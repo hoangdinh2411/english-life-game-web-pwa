@@ -54,10 +54,10 @@ apps/server/src/
     auth/                 # Supabase JWT guard / current user (exists)
     onboarding/           # onboarding choices (exists)
     players/              # profile/character (exists)
-    dialogue/             # scripted node lookup + intent (planned)
-    conversations/        # session + append-only messages (planned)
-    quests/               # ordered quest steps + bus-ticket state (planned)
-    economy/              # transactional XP/coins rewards (planned)
+    dialogue/             # cached scripted node lookup + intent (implemented)
+    conversations/        # scripted session + append-only messages (implemented)
+    quests/               # ordered arrival steps + bus-ticket entitlement (implemented)
+    economy/              # transactional one-time quest rewards (implemented)
     learning/             # optional corrections/feedback (planned)
   infrastructure/         # database, content cache, external adapters
   common/                 # truly cross-cutting filters/pipes/guards
@@ -71,7 +71,7 @@ imports. `conversations` orchestrates dialogue and asks `quests` to apply
 recognized intents; `quests` performs step/ticket changes and calls `economy`
 for one-time rewards **inside the same PostgreSQL transaction**. A unique
 reward/claim key protects retries/concurrency. Auth stays Supabase-first;
-external AI stays a future server-only adapter, not a mandatory module.
+  external AI stays a future server-only adapter, not a mandatory module.
 
 `packages/shared` contains only contracts, Zod schemas and pure rules actually
 consumed across client/server. Authored quest/NPC/dialogue content stays in
@@ -88,7 +88,11 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
 - NestJS verifies JWT identity, validates requests with Zod, and uses a shared
   PostgreSQL pool. Future quest/reward writes must be transactional and idempotent.
 - Server dialogue: JSON → validation → seed into `dialogue_nodes` → cached
-  NPC/role/global lookup (engine **planned**). The **first planned server quest**
+  NPC/role/global lookup through `DialogueService.reply` (T4). Server callers
+  supply NPC/role/personality and optionally the current node; replies include
+  the matched intent, authored node and personality wording. Unrecognized input
+  uses authored clarification without completing a step. Quest `doneWhen`
+  supports a primary `intent` and optional `alternativeIntents`. The **server arrival quest**
   starts at the station receptionist: dialogue earns a bus-ticket entitlement,
   which permits entering Town Street; reward completion and saved progress are
   server-owned. Existing local station practice still uses ID-card directions,
@@ -98,13 +102,25 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   offline success. Updates require explicit approval to reload; failed updates
   retain the active worker. Test on real devices before claiming PWA parity.
 - Never modify an applied migration. Existing SQL files are `001` core,
-  `002` unassigned player state, `003` player permissions, `004` dialogue nodes.
+  `002` unassigned player state, `003` player permissions, `004` dialogue nodes,
+  `005` arrival ticket timestamps, character location and unique reward claims;
+  `006` conversation node, immutable message replay metadata and ordering.
   Inspect schema and current database before applying new changes.
 
 ## API (implemented vs planned)
 All paths are under `/api/v1`; protected requests use
 `Authorization: Bearer <Supabase access token>`. Error envelope:
 `{ "error": { "code": "...", "message": "..." } }`.
+
+API throttling (T6) is opt-in: set both `API_RATE_LIMIT_MAX` and
+`API_RATE_LIMIT_WINDOW_MS` to approved positive integers (window ≤ 2147483647ms).
+No default request cap or energy/free-chat policy is imposed. All routed calls,
+including health and failed authentication, share a fixed window per connection
+IP; excess calls return 429 `too_many_requests` with `Retry-After` seconds.
+The global guard runs before controller authentication. Forwarded headers and
+unverified tokens cannot select a different bucket. Expired buckets are removed.
+Counters are process-local and reset on restart; multiple replicas need a shared
+limiter before deployment, and a reverse proxy shares its peer-IP bucket.
 
 **Implemented:**
 - `GET /health` → `{ status: "ok" }` (public).
@@ -113,9 +129,42 @@ All paths are under `/api/v1`; protected requests use
   `stats` contains existing `xp`/`coins` even before a character exists.
 - `POST /characters` with `{ name, cityId, avatarId }`; creates one character
   atomically, retains existing stats, duplicate returns 409.
+- `GET /quests/arrival` → `{ questId, status, currentStepId, ticket: { issued,
+  used }, canEnterTownStreet, locationId, rewardsGranted }` (protected; requires
+  a character). Reads persisted account state; no client-provided user ID.
+- `POST /quests/arrival/enter-town-street` with `{}` (protected): requires the
+  ordered arrival steps and a server-issued ticket; returns arrival state.
+  Ticket use, character location, completion, reward claim and XP/coins update
+  commit atomically. Repeated exits return the saved result without another grant.
+- `POST /conversations` with `{ npcId: "npc_receptionist" }`: creates a scripted
+  station conversation with an authored opening message; requires a character
+  at the station. Returns `{ id, npcId, messages, arrival }`.
+- `GET /conversations/:id`: returns the owner's ordered messages and current
+  arrival state. Another owner's ID returns 404; all routes require Auth.
+- `POST /conversations/:id/messages` with `{ clientMessageId: <UUID>, text,
+  coach?: boolean }`: trimmed text of 1–2000 characters, Coach defaults off.
+  Returns `{ playerMessage, npcMessage, intent, misunderstood, correction,
+  arrival }`; messages contain `{ id, sender, text, createdAt }`. Grammar feedback
+  is optional and never prevents recognized meaning from progressing. Greet
+  before asking directions/requesting a ticket; only a ticket request issues it.
+  Out-of-order requests return 409 without appending messages or changing state.
+  Both messages, node state, quest steps and ticket commit in one transaction.
+  Retry the same conversation/message UUID with the same text/Coach setting to
+  receive the original response without duplicate messages; changed payloads
+  return 409. Replay includes the original arrival snapshot; GET gives current
+  state. After entering Town Street, history/replay remain readable but new
+  station messages are rejected. No edit/delete message endpoints are exposed.
 
-**Planned (not callable yet):** quest endpoints; scripted conversation
-create/send-message; corrections/vocabulary; AI chat via SSE; public asset
+`QuestsService.applyReceptionistIntent` and `issueArrivalTicket` are server-only
+entry points for T7 orchestration; no public endpoint accepts dialogue intents,
+step IDs or ticket grants. Steps are greet → directions/request → issue ticket
+→ enter street. Character-row locking serializes concurrent account requests;
+the `(user_id, quest_id)` reward ledger prevents duplicate grants. Null character
+location means the station for existing starter-city characters. Existing
+balances remain intact; rewards come from the validated seeded quest.
+
+**Planned (not callable yet):** other quest endpoints; corrections history/
+vocabulary; AI chat via SSE; public asset
 manifest. Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
 
 ## Run locally

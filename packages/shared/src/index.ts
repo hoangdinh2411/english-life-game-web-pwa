@@ -11,3 +11,5 @@ export * from './dialogue/language';
 export * from './dialogue/metadata';
 export * from './dialogue/questions';
 export * from './content';
+export * from './quests';
+export * from './conversations';

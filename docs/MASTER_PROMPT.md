@@ -32,6 +32,8 @@ in the current session.
 ## 2. Select the Task
 
 - If I specify a task ID, implement that task only.
+- if I specify a task ID, work on a new branch that have been checked out from
+  the dev branch and merge into the dev branch when the task is completed
 - Otherwise, select the highest-priority uncompleted, unblocked task from the
   `NOW` section of `docs/TASKS.md`.
 - Check the task's acceptance criteria, dependencies, and affected features.

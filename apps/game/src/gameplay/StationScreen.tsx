@@ -10,7 +10,6 @@ import { OverlayButton } from './OverlayButton';
 import { PlayerInfoCard } from './PlayerInfoCard';
 import { QuestBoard } from './QuestBoard';
 import { shouldShowQuestBoard, goalNotice } from './arrival-hud';
-import { useWindowDimensions } from '../hooks/use-window-size';
 import { usePwa } from '../pwa/PwaProvider';
 export default function StationScreen({ playerName, xp, coins, onSignOut, practice = false }: StationScreenProps) {
   const [npcId, setNpcId] = useState<StationSpeaker | null>(null);
@@ -22,23 +21,21 @@ export default function StationScreen({ playerName, xp, coins, onSignOut, practi
   const [sound, setSound] = useState(true);
   const [exitUnlocked, setExitUnlocked] = useState(false);
   const [exitReminder, setExitReminder] = useState(false);
-  const { width } = useWindowDimensions();
   const pwa = usePwa();
   const cityName = location.split(' · ')[0] ?? 'Maplewood';
-  const placeName = location.split(' · ').at(-1) ?? location;
-  const centeredPlace = width < 360 ? placeName.replace('Train Station', 'Station').replace('Clothes Shop', 'Clothes') : placeName;
   const overlayOpen = npcId !== null || tutorial || menu || goals || exitReminder;
   const showGoals = shouldShowQuestBoard({ tutorialOpen: overlayOpen, mapReady: stationReady });
   const notice = goalNotice();
-  return <main className="station-screen">
+  return <main className="station-screen" aria-label={location}>
     <GameCanvas exitUnlocked={exitUnlocked} onExitBlocked={() => setExitReminder(true)} onReadyChange={setStationReady} onLocationChange={setLocation} paused={!stationReady || overlayOpen} onTalk={(id) => {
       if (id === 'npc_station_information' || id === 'npc_passenger_backpack' || id === 'npc_passenger_suitcase') setNpcId(id);
     }} />
-    <PlayerInfoCard playerName={playerName} cityName={cityName} xp={xp} coins={coins} visible={!overlayOpen} />
-    {!overlayOpen ? <h1 className="place-card">{centeredPlace}</h1> : null}
-    <div className="station-tools">
+    <div className="station-hud">
+      <PlayerInfoCard playerName={playerName} cityName={cityName} xp={xp} coins={coins} visible={!overlayOpen} />
+      <div className="station-tools">
       <OverlayButton label={sound ? 'Sound on' : 'Sound off'} icon={sound ? '🔊' : '🔇'} onClick={() => setSound(!sound)} />
       {!overlayOpen ? <OverlayButton label="Menu" icon="≡" onClick={() => setMenu(true)} /> : null}
+      </div>
     </div>
     {showGoals ? <div className="goals-control"><span className="goal-notice">{notice.fresh ? `${notice.fresh} new quest${notice.fresh > 1 ? 's' : ''}` : notice.active ? `${notice.active} active quest${notice.active > 1 ? 's' : ''}` : 'Your quests'}</span><GameButton label={notice.active || notice.fresh ? '! Goals' : 'Goals'} ariaLabel={`Open goals, ${notice.active} active quests, ${notice.fresh} new quests`} onClick={() => setGoals(true)} /></div> : null}
     {goals ? <DialogueFrame><div className="dialogue-header"><h2>Goals</h2><GameButton label="Close goals" onClick={() => setGoals(false)} /></div><QuestBoard inPanel /></DialogueFrame> : null}

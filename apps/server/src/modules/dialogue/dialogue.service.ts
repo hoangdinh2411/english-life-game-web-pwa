@@ -30,6 +30,14 @@ function matches(input: string, keyword: string): boolean {
 export class DialogueService {
   constructor(private readonly cache: DialogueCacheService) {}
 
+  async node(context: DialogueContext, id: string): Promise<DialogueReply> {
+    const entry = (await this.cache.getNodes()).find(item => item.node.id === id &&
+      (item.scope === 'npc' && item.npcId === context.npcId ||
+       item.scope === 'role' && item.roleId === context.roleId || item.scope === 'global'));
+    if (!entry) throw new ServiceUnavailableException('Dialogue node is unavailable.');
+    return this.render(entry, context, null);
+  }
+
   // Context is supplied by server orchestration; this service never changes quest state.
   async reply(context: DialogueContext, input: string): Promise<DialogueReply> {
     const all = await this.cache.getNodes();
@@ -44,7 +52,7 @@ export class DialogueService {
     const current = find(context.currentNodeId);
     const text = words(input);
     // Do not turn an explicit refusal into a positive request.
-    const refused = /\b(?:don't|do not|not|never|no)\b/.test(text);
+    const refused = /\b(?:(?:don't|do not|not|never)\s+(?:want|need|like|request|ask|asking)|(?:no|not)\s+(?:a\s+|the\s+)?(?:bus\s+)?tickets?)\b/.test(text);
     if (text && !refused) for (const group of groups) {
       const ordered = [...group].sort((a, b) =>
         Number(b === current) - Number(a === current) || a.node.id.localeCompare(b.node.id));
@@ -56,10 +64,11 @@ export class DialogueService {
       }
     }
     // Specific clarification first, then role clarification, then the global repeat.
-    const fallbacks = [current, ...applicable];
+    const fallbacks = groups.flatMap(group => [...group].sort((a, b) =>
+      Number(b === current) - Number(a === current) || a.node.id.localeCompare(b.node.id)));
     for (const entry of fallbacks) {
       const target = find(entry?.node.fallback);
-      if (target) return this.render(target, context, null);
+      if (target && !target.node.completesStep) return this.render(target, context, null);
     }
     const repeat = groups[2]?.find(entry => entry.node.id === 'global_repeat');
     if (repeat) return this.render(repeat, context, null);

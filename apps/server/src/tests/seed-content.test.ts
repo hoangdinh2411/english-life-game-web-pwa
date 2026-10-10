@@ -8,8 +8,8 @@ import { loadSeedContent } from '../infrastructure/content/seed-content';
 
 test('T2 committed content and all scope references validate', async () => {
   const content = await loadSeedContent(resolve('../../content'));
-  assert.equal(content.npcs.length, 3);
-  assert.equal(content.quests.length, 5);
+  assert.equal(content.npcs.length, 4);
+  assert.equal(content.quests.length, 6);
   assert.deepEqual(new Set(content.dialogues.map(file => file.scope)), new Set(['global', 'npc', 'role']));
 });
 

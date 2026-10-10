@@ -31,7 +31,7 @@ export const npcSchema = z.object({
 export const questStepSchema = z.object({
   id: identifier,
   description: text,
-  doneWhen: z.object({ intent: identifier }).strict(),
+  doneWhen: z.object({ intent: identifier, alternativeIntents: z.array(identifier).min(1).optional() }).strict(),
 }).strict();
 
 export const questSchema = z.object({

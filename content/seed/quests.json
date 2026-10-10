@@ -4,7 +4,7 @@
     "rewards": { "xp": 20, "coins": 5 },
     "steps": [
       { "id": "arrival_greet", "description": "Greet the station receptionist", "doneWhen": { "intent": "greet" } },
-      { "id": "arrival_ask", "description": "Ask how to reach town or request a bus ticket", "doneWhen": { "intent": "ask_town_directions" } },
+      { "id": "arrival_ask", "description": "Ask how to reach town or request a bus ticket", "doneWhen": { "intent": "ask_town_directions", "alternativeIntents": ["request_bus_ticket"] } },
       { "id": "arrival_ticket", "description": "Obtain your bus ticket from the receptionist", "doneWhen": { "intent": "obtain_bus_ticket" } },
       { "id": "arrival_exit", "description": "Use the ticket to enter Maplewood Town Street", "doneWhen": { "intent": "enter_town_street" } }
     ]

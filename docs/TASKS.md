@@ -39,7 +39,7 @@ Do not create Git commits.
 - [x] Local Phaser station practice, three station NPCs, optional browser
       speech, recorded voice, Coach, portals, public-only PWA precache; **no
       rewards**. The station's current ID-card directions unlock the street
-      locally; a real bus-ticket quest and server progression are **not done**.
+      locally; this remains separate from the server-owned arrival quest state.
 
 ## NOW — Slice 1: arrival at the train station
 
@@ -48,21 +48,22 @@ receptionist**, receives a **bus ticket**, takes the station exit to **Maplewood
 Town Street**, and finishes the arrival quest. The **server** saves the ticket,
 ordered steps, and one-time XP/coins reward across reload/sign-in. Intent
 recognition and gentle Coach feedback support typed answers (optional speech).
-**This quest is planned, not implemented.** Keep `/practice` reward-free.
+**Server dialogue, conversation API and quest state are implemented; the playable
+loop still needs T8–T9.** Keep `/practice` reward-free.
 
-- [ ] **T4 — Station dialogue engine and content.** Author/validate/seed the
+- [x] **T4 — Station dialogue engine and content.** Author/validate/seed the
       receptionist NPC, bus-ticket quest and scripted dialogue in `content/`;
       load/cache `dialogue_nodes`, recognize polite requests for a ticket and
       town directions, apply NPC → role → global fallback. Test intent matching,
       precedence, misunderstanding and safe fallback. Reuse shared code where
       suitable; don't change the independent practice flow yet.
-- [ ] **T5 — Arrival quest and ticket state.** Server-owned ordered steps: greet
+- [x] **T5 — Arrival quest and ticket state.** Server-owned ordered steps: greet
       receptionist → ask how to reach town/request a bus ticket → obtain ticket
       → use it to enter Town Street. Persist a ticket/exit entitlement in quest
       progress (no general inventory needed), guard street access, and
-      transactionally grant XP/coins **once** on quest completion. Test out-of-
+      transactionally grant XP/coins **on ce** on quest completion. Test out-of-
       order steps, repeat requests, race conditions and reloads.
-- [ ] **T7 — Scripted conversation API.** Create conversation and append-only
+- [x] **T7 — Scripted conversation API.** Create conversation and append-only
       messages; connect receptionist intents to ordered quest steps and ticket
       issuance; give optional non-blocking grammar corrections. Test the station
       arrival flow through the API, including replay and sign-in persistence.
@@ -79,8 +80,9 @@ recognition and gentle Coach feedback support typed answers (optional speech).
 
 ## NEXT — after the first playable loop
 
-- [ ] **T6 — Rate limiting.** API tests for allowed and rejected calls; do not
-      invent unapproved energy/free-chat cap values.
+- [x] **T6 — Rate limiting.** Configurable process-local per-IP API windows;
+      verified allowed/rejected calls, 429/Retry-After, header spoofing, expiry
+      and peer isolation. No default cap or energy/free-chat limits.
 - [ ] **First café quest with Mia.** Reuse the proven station conversation,
       intent, quest and reward systems for existing seeded “Your First Coffee”
       after the player reaches Town Street. Don't build another quest framework.

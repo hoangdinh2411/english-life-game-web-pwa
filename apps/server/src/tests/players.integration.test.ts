@@ -8,6 +8,8 @@ import { Pool } from 'pg';
 import { AppModule } from '../app.module';
 import { PlayersRepository } from '../modules/players/players.repository';
 import { ServiceUnavailableException } from '@nestjs/common';
+import { QuestsService } from '../modules/quests/quests.service';
+import { ARRIVAL_NPC_ID, arrivalStateSchema } from '@life-abroad/shared';
 
 // Real Auth, HTTP and SQL catch missing transactions, duplicate creation and balance resets.
 test('R4 real onboarding, validation, concurrent creation and account resume', async () => {
@@ -90,6 +92,30 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
     assert.ok(login.data.session);
     headers.Authorization = `Bearer ${login.data.session.access_token}`;
     assert.deepEqual(await (await call('/me')).json(), expected);
+    // T5 quest state follows the verified account across refresh and sign-in.
+    const quests = app.get(QuestsService);
+    await quests.applyReceptionistIntent(userId, ARRIVAL_NPC_ID, 'greet');
+    await quests.applyReceptionistIntent(userId, ARRIVAL_NPC_ID, 'request_bus_ticket');
+    await quests.issueArrivalTicket(userId);
+    const ticket = arrivalStateSchema.parse(await (await call('/quests/arrival')).json());
+    assert.equal(ticket.ticket.issued, true);
+    assert.equal(ticket.ticket.used, false);
+    await auth.auth.signOut();
+    const resumed = await auth.auth.signInWithPassword({ email, password });
+    assert.equal(resumed.error, null);
+    assert.ok(resumed.data.session);
+    headers.Authorization = `Bearer ${resumed.data.session.access_token}`;
+    assert.deepEqual(await (await call('/quests/arrival')).json(), ticket);
+    const exit = await call('/quests/arrival/enter-town-street', {});
+    assert.equal(exit.status, 201);
+    const arrival = arrivalStateSchema.parse(await exit.json());
+    assert.equal(arrival.status, 'done');
+    assert.equal(arrival.locationId, 'loc_town_street');
+    assert.equal(arrival.rewardsGranted, true);
+    assert.deepEqual(await (await call('/quests/arrival/enter-town-street', {})).json(), arrival);
+    const earned = await database.query<{ rewards: { xp: number; coins: number } }>('SELECT rewards FROM quests WHERE id=$1', ['q_station_arrival']);
+    assert.deepEqual(((await (await call('/me')).json()) as { stats: unknown }).stats,
+      { xp: 23 + earned.rows[0]!.rewards.xp, coins: 7 + earned.rows[0]!.rewards.coins });
     for (const path of ['/me', '/characters']) {
       const response = await fetch(base + path, { method: path === '/me' ? 'GET' : 'POST', headers: { 'Content-Type': 'application/json' }, ...(path === '/me' ? {} : { body: JSON.stringify(request) }) });
       assert.equal(response.status, 401);

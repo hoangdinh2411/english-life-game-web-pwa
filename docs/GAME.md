@@ -11,8 +11,11 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
 - Authored content in `content/seed/`: one town; **Mia** (café), **Mr. Brown**
   (housing), **Sam** (bank); **five later quests** and their ordered steps/rewards.
   These quests are *seeded data*, **not yet playable server quest gameplay**.
-  The first **station arrival quest** and receptionist's bus-ticket dialogue
-  still need to be authored and seeded.
+  The **station arrival quest**, receptionist, station/street locations and
+  bus-ticket dialogue are also authored and seeded. The server dialogue engine
+  recognizes requests with NPC → role → global fallback. Ordered server arrival
+  steps, saved ticket entitlement and one-time rewards are implemented; the
+  scripted conversation API is implemented; authenticated client connection is pending.
 - The existing Phaser **train station** is playable local practice with a
   receptionist and two passengers, sample conversations, Coach feedback,
   movement/portals, recorded audio, and optional browser speech-to-text.
@@ -34,7 +37,8 @@ XP/coins **once** → ticket, quest state and rewards survive reload/sign-in.
 The ticket can be a server-verified **arrival-quest entitlement**; do not build
 an entire inventory system just for this item. Speech input stays optional.
 The café/Mia quest comes **after** the player reaches the town streets.
-This first server-backed loop is **not implemented**; see `TASKS.md`.
+Server quest state and the guarded street-exit API are implemented. This full
+playable loop still needs client wiring; see `TASKS.md`.
 
 ## Learning and dialogue rules
 - **Meaning first:** understandable but imperfect English can complete a step.

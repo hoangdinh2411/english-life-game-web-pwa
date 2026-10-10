@@ -54,8 +54,8 @@ canvas { display: block; }
 .station-loading { position: absolute; top: 40%; left: 50%; transform: translateX(-50%); background: var(--dialogue); padding: 20px; border-radius: 16px; max-width: calc(100% - 24px); }
 .game-button { min-height: 44px; padding: 10px 16px; border: 0; border-radius: 12px; background: #315749; color: #fff8e7; font-size: 15px; font-weight: 700; }
 .overlay-button { width: 44px; height: 44px; border-radius: 22px; background: rgba(255,248,233,.97); border: 1px solid #9b8c70; color: var(--ink); font-size: 20px; }
-.station-tools { position: absolute; top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); display: flex; gap: 8px; }
-.place-card { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; background: var(--dialogue); border: 1px solid #aa8b57; border-radius: 12px; padding: 10px 8px; font-size: 13px; pointer-events: none; }
+.station-hud { position: absolute; top: max(8px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; pointer-events: none; }
+.station-tools { grid-column: 2; grid-row: 1; justify-self: end; display: flex; gap: 8px; pointer-events: auto; }
 .talk-control { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); right: 12px; }
 .goals-control { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .goal-notice { background: #ffe08a; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 700; }
@@ -82,7 +82,7 @@ canvas { display: block; }
 .composer-action.primary { background: #315749; }
 .composer-action.primary:disabled { background: #e5e7df; opacity: 1; }
 .tutorial-copy { max-height: 300px; overflow: auto; }
-.player-card { position: absolute; top: 8px; left: 8px; width: 320px; display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: rgba(255,248,233,.97); border: 1px solid #aa8b57; border-radius: 14px; }
+.player-card { grid-column: 1; grid-row: 1; width: min(320px, 100%); min-width: 0; display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: rgba(255,248,233,.97); border: 1px solid #aa8b57; border-radius: 14px; }
 .player-card[hidden] { display: none; }
 .player-card img { flex-shrink: 0; border: 1px solid #d7c49b; border-radius: 50%; background: #f3e4c2; }
 .player-details { flex: 1; min-width: 0; display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; font-size: 12px; color: #52644f; font-variant-numeric: tabular-nums; }
@@ -99,15 +99,17 @@ canvas { display: block; }
 .quest-board .current, .quest-board .new { font-weight: 700; }
 .quest-board .locked { color: #817a6d; }
 .quest-board.floating { position: absolute; top: 146px; left: 12px; width: min(280px, calc(100% - 24px)); }
-@media (max-width: 699px) { .dialogue-frame { padding: 12px; } .player-card { width: 210px; } .place-card { width: 140px; } }
+@media (max-width: 699px) { .dialogue-frame { padding: 12px; } }
 @media (max-width: 479px) {
   .onboarding { padding: 16px; }
-  .player-card { width: 116px; gap: 4px; padding: 5px; }
-  .player-card img { width: 30px; height: 30px; }
-  .player-details { display: flex; flex-direction: column; gap: 1px; font-size: 10px; }
-  .player-details strong { font-size: 11px; }
-  .player-details .coins { align-self: flex-start; }
-  .place-card { width: max(72px, calc(100% - 248px)); font-size: 10px; }
+  .player-card { gap: 8px; padding: 8px; }
+  .player-card img { width: 36px; height: 36px; }
+  .player-details { display: flex; flex-wrap: wrap; gap: 2px 8px; }
+  .player-details strong, .player-details > span:nth-child(2) { flex-basis: 100%; }
+  .player-details strong { font-size: 14px; }
+  .station-tools { gap: 4px; }
+  .overlay-button { font-size: 18px; }
+  .goals-control .game-button { padding: 8px 12px; font-size: 14px; }
   .choice-card { padding: 12px; gap: 10px; }
 }
 @media (max-height: 480px) { .dialogue-frame { max-height: calc(100% - 16px); } .conversation-history { height: 120px; } }
