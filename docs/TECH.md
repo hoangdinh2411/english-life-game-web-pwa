@@ -5,7 +5,7 @@
 | --- | --- |
 | Client | `apps/game`: Vite 8, React DOM 19, strict TypeScript, Phaser 4, installable browser PWA |
 | Server | `apps/server`: NestJS 11, API and server-authoritative gameplay |
-| Data/auth | PostgreSQL and Supabase Auth; Storage available for future public assets |
+| Data/auth | PostgreSQL and Supabase Auth; public Storage for versioned destination packs |
 | Shared | `packages/shared`: game logic, Zod schemas and API contracts |
 | Content | `content/seed` and `content/dialogue`: validated JSON, then seeded to Postgres |
 | Tooling | pnpm workspace, Node >=20.19; Docker for local Supabase |
@@ -104,7 +104,8 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
 - Never modify an applied migration. Existing SQL files are `001` core,
   `002` unassigned player state, `003` player permissions, `004` dialogue nodes,
   `005` arrival ticket timestamps, character location and unique reward claims;
-  `006` conversation node, immutable message replay metadata and ordering.
+  `006` conversation node, immutable message replay metadata and ordering;
+  `007` asset metadata and the public `game-assets` bucket.
   Inspect schema and current database before applying new changes.
 
 ## API (implemented vs planned)
@@ -123,6 +124,16 @@ Counters are process-local and reset on restart; multiple replicas need a shared
 limiter before deployment, and a reverse proxy shares its peer-IP bucket.
 
 **Implemented:**
+- `POST /content/assets/upload` (service-key only): multipart `file`, `mapId?`,
+  `npcId?`, `type`, positive integer `version` → `{ path, url, bytes }`. Send
+  `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>` from server tooling only.
+  One file ≤20 MiB; filename stem supplies its logical key. Types: `map`, `image`,
+  `audio`, `spritesheet`, `json`, `animation`. Station ownership is rejected.
+  Version + SHA-256 filenames are immutable, cached for one year; identical
+  retries reuse metadata, changed bytes/type require a new version.
+- `GET /content/maps/:mapId` (public): `{ mapId, assets: [{ key, type, version,
+  url, bytes, npcId }] }`. Latest version per map/NPC logical key, resolved from
+  PostgreSQL; no browser PostgREST access. Unavailable packs return 404.
 - `GET /health` → `{ status: "ok" }` (public).
 - `GET /onboarding/options` → `{ cities, avatars }` (protected, authored content).
 - `GET /me` → `{ user, character, stats }`; `character: null` before creation,
@@ -164,8 +175,37 @@ location means the station for existing starter-city characters. Existing
 balances remain intact; rewards come from the validated seeded quest.
 
 **Planned (not callable yet):** other quest endpoints; corrections history/
-vocabulary; AI chat via SSE; public asset
-manifest. Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
+vocabulary; AI chat via SSE. Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
+
+## Destination assets (T14 experiment)
+
+Station art/voices remain bundled for first load and offline `/practice`.
+Practice portals stay in the station. Signed-in destinations load public packs
+on entry with progress, retry and an offline explanation; scene shutdown removes
+previous textures, sounds/audio, JSON and animation keys. Storage URLs are never
+included in PWA precache. The old destination PNG sources are retained as reference
+art, but are no longer imported or built into the app.
+
+After local Supabase, migrations, seed and NestJS are running, use
+`pnpm assets:upload loc_town_street 1` (also `loc_cafe`, `loc_clothes`).
+`SUPABASE_SERVICE_ROLE_KEY` comes from ignored server configuration;
+`CONTENT_API_URL` optionally overrides `http://127.0.0.1:3000/api/v1`.
+The script generates experimental SVG backgrounds, 32×48 player frames and JSON
+walking definitions in a temporary directory, uploads each through NestJS, then
+deletes confirmed uploads. Failed uploads retain their generated file for retry.
+Destination packs require a map background, `player` spritesheet and an animation
+JSON asset defining `walk-0` through `walk-3`; definitions contain `key`, `texture`,
+numeric `frames`, `frameRate` and `repeat`. Optional NPC art/voices and JSON are
+loaded with the same pack; shop conversations remain separate later tasks.
+
+Measured 2026-10-10: initial built asset payload **15,047,847 → 7,121,361 bytes**
+(14.35 → 6.79 MiB; uncompressed bytes, not network timing). Public precache:
+6.81 MiB. Town Street/café/clothes packs: **6,202 / 6,191 / 6,193 bytes**.
+`/tests/map-pack-browser.html` on Vite verifies ten real station/street round trips:
+texture allocation remains **6,408,800 bytes**, with stable texture/cache/animation,
+scene-object and listener counts. This proves bounded Phaser resources; it is not
+a garbage-collection-controlled JavaScript heap profile. Physical phones remain
+unverified.
 
 ## Run locally
 Install Node >=20.19, pnpm 11 and Docker (only needed for local Supabase):
@@ -205,6 +245,6 @@ Physical Android/iOS install, standalone reopen and airplane-mode testing are
 **unverified**, even though desktop/browser offline practice was tested.
 
 ## Future decisions, not current implementation
-Supabase Storage manifest/download caching, AI provider/limits, energy, CEFR
+AI provider/limits, energy, CEFR
 promotion and full speech service are not authorized by these architecture
 notes. See `TASKS.md` before extending scope.

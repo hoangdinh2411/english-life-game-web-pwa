@@ -52,7 +52,7 @@ double_confirm_changes = true
 enabled = false
 
 [storage]
-enabled = false
+enabled = true
 
 [edge_runtime]
 enabled = false

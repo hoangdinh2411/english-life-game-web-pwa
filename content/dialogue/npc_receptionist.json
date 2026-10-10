@@ -14,9 +14,10 @@
       "fallback": "receptionist_repeat"
     },
     { "id": "receptionist_welcome", "text": { "default": "Welcome! You can take the bus to Maplewood Town Street. Would you like a bus ticket?", "cheerful": "Welcome to Maplewood! The bus takes you to Town Street. Would you like a bus ticket?" }, "completesStep": "arrival_greet" },
-    { "id": "receptionist_directions", "text": { "default": "The bus goes to Maplewood Town Street. Please ask me for a bus ticket before you use the station exit." }, "completesStep": "arrival_ask" },
+    { "id": "receptionist_directions", "text": { "default": "The bus goes to Maplewood Town Street." }, "completesStep": "arrival_ask" },
     { "id": "receptionist_ticket_request", "text": { "default": "A bus ticket to Maplewood Town Street? Certainly. Let me check your arrival details first." }, "completesStep": "arrival_ask" },
     { "id": "receptionist_repeat", "text": { "default": "Sorry, I didn't understand. You can say: 'Could I have a bus ticket, please?' or 'How do I get to town?'" } },
+    { "id": "receptionist_directions_ticket_issued", "text": { "default": "The bus goes to Maplewood Town Street. Here is your bus ticket. You can now use the station exit." }, "completesStep": "arrival_ticket" },
     { "id": "receptionist_ticket_issued", "text": { "default": "Here is your bus ticket to Maplewood Town Street. You can now use the station exit." }, "completesStep": "arrival_ticket" }
   ]
 }

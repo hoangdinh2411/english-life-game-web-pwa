@@ -13,12 +13,12 @@ export function createRecordedNarrator(findClip: (text: string, gender: VoiceGen
     speak(text, gender = 'male') {
       stop();
       const url = findClip(text, gender);
-      if (!url) { fallback.speak(text); return; }
+      if (!url) { fallback.speak(text, gender); return; }
       const audio = createAudio(url);
       const request = version;
       current = audio;
       audio.onended = () => { if (request === version) { current = null; callbacks.onSpeaking(false); } };
-      audio.onerror = () => { if (request === version) { stop(); fallback.speak(text); } };
+      audio.onerror = () => { if (request === version) { stop(); fallback.speak(text, gender); } };
       void audio.play().then(() => { if (request === version) callbacks.onSpeaking(true); }).catch(() => {
         if (request !== version) return;
         stop(); callbacks.onError('Tap a speaker icon to enable voice playback.');

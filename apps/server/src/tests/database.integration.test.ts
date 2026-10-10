@@ -32,13 +32,16 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
     await clean.query(`CREATE SCHEMA auth;
       CREATE TABLE auth.users (id uuid PRIMARY KEY, email text, raw_user_meta_data jsonb);
       CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT null::uuid $$;`);
+    // Minimal Storage prerequisite for the bucket migration in this isolated SQL database.
+    await clean.query(`CREATE SCHEMA storage; CREATE TABLE storage.buckets
+      (id text PRIMARY KEY, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);`);
     for (let attempt = 0; attempt < 2; attempt++) {
       const migration = spawnSync(process.execPath, ['scripts/migrate.mjs'], {
         env: { ...process.env, DATABASE_URL: cleanUrl.toString() }, encoding: 'utf8',
       });
       assert.equal(migration.status, 0, migration.stderr);
     }
-    assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, 6);
+    assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, 7);
     const content = await loadSeedContent(resolve('../../content'));
     const seedDatabase = new DatabaseService(new ConfigService({ DATABASE_URL: cleanUrl.toString() }));
     let seedClosed = false;

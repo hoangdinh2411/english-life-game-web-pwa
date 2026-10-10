@@ -1,0 +1,62 @@
+import type Phaser from 'phaser';
+import type { MapPack } from '@life-abroad/shared';
+import { packAnimationsSchema } from '@life-abroad/shared';
+import { packKey } from './map-pack';
+
+export function loadPack(scene: Phaser.Scene, pack: MapPack, progress: (value: number) => void, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let failed = false;
+    const error = () => { failed = true; };
+    const cleanup = () => {
+      scene.load.off('progress', progress);
+      scene.load.off('loaderror', error);
+      scene.load.off('complete', complete);
+      signal.removeEventListener('abort', abort);
+    };
+    const abort = () => { cleanup(); scene.load.reset(); reject(new Error('Map download cancelled.')); };
+    const complete = () => {
+      cleanup();
+      if (failed) reject(new Error('Map download failed. Reconnect and retry.'));
+      else resolve();
+    };
+    if (signal.aborted) { reject(new Error('Map download cancelled.')); return; }
+    signal.addEventListener('abort', abort, { once: true });
+    scene.load.on('progress', progress);
+    scene.load.on('loaderror', error);
+    scene.load.once('complete', complete);
+    for (const asset of pack.assets) {
+      const key = packKey(pack, asset);
+      if (asset.type === 'audio') scene.load.audio(key, asset.url);
+      else if (asset.type === 'json' || asset.type === 'animation') scene.load.json(key, asset.url);
+      else if (asset.type === 'spritesheet') scene.load.spritesheet(key, asset.url, { frameWidth: 32, frameHeight: 48 });
+      else scene.load.image(key, asset.url);
+    }
+    scene.load.start();
+  });
+}
+
+export function preparePack(scene: Phaser.Scene, pack: MapPack) {
+  const background = pack.assets.find((asset) => asset.type === 'map' && asset.npcId === null);
+  const player = pack.assets.find((asset) => asset.key === 'player' && asset.type === 'spritesheet' && asset.npcId === null);
+  const playerAnimations = pack.assets.find((asset) => asset.type === 'animation' && asset.npcId === null);
+  if (!background || !player || !playerAnimations) throw new Error('Map pack needs a background, player spritesheet and animations.');
+  const definitions: { key: string; frames: { key: string; frame: number }[]; frameRate: number; repeat: number }[] = [];
+  for (const asset of pack.assets.filter((item) => item.type === 'animation')) {
+    const data = packAnimationsSchema.parse(scene.cache.json.get(packKey(pack, asset)));
+    for (const animation of data.animations) {
+      const texture = pack.assets.find((item) => item.key === animation.texture && item.npcId === asset.npcId && item.type === 'spritesheet');
+      if (!texture) throw new Error('Animation texture is missing from this pack.');
+      const key = `${packKey(pack, asset)}:${animation.key}`;
+      const textureKey = packKey(pack, texture);
+      if (animation.frames.some((frame) => !scene.textures.get(textureKey).has(String(frame)))) throw new Error('Animation frame is missing from this pack.');
+      definitions.push({ key, frames: animation.frames.map((frame) => ({ key: textureKey, frame })), frameRate: animation.frameRate, repeat: animation.repeat });
+    }
+  }
+  const walkPrefix = `${packKey(pack, playerAnimations)}:walk`;
+  const animationKeys = definitions.map((definition) => definition.key);
+  if ([0, 1, 2, 3].some((row) => !animationKeys.includes(`${walkPrefix}-${row}`))) {
+    throw new Error('Map pack needs all four player walking animations.');
+  }
+  for (const definition of definitions) scene.anims.create(definition);
+  return { background: packKey(pack, background), player: packKey(pack, player), walkPrefix, animationKeys };
+}

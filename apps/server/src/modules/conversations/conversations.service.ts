@@ -43,9 +43,12 @@ export class ConversationsService {
       if (reply.intent) arrival = await this.quests.applyReceptionistIntent(userId, ARRIVAL_NPC_ID, reply.intent, client);
       let responseText = reply.text;
       let nodeId = reply.node.id;
-      if (reply.intent === 'request_bus_ticket') {
+      if (reply.intent === 'request_bus_ticket' || reply.intent === 'ask_town_directions') {
         arrival = await this.quests.issueArrivalTicket(userId, client);
-        const receipt = await this.dialogue.node(context, 'receptionist_ticket_issued');
+        const receiptId = reply.intent === 'ask_town_directions'
+          ? 'receptionist_directions_ticket_issued'
+          : 'receptionist_ticket_issued';
+        const receipt = await this.dialogue.node(context, receiptId);
         responseText = receipt.text;
         nodeId = receipt.node.id;
       }

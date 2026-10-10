@@ -1,8 +1,7 @@
 # TASKS — one small board
 
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
-Native/Expo/WebView tasks are retired. The app and the seed content are not
-proof that planned server quest/chat engines have been implemented.
+Native/Expo/WebView tasks are retired.
 
 ## How to work
 
@@ -16,6 +15,8 @@ proof that planned server quest/chat engines have been implemented.
   new agent sessions automatically. Add necessary source/tests/migrations.
 - Mark a task done here **only after verification**. Reply with a short summary,
   checks and blockers; do not start the following task automatically.
+- Keep this board short: when a task is done, collapse it into one line under
+  DONE. Git keeps the history.
 
 Example task request:
 
@@ -29,86 +30,145 @@ Complete the task, verify the acceptance criteria, update its status if verified
 Do not create Git commits. Just suggest a commit message for me; I will commit manually.
 ```
 
-## DONE — existing foundation (verified in supplied project history)
+## DONE
 
-- [x] Monorepo and Vite/PWA client (D16); responsive browser onboarding.
-- [x] Supabase SDK auth and NestJS JWT verification.
-- [x] R1–R4: health, DB/access, onboarding options, `/me`, character creation.
-- [x] T2: migrations 001–004; authored NPC/quest/dialogue seed.
-- [x] T3: Zod content validation and invalid-content tests.
-- [x] Local Phaser station practice, three station NPCs, optional browser
-      speech, recorded voice, Coach, portals, public-only PWA precache; **no
-      rewards**. The station's current ID-card directions unlock the street
-      locally; this remains separate from the server-owned arrival quest state.
+- [x] **Foundation:** monorepo, Vite/PWA client (D16), Supabase auth and NestJS
+      token check, health, database and access, onboarding options, `/me`,
+      character creation, migrations 001–004, authored seed, Zod content
+      validation, API rate limiting (T6).
+- [x] **Local `/practice` station:** three NPCs, optional browser speech,
+      recorded voice, Coach, portals, public-only PWA precache. No rewards, and
+      separate from the server quest state.
+- [x] **Arrival quest, end to end (T4, T5, T7, T8, T9):** receptionist dialogue
+      → bus ticket → Town Street → one-time XP/coins reward. Saved on the server
+      across reload and sign-in. Chat, optional Coach, ticket receipt, ordered
+      progress and blocked-exit messages in the UI.
+- [x] **T14 — Asset pipeline and dynamic map/NPC loading (experiment):** versioned Storage packs, service-key uploads, generated-file cleanup, station-only offline practice; unit/integration/PWA checks and ten browser portal round trips verified (sizes and resource-memory measurements in `TECH.md`).
 
-## NOW — Slice 1: arrival at the train station
+## NOW
 
-**Goal:** an authenticated player speaks English with the **station
-receptionist**, receives a **bus ticket**, takes the station exit to **Maplewood
-Town Street**, and finishes the arrival quest. The **server** saves the ticket,
-ordered steps, and one-time XP/coins reward across reload/sign-in. Intent
-recognition and gentle Coach feedback support typed answers (optional speech).
-**Server dialogue, conversation API, quest state and station/street wiring are
-implemented, including chat, optional Coach, ticket receipts and saved progress.** Keep `/practice` reward-free.
+No active NOW item. Select another task only when requested.
 
-- [x] **T4 — Station dialogue engine and content.** Author/validate/seed the
-      receptionist NPC, bus-ticket quest and scripted dialogue in `content/`;
-      load/cache `dialogue_nodes`, recognize polite requests for a ticket and
-      town directions, apply NPC → role → global fallback. Test intent matching,
-      precedence, misunderstanding and safe fallback. Reuse shared code where
-      suitable; don't change the independent practice flow yet.
-- [x] **T5 — Arrival quest and ticket state.** Server-owned ordered steps: greet
-      receptionist → ask how to reach town/request a bus ticket → obtain ticket
-      → use it to enter Town Street. Persist a ticket/exit entitlement in quest
-      progress (no general inventory needed), guard street access, and
-      transactionally grant XP/coins **on ce** on quest completion. Test out-of-
-      order steps, repeat requests, race conditions and reloads.
-- [x] **T7 — Scripted conversation API.** Create conversation and append-only
-      messages; connect receptionist intents to ordered quest steps and ticket
-      issuance; give optional non-blocking grammar corrections. Test the station
-      arrival flow through the API, including replay and sign-in persistence.
-- [x] **T8 — Connect the station and street.** Reuse the current Phaser train
-      station and Town Street visuals; wire authenticated receptionist
-      interaction and street-exit eligibility to the server ticket/quest state.
-      Replace the local ID-card exit rule **only in authenticated quest mode**.
-      Preserve the existing offline `/practice` scene without rewards or private
-      data caching.
-- [x] **T9 — Chat, ticket and quest UI.** Show typed dialogue, optional Coach,
-      ticket receipt, ordered progress, clear blocked-exit messaging, and
-      network/offline errors. Browser-check train station → receptionist →
-      ticket → Town Street → one-time reward, plus refresh/sign-in persistence.
+## APPROVED DESIGN (2026-10-10) — shops and money
 
-## NEXT — after the first playable loop
+- New characters start with **$500**. The database field stays `coins`; the UI
+  shows `$`.
+- The **station café** and the **clothes shop** each have two NPCs: a **seller**
+  (lists items, takes the order, charges money) and an **assistant** (the café
+  waiter, the shop assistant: friendly small talk, and for any order says
+  "please ask the seller").
+- Asking how to leave the station: either NPC points to the **receptionist**.
+- **Scripts first.** Orders, prices and payments are deterministic dialogue +
+  server state. AI never decides a price or a charge. AI free chat comes later,
+  for chat only.
+- **AI:** use a free Gemini key for development only (fake data, never real
+  learners). The production AI provider is decided later, so everything goes
+  through one provider interface.
+- Item lists and prices live in content (`content/seed/shops.json`), never in
+  code. Codex must not invent prices: the owner supplies or approves them.
 
-- [x] **T6 — Rate limiting.** Configurable process-local per-IP API windows;
-      verified allowed/rejected calls, 429/Retry-After, header spoofing, expiry
-      and peer isolation. No default cap or energy/free-chat limits.
-- [ ] **First café quest with Mia.** Reuse the proven station conversation,
-      intent, quest and reward systems for existing seeded “Your First Coffee”
-      after the player reaches Town Street. Don't build another quest framework.
-- [ ] Expand remaining authored quests from the existing seed as needed (add
-      content before new framework code).
-- [ ] Physical Android Chrome/iOS Safari PWA install, reopen, offline/keyboard,
-      update confirmation, microphone behavior and realistic performance
-      testing.
+## NEXT
+
+- [ ] **T15 — Wallet and starting $500.** Server grants the starting balance to
+      new characters from a config value. Add a wallet ledger table (new
+      migration: user, amount, reason, reference, idempotency key, time) and one
+      server function `spend(amount, reason, key)`: transactional, never below
+      $0, the same key never charges twice. Existing characters keep their
+      balance. Update the one economy note in the docs. Done when: tests cover a
+      new character with $500, insufficient funds, a repeated key, two
+      simultaneous spends, and the balance shows in the UI after reload.
+- [ ] **T16 — Shop catalog (data).** `content/seed/shops.json` validated by Zod
+      and seeded into a `shop_items` table: id, name, kind (drink, food,
+      clothing), price, shop (cafe, clothes). Owner supplies the list
+      (suggested: 4 drinks, 3 foods, 4 clothes). Done when:
+      `pnpm content:validate` rejects a missing price or an unknown shop, and
+      the server reads the items from the database.
+- [ ] **T17 — Order and pay conversation (seller role).** Greet → list the menu
+      → player names an item and a quantity (1 to 3) → seller repeats the order
+      and total → player confirms → server spends the money → hands over the
+      item. Also: ask a price, change or cancel, unknown item, not enough money,
+      goodbye. The pending order is server state. Done when: API tests cover a
+      full order (balance drops once), cancel, not enough money, a replayed
+      confirm, and a Coach correction for "I want buy coffee".
+- [ ] **T18 — Station café (two NPCs) and "Your First Coffee".** Café map with a
+      cashier (may reuse Mia) and a waiter. The waiter chats and sends orders to
+      the cashier. Both point to the receptionist when asked how to leave.
+      Update the seeded quest to: greet the cashier → order a drink → confirm
+      and pay → reward once. Done when: a signed-in player completes it by
+      typing, pays from the balance, gets the reward once, and a refresh keeps
+      everything.
+- [ ] **T19 — Small-talk pools (scripted).** Global and role-layer topics: how
+      are you, weather, feeling tired/fine/sick (a friendly reply only, no
+      medical advice), the station, where are you from. 2 or 3 replies per
+      topic, with personality styles. Done when: the waiter can chat 5 or more
+      turns without the fallback line, with tests for each topic and for unknown
+      input.
+- [ ] **T20 — Clothes shop (two NPCs) and minimal inventory.** Same pattern as
+      the café. Add a small inventory table (user, item, quantity) and a "My
+      items" list. Done when: buying a shirt lowers the balance once and the
+      item is listed after reload. (Whether clothes change the avatar is an open
+      decision.)
+- [ ] **T12 — Minimal review screen.** Past corrections and the useful phrases
+      the player used in shops ("I'd like…", "How much is…"). Store useful terms
+      only, not every word. Done when: after ordering coffee, the screen shows
+      the phrase and one correction.
+- [ ] **T10 — AI free chat, development provider.** `AiProvider` interface
+      (server only), `GeminiProvider` with a free key (fake data only), a mock
+      provider for tests, settings in `.env` (`AI_PROVIDER`, `AI_API_KEY`,
+      `AI_MODEL`), prompts in one file. SSE streaming, token usage saved,
+      free-chat cap and rate limit, scripted fallback on error, timeout or 429.
+      AI never changes money, items or quest state. Don't use Gemini-only
+      features (for example Google Search grounding). Include a 20-message
+      evaluation set and a command that runs it against a chosen provider. Done
+      when: text streams word by word, limits work with the mock, the fallback
+      works, and switching `AI_PROVIDER` needs no change outside the provider
+      class. Production use stays blocked (see Open decisions).
+- [ ] **Remaining authored quests** from the existing seed (Mr. Brown, Sam, the
+      heater). Add content before any new framework code.
+- [ ] **Real phone check (PWA):** Android Chrome and iOS Safari: install,
+      reopen, offline `/practice`, keyboard, update confirmation, microphone,
+      and performance on a low-end Android with the busiest map.
+- [ ] **Playtest build:** HTTPS hosting for the app and the server, a hosted
+      Supabase project (migrations, seed, production Auth settings), CORS,
+      rate-limit values, and a short privacy note (speech audio may go to the
+      browser vendor).
 
 ## LATER — only when explicitly requested and policies are decided
 
-- AI free chat/SSE (T10), memory (T11), useful vocabulary journal (T12),
-  tutorial/playtest deployment (T13), browser speech accuracy experiment (S0).
-- Supabase Storage asset table/manifest, client download/cache and measurement:
-  **proposal only**; existing local practice assets stay bundled for now.
+- **Production AI provider:** after the audience decision, compare providers
+  with the evaluation set (quality, speed, price), check EU and under-18 terms
+  and the data processing terms, add the provider class, and add the privacy
+  note.
+- NPC memory (T11), A1 tutorial for the playtest (T13), browser speech accuracy
+  experiment (S0).
+- **Job application** (decision first, see below). Light version: a scripted
+  interview chat that ends with a "job offer" flag and XP, with no salary or
+  work loop.
+- Public website for SEO: a separate static site (landing, how it works, FAQ,
+  privacy, sitemap); the game lives on its own address.
 
 ## Open product decisions — ask only if they block the current task
 
+- Is AI free chat in the MVP, or after the first playtest?
+- AI chat audience and provider: adults 18+ only (paid tier), or a provider that
+  allows teens, or no AI chat for minors. The free Gemini quota is for
+  development with fake data only (its terms exclude EU/EEA/UK end users and
+  apps likely used by under-18s).
+- Shops: the item list and prices; what clothes do (only a list, or they change
+  the avatar outfit); whether old test characters get a top-up to $500.
+- Jobs: light interview only (suggested), or real jobs with pay and work time (a
+  big feature, after the MVP).
 - XP-to-level thresholds/CEFR promotion, coin spending, energy/free-chat limits.
 - General AI/speech providers, production Auth recovery/verification policies,
   audio privacy/age/GDPR and final asset licenses.
+- Domain name and hosting for the public site and the game.
 - Starter-city expansion and final game name; technical character-name policy.
 - Optional improvements: consolidate local vs server-authored dialogue, share
   suitable intent/grammar helpers, useful-vocabulary recording.
 
-Previously approved D16 cancels **native Expo/WebView delivery**. These future
-ideas are not authority to implement extra features during T4–T9. The existing
-practice-mode ID-card conversation is not evidence that a bus ticket is earned
-or that persistent station progression exists.
+D16 cancels native Expo/WebView delivery. Items in LATER are not authority to
+implement extra features during the current task.
+
+```
+
+```

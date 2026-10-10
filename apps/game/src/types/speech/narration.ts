@@ -7,7 +7,7 @@ export interface NarrationCallbacks {
   onError(message: string): void;
 }
 export interface Narrator {
-  speak(text: string): void;
+  speak(text: string, gender?: VoiceGender): void;
   stop(): void;
 }
 export interface RecordedNarrator {

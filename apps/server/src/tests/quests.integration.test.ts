@@ -34,6 +34,8 @@ test('T5 ordered arrival, persisted entitlement, concurrent retries, atomic rewa
     await clean.query(`CREATE SCHEMA auth;
       CREATE TABLE auth.users (id uuid PRIMARY KEY, email text, raw_user_meta_data jsonb);
       CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT null::uuid $$;`);
+    await clean.query(`CREATE SCHEMA storage; CREATE TABLE storage.buckets
+      (id text PRIMARY KEY, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);`);
     const migrated = spawnSync(process.execPath, ['scripts/migrate.mjs'], {
       env: { ...process.env, DATABASE_URL: cleanUrl.toString() }, encoding: 'utf8',
     });

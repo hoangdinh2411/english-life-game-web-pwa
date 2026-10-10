@@ -14,6 +14,7 @@ testDatabase.pathname = '/lifeabroad_test';
 const contents = [
   '# Generated local-only configuration. Keep this file out of version control.',
   `SUPABASE_URL=${url}`, `SUPABASE_PUBLISHABLE_KEY=${key}`,
+  `SUPABASE_SERVICE_ROLE_KEY=${status.SERVICE_ROLE_KEY ?? ''}`,
   `DATABASE_URL=${database}`, `TEST_DATABASE_URL=${testDatabase.href}`, 'TEST_SUPABASE_ENABLED=true', `TEST_SUPABASE_URL=${url}`,
   `TEST_SUPABASE_PUBLISHABLE_KEY=${key}`, `TEST_SUPABASE_DATABASE_URL=${database}`, '',
 ].join('\n');

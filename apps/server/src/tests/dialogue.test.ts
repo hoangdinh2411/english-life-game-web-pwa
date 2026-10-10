@@ -46,6 +46,9 @@ test('T4 recognizes polite ticket and directions requests and imperfect meaningf
   for (const input of ['How do I get to town?', 'Could you tell me how to reach town?', 'Please give me directions to town.', 'Where is the town centre?', "I don't know how to reach town."]) {
     assert.equal((await engine.reply(receptionist, input)).intent, 'ask_town_directions', input);
   }
+  for (const input of ['How do I get to the tax office?', 'How I get to town', 'How can we go to the town centre?']) {
+    assert.equal((await engine.reply(receptionist, input)).intent, 'ask_town_directions', input);
+  }
   const quest = content.quests.find(entry => entry.id === 'q_station_arrival');
   assert.deepEqual(quest?.steps.map(step => step.id), ['arrival_greet', 'arrival_ask', 'arrival_ticket', 'arrival_exit']);
   assert.deepEqual(quest?.steps[1]?.doneWhen, { intent: 'ask_town_directions', alternativeIntents: ['request_bus_ticket'] });

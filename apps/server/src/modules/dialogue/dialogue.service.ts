@@ -26,6 +26,12 @@ function matches(input: string, keyword: string): boolean {
   return phrase.length > 0 && ` ${input} `.includes(` ${phrase} `);
 }
 
+function asksForDirections(input: string): boolean {
+  // Learners may omit auxiliaries/articles ("how I get tax office"). Keep the
+  // shape specific enough to avoid treating unrelated questions as directions.
+  return /^how (?:do |can |could |would )?(?:i|we) (?:get|go|travel|reach) (?:to )?(?:the )?[a-z0-9]+(?: [a-z0-9]+){0,5}$/.test(input);
+}
+
 @Injectable()
 export class DialogueService {
   constructor(private readonly cache: DialogueCacheService) {}
@@ -57,7 +63,8 @@ export class DialogueService {
       const ordered = [...group].sort((a, b) =>
         Number(b === current) - Number(a === current) || a.node.id.localeCompare(b.node.id));
       for (const entry of ordered) for (const intent of entry.node.intents ?? []) {
-        if (!intent.keywords.some(keyword => matches(text, keyword))) continue;
+        const directionRequest = context.npcId === 'npc_receptionist' && intent.name === 'ask_town_directions' && asksForDirections(text);
+        if (!directionRequest && !intent.keywords.some(keyword => matches(text, keyword))) continue;
         const target = find(intent.next);
         // A stale/broken link must never acknowledge a successful intent.
         if (target) return this.render(target, context, intent.name);

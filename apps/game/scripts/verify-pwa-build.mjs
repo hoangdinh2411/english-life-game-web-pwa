@@ -27,6 +27,7 @@ let install;
 handlers.get('install')({ waitUntil: (promise) => { install = promise; } });
 await install;
 const urls = requests.map((request) => new URL(request.url).pathname.slice(1));
+assert.ok(urls.every((path) => !path.includes('game-assets') && !/location_(?:cafe|clothes|maplewood_street)/.test(path)));
 assert.equal(new Set(urls).size, urls.length);
 assert.ok(urls.includes('index.html'));
 assert.ok(urls.includes('manifest.webmanifest'));

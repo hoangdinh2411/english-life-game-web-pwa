@@ -60,11 +60,12 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     assert.equal(greeting.arrival.currentStepId, 'arrival_ask');
     const imperfect = conversationTurnSchema.parse(await (await send('I want get to Maplewood', true)).json());
     assert.equal(imperfect.intent, 'ask_town_directions');
-    assert.equal(imperfect.arrival.currentStepId, 'arrival_ticket');
-    assert.equal(imperfect.arrival.ticket.issued, false);
+    assert.equal(imperfect.arrival.currentStepId, 'arrival_exit');
+    assert.equal(imperfect.arrival.ticket.issued, true);
+    assert.match(imperfect.npcMessage.text, /Here is your bus ticket/);
     assert.equal(imperfect.correction?.improved, 'I want to get to Maplewood.');
     assert.equal((await send("I don't want a bus ticket")).status, 201);
-    assert.equal(arrivalStateSchema.parse(await (await call('/quests/arrival')).json()).ticket.issued, false);
+    assert.equal(arrivalStateSchema.parse(await (await call('/quests/arrival')).json()).ticket.issued, true);
 
     // Force failure after quest updates and the player INSERT: both must roll back.
     const repository = app.get(ConversationsRepository);

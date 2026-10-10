@@ -7,6 +7,7 @@
     "pnpm": ">=11"
   },
   "scripts": {
+    "assets:upload": "node scripts/upload-map-assets.mjs",
     "voices:build": "pnpm --filter @life-abroad/shared build && pnpm --filter game exec node --import tsx ../../scripts/generate-station-voices.mjs",
     "dev": "pnpm --filter @life-abroad/shared build && pnpm --parallel --filter game --filter server dev",
     "dev:game": "pnpm --filter @life-abroad/shared build && pnpm --filter game dev",

@@ -17,6 +17,7 @@ export default function GameCanvas({ paused, exitUnlocked, onExitBlocked, onTalk
   const [ready, setReady] = useState(false);
   const [locationLabel, setLocationLabel] = useState(initialLocation === 'street' ? 'Maplewood Town Street' : 'Maplewood train station');
   const [attempt, setAttempt] = useState(0);
+  const [progress, setProgress] = useState(0);
   const serverExit = Boolean(onEnterStreet);
   useEffect(() => {
     let cancelled = false;
@@ -31,6 +32,8 @@ export default function GameCanvas({ paused, exitUnlocked, onExitBlocked, onTalk
       if (cancelled) return;
       instance = createStationGame(host, {
         initialLocation,
+        practice: !serverExit,
+        onProgress: (value) => { if (!cancelled) setProgress(value); },
         ...(serverExit ? { onEnterStreet: () => callbacks.current.onEnterStreet?.() ?? Promise.resolve(false) } : {}),
         onNearby: (id) => { if (!cancelled) setNearby(id); },
         onTalk: (id) => { if (!cancelled) callbacks.current.onTalk(id); },
@@ -61,7 +64,7 @@ export default function GameCanvas({ paused, exitUnlocked, onExitBlocked, onTalk
   const npc = STATION_NPCS.find((item) => item.id === nearby);
   return <div className="game-canvas">
     <div ref={parent} className="canvas-parent" role="img" aria-label={`${locationLabel}. Tap the path to walk, or use arrow keys or WASD. An exclamation mark shows an NPC with an active or new goal. Approach a nearby NPC to talk.`} />
-    {!ready || error ? <div className="station-loading">{error ? <><p role="alert">{error}</p><GameButton label="Retry station" onClick={() => setAttempt((value) => value + 1)} /></> : <p role="status">Loading the train station…</p>}</div> : null}
+    {!ready || error ? <div className="station-loading">{error ? <><p role="alert">{error}</p><GameButton label="Retry map" onClick={() => setAttempt((value) => value + 1)} /></> : <p role="status">Loading map… {Math.round(progress * 100)}%</p>}</div> : null}
     {ready && !error && npc && !paused ? <div className="talk-control"><GameButton label={width < 700 ? 'Talk' : `Talk to ${npc.name} · E`} ariaLabel={`Talk to ${npc.name}`} onClick={() => game.current?.talk()} /></div> : null}
   </div>;
 }

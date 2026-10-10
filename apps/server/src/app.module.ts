@@ -11,10 +11,11 @@ import { PlayersModule } from './modules/players/players.module';
 import { DialogueModule } from './modules/dialogue/dialogue.module';
 import { QuestsModule } from './modules/quests/quests.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
+import { ContentModule } from './modules/content/content.module';
 
 // Register your business modules here as you implement them.
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env.supabase.local', '.env', '../../.env'] }), HealthModule, AuthModule, DatabaseModule, OnboardingModule, PlayersModule, DialogueModule, QuestsModule, ConversationsModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env.supabase.local', '.env', '../../.env'] }), HealthModule, AuthModule, DatabaseModule, OnboardingModule, PlayersModule, DialogueModule, QuestsModule, ConversationsModule, ContentModule],
   providers: [{ provide: APP_FILTER, useClass: ApiErrorFilter }, { provide: APP_GUARD, useClass: RateLimitGuard }],
 })
 export class AppModule {}

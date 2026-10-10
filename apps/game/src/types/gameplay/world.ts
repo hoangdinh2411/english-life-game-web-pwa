@@ -21,6 +21,8 @@ export interface StationPortal extends Point {
 export type Direction = 'left' | 'right' | 'up' | 'down';
 export type MapLocation = 'station' | 'cafe' | 'clothes' | 'street';
 export interface StationCallbacks {
+  practice?: boolean;
+  onProgress: (value: number) => void;
   initialLocation?: 'station' | 'street';
   onEnterStreet?: () => Promise<boolean>;
   onNearby: (id: string | null) => void;

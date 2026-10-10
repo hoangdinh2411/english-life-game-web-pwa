@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-for (const path of [resolve(process.cwd(), '.env.supabase.local'), resolve(process.cwd(), '.env'), resolve(process.cwd(), '../../.env')]) {
+for (const path of [fileURLToPath(new URL('../.env.supabase.local', import.meta.url)), resolve(process.cwd(), '.env'), fileURLToPath(new URL('../../../.env', import.meta.url))]) {
   let contents;
   try { contents = await readFile(path, 'utf8'); }
   catch (error) {
