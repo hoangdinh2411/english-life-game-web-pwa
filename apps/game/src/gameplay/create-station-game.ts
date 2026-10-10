@@ -1,18 +1,20 @@
 import type { MapLocation, NpcActor, Point, StationCallbacks, StationGame, StationPortal } from '../types/gameplay/world';
 import Phaser from 'phaser';
 import { destinationMaps, stationAtlases, stationBackground } from './station-assets';
-import { canWalk, findPath, movePlayer, movementDelta, nearestNpc, portalAt, STATION_NPCS, STATION_PORTALS } from './station-navigation';
+import { authorizeStreetExit, canWalk, findPath, movePlayer, movementDelta, nearestNpc, portalAt, STATION_NPCS, STATION_PORTALS } from './station-navigation';
 import { npcIdlePose } from './npc-idle';
 import { npcNeedsTalk } from './arrival-hud';
 const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Maplewood · Train Station', cafe: 'Maplewood · Café', clothes: 'Maplewood · Clothes Shop', street: 'Maplewood · Town Street' };
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
-  let activeLocation: MapLocation = 'station';
+  let activeLocation: MapLocation = callbacks.initialLocation ?? 'station';
+  let destroyed = false;
+  let authorizing = false;
   const P = Phaser;
   let paused = false;
   let exitUnlocked = false;
   let blockedPortal: string | null = null;
-  let position: Point = { x: 768, y: 370 };
+  let position: Point = { x: 768, y: activeLocation === 'street' ? 210 : 370 };
   let destinationMapTarget: Point | null = null;
   let destination: Point | null = null;
   let route: Point[] = [];
@@ -134,6 +136,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     }
     update(_time: number, delta: number) {
       if (!this.player) return;
+      if (authorizing) { this.player.anims.stop(); return; }
       if (activeLocation !== 'station') { this.updateDestination(delta); return; }
       for (const [index, actor] of this.npcActors.entries()) {
         const npc = npcs[index];
@@ -183,10 +186,21 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         return;
       }
       blockedPortal = null;
+      if (portal?.id === 'street' && callbacks.onEnterStreet) {
+        authorizing = true;
+        destination = null; route = []; selectedNpc = null;
+        // Move outside the ring so a failed request needs a deliberate retry.
+        position = { x: portal.x, y: portal.y - 55 };
+        this.player.setPosition(position.x, position.y);
+        void authorizeStreetExit(callbacks.onEnterStreet, () => {
+          if (!destroyed) { this.previousLocation = 'street'; this.enterLocation('street'); }
+        }).finally(() => { authorizing = false; });
+        return;
+      }
       if (portal) { this.previousLocation = portal.id as MapLocation; this.enterLocation(this.previousLocation); }
     }
   }
   const game = new P.Game({ type: P.AUTO, parent, width: parent.clientWidth, height: parent.clientHeight, backgroundColor: '#e4cda9', scene: StationScene,
     scale: { mode: P.Scale.RESIZE, autoCenter: P.Scale.CENTER_BOTH }, render: { pixelArt: false }, audio: { noAudio: true } });
-  return { destroy: () => game.destroy(true), pause: (value) => { paused = value; }, unlockExit: (value) => { exitUnlocked = value; }, talk };
+  return { destroy: () => { destroyed = true; game.destroy(true); }, pause: (value) => { paused = value; }, unlockExit: (value) => { exitUnlocked = value; }, talk };
 }

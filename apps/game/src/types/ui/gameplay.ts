@@ -1,4 +1,5 @@
 import type { StationSpeaker } from '@life-abroad/shared';
+import type { ReactNode } from 'react';
 export interface ComposerIconProps {
   kind: 'microphone' | 'send' | 'stop';
   color: string;
@@ -53,6 +54,16 @@ export interface QuestBoardProps {
   inPanel?: boolean;
 }
 export interface StationScreenProps {
+  arrival?: {
+    initialLocation: 'station' | 'street';
+    exitUnlocked: boolean;
+    pending: boolean;
+    error: string;
+    onRetry: () => void;
+    onOpenReceptionist: () => void;
+    onEnterStreet: () => Promise<boolean>;
+    renderReceptionist: (sound: boolean) => ReactNode;
+  };
   playerName: string;
   xp: number;
   coins: number;

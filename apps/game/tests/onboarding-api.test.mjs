@@ -34,3 +34,19 @@ test('onboarding options reject a malformed successful response', async () => {
   const client = loadClient(async () => ({ ok: true, status: 200, json: async () => ({ cities: [], avatars: 'invalid' }) }));
   await assert.rejects(client.loadOptions('current-token'), /Invalid onboarding catalog/);
 });
+// The authenticated exit must use the protected endpoint and never cache private state.
+test('arrival exit sends an authenticated, network-only request and validates saved state', async () => {
+  const arrival = { questId: 'q_station_arrival', status: 'done', currentStepId: null,
+    ticket: { issued: true, used: true }, canEnterTownStreet: true,
+    locationId: 'loc_town_street', rewardsGranted: true };
+  const client = loadClient(async (url, init) => {
+    assert.equal(url, 'http://fixture/api/v1/quests/arrival/enter-town-street');
+    assert.equal(init.method, 'POST');
+    assert.equal(init.headers.Authorization, 'Bearer current-token');
+    assert.equal(init.cache, 'no-store');
+    assert.equal(init.body, '{}');
+    return { ok: true, status: 200, json: async () => arrival };
+  });
+  assert.equal(typeof client.enterTownStreet, 'function', 'authenticated arrival exit is missing');
+  assert.deepEqual(await client.enterTownStreet('current-token'), arrival);
+});

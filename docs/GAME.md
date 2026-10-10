@@ -15,7 +15,9 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   bus-ticket dialogue are also authored and seeded. The server dialogue engine
   recognizes requests with NPC → role → global fallback. Ordered server arrival
   steps, saved ticket entitlement and one-time rewards are implemented; the
-  scripted conversation API is implemented; authenticated client connection is pending.
+  scripted conversation API and authenticated station/street connection are
+  implemented. Typed receptionist replies use the server; entering Town Street
+  waits for the saved ticket use and restores the saved location on reload.
 - The existing Phaser **train station** is playable local practice with a
   receptionist and two passengers, sample conversations, Coach feedback,
   movement/portals, recorded audio, and optional browser speech-to-text.
@@ -26,7 +28,7 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
 - Not in this MVP slice: native apps, multiplayer, spending coins,
   energy consumption/refill, subscriptions, general AI chat, deep NPC memory.
 
-## First full quest loop (planned: station → town streets)
+## First full quest loop (station → town streets)
 Arrive at the **train station** → approach the **receptionist** → ask how to
 reach town and request a **bus ticket** → type a reply → recognize its **intent**
 → advance ordered arrival-quest steps → offer a gentle correction →
@@ -37,8 +39,8 @@ XP/coins **once** → ticket, quest state and rewards survive reload/sign-in.
 The ticket can be a server-verified **arrival-quest entitlement**; do not build
 an entire inventory system just for this item. Speech input stays optional.
 The café/Mia quest comes **after** the player reaches the town streets.
-Server quest state and the guarded street-exit API are implemented. This full
-playable loop still needs client wiring; see `TASKS.md`.
+Server quest state, the guarded street-exit API and client wiring are implemented.
+The richer ticket/progress/Coach UI remains T9; see `TASKS.md`.
 
 ## Learning and dialogue rules
 - **Meaning first:** understandable but imperfect English can complete a step.
@@ -59,8 +61,8 @@ playable loop still needs client wiring; see `TASKS.md`.
 - `content/dialogue/*.json`: server-scripted dialogue, validated then seeded
   into PostgreSQL `dialogue_nodes`; server uses cached nodes.
 - `packages/shared`: shared schemas, rules and current station practice logic.
-- `apps/game/assets` and existing game code: local train-station practice
-  and station/street visuals, not yet the server-backed ticket journey.
+- `apps/game/assets` and existing game code: shared station/street visuals,
+  independent local practice and the authenticated server-backed ticket journey.
 - `docs/TECH.md`: implemented API, architecture and runtime rules.
 
 Future asset delivery through Supabase Storage is a **proposal**, not the

@@ -92,7 +92,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
   }, [draft, token, manager]);
 
   const value = useMemo<SessionValue>(() => ({
-    ready, token, player, draft, options, playerError, playerLoading, refreshPlayer,
+    ready, token, player, draft, options, playerError, playerLoading, refreshPlayer, runAuthenticated: manager.run,
     authenticate, signOut, refreshOptions,
     updateDraft: (changes) => setDraft((current) => mergeOnboardingDraft(current, changes)),
     startLife,

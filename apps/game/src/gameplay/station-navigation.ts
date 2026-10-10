@@ -14,6 +14,10 @@ export function portalAt(point: Point, portals: StationPortal[], radius = 38): S
   return portals.find((portal) => Math.hypot(point.x - portal.x, point.y - portal.y) <= radius) ?? null;
 }
 
+export async function authorizeStreetExit(authorize: () => Promise<boolean>, enter: () => void): Promise<void> {
+  try { if (await authorize()) enter(); } catch { /* Failed authorization leaves the player at the station. */ }
+}
+
 // Coordinates describe feet on the flattened 1536×1024 station illustration.
 const paths = [
   { left: 540, right: 985, top: 350, bottom: 750 },

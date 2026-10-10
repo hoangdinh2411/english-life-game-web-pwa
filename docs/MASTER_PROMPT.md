@@ -20,7 +20,8 @@ Before changing code:
 3. Read `docs/TECH.md` and `docs/GAME.md` only to the extent relevant to the
    selected task.
 4. Read any applicable nested `AGENTS.md` files.
-5. Inspect the relevant existing source code, tests, contracts, and data
+5. Work on a new branch that have been checked out from
+6. Inspect the relevant existing source code, tests, contracts, and data
    structures.
 
 Treat the current codebase and approved project decisions as the source of
@@ -32,8 +33,9 @@ in the current session.
 ## 2. Select the Task
 
 - If I specify a task ID, implement that task only.
-- if I specify a task ID, work on a new branch that have been checked out from
+
   the dev branch and merge into the dev branch when the task is completed
+
 - Otherwise, select the highest-priority uncompleted, unblocked task from the
   `NOW` section of `docs/TASKS.md`.
 - Check the task's acceptance criteria, dependencies, and affected features.

@@ -26,7 +26,7 @@ Follow all applicable project instructions.
 
 Complete the task, verify the acceptance criteria, update its status if verified, report briefly, and stop.
 
-Do not create Git commits.
+Do not create Git commits. Just suggest a commit message for me; I will commit manually.
 ```
 
 ## DONE — existing foundation (verified in supplied project history)
@@ -48,8 +48,8 @@ receptionist**, receives a **bus ticket**, takes the station exit to **Maplewood
 Town Street**, and finishes the arrival quest. The **server** saves the ticket,
 ordered steps, and one-time XP/coins reward across reload/sign-in. Intent
 recognition and gentle Coach feedback support typed answers (optional speech).
-**Server dialogue, conversation API and quest state are implemented; the playable
-loop still needs T8–T9.** Keep `/practice` reward-free.
+**Server dialogue, conversation API, quest state and station/street wiring are
+implemented; the fuller chat/ticket/progress UI remains T9.** Keep `/practice` reward-free.
 
 - [x] **T4 — Station dialogue engine and content.** Author/validate/seed the
       receptionist NPC, bus-ticket quest and scripted dialogue in `content/`;
@@ -67,7 +67,7 @@ loop still needs T8–T9.** Keep `/practice` reward-free.
       messages; connect receptionist intents to ordered quest steps and ticket
       issuance; give optional non-blocking grammar corrections. Test the station
       arrival flow through the API, including replay and sign-in persistence.
-- [ ] **T8 — Connect the station and street.** Reuse the current Phaser train
+- [x] **T8 — Connect the station and street.** Reuse the current Phaser train
       station and Town Street visuals; wire authenticated receptionist
       interaction and street-exit eligibility to the server ticket/quest state.
       Replace the local ID-card exit rule **only in authenticated quest mode**.

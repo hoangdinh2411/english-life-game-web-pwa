@@ -31,3 +31,22 @@ test('map-only destination artwork is present and uses the station map dimension
     assert.equal(png.readUInt32BE(20), 1024, `${asset} height`);
   }
 });
+import * as transitions from '../src/gameplay/station-navigation.ts';
+
+// A cached ticket must not move the player before the server commits ticket use.
+test('street transition waits for authorization and fails closed on network errors', async () => {
+  assert.equal(typeof transitions.authorizeStreetExit, 'function', 'server-confirmed exit is missing');
+  let resolve;
+  const authorization = new Promise((done) => { resolve = done; });
+  let entered = false;
+  const attempt = transitions.authorizeStreetExit(() => authorization, () => { entered = true; });
+  assert.equal(entered, false);
+  resolve(true);
+  await attempt;
+  assert.equal(entered, true);
+  entered = false;
+  await transitions.authorizeStreetExit(async () => false, () => { entered = true; });
+  assert.equal(entered, false);
+  await transitions.authorizeStreetExit(async () => { throw new Error('offline'); }, () => { entered = true; });
+  assert.equal(entered, false);
+});

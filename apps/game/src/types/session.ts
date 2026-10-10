@@ -19,6 +19,7 @@ export interface SessionManager {
   signOut: (revoke: (token: string) => Promise<void>) => Promise<void>;
 }
 export interface SessionValue {
+  runAuthenticated: SessionManager['run'];
   ready: boolean;
   token: string | null;
   player: PlayerResponse | PlayerState | null;
