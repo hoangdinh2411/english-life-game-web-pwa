@@ -1,0 +1,332 @@
+{
+    "frames":  {
+                   "0-0":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  0,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  0
+                                         }
+                           },
+                   "0-1":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  0,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  32
+                                         }
+                           },
+                   "0-2":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  0,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  64
+                                         }
+                           },
+                   "0-3":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  0,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  96
+                                         }
+                           },
+                   "1-0":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  48,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  0
+                                         }
+                           },
+                   "1-1":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  48,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  32
+                                         }
+                           },
+                   "1-2":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  48,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  64
+                                         }
+                           },
+                   "1-3":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  48,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  96
+                                         }
+                           },
+                   "2-0":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  96,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  0
+                                         }
+                           },
+                   "2-1":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  96,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  32
+                                         }
+                           },
+                   "2-2":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  96,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  64
+                                         }
+                           },
+                   "2-3":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  96,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  96
+                                         }
+                           },
+                   "3-0":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  144,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  0
+                                         }
+                           },
+                   "3-1":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  144,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  32
+                                         }
+                           },
+                   "3-2":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  144,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  64
+                                         }
+                           },
+                   "3-3":  {
+                               "trimmed":  false,
+                               "spriteSourceSize":  {
+                                                        "y":  0,
+                                                        "w":  32,
+                                                        "h":  48,
+                                                        "x":  0
+                                                    },
+                               "sourceSize":  {
+                                                  "h":  48,
+                                                  "w":  32
+                                              },
+                               "rotated":  false,
+                               "frame":  {
+                                             "y":  144,
+                                             "w":  32,
+                                             "h":  48,
+                                             "x":  96
+                                         }
+                           }
+               },
+    "meta":  {
+                 "scale":  "1",
+                 "size":  {
+                              "h":  192,
+                              "w":  128
+                          },
+                 "image":  "suitcase.png"
+             }
+}

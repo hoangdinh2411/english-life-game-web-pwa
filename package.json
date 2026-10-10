@@ -1,0 +1,40 @@
+{
+  "name": "life-abroad",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=20.19.0",
+    "pnpm": ">=11"
+  },
+  "scripts": {
+    "voices:build": "pnpm --filter @life-abroad/shared build && pnpm --filter game exec node --import tsx ../../scripts/generate-station-voices.mjs",
+    "dev": "pnpm --filter @life-abroad/shared build && pnpm --parallel --filter game --filter server dev",
+    "dev:game": "pnpm --filter @life-abroad/shared build && pnpm --filter game dev",
+    "dev:server": "pnpm --filter @life-abroad/shared build && pnpm --filter server dev",
+    "dev:web": "pnpm --filter @life-abroad/shared build && pnpm --filter game web",
+    "preview:game": "pnpm --filter game preview",
+    "check:pwa": "pnpm --filter game check:pwa",
+    "typecheck": "pnpm --filter @life-abroad/shared build && pnpm -r typecheck",
+    "lint": "eslint .",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "db:migrate": "pnpm --filter server migrate",
+    "db:seed": "pnpm --filter server seed",
+    "supabase:start": "pnpm --filter server supabase:start",
+    "supabase:stop": "pnpm --filter server supabase:stop",
+    "supabase:status": "pnpm --filter server supabase:status",
+    "supabase:env": "pnpm --filter server supabase:env",
+    "content:validate": "pnpm --filter @life-abroad/shared build && node scripts/onboarding-content.mjs",
+    "test:integration": "pnpm --filter server test:integration",
+    "content:build": "node scripts/placeholder.mjs content:build later-content-export"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@ffmpeg-installer/win32-x64": "^4.1.0",
+    "@types/node": "^22.19.0",
+    "eslint": "^9.39.0",
+    "kokoro-js": "^1.2.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.0"
+  }
+}

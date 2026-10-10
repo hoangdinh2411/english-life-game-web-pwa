@@ -1,0 +1,42 @@
+[
+    {
+        "W":  155,
+        "File":  "characters/character_newcomer_transparent.png",
+        "Y":  35,
+        "Name":  "player",
+        "X":  120,
+        "DY":  270,
+        "DX":  210,
+        "H":  255
+    },
+    {
+        "W":  185,
+        "File":  "npcs/npc_passenger_backpack_transparent.png",
+        "Y":  30,
+        "Name":  "backpack",
+        "X":  90,
+        "DY":  270,
+        "DX":  215,
+        "H":  260
+    },
+    {
+        "W":  180,
+        "File":  "npcs/npc_station_information_transparent.png",
+        "Y":  15,
+        "Name":  "receptionist",
+        "X":  75,
+        "DY":  280,
+        "DX":  230,
+        "H":  280
+    },
+    {
+        "W":  180,
+        "File":  "npcs/npc_passenger_suitcase_source.png",
+        "Y":  15,
+        "Name":  "suitcase",
+        "X":  250,
+        "DY":  215,
+        "DX":  200,
+        "H":  220
+    }
+]

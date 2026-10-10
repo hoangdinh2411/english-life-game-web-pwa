@@ -1,0 +1,46 @@
+[
+  {
+    "file": "characters/character_newcomer_source.png",
+    "prompt": "Use case: stylized-concept. Asset for Life Abroad, friendly western chibi 2D English-learning RPG. Warm soft palette cream #F6E7CB, ink #594B45, terracotta #CB8067, sage #95AB8D, muted blue #789DAA, gold #D8B36A. Clean pixel-art-like silhouettes, orthographic top-down RPG sprites, no anime gloss, no 3D, no lettering, no watermark. Transparent PNG background. Create ONE neatly aligned character production reference sheet for player avatar: young adult newcomer with short dark hair, teal jacket, cream shirt, tan trousers, small travel backpack, sneakers. Upper portion: 4 by 4 walking sprite grid, rows down/left/right/up, columns four successive walk-cycle frames. All 16 full-body sprites identical size and proportions, aligned feet, no overlaps, intended native sprite 32x48 pixels. Lower portion: three separated square bust portraits of same character, neutral/happy/confused in that order, intended 256x256 each. Generous transparent gutters; no grid lines or labels. Exact same outfit and identity in all views. Sheet is a high-resolution source to later slice, not a mockup."
+  },
+  {
+    "file": "npcs/npc_passenger_backpack_source.png",
+    "prompt": "Use case: stylized-concept. Asset for Life Abroad, friendly western chibi 2D English-learning RPG. Warm soft palette cream #F6E7CB, ink #594B45, terracotta #CB8067, sage #95AB8D, muted blue #789DAA, gold #D8B36A. Clean pixel-art-like silhouettes, orthographic top-down RPG sprites, no anime gloss, no 3D, no lettering, no watermark. Transparent PNG background. Create ONE neatly aligned character source sheet: young adult female passenger, curly chestnut bob, mustard cardigan, cream shirt, blue jeans, red backpack. Upper portion: exactly 4 by 4 walk sprite grid, rows facing down/left/right/up, columns four successive walking frames. All 16 full-body figures same scale, feet aligned, identical outfit, no overlaps, native target 32x48. Lower portion: three separated square bust dialogue portraits of same person, neutral, happy, confused in that order, native target 256x256. Transparent gutters, no labels, no grid lines. Consistent western chibi proportions, large head, small body."
+  },
+  {
+    "file": "npcs/npc_passenger_suitcase_source.png",
+    "prompt": "Use case: stylized-concept. Asset for Life Abroad, friendly western chibi 2D English-learning RPG. Warm soft palette cream #F6E7CB, ink #594B45, terracotta #CB8067, sage #95AB8D, muted blue #789DAA, gold #D8B36A. Clean pixel-art-like silhouettes, orthographic top-down RPG sprites, no anime gloss, no 3D, no lettering, no watermark. Transparent PNG background. Create ONE neatly aligned character source sheet: middle-aged male passenger, brown skin, short salt-and-pepper hair, round glasses, terracotta sweater, navy trousers, compact sage rolling suitcase. Upper portion: exactly 4 by 4 walk sprite grid, rows facing down/left/right/up, columns four successive walking frames. All 16 full-body figures same scale, feet aligned, identical outfit, no overlaps, native target 32x48. Lower portion: three separated square bust dialogue portraits of same person, neutral, happy, confused in that order, native target 256x256. Transparent gutters, no labels, no grid lines. Consistent western chibi proportions, large head, small body."
+  },
+  {
+    "file": "npcs/npc_station_information_source.png",
+    "prompt": "Use case: stylized-concept. Asset for Life Abroad, friendly western chibi 2D English-learning RPG. Warm soft palette cream #F6E7CB, ink #594B45, terracotta #CB8067, sage #95AB8D, muted blue #789DAA, gold #D8B36A. Clean pixel-art-like silhouettes, orthographic top-down RPG sprites, no anime gloss, no 3D, no lettering, no watermark. Transparent PNG background. Create ONE neatly aligned character source sheet: friendly adult female station information officer, dark skin, dark hair tied back, muted blue uniform jacket, cream shirt, blue trousers, small gold badge, no text on badge. Upper portion: exactly 4 by 4 walk sprite grid, rows facing down/left/right/up, columns four successive walking frames. All 16 full-body figures same scale, feet aligned, identical outfit, no overlaps, native target 32x48. Lower portion: three separated square bust dialogue portraits of same person, neutral, happy, confused in that order, native target 256x256. Transparent gutters, no labels, no grid lines. Consistent western chibi proportions, large head, small body."
+  },
+  {
+    "file": "locations/location_station_map_source.png",
+    "prompt": "Use case: stylized-concept. Asset for Life Abroad, friendly western chibi 2D English-learning RPG. Warm soft palette cream #F6E7CB, ink #594B45, terracotta #CB8067, sage #95AB8D, muted blue #789DAA, gold #D8B36A. Clean pixel-art-like silhouettes, orthographic top-down RPG sprites, no anime gloss, no 3D, no lettering, no watermark. Transparent PNG background. Create a complete overhead orthographic 2D RPG station district map, landscape composition. Northern edge railway tracks and a stationary small passenger train beside safe wide platform, station canopy and benches. Middle open pedestrian concourse with information booth marked only by a simple information pictogram. Left a food-and-drink storefront, visible coffee cup and bread pictograms, small outdoor tables. Right clothing storefront, shirt pictogram, window displaying outfits. Bottom entrance plaza. Clearly connected broad unobstructed walkways, coherent 32x32 tile design target, small charming western architecture, soft warm colors, readable on phone. No characters, no readable text, no interface, no perspective vanishing point, no isometric view. Finished environmental artwork, not diagram. Ground fills entire canvas. This is visual map source; no claim of collision or tile data."
+  },
+  {
+    "file": "ui/ui_dialogue_source.png",
+    "prompt": "Use case: stylized-concept. Asset for Life Abroad, friendly western chibi 2D English-learning RPG. Warm soft palette cream #F6E7CB, ink #594B45, terracotta #CB8067, sage #95AB8D, muted blue #789DAA, gold #D8B36A. Clean pixel-art-like silhouettes, orthographic top-down RPG sprites, no anime gloss, no 3D, no lettering, no watermark. Transparent PNG background. Create one transparent PNG UI asset sheet matching warm western chibi RPG. Neatly separated components: one large wide rounded cream dialogue panel with thin brown border and completely empty interior for live text; separate square portrait frame; separate small rounded nameplate with blank center; two empty rounded buttons; three small icons speech bubble, notebook, right arrow. Friendly softly shaded restrained 2D pixel-style, no text, no lettering, no characters, no mock screen, no checkerboard background. Large transparent spacing between pieces, all edges fully visible."
+  },
+  {
+    "file": "characters/character_newcomer_transparent.png",
+    "prompt": "Background extraction: remove gradient backdrop; preserve all foreground sprites, portraits/UI, positions, colors and details; transparent PNG.",
+    "reference": "characters/character_newcomer_source.png"
+  },
+  {
+    "file": "npcs/npc_passenger_backpack_transparent.png",
+    "prompt": "Background extraction: remove gradient backdrop; preserve all foreground sprites, portraits/UI, positions, colors and details; transparent PNG.",
+    "reference": "npcs/npc_passenger_backpack_source.png"
+  },
+  {
+    "file": "npcs/npc_station_information_transparent.png",
+    "prompt": "Background extraction: remove gradient backdrop; preserve all foreground sprites, portraits/UI, positions, colors and details; transparent PNG.",
+    "reference": "npcs/npc_station_information_source.png"
+  },
+  {
+    "file": "ui/ui_dialogue_transparent.png",
+    "prompt": "Background extraction: remove gradient backdrop; preserve all foreground sprites, portraits/UI, positions, colors and details; transparent PNG.",
+    "reference": "ui/ui_dialogue_source.png"
+  }
+]

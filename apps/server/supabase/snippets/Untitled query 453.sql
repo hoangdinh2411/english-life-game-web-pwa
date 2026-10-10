@@ -1,0 +1,1 @@
+insert into profiles (id, display_name ) values ('6ed47f1e-3fc1-48fa-8013-0e53151cf10b','William Dinh');

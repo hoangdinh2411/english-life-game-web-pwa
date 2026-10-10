@@ -1,0 +1,102 @@
+import 'reflect-metadata';
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { randomUUID } from 'node:crypto';
+import { Test } from '@nestjs/testing';
+import { createClient } from '@supabase/supabase-js';
+import { Pool } from 'pg';
+import { AppModule } from '../app.module';
+import { PlayersRepository } from '../modules/players/players.repository';
+import { ServiceUnavailableException } from '@nestjs/common';
+
+// Real Auth, HTTP and SQL catch missing transactions, duplicate creation and balance resets.
+test('R4 real onboarding, validation, concurrent creation and account resume', async () => {
+  const databaseUrl = process.env.DATABASE_URL ?? '';
+  const authUrl = process.env.SUPABASE_URL ?? '';
+  assert.equal(new URL(databaseUrl).hostname, '127.0.0.1');
+  assert.equal(new URL(databaseUrl).port, '55422');
+  assert.equal(new URL(authUrl).hostname, '127.0.0.1');
+  const database = new Pool({ connectionString: databaseUrl });
+  const auth = createClient(authUrl, process.env.SUPABASE_PUBLISHABLE_KEY ?? '', {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  const email = `r4-${randomUUID()}@example.com`;
+  const password = randomUUID();
+  const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
+  const app = module.createNestApplication();
+  app.setGlobalPrefix('api/v1');
+  let userId: string | undefined;
+  try {
+    await app.listen(0, '127.0.0.1');
+    const signed = await auth.auth.signUp({ email, password, options: { data: { display_name: 'R4 learner' } } });
+    assert.equal(signed.error, null);
+    userId = signed.data.user?.id;
+    assert.ok(userId);
+    assert.ok(signed.data.session);
+    const headers = { Authorization: `Bearer ${signed.data.session.access_token}`, 'Content-Type': 'application/json' };
+    const base = await app.getUrl() + '/api/v1';
+    const call = (path: string, body?: unknown) => fetch(base + path, {
+      headers, method: body === undefined ? 'GET' : 'POST',
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+    const initial = await call('/me');
+    assert.equal(initial.status, 200);
+    const before = await initial.json() as { character: unknown; stats: unknown; user: { id: string } };
+    assert.equal(before.character, null);
+    assert.deepEqual(before.stats, { xp: 0, coins: 0 });
+    assert.equal(before.user.id, userId);
+    await database.query('UPDATE player_stats SET xp = 23, coins = 7 WHERE user_id = $1', [userId]);
+    const optionsResponse = await call('/onboarding/options');
+    const options = await optionsResponse.json() as { cities: Array<{ id: string }>; avatars: Array<{ id: string }> };
+    assert.ok(options.cities[0]); assert.ok(options.avatars[0]);
+    const request = { name: '  R4 Learner  ', cityId: options.cities[0].id, avatarId: options.avatars[0].id };
+    for (const body of [null, {}, { ...request, xp: 999 }, { ...request, userId }, { ...request, name: ' ' },
+      { ...request, name: 'a'.repeat(2001) }, { ...request, cityId: 'city_unknown' }, { ...request, avatarId: 'avatar_unknown' }]) {
+      assert.equal((await call('/characters', body)).status, 400);
+    }
+    assert.equal((await database.query('SELECT * FROM characters WHERE user_id = $1', [userId])).rowCount, 0);
+    // Fail the response read after INSERT: the real transaction must roll back.
+    const repository = app.get(PlayersRepository);
+    const readPlayer = repository.getPlayer.bind(repository);
+    let reads = 0;
+    repository.getPlayer = async (...args) => {
+      if (++reads === 2) throw new ServiceUnavailableException('Injected read failure');
+      return readPlayer(...args);
+    };
+    try { assert.equal((await call('/characters', request)).status, 503); }
+    finally { repository.getPlayer = readPlayer; }
+    assert.equal((await database.query('SELECT * FROM characters WHERE user_id = $1', [userId])).rowCount, 0);
+    assert.deepEqual(((await (await call('/me')).json()) as { stats: unknown }).stats, { xp: 23, coins: 7 });
+    const responses = await Promise.all([call('/characters', request), call('/characters', request)]);
+    assert.deepEqual(responses.map(response => response.status).sort(), [201, 409]);
+    const created = await responses.find(response => response.status === 201)!.json();
+    assert.deepEqual(created, {
+      user: { id: userId, email, displayName: 'R4 learner' },
+      character: { id: userId, userId, ...request }, stats: { xp: 23, coins: 7 }, inventory: [], questProgress: [],
+    });
+    assert.equal((await call('/characters', request)).status, 409);
+    assert.equal((await database.query('SELECT * FROM characters WHERE user_id = $1', [userId])).rowCount, 1);
+    const state = await database.query('SELECT xp, coins, energy, last_energy_update FROM player_stats WHERE user_id = $1', [userId]);
+    assert.deepEqual(state.rows[0], { xp: 23, coins: 7, energy: null, last_energy_update: null });
+    const refresh = await auth.auth.refreshSession();
+    assert.equal(refresh.error, null);
+    assert.ok(refresh.data.session);
+    headers.Authorization = `Bearer ${refresh.data.session.access_token}`;
+    const expected = { user: created.user, character: created.character, stats: created.stats };
+    assert.deepEqual(await (await call('/me')).json(), expected);
+    await auth.auth.signOut();
+    const login = await auth.auth.signInWithPassword({ email, password });
+    assert.equal(login.error, null);
+    assert.ok(login.data.session);
+    headers.Authorization = `Bearer ${login.data.session.access_token}`;
+    assert.deepEqual(await (await call('/me')).json(), expected);
+    for (const path of ['/me', '/characters']) {
+      const response = await fetch(base + path, { method: path === '/me' ? 'GET' : 'POST', headers: { 'Content-Type': 'application/json' }, ...(path === '/me' ? {} : { body: JSON.stringify(request) }) });
+      assert.equal(response.status, 401);
+    }
+  } finally {
+    if (userId) await database.query('DELETE FROM auth.users WHERE id = $1', [userId]);
+    await app.close();
+    await database.end();
+  }
+});

@@ -1,0 +1,12 @@
+{
+  "greetingPrefix": "^(?:hello|hi|hey|good morning|good afternoon|good evening)\\b[!,.?]*\\s*",
+  "unpunctuatedGreeting": "^(hello|hi|hey|good morning|good afternoon|good evening)\\s+",
+  "statementBeforeQuestion": "^(?:i(?:['’]m| am| have| need| want| live| work)|(?:you|we|they) (?:are|have|need|want)|(?:he|she|it|this|that) (?:is|has))\\b",
+  "embeddedQuestionMarkers": "[\\\"“”]|\\b(?:know|wonder|ask|asked|asking|said|say|unsure|sure|remember|understand|if|whether|because|that)\\b",
+  "directQuestionPatterns": [
+    "^(?:what|where|when|why|how|which|whose)\\s+(?:is|are|was|were|do|does|did|can|could|will|would|should|have|has|had)\\b",
+    "^(?:what time|what kind|which platform|how much|how many|how long|how far|how often)\\b",
+    "^(?:can|could|will|would|should|do|does|did|is|are|was|were|have|has|had)\\s+(?:i|you|he|she|it|we|they|there|the|this|that|a|an|my|your)\\b",
+    "^who\\s+(?:is|are|was|were|can|could|will|would|does|did|has|knows|works|lives)\\b"
+  ]
+}

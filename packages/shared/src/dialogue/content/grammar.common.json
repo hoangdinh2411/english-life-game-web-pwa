@@ -1,0 +1,28 @@
+{
+  "rules": [
+    {
+      "id": "want_to",
+      "pattern": "\\b(I want) (get|buy|find|open|apply|visit)\\b",
+      "replacement": "$1 to $2",
+      "reason": "Use “to” before a verb after “want”."
+    },
+    {
+      "id": "id_article",
+      "pattern": "\\b(need|get|want) (?:a )?(ID card)\\b",
+      "replacement": "$1 an $2",
+      "reason": "Use “an” before “ID card”."
+    },
+    {
+      "id": "new_am",
+      "pattern": "^I (new (?:here|to [\\w ]+))$",
+      "replacement": "I am $1",
+      "reason": "Use “am” after “I” when describing yourself."
+    },
+    {
+      "id": "journey_was",
+      "pattern": "^My journey (good|great|long|tiring)$",
+      "replacement": "My journey was $1",
+      "reason": "Use “was” to describe a past journey."
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "greetings": {
+    "receptionist": "Welcome to Maplewood! I’m the station receptionist. Say hello, and I can help you find your way.",
+    "backpack": "Hi! I just arrived too. Are you new to Maplewood?",
+    "suitcase": "Hello! How was your journey?"
+  },
+  "nodes": {
+    "ai_pending": {
+      "text": "I’m not sure about that yet. Could you ask me something else?"
+    },
+    "request": {
+      "text": "Hello! New residents need an ID card from the tax office. What would you like to ask?",
+      "context": {
+        "topic": "id_card",
+        "expectedIntents": [
+          "request_document",
+          "ask_location"
+        ]
+      },
+      "learningFocus": [
+        "polite_requests",
+        "question_forms"
+      ]
+    },
+    "directions": {
+      "text": "You can get an ID card at the tax office. Leave through the south path, then ask the clerk for an ID card. You’ll need it for a bank account or a flat."
+    },
+    "clarify": {
+      "text": "What would you like help with? You can ask where to get an ID card."
+    },
+    "deny": {
+      "text": "Of course! What would you like help with instead?"
+    },
+    "goodbye": {
+      "text": "You’re welcome! Enjoy your new life in Maplewood."
+    },
+    "passenger_directions": {
+      "text": "The receptionist at the information kiosk can help you with that."
+    },
+    "passenger_chat": {
+      "text": "It’s nice to meet you! What would you like to do in Maplewood?"
+    },
+    "confirmation": {
+      "text": "Oh, {question}?",
+      "context": {
+        "expectedIntents": [
+          "confirm",
+          "deny"
+        ]
+      },
+      "learningFocus": [
+        "confirmation"
+      ]
+    },
+    "ask_journey": {
+      "text": "Hello! How was your journey?",
+      "context": {
+        "timeReference": "completed_past",
+        "expectedIntents": [
+          "describe_journey"
+        ],
+        "topic": "journey"
+      },
+      "learningFocus": [
+        "past_simple"
+      ]
+    }
+  }
+}

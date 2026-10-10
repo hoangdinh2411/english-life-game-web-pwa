@@ -1,0 +1,1 @@
+Built-in ImageGen edit of location_station_map_source.png: remove only the checkerboard-pattern exterior border, replacing it with genuine transparent alpha. Preserve station, train, platform, concourse, information kiosk, food/drink store, clothing store, architecture, colors and paths. No other changes.

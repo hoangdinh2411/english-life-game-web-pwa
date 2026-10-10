@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createNarrator } from '../src/speech/narration.ts';
+test('narration selects English, replaces previous speech and cancels on close', () => {
+  const spoken = [], state = [];
+  let cancelled = 0;
+  const narrator = createNarrator({ getVoices: () => [{ lang: 'sv-SE' }, { lang: 'en-GB' }], speak: (utterance) => { spoken.push(utterance); utterance.onstart(); }, cancel: () => cancelled++ }, (text) => ({ text }), { onSpeaking: (value) => state.push(value), onError: () => assert.fail('unexpected error') });
+  narrator.speak('Welcome');
+  assert.equal(spoken[0].voice.lang, 'en-GB');
+  assert.equal(spoken[0].volume, 1);
+  const late = spoken[0].onend;
+  narrator.speak('Next reply'); late();
+  assert.equal(state.at(-1), true);
+  narrator.stop(); assert.equal(cancelled, 2); assert.equal(state.at(-1), false);
+});
+test('unavailable or blocked narration preserves readable dialogue', () => {
+  const errors = [];
+  const callbacks = { onSpeaking: () => {}, onError: (message) => errors.push(message) };
+  createNarrator(null, () => assert.fail('no voice available'), callbacks).speak('Hello');
+  createNarrator({ getVoices: () => [], cancel: () => {}, speak: () => { throw new Error('blocked'); } }, (text) => ({ text }), callbacks).speak('Hello');
+  assert.match(errors[0], /read/);
+});

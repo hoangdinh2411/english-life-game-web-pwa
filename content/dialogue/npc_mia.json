@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "scope": "npc",
+  "npcId": "npc_mia",
+  "nodes": [
+    {
+      "id": "mia_jazz",
+      "text": { "default": "Do you like jazz? I play it every morning!" },
+      "intents": [
+        { "name": "like_music", "keywords": ["yes", "love", "like", "music", "jazz"], "next": "mia_jazz_yes" },
+        { "name": "dislike_music", "keywords": ["no", "not really", "don't"], "next": "mia_jazz_no" }
+      ],
+      "fallback": "global_repeat"
+    },
+    { "id": "mia_jazz_yes", "text": { "default": "Great! Come back on Friday. I have a new song." }, "end": true },
+    { "id": "mia_jazz_no", "text": { "default": "That's okay! What music do you like?" } }
+  ]
+}

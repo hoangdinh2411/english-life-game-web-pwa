@@ -1,0 +1,184 @@
+[
+  {
+    "id": "line-01",
+    "text": "Hello! Your new life starts here.\n\nUse W to walk up, A left, S down, and D right. You can also tap a path to walk.\n\nCome to the green information kiosk and say hello to me. Tap a person or press E nearby to talk. The two passengers are happy to chat too.",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-01-female.mp3"
+  },
+  {
+    "id": "line-01",
+    "text": "Hello! Your new life starts here.\n\nUse W to walk up, A left, S down, and D right. You can also tap a path to walk.\n\nCome to the green information kiosk and say hello to me. Tap a person or press E nearby to talk. The two passengers are happy to chat too.",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-01-male.mp3"
+  },
+  {
+    "id": "line-02",
+    "text": "Welcome to Maplewood! I’m the station receptionist. Say hello, and I can help you find your way.",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-02-female.mp3"
+  },
+  {
+    "id": "line-02",
+    "text": "Welcome to Maplewood! I’m the station receptionist. Say hello, and I can help you find your way.",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-02-male.mp3"
+  },
+  {
+    "id": "line-03",
+    "text": "Hello! New residents need an ID card from the tax office. What would you like to ask?",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-03-female.mp3"
+  },
+  {
+    "id": "line-03",
+    "text": "Hello! New residents need an ID card from the tax office. What would you like to ask?",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-03-male.mp3"
+  },
+  {
+    "id": "line-04",
+    "text": "Let’s start with a greeting. You can say “Hello!”",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-04-female.mp3"
+  },
+  {
+    "id": "line-04",
+    "text": "Let’s start with a greeting. You can say “Hello!”",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-04-male.mp3"
+  },
+  {
+    "id": "line-05",
+    "text": "Do you want directions to the tax office? You can ask where to get an ID card.",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-05-female.mp3"
+  },
+  {
+    "id": "line-05",
+    "text": "Do you want directions to the tax office? You can ask where to get an ID card.",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-05-male.mp3"
+  },
+  {
+    "id": "line-06",
+    "text": "You can get an ID card at the tax office. Leave through the south path, then ask the clerk for an ID card. You’ll need it for a bank account or a flat.",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-06-female.mp3"
+  },
+  {
+    "id": "line-06",
+    "text": "You can get an ID card at the tax office. Leave through the south path, then ask the clerk for an ID card. You’ll need it for a bank account or a flat.",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-06-male.mp3"
+  },
+  {
+    "id": "line-07",
+    "text": "You’re welcome! Enjoy your new life in Maplewood.",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-07-female.mp3"
+  },
+  {
+    "id": "line-07",
+    "text": "You’re welcome! Enjoy your new life in Maplewood.",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-07-male.mp3"
+  },
+  {
+    "id": "line-08",
+    "text": "Hi! I just arrived too. Are you new to Maplewood?",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-08-female.mp3"
+  },
+  {
+    "id": "line-08",
+    "text": "Hi! I just arrived too. Are you new to Maplewood?",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-08-male.mp3"
+  },
+  {
+    "id": "line-09",
+    "text": "It’s nice to meet another newcomer! I’m looking forward to exploring the town.",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-09-female.mp3"
+  },
+  {
+    "id": "line-09",
+    "text": "It’s nice to meet another newcomer! I’m looking forward to exploring the town.",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-09-male.mp3"
+  },
+  {
+    "id": "line-10",
+    "text": "The receptionist at the information kiosk can help you with that.",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-10-female.mp3"
+  },
+  {
+    "id": "line-10",
+    "text": "The receptionist at the information kiosk can help you with that.",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-10-male.mp3"
+  },
+  {
+    "id": "line-11",
+    "text": "See you around Maplewood!",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-11-female.mp3"
+  },
+  {
+    "id": "line-11",
+    "text": "See you around Maplewood!",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-11-male.mp3"
+  },
+  {
+    "id": "line-12",
+    "text": "Hello! How was your journey?",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-12-female.mp3"
+  },
+  {
+    "id": "line-12",
+    "text": "Hello! How was your journey?",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-12-male.mp3"
+  },
+  {
+    "id": "line-13",
+    "text": "A cup of coffee sounds nice after a train journey. Enjoy your stay!",
+    "gender": "female",
+    "voice": "af_heart",
+    "file": "line-13-female.mp3"
+  },
+  {
+    "id": "line-13",
+    "text": "A cup of coffee sounds nice after a train journey. Enjoy your stay!",
+    "gender": "male",
+    "voice": "am_michael",
+    "file": "line-13-male.mp3"
+  }
+]

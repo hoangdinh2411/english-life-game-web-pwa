@@ -1,0 +1,40 @@
+{
+  "intents": [
+    {
+      "id": "request_document",
+      "pattern": "\\b(?:need|want|would like|apply|get|how|where)\\b",
+      "slot": "document",
+      "entities": {
+        "id_card": [
+          "id card",
+          "identity card"
+        ]
+      }
+    },
+    {
+      "id": "ask_location",
+      "pattern": "\\b(?:where|how|find|directions)\\b",
+      "slot": "place",
+      "entities": {
+        "tax_office": [
+          "tax office"
+        ],
+        "bank": [
+          "bank"
+        ],
+        "cafe": [
+          "cafe",
+          "café"
+        ]
+      }
+    },
+    {
+      "id": "introduce",
+      "pattern": "\\b(?:i am|i'm|i) new\\b"
+    },
+    {
+      "id": "describe_journey",
+      "pattern": "\\b(?:my journey|my trip)\\b"
+    }
+  ]
+}

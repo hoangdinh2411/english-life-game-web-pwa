@@ -1,0 +1,54 @@
+[
+  {
+    "id": "q_station_arrival", "title": "Welcome to Maplewood", "requiredLevel": "A1", "npcId": "npc_receptionist",
+    "rewards": { "xp": 20, "coins": 5 },
+    "steps": [
+      { "id": "arrival_greet", "description": "Greet the station receptionist", "doneWhen": { "intent": "greet" } },
+      { "id": "arrival_ask", "description": "Ask how to reach town or request a bus ticket", "doneWhen": { "intent": "ask_town_directions" } },
+      { "id": "arrival_ticket", "description": "Obtain your bus ticket from the receptionist", "doneWhen": { "intent": "obtain_bus_ticket" } },
+      { "id": "arrival_exit", "description": "Use the ticket to enter Maplewood Town Street", "doneWhen": { "intent": "enter_town_street" } }
+    ]
+  },
+  {
+    "id": "q_order_coffee", "title": "Your First Coffee", "requiredLevel": "A1", "npcId": "npc_mia",
+    "rewards": { "xp": 20, "coins": 5 },
+    "steps": [
+      { "id": "s1", "description": "Greet Mia", "doneWhen": { "intent": "greet" } },
+      { "id": "s2", "description": "Order a drink", "doneWhen": { "intent": "order_drink" } },
+      { "id": "s3", "description": "Choose a size", "doneWhen": { "intent": "choose_size" } }
+    ]
+  },
+  {
+    "id": "q_introduce_yourself", "title": "Nice to Meet You", "requiredLevel": "A1", "npcId": "npc_mia",
+    "rewards": { "xp": 25, "coins": 5 },
+    "steps": [
+      { "id": "s1", "description": "Say your name", "doneWhen": { "intent": "say_name" } },
+      { "id": "s2", "description": "Say where you are from", "doneWhen": { "intent": "say_origin" } }
+    ]
+  },
+  {
+    "id": "q_find_flat", "title": "Looking for a Flat", "requiredLevel": "A2", "npcId": "npc_brown",
+    "rewards": { "xp": 40, "coins": 15 },
+    "steps": [
+      { "id": "s1", "description": "Say you need a flat", "doneWhen": { "intent": "need_flat" } },
+      { "id": "s2", "description": "Ask about the price", "doneWhen": { "intent": "ask_price" } },
+      { "id": "s3", "description": "Agree to rent the flat", "doneWhen": { "intent": "agree" } }
+    ]
+  },
+  {
+    "id": "q_open_bank_account", "title": "Open a Bank Account", "requiredLevel": "A2", "npcId": "npc_sam",
+    "rewards": { "xp": 40, "coins": 20 },
+    "steps": [
+      { "id": "s1", "description": "Say you want an account", "doneWhen": { "intent": "want_account" } },
+      { "id": "s2", "description": "Give your name and address", "doneWhen": { "intent": "give_details" } }
+    ]
+  },
+  {
+    "id": "q_report_problem", "title": "The Broken Heater", "requiredLevel": "B1", "npcId": "npc_brown",
+    "rewards": { "xp": 60, "coins": 25 },
+    "steps": [
+      { "id": "s1", "description": "Explain the problem politely", "doneWhen": { "intent": "report_problem" } },
+      { "id": "s2", "description": "Agree on a day for repair", "doneWhen": { "intent": "agree_time" } }
+    ]
+  }
+]

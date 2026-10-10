@@ -1,0 +1,12 @@
+node_modules/
+.voice-cache/
+.pnpm-store/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+.refactor-backups/
+apps/server/supabase/.temp/
+apps/server/supabase/.branches/

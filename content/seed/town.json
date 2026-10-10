@@ -1,0 +1,13 @@
+{
+  "id": "city_maplewood",
+  "isStarterCity": true,
+  "name": "Maplewood",
+  "description": "A small, friendly town. The starting city of the game.",
+  "locations": [
+    { "id": "loc_station", "name": "Maplewood Train Station", "type": "station" },
+    { "id": "loc_town_street", "name": "Maplewood Town Street", "type": "street" },
+    { "id": "loc_cafe", "name": "Maple Cafe", "type": "cafe" },
+    { "id": "loc_bank", "name": "Maplewood Bank", "type": "bank" },
+    { "id": "loc_housing", "name": "Brown Housing Office", "type": "housing" }
+  ]
+}

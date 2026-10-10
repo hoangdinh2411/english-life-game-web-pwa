@@ -1,0 +1,37 @@
+{
+  "name": "server",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm build && pnpm --parallel run /^watch:/",
+    "watch:types": "tsc --watch --preserveWatchOutput",
+    "watch:server": "node --watch dist/main.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm build && node scripts/test.mjs",
+    "test:integration": "pnpm build && node scripts/test-integration.mjs",
+    "migrate": "node scripts/migrate.mjs",
+    "seed": "pnpm --filter @life-abroad/shared build && pnpm build && node scripts/seed.mjs",
+    "supabase:start": "node scripts/supabase.mjs start",
+    "supabase:stop": "node scripts/supabase.mjs stop",
+    "supabase:status": "node scripts/supabase.mjs status",
+    "supabase:env": "node scripts/supabase-env.mjs",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@life-abroad/shared": "workspace:*",
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/platform-express": "^11.1.0",
+    "@supabase/supabase-js": "^2.117.2",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.1.0",
+    "@types/pg": "^8.23.1",
+    "supabase": "2.119.0"
+  }
+}

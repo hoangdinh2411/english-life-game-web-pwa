@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "scope": "global",
+  "nodes": [
+    {
+      "id": "global_greet",
+      "text": { "default": "Hello!", "cheerful": "Hey there!", "shy": "Um... hello.", "serious": "Good day." },
+      "intents": [ { "name": "greet", "keywords": ["hello", "hi", "hey", "good morning", "good afternoon"], "next": "global_how_are_you" } ]
+    },
+    {
+      "id": "global_how_are_you",
+      "text": { "default": "How are you today?" },
+      "intents": [ { "name": "small_talk", "keywords": ["fine", "good", "great", "okay", "tired"], "next": "global_nice" } ],
+      "fallback": "global_repeat"
+    },
+    { "id": "global_nice", "text": { "default": "Nice to hear that!" }, "end": true },
+    { "id": "global_repeat", "text": { "default": "Sorry, can you say that again?" } },
+    { "id": "global_goodbye", "text": { "default": "Goodbye! See you soon.", "shy": "Um... bye.", "cheerful": "Bye! Have a lovely day!" }, "end": true }
+  ]
+}
