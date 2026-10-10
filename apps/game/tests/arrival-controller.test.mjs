@@ -70,3 +70,28 @@ test('rejected out-of-order reply allows a different message, and overlapping se
   assert.equal(await sent, true);
   assert.equal(calls, 2);
 });
+// Coach must be opt-in and remain stable when a message response is lost.
+test('Coach feedback comes from the server and retries preserve the original Coach setting', async () => {
+  const correction = { original: 'I need ticket', improved: 'I need a ticket.', reason: 'Use an article.', question: 'you need a ticket' };
+  const bodies = [];
+  let fail = true;
+  const controller = createArrivalController({ load: async () => ticket, start: async () => conversation,
+    send: async (_id, body) => { bodies.push(body); if (fail) throw new Error('Connection lost'); return { playerMessage: { id: 'p', sender: 'player', text: body.text }, npcMessage: { id: 'n', sender: 'npc', text: 'Here is your ticket' }, correction, arrival: ticket }; } });
+  await controller.load(); await controller.start();
+  assert.equal(await controller.send('I need ticket', true), false);
+  assert.equal(bodies[0].coach, true);
+  assert.equal(controller.getSnapshot().retryMessage.text, 'I need ticket');
+  fail = false;
+  assert.equal(await controller.send('I need ticket', true), true);
+  assert.equal(bodies[0].clientMessageId, bodies[1].clientMessageId);
+  assert.deepEqual(controller.getSnapshot().correction, correction);
+  assert.equal(controller.getSnapshot().arrival.ticket.issued, true);
+  assert.equal(controller.getSnapshot().retryMessage, null);
+});
+// Failed fetches need a useful recovery message rather than a browser-specific exception.
+test('network failures explain how to retry without pretending progress was saved', async () => {
+  const controller = createArrivalController({ load: async () => { throw new TypeError('Failed to fetch'); } });
+  assert.equal(await controller.load(), false);
+  assert.match(controller.getSnapshot().error, /connection.*retry/i);
+  assert.equal(controller.getSnapshot().arrival, null);
+});

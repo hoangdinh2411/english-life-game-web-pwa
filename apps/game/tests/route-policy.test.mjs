@@ -15,9 +15,13 @@ test('resumed characters go home and new accounts keep valid onboarding routes',
   assert.equal(resolveRoute('/practice', { ...signedIn, hasCharacter: true }), '/practice');
 });
 test('offline launch offers practice without claiming a saved character; sign-in explains connectivity', () => {
-  const offline = { token: 'expired-token', hasCharacter: true, online: false };
+  const offline = { token: 'expired-token', hasCharacter: false, online: false };
   assert.equal(resolveRoute('/home', offline), '/practice');
   assert.equal(resolveRoute('/', offline), '/practice');
   assert.equal(resolveRoute('/sign-in', offline), '/sign-in');
   assert.equal(resolveRoute('/practice', { ...offline, online: true }), '/practice');
+});
+// Going offline during chat must not discard the authenticated conversation or draft.
+test('an already loaded saved game stays home offline so it can show errors and reconnect', () => {
+  assert.equal(resolveRoute('/home', { token: 'current-token', hasCharacter: true, online: false }), '/home');
 });

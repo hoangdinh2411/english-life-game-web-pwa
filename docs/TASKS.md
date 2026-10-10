@@ -49,7 +49,7 @@ Town Street**, and finishes the arrival quest. The **server** saves the ticket,
 ordered steps, and one-time XP/coins reward across reload/sign-in. Intent
 recognition and gentle Coach feedback support typed answers (optional speech).
 **Server dialogue, conversation API, quest state and station/street wiring are
-implemented; the fuller chat/ticket/progress UI remains T9.** Keep `/practice` reward-free.
+implemented, including chat, optional Coach, ticket receipts and saved progress.** Keep `/practice` reward-free.
 
 - [x] **T4 — Station dialogue engine and content.** Author/validate/seed the
       receptionist NPC, bus-ticket quest and scripted dialogue in `content/`;
@@ -73,7 +73,7 @@ implemented; the fuller chat/ticket/progress UI remains T9.** Keep `/practice` r
       Replace the local ID-card exit rule **only in authenticated quest mode**.
       Preserve the existing offline `/practice` scene without rewards or private
       data caching.
-- [ ] **T9 — Chat, ticket and quest UI.** Show typed dialogue, optional Coach,
+- [x] **T9 — Chat, ticket and quest UI.** Show typed dialogue, optional Coach,
       ticket receipt, ordered progress, clear blocked-exit messaging, and
       network/offline errors. Browser-check train station → receptionist →
       ticket → Town Street → one-time reward, plus refresh/sign-in persistence.

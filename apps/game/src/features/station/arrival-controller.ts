@@ -11,11 +11,13 @@ export interface ArrivalSnapshot {
   conversation: Conversation | null;
   pending: boolean;
   error: string;
+  correction: ConversationTurn['correction'];
+  retryMessage: SendMessageRequest | null;
 }
 
 // Private state lives only in memory. All mutations come from authenticated API responses.
 export function createArrivalController(api: ArrivalApi) {
-  let state: ArrivalSnapshot = { arrival: null, conversation: null, pending: false, error: '' };
+  let state: ArrivalSnapshot = { arrival: null, conversation: null, pending: false, error: '', correction: null, retryMessage: null };
   let epoch = 0;
   let disposed = false;
   let retry: SendMessageRequest | null = null;
@@ -34,7 +36,9 @@ export function createArrivalController(api: ArrivalApi) {
       update(patch);
       return true;
     } catch (failure) {
-      if (!disposed && current === epoch) update({ error: failure instanceof Error ? failure.message : 'Check your connection and try again.' });
+      if (!disposed && current === epoch) update({ error: failure instanceof TypeError || (failure instanceof Error && failure.name === 'TimeoutError')
+        ? 'Could not confirm the server response. Check your connection, then retry.'
+        : failure instanceof Error ? failure.message : 'Check your connection, then retry.' });
       return false;
     } finally {
       if (!disposed && current === epoch) update({ pending: false });
@@ -51,23 +55,24 @@ export function createArrivalController(api: ArrivalApi) {
       const conversation = await api.start();
       return { conversation, arrival: conversation.arrival };
     }),
-    send: (input: string) => {
+    send: (input: string, coach = false) => {
       const text = input.trim();
       const conversation = state.conversation;
       if (!conversation || !text || state.pending || disposed) return Promise.resolve(false);
-      if (retry && retry.text !== text) {
+      if (retry && (retry.text !== text || retry.coach !== coach)) {
         update({ error: 'Retry your previous reply before sending a different message.' });
         return Promise.resolve(false);
       }
-      const body = retry ?? { text, coach: false, clientMessageId: crypto.randomUUID() };
+      const body = retry ?? { text, coach, clientMessageId: crypto.randomUUID() };
       retry = body;
+      update({ retryMessage: body });
       return run(async () => {
         let turn: ConversationTurn;
         try { turn = await api.send(conversation.id, body); }
         catch (failure) {
           // Validation/ordering failures commit nothing; let the learner change their reply.
           const status = typeof failure === 'object' && failure !== null && 'status' in failure ? failure.status : null;
-          if (typeof status === 'number' && status >= 400 && status < 500 && status !== 401 && status !== 429) retry = null;
+          if (typeof status === 'number' && status >= 400 && status < 500 && status !== 401 && status !== 429) { retry = null; update({ retryMessage: null }); }
           throw failure;
         }
         // The API may replay an old snapshot; refresh persisted eligibility before exiting.
@@ -75,7 +80,7 @@ export function createArrivalController(api: ArrivalApi) {
         retry = null;
         const messages = [...conversation.messages];
         for (const message of [turn.playerMessage, turn.npcMessage]) if (!messages.some((item) => item.id === message.id)) messages.push(message);
-        return { conversation: { ...conversation, messages, arrival }, arrival };
+        return { conversation: { ...conversation, messages, arrival }, arrival, correction: turn.correction ?? null, retryMessage: null };
       });
     },
     enter: () => {

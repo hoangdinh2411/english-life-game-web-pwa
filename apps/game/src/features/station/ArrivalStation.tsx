@@ -5,9 +5,14 @@ import StationScreen from '../../gameplay/StationScreen';
 import { Screen, ActionButton } from '../../components/onboarding-ui';
 import { createArrivalController } from './arrival-controller';
 import { ArrivalConversation } from './ArrivalConversation';
+import { ArrivalQuest } from './ArrivalQuest';
+import { arrivalPresentation } from './arrival-presentation';
+import { usePwa } from '../../pwa/PwaProvider';
+import { router } from '../../navigation/router';
 
 export default function ArrivalStation({ onSignOut }: { onSignOut: () => void }) {
   const session = useSession();
+  const { online } = usePwa();
   const run = session.runAuthenticated;
   const [controller] = useState(() => createArrivalController({
     load: () => run(api.loadArrival), start: () => run(api.startArrivalConversation),
@@ -17,6 +22,11 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const [initialLocation, setInitialLocation] = useState<'station' | 'street' | null>(null);
   const [stats, setStats] = useState(session.player?.stats);
+  const [statsError, setStatsError] = useState('');
+  const refreshStats = async () => {
+    try { const player = await run(api.loadPlayer); setStats(player.stats); setStatsError(''); }
+    catch { setStatsError('Your arrival rewards are saved. Reconnect to refresh the displayed balances.'); }
+  };
   useEffect(() => {
     let active = true;
     void controller.load().then((loaded) => {
@@ -30,20 +40,26 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
   if (!state.arrival || !initialLocation) return <Screen>
     <p role={state.error ? 'alert' : 'status'}>{state.error || 'Loading your saved arrival…'}</p>
     {state.error ? <ActionButton label="Try again" onClick={() => void retryLoad()} /> : null}
+    <ActionButton label="Try local station practice" secondary onClick={() => router.push('/practice')} />
     <ActionButton label="Sign out" secondary onClick={onSignOut} />
   </Screen>;
+  const view = arrivalPresentation(state.arrival);
   return <StationScreen playerName={session.player?.character?.name ?? ''} xp={stats?.xp ?? 0} coins={stats?.coins ?? 0} onSignOut={onSignOut}
     arrival={{ initialLocation, exitUnlocked: state.arrival.canEnterTownStreet, pending: state.pending,
-      error: state.error, onRetry: () => void controller.load(),
+      error: state.error, onRetry: () => void controller.load(), online,
+      goalsLabel: state.arrival.status === 'done' ? 'Arrival complete' : `${view.completed}/${view.total} arrival steps`,
+      questPanel: <ArrivalQuest arrival={state.arrival} />,
+      blockedExitMessage: `${view.next}. Get a bus ticket from the receptionist before leaving for Town Street.`,
+      statusPanel: <>{!online ? <div className="arrival-connection" role="alert">You’re offline. Saved dialogue and ticket use need a connection. <button type="button" onClick={() => router.push('/practice')}>Try local practice</button></div> : null}{statsError ? <div className="arrival-connection" role="status">{statsError}<button type="button" disabled={!online} onClick={() => void refreshStats()}>Refresh balances</button></div> : null}</>,
       onOpenReceptionist: () => void controller.start(),
       onEnterStreet: async () => {
         const entered = await controller.enter();
         if (entered) {
           // Refresh displayed balances from /me; never calculate rewards on the client.
-          await run(api.loadPlayer).then((player) => setStats(player.stats)).catch(() => undefined);
+          await refreshStats();
         }
         return entered;
       },
-      renderReceptionist: (sound) => <ArrivalConversation state={state} sound={sound} send={controller.send} retry={() => void controller.start()} />,
+      renderReceptionist: (sound) => <ArrivalConversation state={state} sound={sound} online={online} send={controller.send} retry={() => void controller.start()} />,
     }} />;
 }

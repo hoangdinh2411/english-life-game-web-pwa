@@ -40,7 +40,10 @@ The ticket can be a server-verified **arrival-quest entitlement**; do not build
 an entire inventory system just for this item. Speech input stays optional.
 The café/Mia quest comes **after** the player reaches the town streets.
 Server quest state, the guarded street-exit API and client wiring are implemented.
-The richer ticket/progress/Coach UI remains T9; see `TASKS.md`.
+The arrival UI shows saved ordered progress, ticket receipts and optional Coach
+feedback. Connection failures preserve the reply for an idempotent retry; a live
+offline session keeps its draft in memory and disables remote actions until
+reconnection. Local `/practice` stays available without saved rewards.
 
 ## Learning and dialogue rules
 - **Meaning first:** understandable but imperfect English can complete a step.

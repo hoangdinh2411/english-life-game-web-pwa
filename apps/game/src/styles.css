@@ -114,3 +114,13 @@ canvas { display: block; }
 }
 @media (max-height: 480px) { .dialogue-frame { max-height: calc(100% - 16px); } .conversation-history { height: 120px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+.arrival-ticket { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border: 1px solid #9baa7d; border-radius: 12px; background: #e5eddf; font-size: 14px; line-height: 1.4; }
+.arrival-ticket span { font-size: 13px; }
+.arrival-quest { max-height: none; }
+.arrival-quest ol { display: flex; flex-direction: column; gap: 10px; padding-left: 0; list-style: none; margin: 12px 0; }
+.arrival-quest li { font-size: 14px; }
+.arrival-quest > p { margin-top: 8px; }
+.coach-toggle { align-self: flex-start; }
+.coach-feedback { display: flex; flex-direction: column; gap: 5px; padding: 10px; border-radius: 12px; background: #e5eddf; overflow-wrap: anywhere; }
+.arrival-connection { position: absolute; z-index: 3; top: 60px; left: 8px; right: 8px; max-width: 720px; margin: auto; background: var(--dialogue); padding: 10px; border-radius: 12px; font-size: 14px; }
+.arrival-connection button { margin-left: 8px; color: var(--ink); background: transparent; border: 1px solid var(--border); border-radius: 8px; }

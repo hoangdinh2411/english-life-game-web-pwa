@@ -4,6 +4,7 @@ const routes = new Set(['/sign-in', '/new-game', '/new-game/city', '/new-game/av
 
 // Public practice requires neither a token nor a cached player profile.
 export function resolveRoute(path: string, { token, hasCharacter, online }: RouteState): string {
+  if (!online && path === '/home' && token && hasCharacter) return '/home';
   if (path === '/practice' || (!online && path !== '/sign-in')) return '/practice';
   if (!online) return '/sign-in';
   if (!token) return '/sign-in';

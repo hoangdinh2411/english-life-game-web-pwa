@@ -59,6 +59,11 @@ export interface StationScreenProps {
     exitUnlocked: boolean;
     pending: boolean;
     error: string;
+    online: boolean;
+    goalsLabel: string;
+    questPanel: ReactNode;
+    statusPanel: ReactNode;
+    blockedExitMessage: string;
     onRetry: () => void;
     onOpenReceptionist: () => void;
     onEnterStreet: () => Promise<boolean>;
