@@ -52,7 +52,7 @@ export class DialogueCacheService {
   // Shared global/role scripts ship with the server. Only NPC-specific overrides use DB.
   protected async commonNodes(): Promise<CachedDialogueNode[]> {
     const root = resolve(__dirname, '../../../../../content/dialogue');
-    const files = (await readdir(root)).filter(file => file.endsWith('.json')).sort();
+    const files = (await readdir(root, { recursive: true })).filter(file => file.endsWith('.json')).sort();
     const content = await Promise.all(files.map(async file => dialogueSchema.parse(JSON.parse(await readFile(resolve(root, file), 'utf8')) as unknown)));
     return content.filter(file => file.scope !== 'npc').flatMap(file => file.nodes.map(node => ({
       node, scope: file.scope, version: file.version, npcId: null,

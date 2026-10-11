@@ -17,14 +17,14 @@ export class ConversationsService {
     return this.conversations.transaction(async client => {
       const arrival = await this.quests.getArrival(userId, client);
       if (npcId === SELLER_NPC_ID) {
-        const context = await this.conversations.context(client, npcId);
+        const context = { ...await this.conversations.context(client, npcId), variationIndex: await this.conversations.variationIndex(client, userId, npcId, true) };
         const id = await this.conversations.create(client, userId, npcId);
         const greeting = await this.conversations.append(client, id, 'npc', await this.seller.opening(context));
         return { id, npcId: SELLER_NPC_ID, messages: [greeting], arrival,
           seller: { shop: 'cafe', pendingOrder: null, closed: false } };
       }
       if (npcId !== ARRIVAL_NPC_ID) {
-        const context = await this.conversations.context(client, npcId);
+        const context = { ...await this.conversations.context(client, npcId), variationIndex: await this.conversations.variationIndex(client, userId, npcId, true) };
         const opening = await this.dialogue.node(context, 'shop_start');
         const id = await this.conversations.create(client, userId, npcId);
         const greeting = await this.conversations.append(client, id, 'npc', opening.text);
@@ -61,6 +61,7 @@ export class ConversationsService {
       if (receptionist && arrival.locationId !== STATION_LOCATION_ID) throw new ConflictException('Visit the station receptionist first');
       await this.life.consumeMessage(client, userId);
       const context = { ...await this.conversations.context(client, conversation.npc_id),
+        variationIndex: await this.conversations.variationIndex(client, userId, conversation.npc_id),
         ...(conversation.current_node_id ? { currentNodeId: conversation.current_node_id } : {}) };
       const correction = request.coach ? checkGrammar(request.text) ?? null : null;
       let metadata: TurnMetadata;

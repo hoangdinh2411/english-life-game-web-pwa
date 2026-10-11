@@ -22,6 +22,15 @@ export class ConversationsRepository {
   constructor(private readonly database: DatabaseService) {}
   transaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> { return this.database.transaction(work); }
 
+  async variationIndex(client: PoolClient, userId: string, npcId: string, opening = false): Promise<number> {
+    const result = await client.query<{ count: string }>(opening
+      ? 'SELECT count(*) FROM public.conversations WHERE user_id=$1 AND npc_id=$2'
+      : `SELECT count(*) FROM public.messages m
+      JOIN public.conversations c ON c.id=m.conversation_id
+      WHERE c.user_id=$1 AND c.npc_id=$2 AND m.sender='npc'`, [userId, npcId]);
+    return Number(result.rows[0]?.count ?? 0);
+  }
+
   async context(client: PoolClient, npcId: string = ARRIVAL_NPC_ID): Promise<DialogueContext> {
     const result = await client.query<{ role_id: string; personality: string }>(
       'SELECT role_id,personality FROM public.npcs WHERE id=$1', [npcId]);

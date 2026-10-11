@@ -15,7 +15,7 @@ test('saveMapAssets packages existing artwork without replacing it with SVG plac
     assert.deepEqual((await readdir(directory)).sort(), ['actors.json', 'animations.json', 'background.png', 'player.png', 'shop-npcs-atlas.json', 'shop-npcs.png']);
     assert.deepEqual(await readFile(join(directory, 'background.png')), await readFile(new URL('../apps/game/assets/locations/location_cafe_interior.png', import.meta.url)));
     assert.deepEqual(await readFile(join(directory, 'player.png')), await readFile(new URL('../apps/game/assets/runtime/player.png', import.meta.url)));
-    assert.deepEqual(await readFile(join(directory, 'shop-npcs.png')), await readFile(new URL('../apps/game/assets/npcs/shop-npcs.png', import.meta.url)));
+    assert.deepEqual(await readFile(join(directory, 'shop-npcs.png')), await readFile(new URL('../apps/game/assets/npcs/shop-walk.png', import.meta.url)));
     assert.equal(JSON.parse(await readFile(join(directory, 'actors.json'), 'utf8')).actors.length, 3);
     assert.equal(JSON.parse(await readFile(join(directory, 'animations.json'), 'utf8')).animations.length, 4);
   } finally {

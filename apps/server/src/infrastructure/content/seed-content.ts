@@ -13,7 +13,7 @@ export async function loadSeedContent(root: string) {
   const quests = questCatalogSchema.parse(await json(join(root, 'seed/quests.json')));
   const shops = shopCatalogSchema.parse(await json(join(root, 'seed/shops.json')));
   const dialogues = [];
-  for (const file of (await readdir(join(root, 'dialogue'))).filter(file => file.endsWith('.json')).sort()) {
+  for (const file of (await readdir(join(root, 'dialogue'), { recursive: true })).filter(file => file.endsWith('.json')).sort()) {
     dialogues.push(dialogueSchema.parse(await json(join(root, 'dialogue', file))));
   }
   if (dialogues.length === 0) throw new Error('No authored dialogue files found');

@@ -7,6 +7,7 @@ export interface DialogueContext {
   roleId: string;
   personality: string;
   currentNodeId?: string;
+  variationIndex?: number;
 }
 
 export interface DialogueReply {
@@ -85,7 +86,8 @@ export class DialogueService {
   private render(entry: CachedDialogueNode, context: DialogueContext, intent: string | null): DialogueReply {
     return {
       node: entry.node,
-      text: entry.node.text[context.personality] ?? entry.node.text.default,
+      text: entry.node.variations?.[(context.variationIndex ?? 0) % entry.node.variations.length]
+        ?? entry.node.text[context.personality] ?? entry.node.text.default,
       intent,
       misunderstood: intent === null,
     };

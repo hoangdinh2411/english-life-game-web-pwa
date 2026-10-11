@@ -11,6 +11,19 @@ import { DialogueService } from '../modules/dialogue/dialogue.service';
 
 const receptionist = { npcId: 'npc_receptionist', roleId: 'station_receptionist', personality: 'cheerful' };
 
+test('shared topic files offer five distinct questions and keep understood small talk going', async () => {
+  const { engine } = await fixture();
+  const context = { npcId: 'npc_cafe_waiter', roleId: 'shop_companion', personality: 'cheerful' };
+  for (const input of ['how are you','weather','I feel sick','where are you from','I am fine']) {
+    const replies = await Promise.all(Array.from({ length: 5 }, (_, variationIndex) => engine.reply({ ...context, variationIndex }, input)));
+    assert.equal(new Set(replies.map(reply => reply.text)).size, 5);
+    assert.ok(replies.every(reply => !reply.misunderstood && reply.text.includes('?')));
+  }
+  const openings = await Promise.all(Array.from({ length: 5 }, (_, variationIndex) => engine.node({ ...context, variationIndex }, 'shop_start')));
+  assert.equal(new Set(openings.map(reply => reply.text)).size, 5);
+  assert.equal((await engine.reply(context,'unrecognized gibberish')).node.id,'global_repeat');
+});
+
 async function fixture() {
   const content = await loadSeedContent(resolve('../../content'));
   const nodes: CachedDialogueNode[] = content.dialogues.flatMap(file => file.nodes.map(node => ({

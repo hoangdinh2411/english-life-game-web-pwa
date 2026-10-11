@@ -17,8 +17,8 @@ test('T2 committed content and all scope references validate', async () => {
 
 for (const [name, file, change, expected] of [
   ['NPC reference', 'npc_mia.json', { npcId: 'npc_missing' }, /Unknown dialogue NPC/],
-  ['role reference', 'role_barista.json', { role: 'missing_role' }, /Unknown dialogue role/],
-  ['scope reference', 'global.json', { npcId: 'npc_mia' }, /Unrecognized key/],
+  ['role reference', 'common/role_barista.json', { role: 'missing_role' }, /Unknown dialogue role/],
+  ['scope reference', 'common/greetings.json', { npcId: 'npc_mia' }, /Unrecognized key/],
   ['transition reference', 'npc_mia.json', { nodes: [{ id: 'test', text: { default: 'Hello' }, fallback: 'missing' }] }, /unknown dialogue target/],
   ['step reference', 'npc_mia.json', { nodes: [{ id: 'test', text: { default: 'Hello' }, completesStep: 'missing' }] }, /unknown applicable quest step/],
 ] as const) {

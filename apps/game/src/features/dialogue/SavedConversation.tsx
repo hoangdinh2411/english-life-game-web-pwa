@@ -23,7 +23,7 @@ export function SavedConversation({ state, sound, online, send, retry, shopNpc, 
   const speech = useSpeech(setText);
   const blocked = state.pending || finalizing || !online || completed || Boolean(state.conversation?.seller?.closed) || !state.conversation;
   const lastNpc = state.conversation?.messages.findLast((message) => message.sender === 'npc');
-  const voice = useNarration(lastNpc?.text ?? '', sound && !state.pending && !speech.listening, lastNpc?.id ?? '', npcVoice.npc_station_information);
+  const voice = useNarration(lastNpc?.text ?? '', sound && !state.pending && !speech.listening, lastNpc?.id ?? '', npcVoice[state.conversation?.npcId ?? 'npc_station_information']);
   useEffect(() => { if (history.current) history.current.scrollTop = history.current.scrollHeight; }, [state.conversation?.messages]);
   const submit = async (original = false) => {
     if (sending.current || blocked) return;

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "scope": "role",
+  "role": "station_receptionist",
+  "nodes": [
+    {
+      "id": "station_receptionist_help",
+      "text": {
+        "default": "How can I help with your journey?"
+      },
+      "intents": [
+        {
+          "name": "request_bus_ticket",
+          "keywords": [
+            "ticket",
+            "tickets"
+          ],
+          "next": "station_receptionist_ticket"
+        },
+        {
+          "name": "ask_town_directions",
+          "keywords": [
+            "reach town",
+            "get to town",
+            "way to town",
+            "directions",
+            "where is the bus",
+            "where's the bus"
+          ],
+          "next": "station_receptionist_directions"
+        }
+      ],
+      "fallback": "station_receptionist_repeat"
+    },
+    {
+      "id": "station_receptionist_ticket",
+      "text": {
+        "default": "You would like a bus ticket to town. Please check with the station receptionist to arrange your ticket."
+      }
+    },
+    {
+      "id": "station_receptionist_directions",
+      "text": {
+        "default": "Take the bus to Maplewood Town Street. The station receptionist can help you with a ticket."
+      }
+    },
+    {
+      "id": "station_receptionist_repeat",
+      "text": {
+        "default": "Could you ask again, please? I can help with bus tickets and directions to town."
+      }
+    }
+  ]
+}

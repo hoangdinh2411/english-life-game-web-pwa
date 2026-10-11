@@ -56,12 +56,12 @@ for (const [file, change, diagnostic] of [
   ['seed/quests.json', (data) => { data[0].rewards.xp = -1; }, /quests\.json.*0\.rewards\.xp/s],
   ['seed/quests.json', (data) => { data[0].steps[0].doneWhen.intent = ''; }, /quests\.json.*doneWhen\.intent/s],
   ['seed/npcs.json', (data) => { data[0].locationId = 'Invalid ID'; }, /npcs\.json.*locationId/s],
-  ['dialogue/role_barista.json', (data) => { delete data.role; }, /role_barista\.json.*role/s],
-  ['dialogue/global.json', (data) => { data.npcId = 'npc_mia'; }, /global\.json/s],
+  ['dialogue/common/role_barista.json', (data) => { delete data.role; }, /role_barista\.json.*role/s],
+  ['dialogue/common/greetings.json', (data) => { data.npcId = 'npc_mia'; }, /greetings\.json/s],
   ['dialogue/npc_mia.json', (data) => { data.nodes[0].text.default = ''; }, /npc_mia\.json.*text\.default/s],
-  ['dialogue/global.json', (data) => { data.version = 0; }, /global\.json.*version/s],
-  ['dialogue/global.json', (data) => { data.nodes[0].intents[0].keywords = []; }, /global\.json.*keywords/s],
-  ['dialogue/global.json', (data) => { data.nodes[0].context = { timeReference: 'yesterday' }; }, /global\.json.*timeReference/s],
+  ['dialogue/common/greetings.json', (data) => { data.version = 0; }, /greetings\.json.*version/s],
+  ['dialogue/common/greetings.json', (data) => { data.nodes[0].intents[0].keywords = []; }, /greetings\.json.*keywords/s],
+  ['dialogue/common/greetings.json', (data) => { data.nodes[0].context = { timeReference: 'yesterday' }; }, /greetings\.json.*timeReference/s],
   ['seed/quests.json', (data) => { data[0].steps.push(data[0].steps[0]); }, /quests\.json.*unique/s],
 ]) {
   test(`rejects malformed ${file}: ${diagnostic}`, async () => {

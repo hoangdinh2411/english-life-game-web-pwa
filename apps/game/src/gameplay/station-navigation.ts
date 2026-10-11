@@ -58,12 +58,12 @@ export function nearestNpc(point: Point, npcs: StationNpc[] = STATION_NPCS): Sta
     .sort((a, b) => Math.hypot(a.x - point.x, a.y - point.y) - Math.hypot(b.x - point.x, b.y - point.y))[0] ?? null;
 }
 
-export function findPath(start: Point, target: Point): Point[] {
-  if (!canWalk(target)) return [];
+export function findPath(start: Point, target: Point, walkable: (point: Point) => boolean = canWalk, move: (point: Point, delta: Point) => Point = movePlayer): Point[] {
+  if (!walkable(target)) return [];
   const snap = (point: Point): Point => ({ x: Math.round(point.x / 16) * 16, y: Math.round(point.y / 16) * 16 });
   const key = (point: Point): string => `${point.x},${point.y}`;
   const origin = snap(start), goal = snap(target);
-  if (!canWalk(origin) || !canWalk(goal)) return [];
+  if (!walkable(origin) || !walkable(goal)) return [];
   const queue = [origin], previous = new Map<string, Point | null>([[key(origin), null]]);
   for (let index = 0; index < queue.length; index++) {
     const point = queue[index];
@@ -76,8 +76,8 @@ export function findPath(start: Point, target: Point): Point[] {
     }
     for (const delta of [{ x: 16, y: 0 }, { x: -16, y: 0 }, { x: 0, y: 16 }, { x: 0, y: -16 }]) {
       const next = { x: point.x + delta.x, y: point.y + delta.y };
-      if (previous.has(key(next)) || !canWalk(next)) continue;
-      const reached = movePlayer(point, delta);
+      if (previous.has(key(next)) || !walkable(next)) continue;
+      const reached = move(point, delta);
       if (Math.hypot(reached.x - next.x, reached.y - next.y) > 0.1) continue;
       previous.set(key(next), point); queue.push(next);
     }

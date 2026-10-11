@@ -29,7 +29,7 @@ const options = parseOnboardingOptions({ cities: [{ id: town.id, name: town.name
 if (options.cities.length === 0 || options.avatars.length === 0) throw new Error('At least one starter city and avatar are required.');
 process.stdout.write(`Validated ${options.cities.length} starter city and ${options.avatars.length} avatar options.\n`);
 
-for (const file of await readdir(resolve('content/dialogue'))) {
+for (const file of await readdir(resolve('content/dialogue'), { recursive: true })) {
   if (!file.endsWith('.json')) continue;
   const path = `content/dialogue/${file}`;
   validate(path, dialogueSchema, await readJson(path));

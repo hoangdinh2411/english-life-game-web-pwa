@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "scope": "global",
+  "nodes": [
+    {
+      "id": "global_nice",
+      "text": {
+        "default": "Nice to hear that!"
+      },
+      "variations": [
+        "Nice to hear that! What do you like doing in your free time?",
+        "Thanks for telling me. What are you looking forward to?",
+        "I understand. What helps you relax?",
+        "That sounds interesting. How do you usually spend your weekends?",
+        "Thanks for sharing. What would you like to talk about next?"
+      ]
+    },
+    {
+      "id": "global_wellbeing",
+      "text": {
+        "default": "I am doing well, thank you! How are you today?"
+      },
+      "variations": [
+        "I am doing well, thank you! How are you today?",
+        "It has been a busy morning. How has your morning been?",
+        "I feel cheerful today. What makes you happy?",
+        "I am enjoying a quiet moment. What helps you relax?",
+        "I am looking forward to the weekend. What are your plans?"
+      ]
+    }
+  ]
+}

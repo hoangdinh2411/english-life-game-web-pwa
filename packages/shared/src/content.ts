@@ -46,6 +46,7 @@ export const questSchema = z.object({
 export const dialogueNodeSchema = dialogueMetadataSchema.extend({
   id: identifier,
   text: z.object({ default: text }).catchall(text),
+  variations: z.array(text).min(2).optional(),
   intents: z.array(z.object({
     name: identifier,
     keywords: z.array(text).min(1),

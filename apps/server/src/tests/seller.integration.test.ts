@@ -162,6 +162,16 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
       assert.match(orderText, npcId === 'npc_clothes_seller' ? /blue.*green.*red.*yellow/ : /seller|Mia/);
     }
     // Keep the original receptionist API compatible without creating another user.
+    const greetings = [];
+    for (let index = 0; index < 5; index++) {
+      const response = await call('/conversations', { npcId: 'npc_cafe_waiter' });
+      assert.equal(response.status, 201);
+      const opened = conversationSchema.parse(await response.json());
+      greetings.push(opened.messages[0]!.text);
+      const saved = conversationSchema.parse(await (await call(`/conversations/${opened.id}`)).json());
+      assert.equal(saved.messages[0]!.text, opened.messages[0]!.text);
+    }
+    assert.equal(new Set(greetings).size, 5);
     await client.query('UPDATE characters SET current_location_id=$2 WHERE user_id=$1', [userId, 'loc_station']);
     const receptionist = await call('/conversations', { npcId: 'npc_receptionist' });
     assert.equal(receptionist.status, 201);

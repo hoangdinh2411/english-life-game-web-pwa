@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "scope": "global",
+  "nodes": [
+    {
+      "id": "global_health",
+      "text": {
+        "default": "I am sorry you are not feeling well. Would you like to talk about something else?"
+      },
+      "variations": [
+        "I am sorry you are not feeling well. Would you like to talk about something else?",
+        "I am sorry you are not feeling well. That sounds difficult. Would you prefer a quiet conversation?",
+        "I am sorry you are not feeling well. I hope your day gets easier. What usually cheers you up?",
+        "I am sorry you are not feeling well. Thanks for telling me. Would you like to talk about a favorite hobby?",
+        "I am sorry to hear that. What has been the best part of your day?"
+      ]
+    }
+  ]
+}

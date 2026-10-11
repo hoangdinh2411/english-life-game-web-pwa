@@ -7,6 +7,7 @@ import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { loadPack, preparePack } from '../features/assets/phaser-pack';
 import { authorizeStreetExit, canWalk, findPath, movePlayer, movementDelta, nearestNpc, portalAt, STATION_NPCS, STATION_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
+import { moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
 import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
 const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Maplewood · Train Station', cafe: 'Maplewood · Café', clothes: 'Maplewood · Clothes Shop', street: 'Maplewood · Town Street' };
@@ -114,12 +115,22 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         npcs.push(npc);
         const label = this.add.text(npc.x, npc.y - 112, npc.name, { fontFamily: 'sans-serif', fontSize: '24px', color: '#263630', backgroundColor: '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
         this.labels.push(label);
-        this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, label, elapsed: 0, idleFrame: actor.frame, labelOffset: 112 });
+        const npcWalk = `${actor.texture}:${actor.frame}-walk`;
+        for (let row = 0; row < 4; row++) {
+          const key = `${npcWalk}-${row}`;
+          this.anims.create({ key, frames: Array.from({ length: 4 }, (_, column) => ({ key: actor.texture, frame: `${actor.frame}-${row}-${column}` })), frameRate: 7, repeat: -1 });
+          packAnimations.push(key);
+        }
+        this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, label, elapsed: 0, idleFrame: actor.frame, walkPrefix: npcWalk, labelOffset: 105,
+          clip: (anchor, offset) => moveInShop(activeLocation, anchor, offset) });
         sprite.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
           if (paused) return;
           if (nearestNpc(position, [npc])) { callbacks.onTalk(npc.id); return; }
           selectedNpc = npc.id;
           destinationMapTarget = { x: npc.x, y: npc.y + 55 };
+          route = findPath(position, destinationMapTarget, point => shopCanWalk(activeLocation, point, npcs), (point, delta) => moveInShop(activeLocation, point, delta, npcs));
+          destinationMapTarget = route.shift() ?? null;
+          if (!destinationMapTarget) return;
           this.marker.setPosition(destinationMapTarget.x, destinationMapTarget.y).setVisible(true);
         });
       }
@@ -160,7 +171,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const target = { x: pointer.worldX, y: pointer.worldY };
         if (activeLocation !== 'station') {
           selectedNpc = null;
-          if (target.x >= 48 && target.x <= 1488 && target.y >= 120 && target.y <= 980) { destinationMapTarget = target; this.marker.setPosition(target.x, target.y).setVisible(true); }
+          if (activeLocation === 'street' || shopCanWalk(activeLocation, target, npcs)) {
+            route = activeLocation === 'street' ? [target] : findPath(position, target, point => shopCanWalk(activeLocation, point, npcs), (point, delta) => moveInShop(activeLocation, point, delta, npcs));
+            destinationMapTarget = route.shift() ?? null; this.marker.setPosition(target.x, target.y).setVisible(true);
+          }
         } else if (canWalk(target)) { route = findPath(position, target); destination = route.shift() ?? null; selectedNpc = null; this.marker.setPosition(target.x, target.y).setVisible(true); }
       });
       const resizeLabels = () => {
@@ -230,16 +244,20 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       }
     }
     private updateDestination(delta: number) {
-      if (paused) { destinationMapTarget = null; this.marker.setVisible(false); this.player.anims.stop(); return; }
+      if (paused) { destinationMapTarget = null; route = []; selectedNpc = null; this.marker.setVisible(false); this.player.anims.stop(); return; }
       const x = Number(this.keys?.right.isDown || this.walkingKeys.D?.isDown) - Number(this.keys?.left.isDown || this.walkingKeys.A?.isDown);
       const y = Number(this.keys?.down.isDown || this.walkingKeys.S?.isDown) - Number(this.keys?.up.isDown || this.walkingKeys.W?.isDown);
       let dx = x, dy = y;
-      if (x || y) { destinationMapTarget = null; selectedNpc = null; }
+      if (x || y) { destinationMapTarget = null; route = []; selectedNpc = null; }
       else if (destinationMapTarget) { dx = destinationMapTarget.x - position.x; dy = destinationMapTarget.y - position.y; }
       const movement = movementDelta({ x: dx, y: dy }, 215 * Math.min(delta, 50) / 1000, Boolean(x || y));
-      position = { x: Math.max(48, Math.min(1488, position.x + movement.x)), y: Math.max(110, Math.min(985, position.y + movement.y)) };
+      const previous = position;
+      position = activeLocation === 'street'
+        ? { x: Math.max(48, Math.min(1488, position.x + movement.x)), y: Math.max(110, Math.min(985, position.y + movement.y)) }
+        : moveInShop(activeLocation, position, movement, npcs);
+      const moved = Math.hypot(position.x - previous.x, position.y - previous.y) > 0.01;
       this.player.setPosition(position.x, position.y).setDepth(position.y);
-      if (movement.x || movement.y) this.player.play(`${this.walkPrefix}-${Math.abs(dx) > Math.abs(dy) ? dx < 0 ? 1 : 2 : dy < 0 ? 3 : 0}`, true);
+      if (moved) this.player.play(`${this.walkPrefix}-${Math.abs(dx) > Math.abs(dy) ? dx < 0 ? 1 : 2 : dy < 0 ? 3 : 0}`, true);
       else this.player.anims.stop();
       const closest = nearestNpc(position, npcs)?.id ?? null;
       if (closest !== nearby) { nearby = closest; callbacks.onNearby(closest); }
@@ -250,6 +268,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const ring = { id: 'station', label: 'Train Station', x: 768, y: activeLocation === 'street' ? 130 : 930 };
       if (portalAt(position, [ring])) { this.previousLocation = activeLocation; this.enterLocation('station'); return; }
       destinationMapTarget = destinationMapTarget && Math.hypot(destinationMapTarget.x - position.x, destinationMapTarget.y - position.y) > 3 ? destinationMapTarget : null;
+      if (!destinationMapTarget && route.length) destinationMapTarget = route.shift() ?? null;
       if (!destinationMapTarget) this.marker.setVisible(false);
     }
     update(_time: number, delta: number) {

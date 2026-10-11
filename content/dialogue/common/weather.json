@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "scope": "global",
+  "nodes": [
+    {
+      "id": "global_weather",
+      "text": {
+        "default": "I hope we have a sunny afternoon. What is the weather like where you are from?"
+      },
+      "variations": [
+        "I hope we have a sunny afternoon. What is the weather like where you are from?",
+        "I enjoy cool mornings. Do you prefer warm or cold weather?",
+        "Rainy days can be cozy. What do you like doing when it rains?",
+        "The weather changes quickly here. What season do you enjoy most?",
+        "A sunny day is great for a walk. What would you do on a sunny afternoon?"
+      ]
+    }
+  ]
+}

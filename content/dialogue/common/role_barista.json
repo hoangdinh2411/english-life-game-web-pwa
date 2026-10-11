@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "scope": "role",
+  "role": "barista",
+  "nodes": [
+    {
+      "id": "barista_start",
+      "text": {
+        "default": "Hi! What would you like?",
+        "cheerful": "Hey there! What can I get you today?"
+      },
+      "intents": [
+        {
+          "name": "order_drink",
+          "keywords": [
+            "coffee",
+            "tea",
+            "latte",
+            "want",
+            "like"
+          ],
+          "next": "barista_size"
+        },
+        {
+          "name": "ask_price",
+          "keywords": [
+            "price",
+            "how much",
+            "cost"
+          ],
+          "next": "barista_price"
+        }
+      ],
+      "fallback": "global_repeat"
+    },
+    {
+      "id": "barista_price",
+      "text": {
+        "default": "A coffee is 3 coins."
+      },
+      "intents": [
+        {
+          "name": "order_drink",
+          "keywords": [
+            "coffee",
+            "tea",
+            "latte",
+            "ok",
+            "yes"
+          ],
+          "next": "barista_size"
+        }
+      ],
+      "fallback": "global_repeat"
+    },
+    {
+      "id": "barista_size",
+      "text": {
+        "default": "Small or large?"
+      },
+      "intents": [
+        {
+          "name": "choose_size",
+          "keywords": [
+            "small",
+            "large",
+            "big",
+            "medium"
+          ],
+          "next": "barista_done"
+        }
+      ],
+      "fallback": "global_repeat"
+    },
+    {
+      "id": "barista_done",
+      "text": {
+        "default": "Here you go!"
+      },
+      "completesStep": "s3",
+      "end": true
+    }
+  ]
+}

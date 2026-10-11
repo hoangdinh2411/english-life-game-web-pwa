@@ -21,7 +21,14 @@
           "next": "shop_directions"
         }
       ],
-      "fallback": "global_repeat"
+      "fallback": "global_repeat",
+      "variations": [
+        "Hello! How are you today? What brings you here?",
+        "Welcome back! How has your morning been?",
+        "Hello! What do you enjoy doing on a day off?",
+        "Hi there! What is your hometown like?",
+        "Hello! What are you looking forward to this week?"
+      ]
     },
     {
       "id": "shop_directions",

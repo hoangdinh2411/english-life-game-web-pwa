@@ -22,18 +22,18 @@ async function mapAssets(mapId) {
   if (mapId !== 'loc_town_street') {
     const cafe = mapId === 'loc_cafe';
     const actors = cafe ? [
-      { frame: 'cafe_seller', x: 800, y: 275 },
+      { frame: 'cafe_seller', x: 800, y: 390 },
       { frame: 'cafe_waiter', x: 1000, y: 460 },
-      { frame: 'cafe_customer', x: 400, y: 600 },
+      { frame: 'cafe_customer', x: 430, y: 600 },
     ] : [
-      { frame: 'clothes_seller', x: 1190, y: 270 },
+      { frame: 'clothes_seller', x: 1005, y: 405 },
       { frame: 'clothes_assistant', x: 550, y: 500 },
       { frame: 'clothes_customer', x: 970, y: 690 },
     ];
     assets.push(
-      { name: 'shop-npcs.png', type: 'image', mime: 'image/png', data: await source('npcs/shop-npcs.png') },
-      { name: 'shop-npcs-atlas.json', type: 'json', mime: 'application/json', data: await source('npcs/shop-npcs.json') },
-      { name: 'actors.json', type: 'json', mime: 'application/json', data: JSON.stringify({ actors: actors.map(actor => ({ ...actor, texture: 'shop-npcs', scale: 0.22 })) }) },
+      { name: 'shop-npcs.png', type: 'image', mime: 'image/png', data: await source('npcs/shop-walk.png') },
+      { name: 'shop-npcs-atlas.json', type: 'json', mime: 'application/json', data: await source('npcs/shop-walk.json') },
+      { name: 'actors.json', type: 'json', mime: 'application/json', data: JSON.stringify({ actors: actors.map(actor => ({ ...actor, texture: 'shop-npcs', scale: 0.6 })) }) },
     );
   }
   return assets;
