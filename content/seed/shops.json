@@ -9,8 +9,8 @@
   { "id": "cookie", "name": "Cookie", "kind": "food", "price": 2, "shop": "cafe" },
   { "id": "cheesecake", "name": "Cheesecake", "kind": "food", "price": 6, "shop": "cafe" },
   { "id": "tiramisu", "name": "Tiramisu", "kind": "food", "price": 6, "shop": "cafe" },
-  { "id": "shirt_blue", "name": "Blue Shirt", "kind": "clothing", "price": 30, "shop": "clothes" },
-  { "id": "shirt_green", "name": "Green Shirt", "kind": "clothing", "price": 30, "shop": "clothes" },
-  { "id": "shirt_red", "name": "Red Shirt", "kind": "clothing", "price": 30, "shop": "clothes" },
-  { "id": "shirt_yellow", "name": "Yellow Shirt", "kind": "clothing", "price": 30, "shop": "clothes" }
+  { "id": "shirt_blue", "name": "Blue Shirt", "kind": "clothing", "price": 30, "shop": "clothes", "color": "blue" },
+  { "id": "shirt_green", "name": "Green Shirt", "kind": "clothing", "price": 30, "shop": "clothes", "color": "green" },
+  { "id": "shirt_red", "name": "Red Shirt", "kind": "clothing", "price": 30, "shop": "clothes", "color": "red" },
+  { "id": "shirt_yellow", "name": "Yellow Shirt", "kind": "clothing", "price": 30, "shop": "clothes", "color": "yellow" }
 ]

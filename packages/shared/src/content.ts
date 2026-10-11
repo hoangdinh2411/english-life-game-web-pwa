@@ -78,6 +78,7 @@ export const shopItemSchema = z.object({
   kind: z.enum(['drink', 'food', 'clothing']),
   price: z.number().int().positive().max(2147483647),
   shop: shopSchema,
+    color: z.enum(['blue', 'green', 'red', 'yellow']).optional(),
 }).strict();
 export const shopCatalogSchema = z.array(shopItemSchema).refine(uniqueIds, 'Shop item IDs must be unique');
 

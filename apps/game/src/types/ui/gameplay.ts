@@ -1,6 +1,7 @@
 import type { StationSpeaker } from '@life-abroad/shared';
 import type { ReactNode } from 'react';
 import type { ArrivalGoal } from '../gameplay/goals';
+import type { LifeControls } from '../../features/life/useLife';
 export interface ComposerIconProps {
   kind: 'microphone' | 'send' | 'stop';
   color: string;
@@ -29,6 +30,10 @@ export interface PlayerInfoCardProps {
   coins: number;
   visible?: boolean;
   timeZone?: string;
+  savedTime?: Date | null;
+  energy?: number;
+  onSleep?: () => void;
+  sleepDisabled?: boolean;
 }
 export interface DialogueMessageProps {
   name: string;
@@ -56,6 +61,7 @@ export interface QuestBoardProps {
   goals?: readonly ArrivalGoal[];
 }
 export interface StationScreenProps {
+  life?: LifeControls;
   arrival?: {
     initialLocation: 'station' | 'street';
     exitUnlocked: boolean;

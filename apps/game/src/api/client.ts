@@ -3,7 +3,7 @@ import { parseOnboardingOptions, arrivalStateSchema, conversationSchema, convers
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
 
-async function request<T>(path: string, body?: unknown, token?: string): Promise<T> {
+export async function request<T>(path: string, body?: unknown, token?: string): Promise<T> {
   if (!navigator.onLine) throw new Error('Connect to the internet to use saved game features. Local practice is available offline.');
   const response = await fetch(`${baseUrl}/${path}`, {
     method: body === undefined ? 'GET' : 'POST',

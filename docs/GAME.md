@@ -25,8 +25,16 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   unlocked by that conversation—not by a bus ticket. This is **legacy practice
   behavior**, not the new opening quest. It works without an account and gives
   **no XP, coins, ticket ownership or saved progress**.
-- Not in this MVP slice: native apps, multiplayer, spending coins,
-  energy consumption/refill, subscriptions, general AI chat, deep NPC memory.
+- The signed-in game menu supports immediate café consumption, shirt purchases,
+  separate hair/shirt/trouser colors. The battery HUD has an icon-only Sleep
+  button, available only below 50% energy (enforced by the server). Hover/focus
+  explains the action; on touch screens, tap once for help and again to sleep.
+  Sleep advances eight game hours, fades out/in over about four seconds, then
+  displays the saved energy with a gradual refill; reduced motion skips animation.
+  Energy, wallet,
+  wardrobe and the independent 2× UTC game clock are saved on the server.
+  Local practice remains free and does not change saved life.
+- Not in this MVP slice: native apps, multiplayer, subscriptions, general AI chat, deep NPC memory.
 
 ## First full quest loop (station → town streets)
 Arrive at the **train station** → approach the **receptionist** → ask how to

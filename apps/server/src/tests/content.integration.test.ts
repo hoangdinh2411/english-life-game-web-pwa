@@ -2,11 +2,26 @@ import 'reflect-metadata';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
-import { readdir } from 'node:fs/promises';
+import { resolve, join } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../app.module';
 import { mapPackSchema } from '@life-abroad/shared';
+
+async function sourceFiles(directory: string): Promise<Record<string, string>> {
+  const entries = await readdir(directory, { withFileTypes: true }).catch((error: unknown) => {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return [];
+    throw error;
+  });
+  const files: Record<string, string> = {};
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      for (const [name, hash] of Object.entries(await sourceFiles(join(directory, entry.name)))) files[join(entry.name, name)] = hash;
+    } else if (entry.isFile()) files[entry.name] = createHash('sha256').update(await readFile(join(directory, entry.name))).digest('hex');
+  }
+  return files;
+}
 
 test('T14 generated files remain in the local asset folder after upload, and immutable retries resolve through metadata', async () => {
   const target = new URL(process.env.SUPABASE_URL ?? '');
@@ -32,10 +47,14 @@ test('T14 generated files remain in the local asset folder after upload, and imm
       child.on('error', reject);
       child.on('exit', (code) => code === 0 ? resolveRun(output) : reject(new Error(`Upload script exited ${code}`)));
     });
+    const assetDirectory = resolve('../../local-assets/maps/loc_town_street');
+    const sourceBefore = await sourceFiles(join(assetDirectory, 'source'));
     const first: unknown = JSON.parse(await invoke());
     const second: unknown = JSON.parse(await invoke());
     assert.deepEqual(first, second, 'Identical retries must keep immutable paths');
-    assert.deepEqual((await readdir(resolve('../../local-assets/maps/loc_town_street'))).sort(), ['animations.json', 'background.svg', 'player.svg']);
+    const entries = await readdir(assetDirectory, { withFileTypes: true });
+    assert.deepEqual(entries.filter(entry => entry.isFile()).map(entry => entry.name).sort(), ['animations.json', 'background.svg', 'player.svg']);
+    assert.deepEqual(await sourceFiles(join(assetDirectory, 'source')), sourceBefore, 'Uploads must preserve source artwork');
     const response = await fetch(`${base}/content/maps/loc_town_street`);
     assert.equal(response.status, 200);
     const pack = mapPackSchema.parse(await response.json());

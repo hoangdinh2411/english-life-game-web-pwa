@@ -1,3 +1,4 @@
+import { LifeService } from '../life/life.service';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { ARRIVAL_NPC_ID, checkGrammar, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID, TurnMetadata } from '@life-abroad/shared';
 import { DialogueService } from '../dialogue/dialogue.service';
@@ -7,7 +8,7 @@ import { ConversationsRepository } from './conversations.repository';
 @Injectable()
 export class ConversationsService {
   constructor(private readonly conversations: ConversationsRepository,
-    private readonly dialogue: DialogueService, private readonly quests: QuestsService) {}
+    private readonly dialogue: DialogueService, private readonly quests: QuestsService, private readonly life: LifeService) {}
 
   create(userId: string): Promise<Conversation> {
     return this.conversations.transaction(async client => {
@@ -37,6 +38,7 @@ export class ConversationsService {
       const replay = await this.conversations.replay(client, id, request);
       if (replay) return replay;
       if (arrival.locationId !== STATION_LOCATION_ID) throw new ConflictException('Visit the station receptionist first');
+      await this.life.consumeMessage(client, userId);
       const context = { ...await this.conversations.context(client),
         ...(conversation.current_node_id ? { currentNodeId: conversation.current_node_id } : {}) };
       const reply = await this.dialogue.reply(context, request.text);

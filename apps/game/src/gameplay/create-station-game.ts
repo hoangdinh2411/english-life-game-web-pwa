@@ -2,6 +2,7 @@ import type { MapLocation, NpcActor, Point, StationCallbacks, StationGame, Stati
 import Phaser from 'phaser';
 import { stationAtlases, stationBackground } from './station-assets';
 import type { MapPack } from '@life-abroad/shared';
+import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { loadPack, preparePack } from '../features/assets/phaser-pack';
 import { authorizeStreetExit, canWalk, findPath, movePlayer, movementDelta, nearestNpc, portalAt, STATION_NPCS, STATION_PORTALS } from './station-navigation';
@@ -12,6 +13,8 @@ const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Maplewood · Tra
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
   let activeLocation: MapLocation = callbacks.initialLocation ?? 'station';
   let destroyed = false;
+  let appearance = callbacks.practice ? undefined : callbacks.appearance;
+  let refreshAppearance: (() => void) | undefined;
   let currentPack: MapPack | null = null;
   let packAnimations: string[] = [];
   let packRequest: AbortController | null = null;
@@ -48,9 +51,14 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.events.once('shutdown', () => this.load.off('loaderror', onLoadError));
     }
     create() {
+      refreshAppearance = () => { if (this.worldReady) this.applyAppearance(); };
       const stationOwned = activeLocation === 'station';
       this.events.once('shutdown', () => {
         this.worldReady = false;
+        refreshAppearance = undefined;
+        for (const key of this.appearanceAnimations) this.anims.remove(key);
+        this.appearanceAnimations = [];
+        if (this.textures.exists('player:appearance')) this.textures.remove('player:appearance');
         packRequest?.abort();
         if (currentPack) { unloadPack(currentPack, this, packAnimations); currentPack = null; packAnimations = []; }
         if (stationOwned) {
@@ -81,6 +89,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (activeLocation === 'station' && (!this.textures.exists('station') || stationAtlases.some((atlas) => !this.textures.exists(atlas.key)))) return;
       this.playerTexture = resources?.player ?? 'player';
       this.walkPrefix = resources?.walkPrefix ?? 'walk';
+      this.sourcePlayerTexture = this.playerTexture;
+      this.sourceWalkPrefix = this.walkPrefix;
       packAnimations = resources?.animationKeys ?? [];
       this.transitionPending = false;
       this.labels = [];
@@ -92,6 +102,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const key = `${this.walkPrefix}-${row}`;
         if (!this.anims.exists(key)) this.anims.create({ key, frames: Array.from({ length: 4 }, (_, column) => ({ key: this.playerTexture, frame: currentPack ? row * 4 + column : `${row}-${column}` })), frameRate: 7, repeat: -1 });
       }
+      if (appearance) this.applyAppearance();
       if (currentPack) for (const asset of currentPack.assets.filter((item) => item.npcId && ['image', 'spritesheet'].includes(item.type))) {
         this.add.sprite(500 + currentPack.assets.indexOf(asset) * 80, 400, packKey(currentPack, asset), 0).setDepth(400);
       }
@@ -175,6 +186,28 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     private previousLocation: MapLocation = 'station';
     private playerTexture = 'player';
     private walkPrefix = 'walk';
+    private sourcePlayerTexture = 'player';
+    private sourceWalkPrefix = 'walk';
+    private appearanceAnimations: string[] = [];
+    applyAppearance() {
+      if (!this.textures.exists(this.sourcePlayerTexture)) return;
+      this.playerTexture = paintPlayerTexture(this, this.sourcePlayerTexture, 'player:appearance', appearance, Boolean(currentPack));
+      for (let row = 0; row < 4; row++) {
+        const key = `appearance:walk-${row}`;
+        if (!this.anims.exists(key)) {
+          const original = this.anims.get(`${this.sourceWalkPrefix}-${row}`);
+          if (!original) continue;
+          this.anims.create({ key, frames: original.frames.map(frame => ({ key: this.playerTexture, frame: frame.textureFrame })), frameRate: original.frameRate, repeat: original.repeat });
+          this.appearanceAnimations.push(key);
+        }
+      }
+      this.walkPrefix = 'appearance:walk';
+      if (this.worldReady && this.player) {
+        const frame = this.player.frame.name;
+        this.player.anims.stop();
+        this.player.setTexture(this.playerTexture, frame);
+      }
+    }
     private updateDestination(delta: number) {
       if (paused) { destinationMapTarget = null; this.marker.setVisible(false); this.player.anims.stop(); return; }
       const x = Number(this.keys?.right.isDown || this.walkingKeys.D?.isDown) - Number(this.keys?.left.isDown || this.walkingKeys.A?.isDown);
@@ -225,7 +258,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const moved = Math.hypot(next.x - position.x, next.y - position.y) > 0.01;
         position = next;
         this.player.setPosition(position.x, position.y).setDepth(position.y);
-        if (moved) this.player.play(`walk-${Math.abs(dx) > Math.abs(dy) ? dx < 0 ? 1 : 2 : dy < 0 ? 3 : 0}`, true);
+        if (moved) this.player.play(`${this.walkPrefix}-${Math.abs(dx) > Math.abs(dy) ? dx < 0 ? 1 : 2 : dy < 0 ? 3 : 0}`, true);
         else { destination = null; selectedNpc = null; this.player.anims.stop(); }
       } else {
         if (route.length) { destination = route.shift() ?? null; return; }
@@ -260,5 +293,6 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   }
   const game = new P.Game({ type: P.AUTO, parent, width: parent.clientWidth, height: parent.clientHeight, backgroundColor: '#e4cda9', scene: StationScene,
     scale: { mode: P.Scale.RESIZE, autoCenter: P.Scale.CENTER_BOTH }, render: { pixelArt: false }, loader: { timeout: 15000 } });
-  return { destroy: () => { destroyed = true; packRequest?.abort(); game.destroy(true); }, pause: (value) => { paused = value; }, unlockExit: (value) => { exitUnlocked = value; }, talk };
+  return { destroy: () => { destroyed = true; packRequest?.abort(); game.destroy(true); }, pause: (value) => { paused = value; }, unlockExit: (value) => { exitUnlocked = value; }, talk,
+    setAppearance: (value) => { if (callbacks.practice) return; appearance = value; refreshAppearance?.(); } };
 }

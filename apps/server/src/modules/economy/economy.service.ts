@@ -22,28 +22,31 @@ export class EconomyService {
 
   // Server callers supply identity and an order reference; never expose this as a client charge endpoint.
   async spend(userId: string, amount: number, reason: string, key: string, reference: string = key): Promise<number> {
+    return this.database.transaction(client => this.spendInTransaction(client, userId, amount, reason, key, reference));
+  }
+
+  async spendInTransaction(client: PoolClient, userId: string, amount: number, reason: string,
+    key: string, reference: string = key): Promise<number> {
     if (!Number.isInteger(amount) || amount <= 0 || amount > 2147483647 ||
         !reason.trim() || !key.trim() || !reference.trim()) throw new BadRequestException('Invalid wallet charge');
-    return this.database.transaction(async client => {
-      const stats = await client.query<{ coins: number }>(
-        'SELECT coins FROM public.player_stats WHERE user_id=$1 FOR UPDATE', [userId]);
-      const balance = stats.rows[0]?.coins;
-      if (balance === undefined) throw new ServiceUnavailableException('Player stats are unavailable');
-      const previous = await client.query<{ amount: number; reason: string; reference: string }>(
-        'SELECT amount,reason,reference FROM public.wallet_ledger WHERE user_id=$1 AND idempotency_key=$2', [userId, key]);
-      const entry = previous.rows[0];
-      if (entry) {
-        if (entry.amount !== -amount || entry.reason !== reason || entry.reference !== reference) {
-          throw new ConflictException('Wallet key already used for another operation');
-        }
-        return balance;
+    const stats = await client.query<{ coins: number }>(
+      'SELECT coins FROM public.player_stats WHERE user_id=$1 FOR UPDATE', [userId]);
+    const balance = stats.rows[0]?.coins;
+    if (balance === undefined) throw new ServiceUnavailableException('Player stats are unavailable');
+    const previous = await client.query<{ amount: number; reason: string; reference: string }>(
+      'SELECT amount,reason,reference FROM public.wallet_ledger WHERE user_id=$1 AND idempotency_key=$2', [userId, key]);
+    const entry = previous.rows[0];
+    if (entry) {
+      if (entry.amount !== -amount || entry.reason !== reason || entry.reference !== reference) {
+        throw new ConflictException('Wallet key already used for another operation');
       }
-      if (balance < amount) throw new ConflictException('Insufficient funds');
-      await client.query(`INSERT INTO public.wallet_ledger (user_id,amount,reason,reference,idempotency_key)
-        VALUES ($1,$2,$3,$4,$5)`, [userId, -amount, reason, reference, key]);
-      await client.query('UPDATE public.player_stats SET coins=coins-$2 WHERE user_id=$1', [userId, amount]);
-      return balance - amount;
-    });
+      return balance;
+    }
+    if (balance < amount) throw new ConflictException('Insufficient funds');
+    await client.query(`INSERT INTO public.wallet_ledger (user_id,amount,reason,reference,idempotency_key)
+      VALUES ($1,$2,$3,$4,$5)`, [userId, -amount, reason, reference, key]);
+    await client.query('UPDATE public.player_stats SET coins=coins-$2 WHERE user_id=$1', [userId, amount]);
+    return balance - amount;
   }
   // The caller owns the transaction encompassing quest completion and reward.
   async grantQuestReward(client: PoolClient, userId: string, quest: QuestContent): Promise<void> {

@@ -28,6 +28,8 @@ Follow all applicable project instructions.
 Complete the task, verify the acceptance criteria, update its status if verified, report briefly, and stop.
 
 Do not create Git commits. Just suggest a commit message for me; I will commit manually.
+Please test using the account I provided. Don’t create a new user for each test.
+test@gmail.com / 12341234.
 ```
 
 ## DONE
@@ -43,9 +45,33 @@ Do not create Git commits. Just suggest a commit message for me; I will commit m
       → bus ticket → Town Street → one-time XP/coins reward. Saved on the server
       across reload and sign-in. Chat, optional Coach, ticket receipt, ordered
       progress and blocked-exit messages in the UI.
-- [x] **T14 — Asset pipeline and dynamic map/NPC loading (experiment):** versioned Storage packs, service-key uploads, generated-file cleanup, station-only offline practice; unit/integration/PWA checks and ten browser portal round trips verified (sizes and resource-memory measurements in `TECH.md`).
-- [x] **T15 — Wallet and starting $500:** configurable atomic starter grant, server-only transactional spending and wallet ledger; insufficient funds, replay/concurrency, persistence and browser reload at 320/375/1024px verified. Existing characters keep their balance.
-- [x] **T16 — Shop catalog:** 5 drinks, 5 pastries/snacks and 4 $30 colored shirts at approved prices; Zod command rejects missing prices/unknown shops, repeatable PostgreSQL seeding and server database reads verified.
+- [x] **T14 — Asset pipeline and dynamic map/NPC loading (experiment):**
+      versioned Storage packs, service-key uploads, generated-file cleanup,
+      station-only offline practice; unit/integration/PWA checks and ten browser
+      portal round trips verified (sizes and resource-memory measurements in
+      `TECH.md`).
+- [x] **T15 — Wallet and starting $500:** configurable atomic starter grant,
+      server-only transactional spending and wallet ledger; insufficient funds,
+      replay/concurrency, persistence and browser reload at 320/375/1024px
+      verified. Existing characters keep their balance.
+- [x] **T16 — Shop catalog:** 5 drinks, 5 pastries/snacks and 4 $30 colored
+      shirts at approved prices; Zod command rejects missing prices/unknown
+      shops, repeatable PostgreSQL seeding and server database reads verified.
+
+- [x] **Approved life gameplay extension (T16 follow-up):** database-backed
+      energy, instant eight-hour sleep, independent saved 2× UTC clock, direct
+      café purchases and shirt ownership/equipping with separate hair/trouser
+      colors. Store purchase hours enforced; organization/workplace hours are
+      shared rules for future actions. Transaction/replay/concurrency/auth/RLS
+      tests and browser purchase/message/sleep/ reload checks at 320/375/1024px
+      passed, plus ten appearance portal round trips. Full integration: 7/7
+      passed; generated-file checks preserve the `source` archive. Energy HUD
+      has a percentage indicator, low/empty guidance and free-practice label.
+      Sleep HUD follow-up: icon beside energy, touch/hover help, server-enforced
+      below-50% threshold, four-second fade and gradual refill. Focused UI 8/8
+      and rollback-only sleep DB check passed using the existing test account;
+      browser sleep and 320/375/768/1024px layouts verified.
+      Typecheck/lint/build passed.
 
 ## NOW
 
@@ -68,16 +94,17 @@ No active NOW item. Select another task only when requested.
   through one provider interface.
 - Item lists and prices live in content (`content/seed/shops.json`), never in
   code. Codex must not invent prices: the owner supplies or approves them.
-- **Approved 2026-10-11, pending gameplay implementation:** energy is 0–100;
-  each player message to an NPC costs 1 point, with retries charged once.
+- **Approved 2026-10-11, implemented in the life gameplay extension:** energy is
+  0–100; each player message to an NPC costs 1 point, with retries charged once.
   Drinks restore 20 points, food/snacks 50, and a drink + food purchase restores
   80 total (10-point combination bonus), capped at 100. Consumables apply
   immediately without inventory storage; payment/effects must be atomic.
 - Sleep instantly advances the player's saved game clock by 8 hours and restores
-  energy to 100. Opening hours use game time: organizations 08:00–16:00,
-  stores 08:00–20:00, workplaces 07:00–17:00.
+  energy to 100. Opening hours use game time: organizations 08:00–16:00, stores
+  08:00–20:00, workplaces 07:00–17:00.
 - Appearance uses separate hair, shirt and trouser colors, saved with the
-  character. The first shop catalog has blue/green/red/yellow shirts at $30 each.
+  character. The first shop catalog has blue/green/red/yellow shirts at $30
+  each.
 
 ## NEXT
 
@@ -106,6 +133,16 @@ No active NOW item. Select another task only when requested.
       items" list. Done when: buying a shirt lowers the balance once and the
       item is listed after reload. Equipping a shirt changes its color while
       preserving the separate hair, skin and trouser appearance.
+- [ ] **T21 — Game clock speed and display.** Make the clock speed one config
+      value (now 2×; the owner approves the new value, test with 6×), not a
+      hardcoded number. Changing the speed must not make saved clocks jump:
+      store the game time, the real time and the speed at the last save. Keep
+      sleep (+8 hours). Use one shared function to check opening hours for
+      stores, organizations and workplaces. Show the game time (HH:MM and
+      weekday) in the HUD, and say the opening hours when a place is closed.
+      Done when: tests cover a speed change, sleep, a reload, and the opening
+      boundaries (07:59, 08:00, 19:59, 20:00 for stores); browser check at
+      320/375/1024px.
 - [ ] **T12 — Minimal review screen.** Past corrections and the useful phrases
       the player used in shops ("I'd like…", "How much is…"). Store useful terms
       only, not every word. Done when: after ordering coffee, the screen shows
@@ -135,7 +172,8 @@ No active NOW item. Select another task only when requested.
 
 - Production asset publishing: upload versioned map, NPC and Koko audio assets
   from the local archive to production Supabase Storage, update pack references,
-  and decide the station offline/PWA cache behavior before removing bundled files.
+  and decide the station offline/PWA cache behavior before removing bundled
+  files.
 - **Production AI provider:** after the audience decision, compare providers
   with the evaluation set (quality, speed, price), check EU and under-18 terms
   and the data processing terms, add the provider class, and add the privacy
@@ -173,5 +211,7 @@ implement extra features during the current task.
 ```
 
 ```
+
 - Approved energy/consumption, saved game clock, sleep and opening-hour rules
-  above need dedicated implementation tasks; T16 only supplies catalog data.
+  above are implemented by the approved life gameplay extension; T16 itself
+  supplies catalog data.

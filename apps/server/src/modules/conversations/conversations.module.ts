@@ -1,3 +1,4 @@
+import { LifeModule } from '../life/life.module';
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../infrastructure/database/database.module';
 import { AuthModule } from '../auth/auth.module';
@@ -7,6 +8,6 @@ import { ConversationsController } from './conversations.controller';
 import { ConversationsRepository } from './conversations.repository';
 import { ConversationsService } from './conversations.service';
 
-@Module({ imports: [DatabaseModule, AuthModule, DialogueModule, QuestsModule],
+@Module({ imports: [DatabaseModule, AuthModule, DialogueModule, QuestsModule, LifeModule],
   controllers: [ConversationsController], providers: [ConversationsRepository, ConversationsService] })
 export class ConversationsModule {}

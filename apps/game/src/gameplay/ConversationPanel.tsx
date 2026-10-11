@@ -37,8 +37,8 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
     } finally { sending.current = false; setFinalizing(false); }
   };
   return <DialogueFrame>
-    <div className="dialogue-header"><h2>{npcName}</h2><GameButton label="Close" onClick={() => { speech.stop(); voice.stop(); onClose(); }} /></div>
-    <div ref={history} className="conversation-history" role="log" aria-label="Conversation history" aria-live="polite">
+    <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0"><h2>{npcName}</h2><GameButton label="Close" onClick={() => { speech.stop(); voice.stop(); onClose(); }} /></div>
+    <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 overflow-auto pr-1 [@media(max-height:480px)]:h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
       {conversation.messages.map((message) => {
         const displayText = message.speaker === 'player' ? formatPlayerMessage(message.text) : message.text;
         return <DialogueMessage key={message.id} name={message.speaker === 'player' ? playerName : npcName} portrait={message.speaker === 'player' ? playerPortrait : npcPortraits[npcId]} text={displayText} player={message.speaker === 'player'} onReplay={() => voice.listen(displayText)} replayDisabled={!sound || !voice.supported || speech.listening || conversation.pending} />;
@@ -46,11 +46,11 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
       {thinking ? <DialogueMessage name={thinking === 'player' ? playerName : npcName} portrait={thinking === 'player' ? playerPortrait : npcPortraits[npcId]} player={thinking === 'player'} thinking text="Thinking…" /> : null}
       {speech.interim ? <p>{speech.interim}</p> : null}
     </div>
-    <p className="dialogue-hint">{conversation.exchange.hint}</p>
+    <p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{conversation.exchange.hint}</p>
     <MessageComposer text={text} onChange={setText} onSend={() => void send()} voiceSupported={speech.supported} listening={speech.listening} pending={conversation.pending || finalizing} onRecord={() => { if (speech.listening) void speech.finish(); else { voice.stop(); speech.start(); } }} />
-    {speech.supported ? <p className="hint">{finalizing ? 'Finishing recording…' : speech.listening ? 'Recording… Tap Send to finish, or Stop to review.' : 'Voice may use an online speech service. Review before sending.'}</p> : null}
-    {speech.error ? <p role="alert" className="error">{speech.error}</p> : null}
-    {voice.error ? <p role="status" className="hint">{voice.error}</p> : null}
+    {speech.supported ? <p className="hint text-muted text-[13px] leading-[1.4]">{finalizing ? 'Finishing recording…' : speech.listening ? 'Recording… Tap Send to finish, or Stop to review.' : 'Voice may use an online speech service. Review before sending.'}</p> : null}
+    {speech.error ? <p role="alert" className="error text-[#a43f34] text-[15px] leading-[1.4]">{speech.error}</p> : null}
+    {voice.error ? <p role="status" className="hint text-muted text-[13px] leading-[1.4]">{voice.error}</p> : null}
     {conversation.exchange.correction ? <GameButton label={coach ? 'Hide Coach' : 'Coach'} onClick={() => setCoach(!coach)} /> : null}
     {coach && conversation.exchange.correction ? <p>{conversation.exchange.correction.improved} {conversation.exchange.correction.reason}</p> : null}
   </DialogueFrame>;

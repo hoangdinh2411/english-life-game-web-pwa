@@ -43,7 +43,7 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
       });
       assert.equal(migration.status, 0, migration.stderr);
     }
-    assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, 9);
+    assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, 10);
     const content = await loadSeedContent(resolve('../../content'));
     const seedDatabase = new DatabaseService(new ConfigService({ DATABASE_URL: cleanUrl.toString() }));
     let seedClosed = false;
@@ -58,7 +58,7 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
       assert.equal((await clean.query('SELECT * FROM quests')).rowCount, content.quests.length);
       assert.equal((await clean.query('SELECT * FROM quest_steps')).rowCount, content.quests.reduce((count, quest) => count + quest.steps.length, 0));
       assert.deepEqual((await clean.query('SELECT rewards FROM quests WHERE id=$1', ['q_order_coffee'])).rows[0].rewards, { xp: 20, coins: 5 });
-      assert.deepEqual((await clean.query<ShopItem>('SELECT id,name,kind,price,shop FROM shop_items ORDER BY id')).rows,
+      assert.deepEqual((await clean.query<ShopItem>('SELECT id,name,kind,price,shop,color FROM shop_items ORDER BY id')).rows.map(({ color, ...item }) => ({ ...item, ...(color ? { color } : {}) })),
         [...content.shops].sort((a, b) => a.id.localeCompare(b.id)));
       // Prices here are isolated fixtures, never the owner-authored live catalog.
       const fixtureItems: ShopItem[] = [

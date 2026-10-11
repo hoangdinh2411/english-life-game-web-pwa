@@ -5,6 +5,9 @@ Follow `../../AGENTS.md`. Read `../../docs/TECH.md` only as needed.
 - One responsive browser/PWA app. Vite + React DOM (routes, forms, HUD and
   accessible dialogue); Phaser 4 (world and movement); strict TypeScript.
   Do not add Expo, React Native, native WebViews or a second frontend.
+- Style React UI with Tailwind utilities. Keep `src/styles.css` limited to
+  Tailwind imports/theme tokens, shared element defaults and animation keyframes;
+  see `docs/TECH.md` for conventions. Preserve existing responsive/focus behavior.
 - **Feature-first for new work:** put each cohesive user-facing capability
   under `src/features/<feature>/` (e.g. `station`, `dialogue`, `quests`,
   `onboarding`). Add `components/`, `hooks/`, `api/`, `game/`, or `model/`

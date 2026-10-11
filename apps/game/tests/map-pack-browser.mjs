@@ -11,6 +11,7 @@ const result = document.querySelector('#result');
 let ready = false, location = '', failure = '';
 const instance = createStationGame(document.querySelector('#world'), {
   initialLocation: 'street', onEnterStreet: async () => true,
+  appearance: { hair: 'blond', shirt: 'red', trousers: 'charcoal' },
   onReady: () => { ready = true; }, onLocationChange: (value) => { location = value; },
   onProgress: (value) => { result.textContent = `Downloading ${Math.round(value * 100)}%`; },
   onNearby: () => {}, onTalk: () => {}, onExitBlocked: () => { failure = 'Exit unexpectedly blocked'; },
@@ -58,8 +59,10 @@ document.querySelector('#run').addEventListener('click', async () => {
     await roundTrip(); // Warm caches before measuring.
     const baseline = snapshot(), samples = [];
     for (let trip = 1; trip <= 10; trip++) {
+      instance.setAppearance({ hair: trip % 2 ? 'black' : 'blond', shirt: 'red', trousers: 'charcoal' });
       await roundTrip();
       const sample = snapshot();
+      assert(captured.textures.exists('player:appearance'), 'Saved appearance texture was lost');
       assert(JSON.stringify(sample) === JSON.stringify(baseline), `Resources changed on trip ${trip}: baseline=${JSON.stringify(baseline)} current=${JSON.stringify(sample)}`);
       assert(sample.textures.every((key) => !['station','player','backpack','suitcase','receptionist'].includes(key)), 'Previous station textures survived');
       samples.push({ trip, ...sample });

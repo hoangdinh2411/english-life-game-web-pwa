@@ -1,9 +1,10 @@
 # TECH — current architecture and setup
 
-## Current stack (D16, 2026-10-09)
+## Current stack (D16, 2026-10-11)
 | Area | Implementation |
 | --- | --- |
 | Client | `apps/game`: Vite 8, React DOM 19, strict TypeScript, Phaser 4, installable browser PWA |
+| UI styling | Tailwind CSS 4.3 through the official `@tailwindcss/vite` plugin; component-local utilities |
 | Server | `apps/server`: NestJS 11, API and server-authoritative gameplay |
 | Data/auth | PostgreSQL and Supabase Auth; public Storage for versioned destination packs |
 | Shared | `packages/shared`: game logic, Zod schemas and API contracts |
@@ -12,6 +13,32 @@
 
 **No Expo, React Native, WebView, native build or second client.** Redis is
 optional later, not a required development service today.
+
+## UI styling
+
+- Style React UI with Tailwind utilities in `className`. Use complete, literal
+  class names in conditional branches so Tailwind can detect them at build time;
+  do not construct names such as `bg-${color}`. Runtime values such as energy
+  width and selected avatar color remain inline styles.
+- `apps/game/vite.config.ts` runs `@tailwindcss/vite`; there is no CDN, runtime
+  style generation, PostCSS configuration or separate Tailwind config file.
+- `apps/game/src/styles.css` contains Tailwind imports, `@theme` color/font
+  tokens, shared element defaults and sleep keyframes. Use `text-ink`,
+  `bg-paper`, `bg-card`, `bg-green` and other theme utilities. Keep ordinary
+  component layout, responsive rules and states in JSX rather than adding
+  named CSS selectors. Existing semantic class markers support state/descendant
+  variants and UI inspection; their visual styles are Tailwind utilities.
+- Preflight is deliberately omitted to preserve existing browser form defaults.
+  The theme and utilities are imported separately; existing global defaults
+  use `@layer base` and `@apply`. Preserve 44px controls, focus outlines,
+  safe-area offsets, existing mobile breakpoints and reduced-motion behavior.
+- `pnpm dev:game` compiles utilities during development. Verify styling changes
+  with `pnpm --filter game test`, `pnpm typecheck`, `pnpm lint`,
+  `pnpm --filter game build` and `pnpm check:pwa`, plus responsive browser checks
+  at 320/375px and tablet/desktop widths. Generated CSS remains a public PWA asset.
+  `/tests/ui-styles-browser.html` is a development-only fixture for the real
+  onboarding/dialogue components and their selected, disabled, error and focus
+  states; it uses fictional data and never calls Auth or gameplay APIs.
 
 ## Code organization (target for new work; no bulk migration)
 
@@ -106,7 +133,7 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   `005` arrival ticket timestamps, character location and unique reward claims;
   `006` conversation node, immutable message replay metadata and ordering;
   `007` asset metadata and the public `game-assets` bucket; `008` wallet ledger;
-  `009` shop catalog.
+  `009` shop catalog; `010` saved life, wardrobe and action receipts.
   Inspect schema and current database before applying new changes.
 
 ## API (implemented vs planned)
@@ -116,7 +143,7 @@ All paths are under `/api/v1`; protected requests use
 
 API throttling (T6) is opt-in: set both `API_RATE_LIMIT_MAX` and
 `API_RATE_LIMIT_WINDOW_MS` to approved positive integers (window ≤ 2147483647ms).
-No default request cap or energy/free-chat policy is imposed. All routed calls,
+No default request cap or AI free-chat policy is imposed. All routed calls,
 including health and failed authentication, share a fixed window per connection
 IP; excess calls return 429 `too_many_requests` with `Retry-After` seconds.
 The global guard runs before controller authentication. Forwarded headers and
@@ -183,18 +210,41 @@ for new grants/rewards/spends; it does not backfill historical balances.
 `EconomyService.spend(userId, amount, reason, key, reference?)` is server-only:
 positive integer charges lock the balance row in a transaction, reject insufficient
 funds with 409, and replay matching keys without charging again. Reusing a key for
-a different charge returns 409. No public spending endpoint exists yet.
+a different charge returns 409. `spendInTransaction` lets life purchases charge inside their effect transaction.
 
 **Planned (not callable yet):** other quest endpoints; corrections history/
 vocabulary; AI chat via SSE. Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
 
 **Shop catalog (T16):** `content/seed/shops.json` is a Zod-validated
-array of `{ id, name, kind, price, shop }`; kind is `drink`, `food` or `clothing`,
+array of `{ id, name, kind, price, shop, color? }`; kind is `drink`, `food` or `clothing`,
 shop is `cafe` or `clothes`, and prices are positive whole dollars. The catalog
 contains 5 drinks, 5 pastries/snacks and 4 colored shirts at owner-approved prices. `db:seed` upserts
 items by ID into `shop_items`. `ShopsService.listItems(shop)` reads that table
-for server callers; browser database access and public order/payment routes are
-not introduced. Validation rejects missing prices, unknown shops and duplicate IDs.
+for server callers; the authenticated life catalog exposes these rows without browser database access. Validation rejects missing prices, unknown shops and duplicate IDs.
+
+## Saved life and direct purchases
+
+- Protected `GET /life` returns `{ energy, coins, gameTime, serverTime, appearance, ownedShirts }`.
+  State initializes lazily for a character at 100 energy and 08:00 on game day 2000-01-01.
+  Its UTC clock advances at 2× elapsed server time, including time away from the app;
+  browser wall-clock changes cannot mutate saved time.
+- Protected `GET /life/catalog` returns the seeded shop catalog.
+- `POST /life/sleep` takes `{ key: UUID }`, adds eight game hours immediately and restores 100 energy.
+- `POST /life/purchase` takes `{ key: UUID, itemIds: string[] }`: one item or one drink plus
+  one food. Stores accept purchases only from 08:00 until 20:00. Prices come from PostgreSQL.
+  Payment and consumption/wardrobe changes share a transaction. Consumables create no inventory;
+  shirts enter `owned_shirts` and equip immediately.
+- `POST /life/appearance` takes `{ key: UUID, hair?, trousers?, shirtItemId? }`.
+  Hair/trousers change freely; equipped shirts must already be owned. Skin stays unchanged.
+- Life writes serialize on the character/stats rows. `player_actions` stores matching replay
+  receipts; a reused key with different arguments returns 409. Exact retries remain valid
+  after closing time. Tables deny direct `anon`/`authenticated` access.
+- Each new server conversation message consumes one energy point in the same transaction;
+  replay consumes none. Zero energy returns 409 with sleep/food guidance. Local practice is free.
+- React's game menu provides purchases, sleep and appearance; the HUD reads saved energy/time.
+  Offline writes are disabled, and uncertain writes offer the same replay key for retry.
+  Scene-owned derived textures preserve original animation frames and skin, and are released
+  on transitions/teardown. The portrait remains the original artwork.
 
 ## Destination assets (T14 experiment)
 
@@ -284,7 +334,6 @@ Physical Android/iOS install, standalone reopen and airplane-mode testing are
 **unverified**, even though desktop/browser offline practice was tested.
 
 ## Future decisions, not current implementation
-Energy, sleep, saved game time, opening hours and color customization have
-approved rules in `TASKS.md` but are not implemented by the catalog task.
+Seller conversations, organization visits and work actions remain future tasks; their approved opening hours are shared contracts.
 AI provider/limits, CEFR promotion and full speech service remain future decisions.
 See `TASKS.md` before extending scope.

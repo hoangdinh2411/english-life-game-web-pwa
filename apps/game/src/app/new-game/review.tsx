@@ -21,8 +21,8 @@ export default function ReviewScreen() {
   }
   return <Screen><Heading title="Your new life" subtitle="Take a look before you begin. You can go back and change anything." />
     <ChoiceCard title={session.draft.name} subtitle="Your character" selected onClick={() => router.push('/new-game/name')}><AvatarPreview color={avatar.outfitColor} /></ChoiceCard>
-    <ChoiceCard title={city.name} subtitle={city.description ?? 'Your starting city'} selected onClick={() => router.push('/new-game/city')}><span className="city-preview" aria-hidden="true">🏡</span></ChoiceCard>
-    {message ? <p role="alert" className="error">{message}</p> : null}
+    <ChoiceCard title={city.name} subtitle={city.description ?? 'Your starting city'} selected onClick={() => router.push('/new-game/city')}><span className="city-preview w-18 h-18 shrink-0 rounded-[16px] bg-[#e5eddd] grid place-items-center text-[32px]" aria-hidden="true">🏡</span></ChoiceCard>
+    {message ? <p role="alert" className="error text-[#a43f34] text-[15px] leading-[1.4]">{message}</p> : null}
     <ActionButton label={busy ? 'Starting your life…' : 'Start Life'} disabled={busy} onClick={() => void startLife()} />
     <ActionButton label="Back" disabled={busy} secondary onClick={() => router.replace('/new-game/name')} />
   </Screen>;

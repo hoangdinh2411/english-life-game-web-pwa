@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import type { Appearance } from '@life-abroad/shared';
 export interface Point {
   x: number;
   y: number;
@@ -21,6 +22,7 @@ export interface StationPortal extends Point {
 export type Direction = 'left' | 'right' | 'up' | 'down';
 export type MapLocation = 'station' | 'cafe' | 'clothes' | 'street';
 export interface StationCallbacks {
+  appearance?: Appearance | undefined;
   practice?: boolean;
   onProgress: (value: number) => void;
   initialLocation?: 'station' | 'street';
@@ -33,12 +35,14 @@ export interface StationCallbacks {
   onExitBlocked: () => void;
 }
 export interface StationGame {
+  setAppearance: (appearance: Appearance | undefined) => void;
   destroy: () => void;
   pause: (paused: boolean) => void;
   unlockExit: (unlocked: boolean) => void;
   talk: () => void;
 }
 export interface GameCanvasProps {
+  appearance?: Appearance | undefined;
   initialLocation?: 'station' | 'street';
   onEnterStreet?: () => Promise<boolean>;
   paused: boolean;
