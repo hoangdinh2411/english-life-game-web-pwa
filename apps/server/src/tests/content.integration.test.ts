@@ -4,12 +4,11 @@ import test from 'node:test';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { readdir } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../app.module';
 import { mapPackSchema } from '@life-abroad/shared';
 
-test('T14 generated files upload through API into real Storage, delete locally, and immutable retries resolve through metadata', async () => {
+test('T14 generated files remain in the local asset folder after upload, and immutable retries resolve through metadata', async () => {
   const target = new URL(process.env.SUPABASE_URL ?? '');
   assert.ok(['127.0.0.1', 'localhost'].includes(target.hostname));
   assert.equal(target.port, '55421');
@@ -21,11 +20,10 @@ test('T14 generated files upload through API into real Storage, delete locally, 
   try {
     await app.listen(0, '127.0.0.1');
     const base = `${await app.getUrl()}/api/v1`;
-    const before = new Set(await readdir(tmpdir()));
     // Spawn asynchronously: the API in this test process must keep servicing requests.
     const { spawn } = await import('node:child_process');
     const invoke = () => new Promise<string>((resolveRun, reject) => {
-      const child = spawn(process.execPath, [resolve('../../scripts/upload-map-assets.mjs')], {
+      const child = spawn(process.execPath, [resolve('../../scripts/upload-map-assets.mjs'), '--target', 'local'], {
         env: { ...process.env, CONTENT_API_URL: base }, stdio: ['ignore', 'pipe', 'pipe'],
       });
       let output = '';
@@ -37,7 +35,7 @@ test('T14 generated files upload through API into real Storage, delete locally, 
     const first: unknown = JSON.parse(await invoke());
     const second: unknown = JSON.parse(await invoke());
     assert.deepEqual(first, second, 'Identical retries must keep immutable paths');
-    assert.deepEqual((await readdir(tmpdir())).filter((name) => !before.has(name) && name.startsWith('life-abroad-assets-')), []);
+    assert.deepEqual((await readdir(resolve('../../local-assets/maps/loc_town_street'))).sort(), ['animations.json', 'background.svg', 'player.svg']);
     const response = await fetch(`${base}/content/maps/loc_town_street`);
     assert.equal(response.status, 200);
     const pack = mapPackSchema.parse(await response.json());

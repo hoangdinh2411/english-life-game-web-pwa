@@ -105,7 +105,8 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   `002` unassigned player state, `003` player permissions, `004` dialogue nodes,
   `005` arrival ticket timestamps, character location and unique reward claims;
   `006` conversation node, immutable message replay metadata and ordering;
-  `007` asset metadata and the public `game-assets` bucket; `008` wallet ledger.
+  `007` asset metadata and the public `game-assets` bucket; `008` wallet ledger;
+  `009` shop catalog.
   Inspect schema and current database before applying new changes.
 
 ## API (implemented vs planned)
@@ -187,6 +188,14 @@ a different charge returns 409. No public spending endpoint exists yet.
 **Planned (not callable yet):** other quest endpoints; corrections history/
 vocabulary; AI chat via SSE. Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
 
+**Shop catalog (T16):** `content/seed/shops.json` is a Zod-validated
+array of `{ id, name, kind, price, shop }`; kind is `drink`, `food` or `clothing`,
+shop is `cafe` or `clothes`, and prices are positive whole dollars. The catalog
+contains 5 drinks, 5 pastries/snacks and 4 colored shirts at owner-approved prices. `db:seed` upserts
+items by ID into `shop_items`. `ShopsService.listItems(shop)` reads that table
+for server callers; browser database access and public order/payment routes are
+not introduced. Validation rejects missing prices, unknown shops and duplicate IDs.
+
 ## Destination assets (T14 experiment)
 
 Station art/voices remain bundled for first load and offline `/practice`.
@@ -196,13 +205,33 @@ previous textures, sounds/audio, JSON and animation keys. Storage URLs are never
 included in PWA precache. The old destination PNG sources are retained as reference
 art, but are no longer imported or built into the app.
 
-After local Supabase, migrations, seed and NestJS are running, use
-`pnpm assets:upload loc_town_street 1` (also `loc_cafe`, `loc_clothes`).
-`SUPABASE_SERVICE_ROLE_KEY` comes from ignored server configuration;
-`CONTENT_API_URL` optionally overrides `http://127.0.0.1:3000/api/v1`.
-The script generates experimental SVG backgrounds, 32×48 player frames and JSON
-walking definitions in a temporary directory, uploads each through NestJS, then
-deletes confirmed uploads. Failed uploads retain their generated file for retry.
+Generated map files are kept outside the game bundle and Git in the ignored
+`local-assets/maps/<mapId>/` directory. Recreate all three local packs without
+Docker or Supabase using `pnpm assets:generate`; pass map IDs to limit output,
+for example `pnpm assets:generate loc_cafe`. After local Supabase, migrations,
+seed and NestJS are running, use
+`pnpm run assets:upload -- --target local loc_town_street 1` (also `loc_cafe`,
+`loc_clothes`). `SUPABASE_SERVICE_ROLE_KEY` comes from ignored local server
+configuration; `CONTENT_API_URL` optionally overrides
+`http://127.0.0.1:3000/api/v1` and must remain on localhost for the local target.
+For an intentional production upload, run
+`pnpm run assets:upload -- --target production loc_town_street 1` with
+`PRODUCTION_CONTENT_API_URL` and `PRODUCTION_SUPABASE_SERVICE_ROLE_KEY` supplied
+by the deployment environment. The URL must be HTTPS and non-local; the API must
+be configured for that same production Supabase project. Production values are
+never loaded from local `.env` files, and the service key remains server-side.
+The upload script generates experimental SVG backgrounds, 32×48 player frames
+and JSON walking definitions in `local-assets/maps/<mapId>/`, then uploads each
+through NestJS. The ignored local copies remain available to inspect, back up or
+upload again. Failed uploads leave the files in place for retry.
+Original map artwork and station NPC atlases, portraits, and Koko-generated voice
+clips can be copied from `apps/game/assets` into map-organized ignored folders
+with `pnpm assets:archive`. Station voice clips are grouped under each matching
+NPC by the scripted dialogue text; shared lines are copied to each NPC that uses
+them. Tutorial narration is kept separately. This includes `loc_station` and
+the current tax-office art.
+The archive command preserves the source files because the station is still
+bundled into the game and loaded directly by `/practice`.
 Destination packs require a map background, `player` spritesheet and an animation
 JSON asset defining `walk-0` through `walk-3`; definitions contain `key`, `texture`,
 numeric `frames`, `frameRate` and `repeat`. Optional NPC art/voices and JSON are
@@ -255,6 +284,7 @@ Physical Android/iOS install, standalone reopen and airplane-mode testing are
 **unverified**, even though desktop/browser offline practice was tested.
 
 ## Future decisions, not current implementation
-AI provider/limits, energy, CEFR
-promotion and full speech service are not authorized by these architecture
-notes. See `TASKS.md` before extending scope.
+Energy, sleep, saved game time, opening hours and color customization have
+approved rules in `TASKS.md` but are not implemented by the catalog task.
+AI provider/limits, CEFR promotion and full speech service remain future decisions.
+See `TASKS.md` before extending scope.

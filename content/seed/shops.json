@@ -1,0 +1,16 @@
+[
+  { "id": "espresso", "name": "Espresso", "kind": "drink", "price": 5, "shop": "cafe" },
+  { "id": "cappuccino", "name": "Cappuccino", "kind": "drink", "price": 7, "shop": "cafe" },
+  { "id": "smoothie", "name": "Smoothie", "kind": "drink", "price": 8, "shop": "cafe" },
+  { "id": "matcha_latte", "name": "Matcha Latte", "kind": "drink", "price": 8, "shop": "cafe" },
+  { "id": "fruit_tea", "name": "Fruit Tea", "kind": "drink", "price": 6, "shop": "cafe" },
+  { "id": "croissant", "name": "Croissant", "kind": "food", "price": 4, "shop": "cafe" },
+  { "id": "muffin", "name": "Muffin", "kind": "food", "price": 5, "shop": "cafe" },
+  { "id": "cookie", "name": "Cookie", "kind": "food", "price": 2, "shop": "cafe" },
+  { "id": "cheesecake", "name": "Cheesecake", "kind": "food", "price": 6, "shop": "cafe" },
+  { "id": "tiramisu", "name": "Tiramisu", "kind": "food", "price": 6, "shop": "cafe" },
+  { "id": "shirt_blue", "name": "Blue Shirt", "kind": "clothing", "price": 30, "shop": "clothes" },
+  { "id": "shirt_green", "name": "Green Shirt", "kind": "clothing", "price": 30, "shop": "clothes" },
+  { "id": "shirt_red", "name": "Red Shirt", "kind": "clothing", "price": 30, "shop": "clothes" },
+  { "id": "shirt_yellow", "name": "Yellow Shirt", "kind": "clothing", "price": 30, "shop": "clothes" }
+]

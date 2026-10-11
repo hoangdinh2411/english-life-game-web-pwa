@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { dialogueSchema, npcCatalogSchema, questCatalogSchema, townSeedSchema } from '@life-abroad/shared';
+import { dialogueSchema, npcCatalogSchema, questCatalogSchema, shopCatalogSchema, townSeedSchema } from '@life-abroad/shared';
 
 async function json(path: string): Promise<unknown> {
   try { return JSON.parse(await readFile(path, 'utf8')) as unknown; }
@@ -11,6 +11,7 @@ export async function loadSeedContent(root: string) {
   const town = townSeedSchema.parse(await json(join(root, 'seed/town.json')));
   const npcs = npcCatalogSchema.parse(await json(join(root, 'seed/npcs.json')));
   const quests = questCatalogSchema.parse(await json(join(root, 'seed/quests.json')));
+  const shops = shopCatalogSchema.parse(await json(join(root, 'seed/shops.json')));
   const dialogues = [];
   for (const file of (await readdir(join(root, 'dialogue'))).filter(file => file.endsWith('.json')).sort()) {
     dialogues.push(dialogueSchema.parse(await json(join(root, 'dialogue', file))));
@@ -45,7 +46,7 @@ export async function loadSeedContent(root: string) {
       }), `${node.id}: unknown applicable quest step ${node.completesStep}`);
     }
   }
-  return { town, roles, npcs, quests, dialogues };
+  return { town, roles, npcs, quests, shops, dialogues };
 }
 
 export type SeedContent = Awaited<ReturnType<typeof loadSeedContent>>;

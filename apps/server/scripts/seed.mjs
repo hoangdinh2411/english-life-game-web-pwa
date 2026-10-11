@@ -10,5 +10,5 @@ const database = new DatabaseService(new ConfigService(process.env));
 try {
   const content = await loadSeedContent(resolve('../../content'));
   await database.transaction(client => seedContent(client, content));
-  process.stdout.write(`Seeded ${content.npcs.length} NPCs, ${content.quests.length} quests and ${content.dialogues.reduce((count, file) => count + file.nodes.length, 0)} dialogue nodes.\n`);
+  process.stdout.write(`Seeded ${content.npcs.length} NPCs, ${content.quests.length} quests, ${content.shops.length} shop items and ${content.dialogues.reduce((count, file) => count + file.nodes.length, 0)} dialogue nodes.\n`);
 } finally { await database.onApplicationShutdown(); }

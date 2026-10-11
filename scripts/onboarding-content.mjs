@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { parseOnboardingOptions, dialogueSchema, npcCatalogSchema, questCatalogSchema, practiceDialogueNodeSchema } from '../packages/shared/dist/index.js';
+import { parseOnboardingOptions, dialogueSchema, npcCatalogSchema, questCatalogSchema, shopCatalogSchema, practiceDialogueNodeSchema } from '../packages/shared/dist/index.js';
 
 async function readJson(file) {
   try {
@@ -20,6 +20,7 @@ function validate(file, schema, content) {
 
 validate('content/seed/npcs.json', npcCatalogSchema, await readJson('content/seed/npcs.json'));
 validate('content/seed/quests.json', questCatalogSchema, await readJson('content/seed/quests.json'));
+validate('content/seed/shops.json', shopCatalogSchema, await readJson('content/seed/shops.json'));
 
 const town = JSON.parse(await readFile(resolve('content/seed/town.json'), 'utf8'));
 const avatars = JSON.parse(await readFile(resolve('content/seed/avatars.json'), 'utf8'));
@@ -38,4 +39,4 @@ for (const [id, node] of Object.entries(station.nodes)) {
   const result = practiceDialogueNodeSchema.safeParse(node);
   if (!result.success) throw new Error(`station.json: ${id}: ${result.error.message}`);
 }
-process.stdout.write('Validated NPCs, quests, authored dialogue and station practice nodes.\n');
+process.stdout.write('Validated NPCs, quests, shop items, authored dialogue and station practice nodes.\n');

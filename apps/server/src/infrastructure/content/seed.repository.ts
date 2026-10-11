@@ -3,7 +3,12 @@ import { SeedContent } from './seed-content';
 
 // Called inside one transaction; never writes player, Auth or progression data.
 export async function seedContent(client: PoolClient, content: SeedContent): Promise<void> {
-  const { town, roles, npcs, quests, dialogues } = content;
+  const { town, roles, npcs, quests, shops, dialogues } = content;
+  for (const item of shops) {
+    await client.query(`INSERT INTO shop_items (id,name,kind,price,shop) VALUES ($1,$2,$3,$4,$5)
+      ON CONFLICT (id) DO UPDATE SET name=excluded.name,kind=excluded.kind,price=excluded.price,shop=excluded.shop`,
+    [item.id, item.name, item.kind, item.price, item.shop]);
+  }
   await client.query(`INSERT INTO cities (id, name, description) VALUES ($1,$2,$3)
     ON CONFLICT (id) DO UPDATE SET name=excluded.name, description=excluded.description`, [town.id, town.name, town.description]);
   for (const location of town.locations) await client.query(`INSERT INTO locations (id,city_id,name,type) VALUES ($1,$2,$3,$4)

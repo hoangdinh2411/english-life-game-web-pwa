@@ -71,6 +71,19 @@ export const dialogueSchema = z.discriminatedUnion('scope', [
 export const npcCatalogSchema = z.array(npcSchema).min(1).refine(uniqueIds, 'NPC IDs must be unique');
 export const questCatalogSchema = z.array(questSchema).min(1).refine(uniqueIds, 'Quest IDs must be unique');
 
+export const shopSchema = z.enum(['cafe', 'clothes']);
+export const shopItemSchema = z.object({
+  id: identifier,
+  name: text,
+  kind: z.enum(['drink', 'food', 'clothing']),
+  price: z.number().int().positive().max(2147483647),
+  shop: shopSchema,
+}).strict();
+export const shopCatalogSchema = z.array(shopItemSchema).refine(uniqueIds, 'Shop item IDs must be unique');
+
+export type Shop = z.infer<typeof shopSchema>;
+export type ShopItem = z.infer<typeof shopItemSchema>;
+
 export type NpcContent = z.infer<typeof npcSchema>;
 export type QuestContent = z.infer<typeof questSchema>;
 export type DialogueContent = z.infer<typeof dialogueSchema>;

@@ -45,6 +45,7 @@ Do not create Git commits. Just suggest a commit message for me; I will commit m
       progress and blocked-exit messages in the UI.
 - [x] **T14 — Asset pipeline and dynamic map/NPC loading (experiment):** versioned Storage packs, service-key uploads, generated-file cleanup, station-only offline practice; unit/integration/PWA checks and ten browser portal round trips verified (sizes and resource-memory measurements in `TECH.md`).
 - [x] **T15 — Wallet and starting $500:** configurable atomic starter grant, server-only transactional spending and wallet ledger; insufficient funds, replay/concurrency, persistence and browser reload at 320/375/1024px verified. Existing characters keep their balance.
+- [x] **T16 — Shop catalog:** 5 drinks, 5 pastries/snacks and 4 $30 colored shirts at approved prices; Zod command rejects missing prices/unknown shops, repeatable PostgreSQL seeding and server database reads verified.
 
 ## NOW
 
@@ -67,15 +68,19 @@ No active NOW item. Select another task only when requested.
   through one provider interface.
 - Item lists and prices live in content (`content/seed/shops.json`), never in
   code. Codex must not invent prices: the owner supplies or approves them.
+- **Approved 2026-10-11, pending gameplay implementation:** energy is 0–100;
+  each player message to an NPC costs 1 point, with retries charged once.
+  Drinks restore 20 points, food/snacks 50, and a drink + food purchase restores
+  80 total (10-point combination bonus), capped at 100. Consumables apply
+  immediately without inventory storage; payment/effects must be atomic.
+- Sleep instantly advances the player's saved game clock by 8 hours and restores
+  energy to 100. Opening hours use game time: organizations 08:00–16:00,
+  stores 08:00–20:00, workplaces 07:00–17:00.
+- Appearance uses separate hair, shirt and trouser colors, saved with the
+  character. The first shop catalog has blue/green/red/yellow shirts at $30 each.
 
 ## NEXT
 
-- [ ] **T16 — Shop catalog (data).** `content/seed/shops.json` validated by Zod
-      and seeded into a `shop_items` table: id, name, kind (drink, food,
-      clothing), price, shop (cafe, clothes). Owner supplies the list
-      (suggested: 4 drinks, 3 foods, 4 clothes). Done when:
-      `pnpm content:validate` rejects a missing price or an unknown shop, and
-      the server reads the items from the database.
 - [ ] **T17 — Order and pay conversation (seller role).** Greet → list the menu
       → player names an item and a quantity (1 to 3) → seller repeats the order
       and total → player confirms → server spends the money → hands over the
@@ -99,8 +104,8 @@ No active NOW item. Select another task only when requested.
 - [ ] **T20 — Clothes shop (two NPCs) and minimal inventory.** Same pattern as
       the café. Add a small inventory table (user, item, quantity) and a "My
       items" list. Done when: buying a shirt lowers the balance once and the
-      item is listed after reload. (Whether clothes change the avatar is an open
-      decision.)
+      item is listed after reload. Equipping a shirt changes its color while
+      preserving the separate hair, skin and trouser appearance.
 - [ ] **T12 — Minimal review screen.** Past corrections and the useful phrases
       the player used in shops ("I'd like…", "How much is…"). Store useful terms
       only, not every word. Done when: after ordering coffee, the screen shows
@@ -128,6 +133,9 @@ No active NOW item. Select another task only when requested.
 
 ## LATER — only when explicitly requested and policies are decided
 
+- Production asset publishing: upload versioned map, NPC and Koko audio assets
+  from the local archive to production Supabase Storage, update pack references,
+  and decide the station offline/PWA cache behavior before removing bundled files.
 - **Production AI provider:** after the audience decision, compare providers
   with the evaluation set (quality, speed, price), check EU and under-18 terms
   and the data processing terms, add the provider class, and add the privacy
@@ -147,11 +155,11 @@ No active NOW item. Select another task only when requested.
   allows teens, or no AI chat for minors. The free Gemini quota is for
   development with fake data only (its terms exclude EU/EEA/UK end users and
   apps likely used by under-18s).
-- Shops: the item list and prices; what clothes do (only a list, or they change
-  the avatar outfit); whether old test characters get a top-up to $500.
+- Shops: future main-meal items and prices; whether old test characters get a
+  top-up to $500. Initial catalog and clothing-color behavior are approved.
 - Jobs: light interview only (suggested), or real jobs with pay and work time (a
   big feature, after the MVP).
-- XP-to-level thresholds/CEFR promotion, coin spending, energy/free-chat limits.
+- XP-to-level thresholds/CEFR promotion and AI free-chat limits.
 - General AI/speech providers, production Auth recovery/verification policies,
   audio privacy/age/GDPR and final asset licenses.
 - Domain name and hosting for the public site and the game.
@@ -165,3 +173,5 @@ implement extra features during the current task.
 ```
 
 ```
+- Approved energy/consumption, saved game clock, sleep and opening-hour rules
+  above need dedicated implementation tasks; T16 only supplies catalog data.

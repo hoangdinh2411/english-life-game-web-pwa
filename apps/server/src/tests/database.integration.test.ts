@@ -11,6 +11,8 @@ import { seedContent } from '../infrastructure/content/seed.repository';
 import { DialogueCacheService } from '../infrastructure/content/dialogue-cache.service';
 import { DialogueService } from '../modules/dialogue/dialogue.service';
 import { resolve } from 'node:path';
+import { ShopsService } from '../modules/shops/shops.service';
+import type { ShopItem } from '@life-abroad/shared';
 
 test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS and shutdown', async () => {
   const url = new URL(process.env.TEST_SUPABASE_DATABASE_URL ?? process.env.DATABASE_URL ?? '');
@@ -41,7 +43,7 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
       });
       assert.equal(migration.status, 0, migration.stderr);
     }
-    assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, 8);
+    assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, 9);
     const content = await loadSeedContent(resolve('../../content'));
     const seedDatabase = new DatabaseService(new ConfigService({ DATABASE_URL: cleanUrl.toString() }));
     let seedClosed = false;
@@ -56,6 +58,37 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
       assert.equal((await clean.query('SELECT * FROM quests')).rowCount, content.quests.length);
       assert.equal((await clean.query('SELECT * FROM quest_steps')).rowCount, content.quests.reduce((count, quest) => count + quest.steps.length, 0));
       assert.deepEqual((await clean.query('SELECT rewards FROM quests WHERE id=$1', ['q_order_coffee'])).rows[0].rewards, { xp: 20, coins: 5 });
+      assert.deepEqual((await clean.query<ShopItem>('SELECT id,name,kind,price,shop FROM shop_items ORDER BY id')).rows,
+        [...content.shops].sort((a, b) => a.id.localeCompare(b.id)));
+      // Prices here are isolated fixtures, never the owner-authored live catalog.
+      const fixtureItems: ShopItem[] = [
+        { id: 'test_drink', name: 'Test drink', kind: 'drink', price: 2, shop: 'cafe' },
+        { id: 'test_food', name: 'Test food', kind: 'food', price: 3, shop: 'cafe' },
+        { id: 'test_shirt', name: 'Test shirt', kind: 'clothing', price: 10, shop: 'clothes' },
+      ];
+      for (let attempt = 0; attempt < 2; attempt++) {
+        await seedDatabase.transaction(client => seedContent(client, { ...content, shops: fixtureItems }));
+      }
+      const shops = new ShopsService(seedDatabase);
+      const cafe = await shops.listItems('cafe');
+      assert.deepEqual(cafe.filter(item => item.id.startsWith('test_')), fixtureItems.slice(0, 2));
+      assert.deepEqual((await shops.listItems('clothes')).filter(item => item.id.startsWith('test_')), [fixtureItems[2]]);
+      await clean.query('UPDATE shop_items SET price=4 WHERE id=$1', ['test_drink']);
+      assert.equal((await shops.listItems('cafe')).find(item => item.id === 'test_drink')?.price, 4);
+      await assert.rejects(seedDatabase.transaction(async client => {
+        await seedContent(client, { ...content, shops: fixtureItems });
+        throw new Error('shop seed rollback');
+      }), /shop seed rollback/);
+      assert.equal((await shops.listItems('cafe')).find(item => item.id === 'test_drink')?.price, 4);
+      const permissionClient = await clean.connect();
+      try {
+        await permissionClient.query('BEGIN');
+        await permissionClient.query('SET LOCAL ROLE authenticated');
+        await assert.rejects(permissionClient.query('SELECT * FROM shop_items'), { code: '42501' });
+      } finally {
+        await permissionClient.query('ROLLBACK');
+        permissionClient.release();
+      }
       const cache = new DialogueCacheService(seedDatabase);
       const [nodes, sameNodes] = await Promise.all([cache.getNodes(), cache.getNodes()]);
       assert.equal(nodes.length, content.dialogues.reduce((count, file) => count + file.nodes.length, 0));

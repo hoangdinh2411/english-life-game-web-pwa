@@ -37,6 +37,21 @@ test('committed content passes', () => {
   assert.equal(result.status, 0, result.stderr);
 });
 
+// Invalid catalog data must fail the actual content command, not just a schema helper.
+for (const [name, item, diagnostic] of [
+  ['missing price', { id: 'test_drink', name: 'Test drink', kind: 'drink', shop: 'cafe' }, /shops\.json.*0\.price/s],
+  ['unknown shop', { id: 'test_drink', name: 'Test drink', kind: 'drink', price: 2, shop: 'unknown' }, /shops\.json.*0\.shop/s],
+]) {
+  test(`shop catalog command rejects ${name}`, async () => {
+    await fixture(async root => {
+      await writeFile(resolve(root, 'content/seed/shops.json'), JSON.stringify([item]));
+      const result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
+      assert.notEqual(result.status, 0, 'Invalid shop catalog must fail validation');
+      assert.match(result.stderr, diagnostic);
+    });
+  });
+}
+
 for (const [file, change, diagnostic] of [
   ['seed/quests.json', (data) => { data[0].rewards.xp = -1; }, /quests\.json.*0\.rewards\.xp/s],
   ['seed/quests.json', (data) => { data[0].steps[0].doneWhen.intent = ''; }, /quests\.json.*doneWhen\.intent/s],

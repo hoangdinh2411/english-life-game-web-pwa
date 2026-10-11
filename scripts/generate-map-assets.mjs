@@ -1,7 +1,9 @@
 /* global FormData, Blob, AbortSignal */
-import { mkdtemp, writeFile, readFile, unlink, rmdir } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+
+const localAssetRoot = fileURLToPath(new URL('../local-assets/maps/', import.meta.url));
 
 // Procedural experiment artwork. Generated files exist only in a temporary directory.
 export function generateMap(mapId) {
@@ -20,19 +22,31 @@ export function generatePlayer() {
   }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="192">${frames}</svg>`;
 }
-export async function generateAndUpload({ mapId = 'loc_town_street', version = 1, baseUrl, serviceKey, fetcher = fetch }) {
-  if (!serviceKey || !baseUrl) throw new Error('CONTENT_API_URL and SUPABASE_SERVICE_ROLE_KEY are required');
-  if (!Number.isSafeInteger(version) || version < 1 || version > 2147483647) throw new Error('Version must be a positive 32-bit integer');
-  const assets = [
+
+function mapAssets(mapId) {
+  return [
     { name: 'background.svg', type: 'map', mime: 'image/svg+xml', data: generateMap(mapId) },
     { name: 'player.svg', type: 'spritesheet', mime: 'image/svg+xml', data: generatePlayer() },
     { name: 'animations.json', type: 'animation', mime: 'application/json', data: JSON.stringify({ animations: Array.from({ length: 4 }, (_, row) => ({ key: `walk-${row}`, texture: 'player', frames: Array.from({ length: 4 }, (_, column) => row * 4 + column), frameRate: 7, repeat: -1 })) }) },
   ];
-  const directory = await mkdtemp(join(tmpdir(), 'life-abroad-assets-'));
+}
+
+export async function saveMapAssets(mapId, outputRoot = localAssetRoot) {
+  const assets = mapAssets(mapId);
+  const directory = join(outputRoot, mapId);
+  await mkdir(directory, { recursive: true });
+  for (const asset of assets) await writeFile(join(directory, asset.name), asset.data, 'utf8');
+  return directory;
+}
+
+export async function generateAndUpload({ mapId = 'loc_town_street', version = 1, baseUrl, serviceKey, fetcher = fetch }) {
+  if (!serviceKey || !baseUrl) throw new Error('CONTENT_API_URL and SUPABASE_SERVICE_ROLE_KEY are required');
+  if (!Number.isSafeInteger(version) || version < 1 || version > 2147483647) throw new Error('Version must be a positive 32-bit integer');
+  const assets = mapAssets(mapId);
+  const directory = await saveMapAssets(mapId);
   const results = [];
   for (const asset of assets) {
     const path = join(directory, asset.name);
-    await writeFile(path, asset.data, { flag: 'wx' });
     const file = await readFile(path);
     const form = new FormData();
     form.set('file', new Blob([file], { type: asset.mime }), asset.name);
@@ -41,9 +55,7 @@ export async function generateAndUpload({ mapId = 'loc_town_street', version = 1
     if (!response.ok) throw new Error(`Upload failed (${response.status}); generated file retained at ${path}`);
     const result = await response.json();
     if (typeof result.url !== 'string' || typeof result.bytes !== 'number') throw new Error(`Invalid upload response; generated file retained at ${path}`);
-    await unlink(path); // Delete only after confirmed upload; never delete a supplied source file.
     results.push(result);
   }
-  await rmdir(directory);
   return results;
 }
