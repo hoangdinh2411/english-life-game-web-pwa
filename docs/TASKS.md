@@ -44,6 +44,7 @@ Do not create Git commits. Just suggest a commit message for me; I will commit m
       across reload and sign-in. Chat, optional Coach, ticket receipt, ordered
       progress and blocked-exit messages in the UI.
 - [x] **T14 — Asset pipeline and dynamic map/NPC loading (experiment):** versioned Storage packs, service-key uploads, generated-file cleanup, station-only offline practice; unit/integration/PWA checks and ten browser portal round trips verified (sizes and resource-memory measurements in `TECH.md`).
+- [x] **T15 — Wallet and starting $500:** configurable atomic starter grant, server-only transactional spending and wallet ledger; insufficient funds, replay/concurrency, persistence and browser reload at 320/375/1024px verified. Existing characters keep their balance.
 
 ## NOW
 
@@ -69,14 +70,6 @@ No active NOW item. Select another task only when requested.
 
 ## NEXT
 
-- [ ] **T15 — Wallet and starting $500.** Server grants the starting balance to
-      new characters from a config value. Add a wallet ledger table (new
-      migration: user, amount, reason, reference, idempotency key, time) and one
-      server function `spend(amount, reason, key)`: transactional, never below
-      $0, the same key never charges twice. Existing characters keep their
-      balance. Update the one economy note in the docs. Done when: tests cover a
-      new character with $500, insufficient funds, a repeated key, two
-      simultaneous spends, and the balance shows in the UI after reload.
 - [ ] **T16 — Shop catalog (data).** `content/seed/shops.json` validated by Zod
       and seeded into a `shop_items` table: id, name, kind (drink, food,
       clothing), price, shop (cafe, clothes). Owner supplies the list

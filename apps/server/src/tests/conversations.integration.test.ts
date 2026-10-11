@@ -42,6 +42,7 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     assert.equal((await call('/conversations', { npcId: 'npc_receptionist' })).status, 409);
     const options = await (await call('/onboarding/options')).json() as { cities: { id: string }[]; avatars: { id: string }[] };
     assert.equal((await call('/characters', { name: 'T7 Learner', cityId: options.cities[0]!.id, avatarId: options.avatars[0]!.id })).status, 201);
+    assert.deepEqual((await (await call('/me')).json() as { stats: unknown }).stats, { xp: 0, coins: 500 });
     const created = await call('/conversations', { npcId: 'npc_receptionist' });
     assert.equal(created.status, 201);
     const conversation = conversationSchema.parse(await created.json());

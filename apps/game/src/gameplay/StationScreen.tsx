@@ -9,7 +9,7 @@ import { TutorialDialogue } from './TutorialDialogue';
 import { OverlayButton } from './OverlayButton';
 import { PlayerInfoCard } from './PlayerInfoCard';
 import { QuestBoard } from './QuestBoard';
-import { shouldShowQuestBoard, goalNotice } from './arrival-hud';
+import { shouldShowQuestBoard, goalNotice, practiceArrivalGoals } from './arrival-hud';
 import { usePwa } from '../pwa/PwaProvider';
 export default function StationScreen({ playerName, xp, coins, onSignOut, practice = false, arrival }: StationScreenProps) {
   const [npcId, setNpcId] = useState<StationSpeaker | null>(null);
@@ -20,12 +20,14 @@ export default function StationScreen({ playerName, xp, coins, onSignOut, practi
   const [goals, setGoals] = useState(false);
   const [sound, setSound] = useState(true);
   const [exitUnlocked, setExitUnlocked] = useState(false);
+  const [practiceDirectionsAsked, setPracticeDirectionsAsked] = useState(false);
   const [exitReminder, setExitReminder] = useState(false);
   const pwa = usePwa();
   const cityName = location.split(' · ')[0] ?? 'Maplewood';
   const overlayOpen = npcId !== null || tutorial || menu || goals || exitReminder || Boolean(arrival?.pending || arrival?.error);
   const showGoals = shouldShowQuestBoard({ tutorialOpen: overlayOpen, mapReady: stationReady });
-  const notice = goalNotice();
+  const practiceGoals = practiceArrivalGoals(practiceDirectionsAsked);
+  const notice = goalNotice(practiceGoals);
   return <main className="station-screen" aria-label={location}>
     <GameCanvas {...(arrival ? { initialLocation: arrival.initialLocation, onEnterStreet: arrival.onEnterStreet } : {})} exitUnlocked={arrival?.exitUnlocked ?? exitUnlocked} onExitBlocked={() => setExitReminder(true)} onReadyChange={setStationReady} onLocationChange={setLocation} paused={!stationReady || overlayOpen || Boolean(arrival && !arrival.online)} onTalk={(id) => {
       if (id === 'npc_station_information') arrival?.onOpenReceptionist();
@@ -39,15 +41,15 @@ export default function StationScreen({ playerName, xp, coins, onSignOut, practi
       </div>
     </div>
     {showGoals ? <div className="goals-control"><span className="goal-notice">{arrival?.goalsLabel ?? (notice.fresh ? `${notice.fresh} new quest${notice.fresh > 1 ? 's' : ''}` : notice.active ? `${notice.active} active quest${notice.active > 1 ? 's' : ''}` : 'Your quests')}</span><GameButton label={arrival ? 'Goals' : notice.active || notice.fresh ? '! Goals' : 'Goals'} ariaLabel={arrival ? 'Open saved arrival goals' : `Open goals, ${notice.active} active quests, ${notice.fresh} new quests`} onClick={() => setGoals(true)} /></div> : null}
-    {goals ? <DialogueFrame><div className="dialogue-header"><h2>Goals</h2><GameButton label="Close goals" onClick={() => setGoals(false)} /></div>{arrival?.questPanel ?? <QuestBoard inPanel />}</DialogueFrame> : null}
+    {goals ? <DialogueFrame><div className="dialogue-header"><h2>Goals</h2><GameButton label="Close goals" onClick={() => setGoals(false)} /></div>{arrival?.questPanel ?? <QuestBoard inPanel goals={practiceGoals} />}</DialogueFrame> : null}
     {!npcId && !tutorial && !goals ? arrival?.statusPanel : null}
     {tutorial && stationReady ? <TutorialDialogue playerName={playerName} sound={sound} onClose={() => setTutorial(false)} /> : null}
-    {npcId === 'npc_station_information' && arrival ? <DialogueFrame><div className="dialogue-header"><h2>Receptionist</h2><GameButton label="Close" onClick={() => setNpcId(null)} /></div>{arrival.renderReceptionist(sound)}</DialogueFrame> : npcId ? <ConversationPanel key={npcId} npcId={npcId} playerName={playerName} sound={sound} {...(practice ? { onDirections: setExitUnlocked } : {})} onClose={() => setNpcId(null)} /> : null}
+    {npcId === 'npc_station_information' && arrival ? <DialogueFrame><div className="dialogue-header"><h2>Receptionist</h2><GameButton label="Close" onClick={() => setNpcId(null)} /></div>{arrival.renderReceptionist(sound)}</DialogueFrame> : npcId ? <ConversationPanel key={npcId} npcId={npcId} playerName={playerName} sound={sound} {...(practice ? { onDirections: (received: boolean) => { setExitUnlocked(received); if (received) setPracticeDirectionsAsked(true); } } : {})} onClose={() => setNpcId(null)} /> : null}
     {arrival?.pending && !npcId ? <p className="practice-status" role="status">Checking your saved game…</p> : null}
     {arrival?.error && !npcId ? <DialogueFrame><p role="alert">{arrival.error}</p><GameButton label="Check saved state" onClick={arrival.onRetry} /><GameButton label="Sign out" onClick={onSignOut} /></DialogueFrame> : null}
     {exitReminder ? <DialogueFrame><h2>Before you leave</h2><p>{arrival?.blockedExitMessage ?? 'Talk to the receptionist at the information kiosk and ask where to get an ID card first. Look for the yellow ! marker.'}</p><GameButton label="Return to station" onClick={() => setExitReminder(false)} /></DialogueFrame> : null}
     {menu ? <DialogueFrame><h2>Game menu</h2><strong className="truncate">{playerName}</strong>
-      {practice ? <p>Local practice · No saved progress or rewards.</p> : <p>XP {xp} · Coins {coins}</p>}
+      {practice ? <p>Local practice · No saved progress or rewards.</p> : <p>XP {xp} · $ {coins}</p>}
       <GameButton label="Movement tutorial" onClick={() => { setMenu(false); setTutorial(true); }} />
       <GameButton label="Return to game" onClick={() => setMenu(false)} />
       {pwa.updateReady ? <GameButton label="Reload to update" onClick={() => void pwa.update()} /> : null}
@@ -55,6 +57,3 @@ export default function StationScreen({ playerName, xp, coins, onSignOut, practi
     </DialogueFrame> : null}
   </main>;
 }
-
-
-

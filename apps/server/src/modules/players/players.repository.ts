@@ -2,6 +2,7 @@ import { ConflictException, Injectable, ServiceUnavailableException } from '@nes
 import type { CreateCharacterRequest, PlayerResponse, PlayerState, StarterCity } from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
+import { EconomyService } from '../economy/economy.service';
 
 interface PlayerRow {
   id: string; email: string; display_name: string;
@@ -11,11 +12,11 @@ interface PlayerRow {
 
 @Injectable()
 export class PlayersRepository {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseService, private readonly economy: EconomyService) {}
 
   async createCharacter(userId: string, request: CreateCharacterRequest, city: StarterCity): Promise<PlayerState> {
     return this.database.transaction(async client => {
-      // Serialize attempts for this account. Stats are read, never initialized or reset here.
+      // Serialize creation and grant the starter money in the same transaction.
       const profile = await client.query('SELECT id FROM public.profiles WHERE id = $1 FOR UPDATE', [userId]);
       if (profile.rowCount !== 1) throw new ServiceUnavailableException('Player profile is unavailable');
       const before = await this.getPlayer(userId, client);
@@ -26,6 +27,7 @@ export class PlayersRepository {
         [city.id, city.name, city.description ?? null]);
       await client.query('INSERT INTO public.characters (user_id, name, outfit, current_city_id) VALUES ($1, $2, $3, $4)',
         [userId, request.name, JSON.stringify({ avatarId: request.avatarId }), request.cityId]);
+      await this.economy.grantStartingBalance(client, userId);
       const player = await this.getPlayer(userId, client);
       if (!player.character) throw new ServiceUnavailableException('Character state is unavailable');
       return { ...player, character: player.character, inventory: [], questProgress: [] };

@@ -19,3 +19,14 @@ test('mock arrival goals show the tutorial completed and the receptionist as the
     { title: 'Get an ID card at the tax office', status: 'locked' },
   ]);
 });
+
+test('local practice advances to the ticket goal after directions without completing the ticket', () => {
+  const goals = hud.practiceArrivalGoals(true);
+  assert.deepEqual(goals.map(({ id, status }) => ({ id, status })), [
+    { id: 'tutorial', status: 'complete' },
+    { id: 'receptionist', status: 'complete' },
+    { id: 'ticket', status: 'current' },
+    { id: 'id-card', status: 'locked' },
+  ]);
+  assert.equal(hud.mockArrivalGoals[1]?.status, 'current');
+});

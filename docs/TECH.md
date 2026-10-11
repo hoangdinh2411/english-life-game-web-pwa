@@ -105,7 +105,7 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   `002` unassigned player state, `003` player permissions, `004` dialogue nodes,
   `005` arrival ticket timestamps, character location and unique reward claims;
   `006` conversation node, immutable message replay metadata and ordering;
-  `007` asset metadata and the public `game-assets` bucket.
+  `007` asset metadata and the public `game-assets` bucket; `008` wallet ledger.
   Inspect schema and current database before applying new changes.
 
 ## API (implemented vs planned)
@@ -139,7 +139,7 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
 - `GET /me` → `{ user, character, stats }`; `character: null` before creation,
   `stats` contains existing `xp`/`coins` even before a character exists.
 - `POST /characters` with `{ name, cityId, avatarId }`; creates one character
-  atomically, retains existing stats, duplicate returns 409.
+  atomically, adds the configured starting grant, duplicate returns 409.
 - `GET /quests/arrival` → `{ questId, status, currentStepId, ticket: { issued,
   used }, canEnterTownStreet, locationId, rewardsGranted }` (protected; requires
   a character). Reads persisted account state; no client-provided user ID.
@@ -172,7 +172,17 @@ step IDs or ticket grants. Steps are greet → directions/request → issue tick
 → enter street. Character-row locking serializes concurrent account requests;
 the `(user_id, quest_id)` reward ledger prevents duplicate grants. Null character
 location means the station for existing starter-city characters. Existing
-balances remain intact; rewards come from the validated seeded quest.
+characters' balances remain intact; rewards come from the validated seeded quest.
+
+**Economy (T15):** new character creation grants `STARTING_BALANCE` (server-only,
+default **500**, whole dollars) atomically; existing characters receive no top-up.
+The database field remains `coins`; the UI shows `$`. `wallet_ledger` records
+signed amounts, reason, reference, account-scoped idempotency key and timestamp
+for new grants/rewards/spends; it does not backfill historical balances.
+`EconomyService.spend(userId, amount, reason, key, reference?)` is server-only:
+positive integer charges lock the balance row in a transaction, reject insufficient
+funds with 409, and replay matching keys without charging again. Reusing a key for
+a different charge returns 409. No public spending endpoint exists yet.
 
 **Planned (not callable yet):** other quest endpoints; corrections history/
 vocabulary; AI chat via SSE. Don't add `/auth/*` to NestJS; Supabase SDK owns auth.

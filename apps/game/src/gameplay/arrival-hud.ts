@@ -7,6 +7,16 @@ export const mockArrivalGoals: ArrivalGoal[] = [
   { id: 'id-card', title: 'Get an ID card at the tax office', status: 'locked' },
 ];
 
+export function practiceArrivalGoals(directionsAsked: boolean): ArrivalGoal[] {
+  if (!directionsAsked) return mockArrivalGoals;
+
+  return mockArrivalGoals.map((goal) => {
+    if (goal.id === 'receptionist') return { ...goal, status: 'complete' };
+    if (goal.id === 'ticket') return { ...goal, status: 'current' };
+    return goal;
+  });
+}
+
 export function goalNotice(goals: readonly ArrivalGoal[] = mockArrivalGoals): GoalNotice {
   return { active: goals.filter((goal) => goal.status === 'current').length, fresh: goals.filter((goal) => goal.status === 'new').length };
 }

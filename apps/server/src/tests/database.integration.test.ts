@@ -41,7 +41,7 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
       });
       assert.equal(migration.status, 0, migration.stderr);
     }
-    assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, 7);
+    assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, 8);
     const content = await loadSeedContent(resolve('../../content'));
     const seedDatabase = new DatabaseService(new ConfigService({ DATABASE_URL: cleanUrl.toString() }));
     let seedClosed = false;

@@ -44,7 +44,7 @@ test('T5 ordered arrival, persisted entitlement, concurrent retries, atomic rewa
     const content = await loadSeedContent(resolve('../../content'));
     await database.transaction(client => seedContent(client, content));
     const repository = new QuestsRepository(database);
-    const economy = new EconomyService();
+    const economy = new EconomyService(database, new ConfigService());
     let quests = new QuestsService(repository, economy);
     const userId = randomUUID();
     const otherUserId = randomUUID();

@@ -1,5 +1,6 @@
 import type { StationSpeaker } from '@life-abroad/shared';
 import type { ReactNode } from 'react';
+import type { ArrivalGoal } from '../gameplay/goals';
 export interface ComposerIconProps {
   kind: 'microphone' | 'send' | 'stop';
   color: string;
@@ -52,6 +53,7 @@ export interface TutorialDialogueProps {
 }
 export interface QuestBoardProps {
   inPanel?: boolean;
+  goals?: readonly ArrivalGoal[];
 }
 export interface StationScreenProps {
   arrival?: {
