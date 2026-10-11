@@ -3,9 +3,9 @@ import * as api from '../../api/client';
 import { useSession } from '../../session/session-provider';
 import StationScreen from '../../gameplay/StationScreen';
 import { Screen, ActionButton } from '../../components/onboarding-ui';
-import { createArrivalController } from './arrival-controller';
-import { ArrivalConversation } from './ArrivalConversation';
-import { ArrivalQuest } from './ArrivalQuest';
+import { createConversationController } from '../dialogue/conversation-controller';
+import { SavedConversation } from '../dialogue/SavedConversation';
+import { ArrivalQuest, TicketReceipt } from './ArrivalQuest';
 import { arrivalPresentation } from './arrival-presentation';
 import { usePwa } from '../../pwa/PwaProvider';
 import { router } from '../../navigation/router';
@@ -16,7 +16,7 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
   const { online } = usePwa();
   const run = session.runAuthenticated;
   const life = useLife(run, online);
-  const [controller] = useState(() => createArrivalController({
+  const [controller] = useState(() => createConversationController({
     load: () => run(api.loadArrival), start: () => run(api.startArrivalConversation),
     send: async (id, body) => {
       const result = await run((token) => api.sendArrivalMessage(token, id, body));
@@ -67,6 +67,7 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
         }
         return entered;
       },
-      renderReceptionist: (sound) => <ArrivalConversation state={state} sound={sound} online={online} send={controller.send} retry={() => void controller.start()} />,
+      renderReceptionist: (sound) => <SavedConversation state={state} sound={sound} online={online} send={controller.send} retry={() => void controller.start()}
+        completed={state.arrival?.status === 'done'} details={<>{state.arrival?.ticket.issued ? <TicketReceipt arrival={state.arrival} /> : null}<p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{view.next}</p></>} />,
     }} />;
 }

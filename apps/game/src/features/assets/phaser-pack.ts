@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import type { MapPack } from '@life-abroad/shared';
-import { packAnimationsSchema } from '@life-abroad/shared';
+import { packActorsSchema, packAnimationsSchema } from '@life-abroad/shared';
 import { packKey } from './map-pack';
 
 export function loadPack(scene: Phaser.Scene, pack: MapPack, progress: (value: number) => void, signal: AbortSignal): Promise<void> {
@@ -26,9 +26,12 @@ export function loadPack(scene: Phaser.Scene, pack: MapPack, progress: (value: n
     scene.load.once('complete', complete);
     for (const asset of pack.assets) {
       const key = packKey(pack, asset);
+      const atlas = asset.type === 'image' ? pack.assets.find(item =>
+        item.type === 'json' && item.key === `${asset.key}-atlas` && item.npcId === asset.npcId && item.version === asset.version) : undefined;
       if (asset.type === 'audio') scene.load.audio(key, asset.url);
       else if (asset.type === 'json' || asset.type === 'animation') scene.load.json(key, asset.url);
       else if (asset.type === 'spritesheet') scene.load.spritesheet(key, asset.url, { frameWidth: 32, frameHeight: 48 });
+      else if (atlas) scene.load.atlas(key, asset.url, atlas.url);
       else scene.load.image(key, asset.url);
     }
     scene.load.start();
@@ -58,5 +61,11 @@ export function preparePack(scene: Phaser.Scene, pack: MapPack) {
     throw new Error('Map pack needs all four player walking animations.');
   }
   for (const definition of definitions) scene.anims.create(definition);
-  return { background: packKey(pack, background), player: packKey(pack, player), walkPrefix, animationKeys };
+  const actorAsset = pack.assets.find(asset => asset.key === 'actors' && asset.type === 'json' && asset.npcId === null);
+  const actors = actorAsset ? packActorsSchema.parse(scene.cache.json.get(packKey(pack, actorAsset))).actors.map(actor => {
+    const texture = pack.assets.find(asset => asset.key === actor.texture && asset.type === 'image' && asset.npcId === null);
+    if (!texture || !scene.textures.get(packKey(pack, texture)).has(actor.frame)) throw new Error('NPC atlas frame is missing from this pack.');
+    return { ...actor, texture: packKey(pack, texture) };
+  }) : [];
+  return { background: packKey(pack, background), player: packKey(pack, player), walkPrefix, animationKeys, actors };
 }

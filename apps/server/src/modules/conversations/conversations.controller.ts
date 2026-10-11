@@ -13,8 +13,7 @@ export class ConversationsController {
   @Post()
   create(@CurrentUser() userId: string,
     @Body(new SchemaValidationPipe(createConversationSchema)) request: { npcId: string }): Promise<Conversation> {
-    void request;
-    return this.conversations.create(userId);
+    return this.conversations.create(userId, request.npcId);
   }
 
   @Get(':id')

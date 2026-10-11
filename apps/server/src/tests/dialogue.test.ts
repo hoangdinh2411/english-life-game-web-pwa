@@ -22,7 +22,7 @@ async function fixture() {
   class ContentDatabase extends DatabaseService {
     override async query<Row extends import('pg').QueryResultRow = import('pg').QueryResultRow>(): Promise<import('pg').QueryResult<Row>> {
       queries++;
-      const rows = nodes.map(({ node, scope, version, roleId, npcId }) => {
+      const rows = nodes.filter(entry => entry.scope === 'npc').map(({ node, scope, version, roleId, npcId }) => {
         const { id, text, ...rules } = node;
         return { id, scope, version, role_id: roleId, npc_id: npcId, npc_text: text, next_rules: rules };
       });
@@ -30,7 +30,10 @@ async function fixture() {
       return { rows: rows as unknown as Row[], rowCount: rows.length, command: 'SELECT', oid: 0, fields: [] };
     }
   }
-  const cache = new DialogueCacheService(new ContentDatabase(new ConfigService()));
+  class FixtureCache extends DialogueCacheService {
+    protected override async commonNodes(): Promise<CachedDialogueNode[]> { return nodes.filter(entry => entry.scope !== 'npc'); }
+  }
+  const cache = new FixtureCache(new ContentDatabase(new ConfigService()));
   return { content, nodes, cache, engine: new DialogueService(cache), queries: () => queries };
 }
 
@@ -131,6 +134,9 @@ test('T4 failed cache loads can retry', async () => {
   }
   const cache = new DialogueCacheService(new RetryingDatabase(new ConfigService()));
   await assert.rejects(cache.getNodes(), /temporary database failure/);
-  assert.deepEqual(await cache.getNodes(), []);
+  const nodes = await cache.getNodes();
+  assert.ok(nodes.some(entry => entry.scope === 'global'));
+  assert.ok(nodes.some(entry => entry.scope === 'role'));
+  assert.ok(nodes.every(entry => entry.scope !== 'npc'));
   assert.equal(attempts, 2);
 });

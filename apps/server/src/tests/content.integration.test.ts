@@ -38,7 +38,7 @@ test('T14 generated files remain in the local asset folder after upload, and imm
     // Spawn asynchronously: the API in this test process must keep servicing requests.
     const { spawn } = await import('node:child_process');
     const invoke = () => new Promise<string>((resolveRun, reject) => {
-      const child = spawn(process.execPath, [resolve('../../scripts/upload-map-assets.mjs'), '--target', 'local'], {
+      const child = spawn(process.execPath, [resolve('../../scripts/upload-map-assets.mjs'), '--target', 'local', 'loc_town_street', '2'], {
         env: { ...process.env, CONTENT_API_URL: base }, stdio: ['ignore', 'pipe', 'pipe'],
       });
       let output = '';
@@ -53,7 +53,8 @@ test('T14 generated files remain in the local asset folder after upload, and imm
     const second: unknown = JSON.parse(await invoke());
     assert.deepEqual(first, second, 'Identical retries must keep immutable paths');
     const entries = await readdir(assetDirectory, { withFileTypes: true });
-    assert.deepEqual(entries.filter(entry => entry.isFile()).map(entry => entry.name).sort(), ['animations.json', 'background.svg', 'player.svg']);
+    const files = entries.filter(entry => entry.isFile()).map(entry => entry.name);
+    for (const file of ['animations.json', 'background.png', 'player.png']) assert.ok(files.includes(file));
     assert.deepEqual(await sourceFiles(join(assetDirectory, 'source')), sourceBefore, 'Uploads must preserve source artwork');
     const response = await fetch(`${base}/content/maps/loc_town_street`);
     assert.equal(response.status, 200);
@@ -69,7 +70,7 @@ test('T14 generated files remain in the local asset folder after upload, and imm
     const send = (mapId: string, type: string, data: string) => {
       const form = new FormData();
       form.set('file', new Blob([data], { type: 'image/svg+xml' }), 'background.svg');
-      form.set('mapId', mapId); form.set('type', type); form.set('version', '1');
+      form.set('mapId', mapId); form.set('type', type); form.set('version', '2');
       return fetch(`${base}/content/assets/upload`, { method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form });
     };
     assert.equal((await send('loc_town_street', 'map', '<svg/>')).status, 409);

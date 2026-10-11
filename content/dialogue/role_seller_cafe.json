@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "scope": "role",
+  "role": "barista",
+  "nodes": [
+    {
+      "id": "seller_start",
+      "text": { "default": "Hi! Welcome to the café. Would you like to see our menu?" },
+      "intents": [
+        { "name": "goodbye", "keywords": ["goodbye", "bye", "see you"], "next": "seller_goodbye" },
+        { "name": "cancel", "keywords": ["cancel", "never mind", "nevermind"], "next": "seller_cancel" },
+        { "name": "ask_price", "keywords": ["how much", "price", "cost"], "next": "seller_ask_price" },
+        { "name": "ask_menu", "keywords": ["menu", "what do you have", "what drinks", "what food", "what can i buy", "what can i order"], "next": "seller_ask_menu" },
+        { "name": "greet", "keywords": ["hello", "hi", "hey", "good morning", "good afternoon"], "next": "seller_greet" }
+      ],
+      "fallback": "seller_clarify"
+    },
+    { "id": "seller_greet", "text": { "default": "Hello! Would you like to see our menu, or do you know what you want?" } },
+    { "id": "seller_ask_menu", "text": { "default": "Here is our menu: {menu}. What would you like? Please name one item and a quantity from one to three." } },
+    { "id": "seller_ask_price", "text": { "default": "{item} costs ${price} each. Would you like to order it?" } },
+    { "id": "seller_order", "text": { "default": "You would like {order}. Your total is ${total}. Would you like to confirm and pay?" } },
+    { "id": "seller_paid", "text": { "default": "Thank you! You paid ${total}. Here is your {order}. Enjoy! Would you like anything else?" } },
+    { "id": "seller_cancel", "text": { "default": "Your order is cancelled. You have not been charged for it. What would you like instead?" } },
+    { "id": "seller_insufficient_funds", "text": { "default": "Your order costs ${total}, but you don't have enough money. You have not been charged. Would you like to change or cancel it?" } },
+    { "id": "seller_price_changed", "text": { "default": "That item or its price has changed. You have not been charged, and I have cleared your order. Please ask for the menu and order again." } },
+    { "id": "seller_no_order", "text": { "default": "You don't have a pending order. What would you like to order?" } },
+    { "id": "seller_unknown_item", "text": { "default": "Which item from our menu would you like? For coffee, please choose a specific drink, such as espresso or cappuccino. Your existing order stays unchanged." } },
+    { "id": "seller_invalid_quantity", "text": { "default": "Please order between one and three of an item. Your existing order stays unchanged. How many would you like?" } },
+    { "id": "seller_one_item", "text": { "default": "Please order one type of item at a time. Your existing order stays unchanged. Which item would you like first?" } },
+    { "id": "seller_clarify", "text": { "default": "Would you like to see the menu, ask a price, order an item, change your order or cancel? Your existing order stays unchanged." } },
+    { "id": "seller_goodbye", "text": { "default": "Goodbye! Any unpaid order is cancelled. Have a lovely day!" }, "end": true }
+  ]
+}

@@ -32,7 +32,7 @@ test('T7 validates typed messages and IDs, rejects forged state and uses verifie
     assert.equal((await post('', { npcId: 'npc_receptionist' })).status, 201);
     assert.equal((await fetch(base + '/' + id, { headers })).status, 200);
     assert.equal((await post(`/${id}/messages`, request)).status, 201);
-    for (const body of [null, {}, { npcId: 'npc_mia' }, { npcId: 'npc_receptionist', userId: 'forged' }]) {
+    for (const body of [null, {}, { npcId: 'npc_missing' }, { npcId: 'npc_receptionist', userId: 'forged' }]) {
       assert.equal((await post('', body)).status, 400);
     }
     for (const body of [null, {}, { ...request, text: ' ' }, { ...request, text: 'a'.repeat(2001) },

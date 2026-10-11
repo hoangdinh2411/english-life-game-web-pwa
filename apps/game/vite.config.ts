@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -27,8 +28,8 @@ export default defineConfig({
     },
   })],
   server: { port: 8082, strictPort: true },
-  // The linked shared package currently emits CommonJS; prebundle it for dev ESM.
-  optimizeDeps: { include: ['@life-abroad/shared'] },
+  // Read workspace source so schema changes cannot leave a stale CommonJS prebundle.
+  resolve: { alias: { '@life-abroad/shared': fileURLToPath(new URL('../../packages/shared/src/index.ts', import.meta.url)) } },
   preview: { port: 8082, strictPort: true },
   build: { assetsInlineLimit: 0 },
 });

@@ -1,6 +1,83 @@
 [
-  { "id": "npc_receptionist", "name": "Station Receptionist", "role": "station_receptionist", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_station", "bio": "Welcomes new arrivals and helps them take the bus to Maplewood Town Street." },
-  { "id": "npc_mia", "name": "Mia", "role": "barista", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_cafe", "bio": "Friendly barista who loves jazz and talks about the weather." },
-  { "id": "npc_brown", "name": "Mr. Brown", "role": "landlord", "personality": "serious", "speakingLevel": "A2", "locationId": "loc_housing", "bio": "Careful landlord. Likes clear answers and polite requests." },
-  { "id": "npc_sam", "name": "Sam", "role": "bank_clerk", "personality": "shy", "speakingLevel": "A2", "locationId": "loc_bank", "bio": "Quiet bank clerk. Speaks slowly and explains forms step by step." }
+  {
+    "id": "npc_receptionist",
+    "name": "Station Receptionist",
+    "role": "station_receptionist",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_station",
+    "bio": "Welcomes new arrivals and helps them take the bus to Maplewood Town Street."
+  },
+  {
+    "id": "npc_mia",
+    "name": "Mia",
+    "role": "barista",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_cafe",
+    "bio": "Friendly barista who loves jazz and talks about the weather."
+  },
+  {
+    "id": "npc_brown",
+    "name": "Mr. Brown",
+    "role": "landlord",
+    "personality": "serious",
+    "speakingLevel": "A2",
+    "locationId": "loc_housing",
+    "bio": "Careful landlord. Likes clear answers and polite requests."
+  },
+  {
+    "id": "npc_sam",
+    "name": "Sam",
+    "role": "bank_clerk",
+    "personality": "shy",
+    "speakingLevel": "A2",
+    "locationId": "loc_bank",
+    "bio": "Quiet bank clerk. Speaks slowly and explains forms step by step."
+  },
+  {
+    "id": "npc_cafe_waiter",
+    "name": "Caf\u00e9 waiter",
+    "role": "shop_companion",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_cafe",
+    "bio": "A friendly person at the station shop."
+  },
+  {
+    "id": "npc_cafe_customer",
+    "name": "Caf\u00e9 customer",
+    "role": "shop_companion",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_cafe",
+    "bio": "A friendly person at the station shop."
+  },
+  {
+    "id": "npc_clothes_seller",
+    "name": "Clothes seller",
+    "role": "shop_companion",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_clothes",
+    "bio": "A friendly person at the station shop."
+  },
+  {
+    "id": "npc_clothes_assistant",
+    "name": "Shop assistant",
+    "role": "shop_companion",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_clothes",
+    "bio": "A friendly person at the station shop."
+  },
+  {
+    "id": "npc_clothes_customer",
+    "name": "Shop customer",
+    "role": "shop_companion",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_clothes",
+    "bio": "A friendly person at the station shop."
+  }
 ]

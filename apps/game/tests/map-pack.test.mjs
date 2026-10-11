@@ -32,7 +32,7 @@ test('leaving a pack removes its textures, audio, JSON and animations without to
   }
 });
 
-test('generator sends each single-file upload and removes temporary files after success', async () => {
+test('uploader sends existing PNG artwork through the asset API', async () => {
   const before = new Set(await readdir(tmpdir()));
   const calls = [];
   const result = await generateAndUpload({ baseUrl: 'http://fixture/api/v1', serviceKey: 'fixture-key', fetcher: async (url, options) => {
@@ -40,12 +40,12 @@ test('generator sends each single-file upload and removes temporary files after 
     assert.equal(url, 'http://fixture/api/v1/content/assets/upload');
     assert.equal(options.headers.Authorization, 'Bearer fixture-key');
     assert.equal(options.body.get('mapId'), 'loc_town_street');
-    if (file.name.endsWith('.svg')) assert.match(await file.text(), /^<svg/);
+    if (file.name.endsWith('.png')) assert.deepEqual([...new Uint8Array(await file.arrayBuffer()).slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
     else assert.equal(JSON.parse(await file.text()).animations.length, 4);
     calls.push(file.name);
     return { ok: true, json: async () => ({ url: `http://fixture/${file.name}`, bytes: file.size }) };
   } });
-  assert.deepEqual(calls, ['background.svg', 'player.svg', 'animations.json']);
+  assert.deepEqual(calls, ['background.png', 'player.png', 'animations.json']);
   assert.equal(result.length, 3);
   const added = (await readdir(tmpdir())).filter((name) => !before.has(name) && name.startsWith('life-abroad-assets-'));
   assert.deepEqual(added, []);

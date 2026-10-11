@@ -8,7 +8,7 @@
 | Server | `apps/server`: NestJS 11, API and server-authoritative gameplay |
 | Data/auth | PostgreSQL and Supabase Auth; public Storage for versioned destination packs |
 | Shared | `packages/shared`: game logic, Zod schemas and API contracts |
-| Content | `content/seed` and `content/dialogue`: validated JSON, then seeded to Postgres |
+| Content | Validated JSON: catalogs and NPC-specific dialogue seed to Postgres; shared global/role scripts load from server files |
 | Tooling | pnpm workspace, Node >=20.19; Docker for local Supabase |
 
 **No Expo, React Native, WebView, native build or second client.** Redis is
@@ -57,6 +57,7 @@ apps/game/src/
       game/               # Phaser scene, movement, world adapters
       api/                # calls to server for authenticated arrival
     dialogue/             # reusable conversation feature UI
+    npcs/                 # shared movement engine and per-NPC patrol profiles
     quests/               # quest/ticket status UI
   shared/                 # reused UI/hooks/helpers ONLY when necessary
 ```
@@ -114,8 +115,10 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   database/PostgREST, server-only AI and authoritative progress.
 - NestJS verifies JWT identity, validates requests with Zod, and uses a shared
   PostgreSQL pool. Future quest/reward writes must be transactional and idempotent.
-- Server dialogue: JSON → validation → seed into `dialogue_nodes` → cached
-  NPC/role/global lookup through `DialogueService.reply` (T4). Server callers
+- Server dialogue: shared global/role scripts load from validated `content/dialogue`
+  JSON; only NPC-specific scripts seed into `dialogue_nodes`. Both sources are
+  cached together with NPC → role → global lookup through `DialogueService.reply`.
+  Deployments must include the content JSON alongside the server. Server callers
   supply NPC/role/personality and optionally the current node; replies include
   the matched intent, authored node and personality wording. Unrecognized input
   uses authored clarification without completing a step. Quest `doneWhen`
@@ -133,7 +136,8 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   `005` arrival ticket timestamps, character location and unique reward claims;
   `006` conversation node, immutable message replay metadata and ordering;
   `007` asset metadata and the public `game-assets` bucket; `008` wallet ledger;
-  `009` shop catalog; `010` saved life, wardrobe and action receipts.
+  `009` shop catalog; `010` saved life, wardrobe and action receipts;
+  `011` server-owned pending seller orders.
   Inspect schema and current database before applying new changes.
 
 ## API (implemented vs planned)
@@ -178,6 +182,19 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
 - `POST /conversations` with `{ npcId: "npc_receptionist" }`: creates a scripted
   station conversation with an authored opening message; requires a character
   at the station. Returns `{ id, npcId, messages, arrival }`.
+- T17: `{ npcId: "npc_mia" }` creates a café seller conversation using the same
+  routes. Responses additionally include `seller: { shop, pendingOrder, closed }`.
+  One catalog item, quantity 1–3, is quoted from database prices and saved in the
+  conversation. Players ask for the menu/prices, order, change, cancel and confirm
+  through text; generic "coffee" requests ask for a specific catalog drink.
+  Confirmation after a quoted order atomically charges the wallet, consumes the
+  purchased items, restores energy (20 per drink or 50 per food, capped at 100),
+  clears the order and appends both messages. Price changes require a new order;
+  insufficient funds keep the unpaid order. Goodbye clears it and closes the
+  conversation. Historical message replay remains available after closing.
+  Store hours and per-message energy costs apply. Seller dialogue grants no quest
+  progress/rewards. Café map/UI integration remains T18; clothes purchases remain
+  T20. Six static shop NPC frames are in `apps/game/assets/npcs/shop-npcs.{png,json}`.
 - `GET /conversations/:id`: returns the owner's ordered messages and current
   arrival state. Another owner's ID returns 404; all routes require Auth.
 - `POST /conversations/:id/messages` with `{ clientMessageId: <UUID>, text,
@@ -321,6 +338,11 @@ to the phone, not the computer.
 - `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm content:validate`,
   `pnpm build`: project validation/build.
 - `pnpm test:integration`: real local Supabase/Postgres tests; requires setup.
+  The T17 seller test reuses an existing account (`T17_TEST_EMAIL`, default
+  `test@gmail.com`; required `T17_TEST_PASSWORD`) and rolls back all game-data
+  changes. To run only it without older tests that create temporary accounts,
+  build the server, then run from `apps/server`:
+  `node --import ./scripts/load-env.mjs --test dist/tests/seller.integration.test.js`.
 - `pnpm preview:game`: preview **production** PWA on :8082 (stop `pnpm dev`
   first; they share a port). `pnpm check:pwa`: validates built worker/manifest;
   run **after** building.
@@ -334,6 +356,7 @@ Physical Android/iOS install, standalone reopen and airplane-mode testing are
 **unverified**, even though desktop/browser offline practice was tested.
 
 ## Future decisions, not current implementation
-Seller conversations, organization visits and work actions remain future tasks; their approved opening hours are shared contracts.
+Café seller conversations enforce store hours. Organization visits and work
+actions remain future tasks; their approved opening hours are shared contracts.
 AI provider/limits, CEFR promotion and full speech service remain future decisions.
 See `TASKS.md` before extending scope.

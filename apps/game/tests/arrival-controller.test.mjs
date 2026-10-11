@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createArrivalController } from '../src/features/station/arrival-controller.ts';
+import { createConversationController } from '../src/features/dialogue/conversation-controller.ts';
 const station = { questId: 'q_station_arrival', status: 'active', currentStepId: 'greet', ticket: { issued: false, used: false }, canEnterTownStreet: false, locationId: 'loc_station', rewardsGranted: false };
 const ticket = { ...station, ticket: { issued: true, used: false }, canEnterTownStreet: true };
 const street = { ...ticket, status: 'done', currentStepId: null, ticket: { issued: true, used: true }, locationId: 'loc_town_street', rewardsGranted: true };
@@ -11,7 +11,7 @@ test('arrival restores server state, receives ticket from dialogue, and commits 
   let saved = station;
   let finish;
   const exit = new Promise((resolve) => { finish = resolve; });
-  const controller = createArrivalController({ load: async () => saved, start: async () => conversation,
+  const controller = createConversationController({ load: async () => saved, start: async () => conversation,
     send: async () => { saved = ticket; return { playerMessage: { id: 'player', sender: 'player', text: 'ticket' }, npcMessage: { id: 'npc', sender: 'npc', text: 'Here you are' }, arrival: ticket }; },
     enter: async () => exit });
   assert.equal(await controller.load(), true);
@@ -33,7 +33,7 @@ test('arrival restores server state, receives ticket from dialogue, and commits 
 test('failed message preserves its UUID for retry, and failed exit does not change location', async () => {
   const bodies = [];
   let fail = true;
-  const controller = createArrivalController({ load: async () => ticket, start: async () => ({ ...conversation, arrival: ticket }),
+  const controller = createConversationController({ load: async () => ticket, start: async () => ({ ...conversation, arrival: ticket }),
     send: async (_id, body) => { bodies.push(body); if (fail) throw new Error('Connection lost'); return { playerMessage: { id: 'p', sender: 'player', text: body.text }, npcMessage: { id: 'n', sender: 'npc', text: 'reply' }, arrival: ticket }; },
     enter: async () => { throw new Error('offline'); } });
   await controller.load(); await controller.start();
@@ -49,7 +49,7 @@ test('failed message preserves its UUID for retry, and failed exit does not chan
 // A detached scene must not receive private state from a late request.
 test('disposed arrival controller ignores pending results', async () => {
   let finish;
-  const controller = createArrivalController({ load: () => new Promise((resolve) => { finish = resolve; }) });
+  const controller = createConversationController({ load: () => new Promise((resolve) => { finish = resolve; }) });
   const loading = controller.load();
   controller.dispose(); finish(street);
   await loading;
@@ -60,7 +60,7 @@ test('disposed arrival controller ignores pending results', async () => {
 test('rejected out-of-order reply allows a different message, and overlapping sends are ignored', async () => {
   let reject = true;
   let calls = 0;
-  const controller = createArrivalController({ load: async () => station, start: async () => conversation,
+  const controller = createConversationController({ load: async () => station, start: async () => conversation,
     send: async (_id, body) => { calls++; if (reject) throw Object.assign(new Error('Greet first'), { status: 409 }); return { playerMessage: { id: 'p', sender: 'player', text: body.text }, npcMessage: { id: 'n', sender: 'npc', text: 'Hello' }, arrival: station }; } });
   await controller.load(); await controller.start();
   assert.equal(await controller.send('ticket'), false);
@@ -75,7 +75,7 @@ test('Coach feedback comes from the server and retries preserve the original Coa
   const correction = { original: 'I need ticket', improved: 'I need a ticket.', reason: 'Use an article.', question: 'you need a ticket' };
   const bodies = [];
   let fail = true;
-  const controller = createArrivalController({ load: async () => ticket, start: async () => conversation,
+  const controller = createConversationController({ load: async () => ticket, start: async () => conversation,
     send: async (_id, body) => { bodies.push(body); if (fail) throw new Error('Connection lost'); return { playerMessage: { id: 'p', sender: 'player', text: body.text }, npcMessage: { id: 'n', sender: 'npc', text: 'Here is your ticket' }, correction, arrival: ticket }; } });
   await controller.load(); await controller.start();
   assert.equal(await controller.send('I need ticket', true), false);
@@ -90,7 +90,7 @@ test('Coach feedback comes from the server and retries preserve the original Coa
 });
 // Failed fetches need a useful recovery message rather than a browser-specific exception.
 test('network failures explain how to retry without pretending progress was saved', async () => {
-  const controller = createArrivalController({ load: async () => { throw new TypeError('Failed to fetch'); } });
+  const controller = createConversationController({ load: async () => { throw new TypeError('Failed to fetch'); } });
   assert.equal(await controller.load(), false);
   assert.match(controller.getSnapshot().error, /connection.*retry/i);
   assert.equal(controller.getSnapshot().arrival, null);

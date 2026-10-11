@@ -89,4 +89,18 @@ export class LifeService {
       WHERE user_id=$1 AND energy>0 RETURNING energy`, [userId]);
     if (!result.rowCount) throw new ConflictException('You have no energy. Sleep or buy something to eat or drink');
   }
+
+  // The conversation transaction owns payment, consumption, order clearing and receipt.
+  async fulfillCafeOrder(client: PoolClient, userId: string, item: ShopItem,
+    quantity: number, orderId: string): Promise<boolean> {
+    await this.repository.lock(client, userId);
+    const state = await this.repository.state(client, userId);
+    if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException('Stores open from 08:00 to 20:00 game time');
+    const total = item.price * quantity;
+    if (state.coins < total) return false;
+    await this.economy.spendInTransaction(client, userId, total, 'shop_purchase', `seller_order:${orderId}`, orderId);
+    const energy = Math.min(100, state.energy + quantity * (item.kind === 'drink' ? 20 : 50));
+    await client.query('UPDATE player_stats SET energy=$2,last_energy_update=now() WHERE user_id=$1', [userId, energy]);
+    return true;
+  }
 }

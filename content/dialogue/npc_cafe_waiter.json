@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "scope": "npc",
+  "npcId": "npc_cafe_waiter",
+  "nodes": [
+    {
+      "id": "cafe_waiter_start",
+      "text": {
+        "default": "How can I help you?"
+      },
+      "intents": [
+        {
+          "name": "shop_items",
+          "keywords": [
+            "order",
+            "buy",
+            "menu",
+            "coffee",
+            "drink",
+            "shirt",
+            "clothes",
+            "color",
+            "blue",
+            "green",
+            "red",
+            "yellow",
+            "shirts",
+            "drinks",
+            "what do you have",
+            "what can i get"
+          ],
+          "next": "cafe_waiter_items"
+        }
+      ]
+    },
+    {
+      "id": "cafe_waiter_items",
+      "text": {
+        "default": "Please ask Mia, the caf\u00e9 seller, to order and pay. What would you like to drink?"
+      }
+    }
+  ]
+}

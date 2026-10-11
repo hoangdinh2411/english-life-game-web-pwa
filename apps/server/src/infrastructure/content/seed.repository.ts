@@ -29,11 +29,11 @@ export async function seedContent(client: PoolClient, content: SeedContent): Pro
       'INSERT INTO quest_steps (quest_id,id,step_order,description,done_when) VALUES ($1,$2,$3,$4,$5)',
       [quest.id,step.id,index + 1,step.description,step.doneWhen]);
   }
-  for (const dialogue of dialogues) for (const node of dialogue.nodes) {
+  for (const dialogue of dialogues.filter(file => file.scope === 'npc')) for (const node of dialogue.nodes) {
     const { id, text, ...rules } = node;
     await client.query(`INSERT INTO dialogue_nodes (id,scope,role_id,npc_id,npc_text,next_rules,version) VALUES ($1,$2,$3,$4,$5,$6,$7)
       ON CONFLICT (id) DO UPDATE SET scope=excluded.scope,role_id=excluded.role_id,npc_id=excluded.npc_id,
       npc_text=excluded.npc_text,next_rules=excluded.next_rules,version=excluded.version`,
-    [id,dialogue.scope,dialogue.scope === 'role' ? dialogue.role : null,dialogue.scope === 'npc' ? dialogue.npcId : null,text,rules,dialogue.version]);
+    [id,dialogue.scope,null,dialogue.npcId,text,rules,dialogue.version]);
   }
 }

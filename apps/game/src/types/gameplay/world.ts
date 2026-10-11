@@ -1,4 +1,3 @@
-import type Phaser from 'phaser';
 import type { Appearance } from '@life-abroad/shared';
 export interface Point {
   x: number;
@@ -51,10 +50,4 @@ export interface GameCanvasProps {
   onTalk: (id: string) => void;
   onReadyChange: (ready: boolean) => void;
   onLocationChange: (location: string) => void;
-}
-export interface NpcActor {
-  sprite: Phaser.GameObjects.Sprite;
-  shadow: Phaser.GameObjects.Ellipse;
-  label: Phaser.GameObjects.Text;
-  elapsed: number;
 }

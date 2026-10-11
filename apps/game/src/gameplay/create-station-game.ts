@@ -1,4 +1,4 @@
-import type { MapLocation, NpcActor, Point, StationCallbacks, StationGame, StationPortal } from '../types/gameplay/world';
+import type { MapLocation, Point, StationCallbacks, StationGame, StationPortal } from '../types/gameplay/world';
 import Phaser from 'phaser';
 import { stationAtlases, stationBackground } from './station-assets';
 import type { MapPack } from '@life-abroad/shared';
@@ -6,7 +6,8 @@ import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { loadPack, preparePack } from '../features/assets/phaser-pack';
 import { authorizeStreetExit, canWalk, findPath, movePlayer, movementDelta, nearestNpc, portalAt, STATION_NPCS, STATION_PORTALS } from './station-navigation';
-import { npcIdlePose } from './npc-idle';
+import { SHOP_NPCS } from '../features/shops/shop-npcs';
+import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
 const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Maplewood · Train Station', cafe: 'Maplewood · Café', clothes: 'Maplewood · Clothes Shop', street: 'Maplewood · Town Street' };
 
@@ -30,7 +31,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let route: Point[] = [];
   let selectedNpc: string | null = null;
   let nearby: string | null = null;
-  const npcs = STATION_NPCS.map((npc) => ({ ...npc }));
+  let npcs = STATION_NPCS.map((npc) => ({ ...npc }));
   const talk = () => { const npc = nearestNpc(position, npcs); if (!paused && npc) callbacks.onTalk(npc.id); };
   class StationScene extends P.Scene {
     private player!: Phaser.GameObjects.Sprite;
@@ -95,6 +96,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.transitionPending = false;
       this.labels = [];
       this.npcActors = [];
+      npcs = activeLocation === 'station' ? STATION_NPCS.map(npc => ({ ...npc })) : [];
       this.add.image(0, 0, resources?.background ?? 'station').setOrigin(0);
       this.marker = this.add.circle(0, 0, 16, 0xf6df9e, 0.5).setStrokeStyle(3, 0x426f61).setVisible(false);
       // Station animation frames stay bundled; destination definitions come from Storage.
@@ -103,6 +105,24 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         if (!this.anims.exists(key)) this.anims.create({ key, frames: Array.from({ length: 4 }, (_, column) => ({ key: this.playerTexture, frame: currentPack ? row * 4 + column : `${row}-${column}` })), frameRate: 7, repeat: -1 });
       }
       if (appearance) this.applyAppearance();
+      for (const actor of resources?.actors ?? []) {
+        const definition = SHOP_NPCS.find(npc => npc.frame === actor.frame);
+        const sprite = this.add.sprite(actor.x, actor.y, actor.texture, actor.frame)
+          .setOrigin(0.5, 1).setScale(actor.scale).setDepth(actor.y);
+        if (!definition) continue;
+        const npc = { id: definition.id, name: definition.name, texture: actor.texture, x: actor.x, y: actor.y };
+        npcs.push(npc);
+        const label = this.add.text(npc.x, npc.y - 112, npc.name, { fontFamily: 'sans-serif', fontSize: '24px', color: '#263630', backgroundColor: '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
+        this.labels.push(label);
+        this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, label, elapsed: 0, idleFrame: actor.frame, labelOffset: 112 });
+        sprite.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+          if (paused) return;
+          if (nearestNpc(position, [npc])) { callbacks.onTalk(npc.id); return; }
+          selectedNpc = npc.id;
+          destinationMapTarget = { x: npc.x, y: npc.y + 55 };
+          this.marker.setPosition(destinationMapTarget.x, destinationMapTarget.y).setVisible(true);
+        });
+      }
       if (currentPack) for (const asset of currentPack.assets.filter((item) => item.npcId && ['image', 'spritesheet'].includes(item.type))) {
         this.add.sprite(500 + currentPack.assets.indexOf(asset) * 80, 400, packKey(currentPack, asset), 0).setDepth(400);
       }
@@ -122,7 +142,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const needsTalk = npcNeedsTalk(npc.id);
         const label = this.add.text(npc.x, npc.y - 108, needsTalk ? `! ${name}` : name, { fontFamily: 'sans-serif', fontSize: '24px', fontStyle: needsTalk ? 'bold' : 'normal', color: '#263630', backgroundColor: needsTalk ? '#ffe08a' : '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
         this.labels.push(label);
-        this.npcActors.push({ sprite, shadow, label, elapsed: 0 });
+        this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, shadow, label, elapsed: 0, idleFrame: '0-0', walkPrefix: `${npc.texture}-walk`, labelOffset: 108, clip: movePlayer });
       }
       if (activeLocation === 'station') for (const portal of STATION_PORTALS) this.addPortalRing(portal);
       else this.addPortalRing({ id: 'station', label: 'Train Station', x: 768, y: activeLocation === 'street' ? 130 : 930 });
@@ -139,6 +159,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         if (paused || objects.length) return;
         const target = { x: pointer.worldX, y: pointer.worldY };
         if (activeLocation !== 'station') {
+          selectedNpc = null;
           if (target.x >= 48 && target.x <= 1488 && target.y >= 120 && target.y <= 980) { destinationMapTarget = target; this.marker.setPosition(target.x, target.y).setVisible(true); }
         } else if (canWalk(target)) { route = findPath(position, target); destination = route.shift() ?? null; selectedNpc = null; this.marker.setPosition(target.x, target.y).setVisible(true); }
       });
@@ -191,7 +212,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     private appearanceAnimations: string[] = [];
     applyAppearance() {
       if (!this.textures.exists(this.sourcePlayerTexture)) return;
-      this.playerTexture = paintPlayerTexture(this, this.sourcePlayerTexture, 'player:appearance', appearance, Boolean(currentPack));
+      this.playerTexture = paintPlayerTexture(this, this.sourcePlayerTexture, 'player:appearance', appearance, false);
       for (let row = 0; row < 4; row++) {
         const key = `appearance:walk-${row}`;
         if (!this.anims.exists(key)) {
@@ -213,13 +234,19 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const x = Number(this.keys?.right.isDown || this.walkingKeys.D?.isDown) - Number(this.keys?.left.isDown || this.walkingKeys.A?.isDown);
       const y = Number(this.keys?.down.isDown || this.walkingKeys.S?.isDown) - Number(this.keys?.up.isDown || this.walkingKeys.W?.isDown);
       let dx = x, dy = y;
-      if (x || y) destinationMapTarget = null;
+      if (x || y) { destinationMapTarget = null; selectedNpc = null; }
       else if (destinationMapTarget) { dx = destinationMapTarget.x - position.x; dy = destinationMapTarget.y - position.y; }
       const movement = movementDelta({ x: dx, y: dy }, 215 * Math.min(delta, 50) / 1000, Boolean(x || y));
       position = { x: Math.max(48, Math.min(1488, position.x + movement.x)), y: Math.max(110, Math.min(985, position.y + movement.y)) };
       this.player.setPosition(position.x, position.y).setDepth(position.y);
       if (movement.x || movement.y) this.player.play(`${this.walkPrefix}-${Math.abs(dx) > Math.abs(dy) ? dx < 0 ? 1 : 2 : dy < 0 ? 3 : 0}`, true);
       else this.player.anims.stop();
+      const closest = nearestNpc(position, npcs)?.id ?? null;
+      if (closest !== nearby) { nearby = closest; callbacks.onNearby(closest); }
+      if (selectedNpc && closest === selectedNpc) {
+        const id = selectedNpc; selectedNpc = null; destinationMapTarget = null;
+        this.player.anims.stop(); this.marker.setVisible(false); callbacks.onTalk(id); return;
+      }
       const ring = { id: 'station', label: 'Train Station', x: 768, y: activeLocation === 'street' ? 130 : 930 };
       if (portalAt(position, [ring])) { this.previousLocation = activeLocation; this.enterLocation('station'); return; }
       destinationMapTarget = destinationMapTarget && Math.hypot(destinationMapTarget.x - position.x, destinationMapTarget.y - position.y) > 3 ? destinationMapTarget : null;
@@ -228,23 +255,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     update(_time: number, delta: number) {
       if (!this.worldReady) return;
       if (authorizing) { this.player.anims.stop(); return; }
+      updateNpcActors(this.npcActors, position, delta, paused, selectedNpc);
       if (activeLocation !== 'station') { this.updateDestination(delta); return; }
-      for (const [index, actor] of this.npcActors.entries()) {
-        const npc = npcs[index];
-        const anchor = STATION_NPCS[index];
-        if (!npc || !anchor) continue;
-        // Stop when approached, so tapping/talking never chases a moving target.
-        if (paused || Math.hypot(position.x - npc.x, position.y - npc.y) <= 120) { actor.sprite.anims.stop(); actor.sprite.setFrame('0-0'); continue; }
-        actor.elapsed += Math.min(delta, 50);
-        const pose = npcIdlePose(anchor, actor.elapsed, index);
-        npc.x = pose.x;
-        npc.y = pose.y;
-        actor.sprite.setPosition(npc.x, npc.y).setDepth(npc.y);
-        actor.shadow.setPosition(npc.x, npc.y - 3);
-        actor.label.setPosition(npc.x, npc.y - 108);
-        const row = { down: 0, left: 1, right: 2, up: 3 }[pose.direction];
-        actor.sprite.play(`${npc.texture}-walk-${row}`, true);
-      }
       if (paused) { destination = null; route = []; selectedNpc = null; this.player.anims.stop(); this.marker.setVisible(false); return; }
       const x = Number(this.keys?.right.isDown || this.walkingKeys.D?.isDown) - Number(this.keys?.left.isDown || this.walkingKeys.A?.isDown);
       const y = Number(this.keys?.down.isDown || this.walkingKeys.S?.isDown) - Number(this.keys?.up.isDown || this.walkingKeys.W?.isDown);

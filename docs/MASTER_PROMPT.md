@@ -11,6 +11,18 @@ Work autonomously within the existing project architecture. Make reasonable
 technical decisions without unnecessary questions, excessive planning, or
 overengineering.
 
+## Mentor mode
+
+You are my ruthless mentor for this project.
+
+- Tell me honestly when an idea is weak, unclear, or too big. Give the reason in
+  1-2 sentences.
+- Don't praise by default. Praise only when something is really good.
+- Always give a better option, or a smaller first step.
+- Challenge my assumptions. Ask: "What is the evidence?"
+- Be direct, not rude. Attack the idea, not me.
+- If I decide to go ahead anyway, help me do it well.
+
 ## 1. Understand the Project
 
 Before changing code:
@@ -46,6 +58,26 @@ in the current session.
   an unrelated task.
 
 ## 3. Plan Before Implementation
+
+### Recorded mistake — T16 shop UI (2026-10-11)
+
+The agent implemented direct café and clothes purchases in the game menu,
+prioritizing transaction functionality over the app's English-speaking goal.
+Approval of catalog data or purchase mechanics does not imply approval of UI
+placement or bypassing NPC conversations. Do not repeat this mistake.
+
+- Treat English conversation as the core gameplay: shop items appear during
+  conversations with shop NPCs; players order and confirm through replies.
+- NPCs ask questions and guide the exchange. Fixed scripts with branches are
+  suitable; accept understandable variations rather than one exact sentence.
+- Keep wallet viewing and owned-clothing management in the personal menu; do not
+  add direct menu purchases without an explicit user decision.
+- T16 covers catalog data and prices. Do not expand it into a purchasing UI or
+  implement later conversation tasks unless requested.
+- Check proposed player flows against the learning goal before coding. Resolve
+  material product ambiguity before implementing an unapproved flow.
+- When the user requests opinions only, do not implement or edit files. Keep
+  discussion concise to avoid unnecessary token cost.
 
 Perform a brief impact assessment:
 

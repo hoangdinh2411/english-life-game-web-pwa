@@ -1,11 +1,17 @@
 import { ConflictException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, SELLER_NPC_ID, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, type PendingOrder, type SellerState } from '@life-abroad/shared';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { DialogueContext } from '../dialogue/dialogue.service';
+import { conversationNpcSchema } from '@life-abroad/shared';
 
 interface MessageRow { id: string; sender: 'player' | 'npc'; text: string; created_at: Date; metadata: unknown }
-interface ConversationRow { id: string; npc_id: string; current_node_id: string | null }
+export interface ConversationRow { id: string; npc_id: string; current_node_id: string | null; pending_order: unknown; ended_at: Date | null }
+
+export function sellerState(row: ConversationRow): SellerState {
+  return { shop: 'cafe', pendingOrder: row.pending_order ? pendingOrderSchema.parse(row.pending_order) : null,
+    closed: row.ended_at !== null };
+}
 
 function message(row: MessageRow): ConversationMessage {
   return { id: row.id, sender: row.sender, text: row.text, createdAt: row.created_at.toISOString() };
@@ -16,27 +22,28 @@ export class ConversationsRepository {
   constructor(private readonly database: DatabaseService) {}
   transaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> { return this.database.transaction(work); }
 
-  async context(client: PoolClient): Promise<DialogueContext> {
+  async context(client: PoolClient, npcId: string = ARRIVAL_NPC_ID): Promise<DialogueContext> {
     const result = await client.query<{ role_id: string; personality: string }>(
-      'SELECT role_id,personality FROM public.npcs WHERE id=$1', [ARRIVAL_NPC_ID]);
+      'SELECT role_id,personality FROM public.npcs WHERE id=$1', [npcId]);
     const npc = result.rows[0];
-    if (!npc) throw new ServiceUnavailableException('Receptionist content is unavailable');
-    return { npcId: ARRIVAL_NPC_ID, roleId: npc.role_id, personality: npc.personality };
+    if (!npc) throw new ServiceUnavailableException('NPC content is unavailable');
+    return { npcId, roleId: npc.role_id, personality: npc.personality };
   }
 
-  async create(client: PoolClient, userId: string): Promise<string> {
+  async create(client: PoolClient, userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<string> {
     const result = await client.query<{ id: string }>(`INSERT INTO public.conversations
-      (user_id,npc_id,quest_id,current_node_id) VALUES ($1,$2,$3,'receptionist_start') RETURNING id`,
-    [userId, ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID]);
+      (user_id,npc_id,quest_id,current_node_id) VALUES ($1,$2,$3,$4) RETURNING id`,
+    [userId, npcId, npcId === ARRIVAL_NPC_ID ? ARRIVAL_QUEST_ID : null,
+      npcId === ARRIVAL_NPC_ID ? 'receptionist_start' : npcId === SELLER_NPC_ID ? 'seller_start' : 'shop_start']);
     return result.rows[0]!.id;
   }
 
   async load(client: PoolClient, userId: string, id: string): Promise<ConversationRow> {
     const result = await client.query<ConversationRow>(
-      'SELECT id,npc_id,current_node_id FROM public.conversations WHERE id=$1 AND user_id=$2 FOR UPDATE', [id, userId]);
+      'SELECT id,npc_id,current_node_id,pending_order,ended_at FROM public.conversations WHERE id=$1 AND user_id=$2 FOR UPDATE', [id, userId]);
     const row = result.rows[0];
     if (!row) throw new NotFoundException('Conversation not found');
-    if (row.npc_id !== ARRIVAL_NPC_ID) throw new ConflictException('Only station receptionist conversations are supported');
+    if (!conversationNpcSchema.safeParse(row.npc_id).success) throw new ConflictException('Unsupported conversation NPC');
     return row;
   }
 
@@ -68,5 +75,10 @@ export class ConversationsRepository {
 
   async setNode(client: PoolClient, id: string, nodeId: string): Promise<void> {
     await client.query('UPDATE public.conversations SET current_node_id=$2 WHERE id=$1', [id, nodeId]);
+  }
+
+  async saveOrder(client: PoolClient, id: string, order: PendingOrder | null, closed: boolean): Promise<void> {
+    await client.query('UPDATE public.conversations SET pending_order=$2,ended_at=CASE WHEN $3 THEN now() ELSE NULL END WHERE id=$1',
+      [id, order, closed]);
   }
 }

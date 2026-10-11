@@ -108,13 +108,19 @@ No active NOW item. Select another task only when requested.
 
 ## NEXT
 
-- [ ] **T17 — Order and pay conversation (seller role).** Greet → list the menu
+- [x] **T17 — Order and pay conversation (seller role).** Greet → list the menu
       → player names an item and a quantity (1 to 3) → seller repeats the order
       and total → player confirms → server spends the money → hands over the
       item. Also: ask a price, change or cancel, unknown item, not enough money,
       goodbye. The pending order is server state. Done when: API tests cover a
       full order (balance drops once), cancel, not enough money, a replayed
-      confirm, and a Coach correction for "I want buy coffee".
+      confirm, and a Coach correction for "I want buy coffee". Create assets for
+      main npcs and customer npcs in these stores.
+      Verified café seller API with the existing test account: saved orders,
+      quantities 1–3, price/change/cancel/unknown-item replies, atomic payment,
+      replay, insufficient funds, Coach, rollback and receptionist compatibility.
+      Six transparent NPC atlas frames displayed in shop maps, with click/nearby dialogue and short patrols. Caf� ordering uses the T17 API; full caf� quest and clothes purchases remain T18/T20.
+      Typecheck, lint, unit tests, content validation, build and PWA checks passed.
 - [ ] **T18 — Station café (two NPCs) and "Your First Coffee".** Café map with a
       cashier (may reuse Mia) and a waiter. The waiter chats and sends orders to
       the cashier. Both point to the receptionist when asked how to leave.

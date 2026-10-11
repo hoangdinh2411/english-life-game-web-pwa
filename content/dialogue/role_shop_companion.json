@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "scope": "role",
+  "role": "shop_companion",
+  "nodes": [
+    {
+      "id": "shop_start",
+      "text": {
+        "default": "Hello! How are you today? What brings you here?"
+      },
+      "intents": [
+        {
+          "name": "directions",
+          "keywords": [
+            "leave",
+            "exit",
+            "bus",
+            "town",
+            "receptionist"
+          ],
+          "next": "shop_directions"
+        }
+      ],
+      "fallback": "global_repeat"
+    },
+    {
+      "id": "shop_directions",
+      "text": {
+        "default": "Please ask the receptionist at the station information desk for a bus ticket. Where would you like to go?"
+      }
+    }
+  ]
+}

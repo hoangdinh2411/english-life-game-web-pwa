@@ -36,6 +36,7 @@ export interface PlayerInfoCardProps {
   sleepDisabled?: boolean;
 }
 export interface DialogueMessageProps {
+  portraitPosition?: string | undefined;
   name: string;
   portrait: string;
   text: string;

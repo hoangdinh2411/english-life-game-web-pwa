@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { DialogueMessage } from '../../gameplay/DialogueMessage';
 import { MessageComposer } from '../../gameplay/MessageComposer';
 import { GameButton } from '../../gameplay/GameButton';
 import { npcPortraits, playerPortrait } from '../../gameplay/portraits';
-import type { ArrivalSnapshot } from './arrival-controller';
+import type { ConversationSnapshot } from './conversation-controller';
 import { useNarration } from '../../speech/use-narration';
 import { useSpeech } from '../../speech/use-speech';
 import { npcVoice } from '../../speech/npc-voice';
-import { TicketReceipt } from './ArrivalQuest';
-import { arrivalPresentation } from './arrival-presentation';
 
-export function ArrivalConversation({ state, sound, online, send, retry }: {
-  state: ArrivalSnapshot; sound: boolean; online: boolean;
+export function SavedConversation({ state, sound, online, send, retry, shopNpc, completed = false, details }: {
+  state: ConversationSnapshot; sound: boolean; online: boolean;
   send: (text: string, coach: boolean) => Promise<boolean>; retry: () => void;
+  shopNpc?: { name: string; portrait: string; portraitPosition: string };
+  completed?: boolean; details?: ReactNode;
 }) {
   const [text, setText] = useState(state.retryMessage?.text ?? '');
   const [coach, setCoach] = useState(state.retryMessage?.coach ?? false);
@@ -20,8 +21,7 @@ export function ArrivalConversation({ state, sound, online, send, retry }: {
   const sending = useRef(false);
   const history = useRef<HTMLDivElement>(null);
   const speech = useSpeech(setText);
-  const completed = state.arrival?.status === 'done';
-  const blocked = state.pending || finalizing || !online || completed || !state.conversation;
+  const blocked = state.pending || finalizing || !online || completed || Boolean(state.conversation?.seller?.closed) || !state.conversation;
   const lastNpc = state.conversation?.messages.findLast((message) => message.sender === 'npc');
   const voice = useNarration(lastNpc?.text ?? '', sound && !state.pending && !speech.listening, lastNpc?.id ?? '', npcVoice.npc_station_information);
   useEffect(() => { if (history.current) history.current.scrollTop = history.current.scrollHeight; }, [state.conversation?.messages]);
@@ -38,12 +38,12 @@ export function ArrivalConversation({ state, sound, online, send, retry }: {
   return <>
     <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 overflow-auto pr-1 [@media(max-height:480px)]:h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
       {state.conversation?.messages.map((message) => <DialogueMessage key={message.id}
-        name={message.sender === 'player' ? 'You' : 'Receptionist'} text={message.text}
-        player={message.sender === 'player'} portrait={message.sender === 'player' ? playerPortrait : npcPortraits.npc_station_information}
+        name={message.sender === 'player' ? 'You' : shopNpc?.name ?? 'Receptionist'} text={message.text}
+        player={message.sender === 'player'} portrait={message.sender === 'player' ? playerPortrait : shopNpc?.portrait ?? npcPortraits.npc_station_information}
+        portraitPosition={message.sender === 'npc' ? shopNpc?.portraitPosition : undefined}
         onReplay={() => voice.listen(message.text)} replayDisabled={!sound || !voice.supported || state.pending || speech.listening} />)}
     </div>
-    {state.arrival?.ticket.issued ? <TicketReceipt arrival={state.arrival} /> : null}
-    {state.arrival ? <p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{arrivalPresentation(state.arrival).next}</p> : null}
+    {details}
     {!online ? <p role="alert" className="error text-[#a43f34] text-[15px] leading-[1.4]">You’re offline. Reconnect to send replies or use your ticket. Your draft stays here; nothing is queued.</p> : null}
     {state.pending ? <p role="status">Waiting for the station server…</p> : null}
     {state.error ? <p role="alert" className="error text-[#a43f34] text-[15px] leading-[1.4]">{state.error}</p> : null}

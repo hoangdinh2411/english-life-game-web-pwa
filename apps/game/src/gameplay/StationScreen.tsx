@@ -12,8 +12,10 @@ import { QuestBoard } from './QuestBoard';
 import { shouldShowQuestBoard, goalNotice, practiceArrivalGoals } from './arrival-hud';
 import { usePwa } from '../pwa/PwaProvider';
 import { LifeMenu } from '../features/life/LifeMenu';
+import { ShopConversation } from '../features/shops/ShopConversation';
+import { isShopNpc, type ShopNpcId } from '../features/shops/shop-npcs';
 export default function StationScreen({ playerName, xp, coins, onSignOut, practice = false, arrival, life }: StationScreenProps) {
-  const [npcId, setNpcId] = useState<StationSpeaker | null>(null);
+  const [npcId, setNpcId] = useState<StationSpeaker | ShopNpcId | null>(null);
   const [tutorial, setTutorial] = useState(true);
   const [stationReady, setStationReady] = useState(false);
   const [location, setLocation] = useState('Maplewood · Train Station');
@@ -33,6 +35,7 @@ export default function StationScreen({ playerName, xp, coins, onSignOut, practi
     <GameCanvas {...(life?.state ? { appearance: life.state.appearance } : {})} {...(arrival ? { initialLocation: arrival.initialLocation, onEnterStreet: arrival.onEnterStreet } : {})} exitUnlocked={arrival?.exitUnlocked ?? exitUnlocked} onExitBlocked={() => setExitReminder(true)} onReadyChange={setStationReady} onLocationChange={setLocation} paused={!stationReady || overlayOpen || Boolean(life?.sleepTransition) || Boolean(arrival && !arrival.online)} onTalk={(id) => {
       if (id === 'npc_station_information') arrival?.onOpenReceptionist();
       if (id === 'npc_station_information' || id === 'npc_passenger_backpack' || id === 'npc_passenger_suitcase') setNpcId(id);
+      if (!practice && isShopNpc(id)) setNpcId(id);
     }} />
     <div className="station-hud absolute [top:max(8px,_env(safe-area-inset-top))] [left:max(8px,_env(safe-area-inset-left))] [right:max(8px,_env(safe-area-inset-right))] grid [grid-template-columns:minmax(0,_1fr)_auto] [align-items:start] gap-2 pointer-events-none" inert={Boolean(life?.sleepTransition)}>
       <PlayerInfoCard playerName={playerName} cityName={cityName} xp={xp} coins={coins} visible={!overlayOpen} {...(life ? { savedTime: life.time, onSleep: () => void life.act({ path: 'sleep', body: { key: crypto.randomUUID() } }), sleepDisabled: !pwa.online || life.pending || Boolean(life.retry) || !life.state } : {})} {...(life?.state ? { energy: life.state.energy } : {})} />
@@ -45,7 +48,7 @@ export default function StationScreen({ playerName, xp, coins, onSignOut, practi
     {goals ? <DialogueFrame><div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0"><h2>Goals</h2><GameButton label="Close goals" onClick={() => setGoals(false)} /></div>{arrival?.questPanel ?? <QuestBoard inPanel goals={practiceGoals} />}</DialogueFrame> : null}
     {!npcId && !tutorial && !goals ? arrival?.statusPanel : null}
     {tutorial && stationReady ? <TutorialDialogue playerName={playerName} sound={sound} onClose={() => setTutorial(false)} /> : null}
-    {npcId === 'npc_station_information' && arrival ? <DialogueFrame><div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0"><h2>Receptionist</h2><GameButton label="Close" onClick={() => setNpcId(null)} /></div>{arrival.renderReceptionist(sound)}</DialogueFrame> : npcId ? <ConversationPanel key={npcId} npcId={npcId} playerName={playerName} sound={sound} {...(practice ? { onDirections: (received: boolean) => { setExitUnlocked(received); if (received) setPracticeDirectionsAsked(true); } } : {})} onClose={() => setNpcId(null)} /> : null}
+    {npcId && isShopNpc(npcId) ? <ShopConversation key={npcId} npcId={npcId} sound={sound} onClose={() => setNpcId(null)} onRefresh={() => life?.refresh() ?? Promise.resolve()} /> : npcId === 'npc_station_information' && arrival ? <DialogueFrame><div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0"><h2>Receptionist</h2><GameButton label="Close" onClick={() => setNpcId(null)} /></div>{arrival.renderReceptionist(sound)}</DialogueFrame> : npcId ? <ConversationPanel key={npcId} npcId={npcId} playerName={playerName} sound={sound} {...(practice ? { onDirections: (received: boolean) => { setExitUnlocked(received); if (received) setPracticeDirectionsAsked(true); } } : {})} onClose={() => setNpcId(null)} /> : null}
     {arrival?.pending && !npcId ? <p className="practice-status shrink-0 flex items-center gap-2 flex-wrap [padding:4px_max(12px,_env(safe-area-inset-left))] bg-[#e5eddd] text-[12px] leading-[1.4] bg-[#fff0c9] [&_button]:bg-transparent [&_button]:[border:1px_solid_#8b806c] [&_button]:rounded-[8px] [&_button]:text-ink [&_button]:[padding:4px_10px]" role="status">Checking your saved game…</p> : null}
     {arrival?.error && !npcId ? <DialogueFrame><p role="alert">{arrival.error}</p><GameButton label="Check saved state" onClick={arrival.onRetry} /><GameButton label="Sign out" onClick={onSignOut} /></DialogueFrame> : null}
     {exitReminder ? <DialogueFrame><h2>Before you leave</h2><p>{arrival?.blockedExitMessage ?? 'Talk to the receptionist at the information kiosk and ask where to get an ID card first. Look for the yellow ! marker.'}</p><GameButton label="Return to station" onClick={() => setExitReminder(false)} /></DialogueFrame> : null}

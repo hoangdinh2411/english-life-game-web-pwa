@@ -1,6 +1,6 @@
 import { generateAndUpload } from './generate-map-assets.mjs';
 
-const args = process.argv.slice(2);
+const args = process.argv.slice(2).filter(argument => argument !== '--');
 const targetArgs = args.filter((argument) => argument === '--target' || argument.startsWith('--target='));
 if (targetArgs.length > 1) throw new Error('Specify --target only once.');
 

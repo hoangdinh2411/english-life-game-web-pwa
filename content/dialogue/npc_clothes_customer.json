@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "scope": "npc",
+  "npcId": "npc_clothes_customer",
+  "nodes": [
+    {
+      "id": "clothes_customer_start",
+      "text": {
+        "default": "How can I help you?"
+      },
+      "intents": [
+        {
+          "name": "shop_items",
+          "keywords": [
+            "order",
+            "buy",
+            "menu",
+            "coffee",
+            "drink",
+            "shirt",
+            "clothes",
+            "color",
+            "blue",
+            "green",
+            "red",
+            "yellow",
+            "shirts",
+            "drinks",
+            "what do you have"
+          ],
+          "next": "clothes_customer_items"
+        }
+      ]
+    },
+    {
+      "id": "clothes_customer_items",
+      "text": {
+        "default": "Please ask the clothes seller about shirts. What color do you like?"
+      }
+    }
+  ]
+}

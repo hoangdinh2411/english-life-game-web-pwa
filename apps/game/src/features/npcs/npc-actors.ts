@@ -1,0 +1,30 @@
+import type Phaser from 'phaser';
+import type { Point, StationNpc } from '../../types/gameplay/world';
+import { advanceNpc } from './npc-motion';
+
+export interface NpcActor {
+  npc: StationNpc;
+  anchor: Point;
+  sprite: Phaser.GameObjects.Sprite;
+  shadow?: Phaser.GameObjects.Ellipse;
+  label: Phaser.GameObjects.Text;
+  elapsed: number;
+  labelOffset: number;
+  idleFrame: string;
+  walkPrefix?: string;
+  clip?: (anchor: Point, offset: Point) => Point;
+}
+
+export function updateNpcActors(actors: NpcActor[], player: Point, delta: number, paused: boolean, selected: string | null): void {
+  for (const actor of actors) {
+    const state = { x: actor.npc.x, y: actor.npc.y, elapsed: actor.elapsed };
+    const pose = advanceNpc(actor.npc.id, state, actor.anchor, player, delta, paused, selected, actor.clip);
+    actor.elapsed = state.elapsed;
+    actor.npc.x = pose.x; actor.npc.y = pose.y;
+    actor.sprite.setPosition(pose.x, pose.y).setDepth(pose.y);
+    actor.shadow?.setPosition(pose.x, pose.y - 3);
+    actor.label.setPosition(pose.x, pose.y - actor.labelOffset);
+    if (actor.walkPrefix && pose.moving) actor.sprite.play(`${actor.walkPrefix}-${{ down: 0, left: 1, right: 2, up: 3 }[pose.direction]}`, true);
+    else { actor.sprite.anims.stop(); actor.sprite.setFrame(actor.idleFrame); }
+  }
+}

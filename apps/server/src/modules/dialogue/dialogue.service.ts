@@ -45,8 +45,8 @@ export class DialogueService {
   }
 
   // Context is supplied by server orchestration; this service never changes quest state.
-  async reply(context: DialogueContext, input: string): Promise<DialogueReply> {
-    const all = await this.cache.getNodes();
+  async reply(context: DialogueContext, input: string, globalOnly = false): Promise<DialogueReply> {
+    const all = (await this.cache.getNodes()).filter(entry => !globalOnly || entry.scope === 'global');
     const groups = [
       all.filter(entry => entry.scope === 'npc' && entry.npcId === context.npcId),
       all.filter(entry => entry.scope === 'role' && entry.roleId === context.roleId),

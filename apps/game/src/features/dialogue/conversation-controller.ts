@@ -1,12 +1,12 @@
 import type { ArrivalState, Conversation, ConversationTurn, SendMessageRequest } from '@life-abroad/shared';
 
-export interface ArrivalApi {
+export interface ConversationApi {
   load: () => Promise<ArrivalState>;
   start: () => Promise<Conversation>;
   send: (id: string, body: SendMessageRequest) => Promise<ConversationTurn>;
-  enter: () => Promise<ArrivalState>;
+  enter?: () => Promise<ArrivalState>;
 }
-export interface ArrivalSnapshot {
+export interface ConversationSnapshot {
   arrival: ArrivalState | null;
   conversation: Conversation | null;
   pending: boolean;
@@ -16,17 +16,17 @@ export interface ArrivalSnapshot {
 }
 
 // Private state lives only in memory. All mutations come from authenticated API responses.
-export function createArrivalController(api: ArrivalApi) {
-  let state: ArrivalSnapshot = { arrival: null, conversation: null, pending: false, error: '', correction: null, retryMessage: null };
+export function createConversationController(api: ConversationApi) {
+  let state: ConversationSnapshot = { arrival: null, conversation: null, pending: false, error: '', correction: null, retryMessage: null };
   let epoch = 0;
   let disposed = false;
   let retry: SendMessageRequest | null = null;
   const listeners = new Set<() => void>();
-  const update = (patch: Partial<ArrivalSnapshot>) => {
+  const update = (patch: Partial<ConversationSnapshot>) => {
     state = { ...state, ...patch };
     for (const listener of listeners) listener();
   };
-  const run = async (operation: () => Promise<Partial<ArrivalSnapshot>>): Promise<boolean> => {
+  const run = async (operation: () => Promise<Partial<ConversationSnapshot>>): Promise<boolean> => {
     if (disposed || state.pending) return false;
     const current = epoch;
     update({ pending: true, error: '' });
@@ -80,13 +80,14 @@ export function createArrivalController(api: ArrivalApi) {
         retry = null;
         const messages = [...conversation.messages];
         for (const message of [turn.playerMessage, turn.npcMessage]) if (!messages.some((item) => item.id === message.id)) messages.push(message);
-        return { conversation: { ...conversation, messages, arrival }, arrival, correction: turn.correction ?? null, retryMessage: null };
+        return { conversation: { ...conversation, messages, arrival, ...(turn.seller ? { seller: turn.seller } : {}) }, arrival, correction: turn.correction ?? null, retryMessage: null };
       });
     },
     enter: () => {
-      if (!state.arrival?.canEnterTownStreet) return Promise.resolve(false);
+      const enter = api.enter;
+      if (!enter || !state.arrival?.canEnterTownStreet) return Promise.resolve(false);
       return run(async () => {
-        const arrival = await api.enter();
+        const arrival = await enter();
         if (arrival.locationId !== 'loc_town_street' || !arrival.ticket.used || !arrival.rewardsGranted) throw new Error('Town Street access could not be confirmed. Try again.');
         return { arrival };
       });

@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "scope": "npc",
+  "npcId": "npc_clothes_seller",
+  "nodes": [
+    {
+      "id": "clothes_seller_start",
+      "text": {
+        "default": "How can I help you?"
+      },
+      "intents": [
+        {
+          "name": "shop_items",
+          "keywords": [
+            "order",
+            "buy",
+            "menu",
+            "coffee",
+            "drink",
+            "shirt",
+            "clothes",
+            "color",
+            "blue",
+            "green",
+            "red",
+            "yellow",
+            "shirts",
+            "drinks",
+            "what do you have",
+            "what can i get"
+          ],
+          "next": "clothes_seller_items"
+        }
+      ]
+    },
+    {
+      "id": "clothes_seller_items",
+      "text": {
+        "default": "We have blue, green, red, and yellow shirts. Which color are you looking for?"
+      }
+    }
+  ]
+}
