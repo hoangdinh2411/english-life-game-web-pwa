@@ -11,17 +11,41 @@ import { DialogueService } from '../modules/dialogue/dialogue.service';
 
 const receptionist = { npcId: 'npc_receptionist', roleId: 'station_receptionist', personality: 'cheerful' };
 
-test('shared topic files offer five distinct questions and keep understood small talk going', async () => {
+test('T19 waiter small-talk topics support personality replies and at least five understood turns', async () => {
   const { engine } = await fixture();
   const context = { npcId: 'npc_cafe_waiter', roleId: 'shop_companion', personality: 'cheerful' };
-  for (const input of ['how are you','weather','I feel sick','where are you from','I am fine']) {
-    const replies = await Promise.all(Array.from({ length: 5 }, (_, variationIndex) => engine.reply({ ...context, variationIndex }, input)));
-    assert.equal(new Set(replies.map(reply => reply.text)).size, 5);
-    assert.ok(replies.every(reply => !reply.misunderstood && reply.text.includes('?')));
+  const topics = [
+    ['How are you?', 'global_wellbeing'],
+    ['How is the weather?', 'global_weather'],
+    ['I feel tired.', 'global_tired'],
+    ['I feel fine.', 'global_fine'],
+    ['I feel sick.', 'global_health'],
+    ['Do you like the station?', 'global_station'],
+    ['Where are you from?', 'global_origin'],
+  ] as const;
+  for (const [input, expectedNode] of topics) {
+    const replies = await Promise.all(['cheerful', 'shy', 'serious'].map(personality =>
+      engine.reply({ ...context, personality }, input)));
+    assert.ok(replies.every(reply => reply.node.id === expectedNode && !reply.misunderstood), input);
+    assert.equal(new Set(replies.map(reply => reply.text)).size, 3, input);
+    if (input === 'I feel sick.') {
+      assert.ok(replies.every(reply => !/doctor|medicine|treatment|diagnos/i.test(reply.text)));
+    }
   }
+
+  let currentNodeId = 'shop_start';
+  for (const [input] of topics.slice(0, 6)) {
+    const reply = await engine.reply({ ...context, currentNodeId }, input);
+    assert.notEqual(reply.node.id, 'global_repeat', input);
+    assert.equal(reply.misunderstood, false, input);
+    currentNodeId = reply.node.id;
+  }
+  const unknown = await engine.reply({ ...context, currentNodeId }, 'purple flying sandwich');
+  assert.equal(unknown.node.id, 'global_repeat');
+  assert.equal(unknown.misunderstood, true);
+
   const openings = await Promise.all(Array.from({ length: 5 }, (_, variationIndex) => engine.node({ ...context, variationIndex }, 'shop_start')));
   assert.equal(new Set(openings.map(reply => reply.text)).size, 5);
-  assert.equal((await engine.reply(context,'unrecognized gibberish')).node.id,'global_repeat');
 });
 
 async function fixture() {
@@ -74,7 +98,7 @@ test('T4 applies NPC then role then global intent precedence and personality wor
   const { engine } = await fixture();
   assert.equal((await engine.reply(receptionist, 'bus ticket please')).node.id, 'receptionist_ticket_request');
   assert.equal((await engine.reply(receptionist, 'ticket please')).node.id, 'station_receptionist_ticket');
-  assert.equal((await engine.reply(receptionist, 'I feel fine')).node.id, 'global_nice');
+  assert.equal((await engine.reply(receptionist, 'I feel fine')).node.id, 'global_fine');
   const greeting = await engine.reply(receptionist, 'hello');
   assert.equal(greeting.node.id, 'receptionist_welcome');
   assert.equal(greeting.text, greeting.node.text.cheerful);

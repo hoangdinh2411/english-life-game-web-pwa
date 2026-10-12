@@ -10,6 +10,18 @@
       },
       "intents": [
         {
+          "name": "directions",
+          "keywords": [
+            "leave",
+            "exit",
+            "bus ticket",
+            "town street",
+            "receptionist",
+            "how do i get to town"
+          ],
+          "next": "seller_directions"
+        },
+        {
           "name": "goodbye",
           "keywords": [
             "goodbye",
@@ -153,6 +165,12 @@
         "default": "Goodbye! Any unpaid order is cancelled. Have a lovely day!"
       },
       "end": true
+    },
+    {
+      "id": "seller_directions",
+      "text": {
+        "default": "Please ask the receptionist at the station information desk for a bus ticket to Town Street. Have you spoken to the receptionist yet?"
+      }
     }
   ]
 }

@@ -5,15 +5,10 @@
     {
       "id": "global_health",
       "text": {
-        "default": "I am sorry you are not feeling well. Would you like to talk about something else?"
-      },
-      "variations": [
-        "I am sorry you are not feeling well. Would you like to talk about something else?",
-        "I am sorry you are not feeling well. That sounds difficult. Would you prefer a quiet conversation?",
-        "I am sorry you are not feeling well. I hope your day gets easier. What usually cheers you up?",
-        "I am sorry you are not feeling well. Thanks for telling me. Would you like to talk about a favorite hobby?",
-        "I am sorry to hear that. What has been the best part of your day?"
-      ]
+        "default": "I am sorry you feel sick. Would you like to talk about something pleasant?",
+        "cheerful": "Oh, I am sorry you feel sick. I hope your day gets a little brighter. What do you enjoy?",
+        "shy": "That sounds hard. I hope you feel more comfortable soon. Would you like a quiet chat?"
+      }
     }
   ]
 }

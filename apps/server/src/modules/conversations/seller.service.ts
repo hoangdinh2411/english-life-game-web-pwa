@@ -6,7 +6,7 @@ import { DialogueService, type DialogueContext } from '../dialogue/dialogue.serv
 import { LifeService } from '../life/life.service';
 import { ConversationsRepository, sellerState, type ConversationRow } from './conversations.repository';
 
-interface SellerReply { text: string; intent: string; misunderstood: boolean; seller: SellerState }
+interface SellerReply { text: string; intent: string; misunderstood: boolean; seller: SellerState; drinkPaid?: boolean; drinkOrdered?: boolean; greeted?: boolean }
 
 function words(text: string): string {
   return normalizeDialogue(text).toLowerCase().replace(/[^a-z0-9']/g, ' ').replace(/\s+/g, ' ').trim();
@@ -55,6 +55,7 @@ export class SellerService {
     // Authored keywords route dialogue; confirmation additionally requires a
     // complete affirmative phrase so "yes, but change it" cannot spend money.
     const route = start.node.intents?.find(intent => intent.keywords.some(keyword => contains(text, keyword)))?.name;
+    const greeted = start.node.intents?.find(intent => intent.name === 'greet')?.keywords.some(keyword => contains(text, keyword)) ?? false;
     if (!route && !matches.length && !/\b(?:want|order|buy|change|make|instead|would like|can i have)\b/.test(text)) {
       const common = await this.dialogue.reply(context, input, true);
       if (common.intent) return { text: common.text, intent: common.intent, misunderstood: false, seller: state };
@@ -62,8 +63,11 @@ export class SellerService {
     let intent: string;
     let order: PendingOrder | null = state.pendingOrder;
     let closed = false;
+    let drinkPaid = false;
+    let drinkOrdered = false;
     const values: Record<string, string> = {};
-    if (route === 'goodbye') { intent = 'goodbye'; order = null; closed = true; }
+    if (route === 'directions') intent = 'directions';
+    else if (route === 'goodbye') { intent = 'goodbye'; order = null; closed = true; }
     else if (route === 'cancel' || /^(?:no|no thanks|no thank you|not now)(?: please)?$/.test(text)) {
       intent = 'cancel'; order = null;
     } else if (route === 'ask_menu') {
@@ -87,8 +91,9 @@ export class SellerService {
             // A "yes" to a price/menu question must first repeat the actual
             // pending order, rather than silently paying for a different item.
             intent = 'order';
+            drinkOrdered = item.kind === 'drink';
           } else if (await this.life.fulfillCafeOrder(client, userId, item, order.quantity, order.orderId)) {
-            intent = 'paid'; order = null;
+            intent = 'paid'; drinkPaid = item.kind === 'drink'; order = null;
           } else intent = 'insufficient_funds';
         }
       }
@@ -102,6 +107,7 @@ export class SellerService {
       else {
         const amount = count ?? 1;
         order = { orderId: randomUUID(), itemId: item.id, quantity: amount, unitPrice: item.price, total: item.price * amount };
+        drinkOrdered = item.kind === 'drink';
         intent = 'order'; values.order = `${amount} × ${item.name}`; values.total = String(order.total);
       }
     } else intent = route === 'greet' ? 'greet' : 'clarify';
@@ -109,6 +115,6 @@ export class SellerService {
     await this.conversations.saveOrder(client, row.id, order, closed);
     return { text: reply.text.replace(/\{(\w+)\}/g, (token, key: string) => values[key] ?? token), intent,
       misunderstood: ['clarify', 'unknown_item', 'invalid_quantity', 'one_item'].includes(intent),
-      seller: { shop: 'cafe', pendingOrder: order, closed } };
+      seller: { shop: 'cafe', pendingOrder: order, closed }, drinkPaid, drinkOrdered, greeted };
   }
 }

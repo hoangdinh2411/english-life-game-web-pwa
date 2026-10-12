@@ -77,7 +77,6 @@
       "text": {
         "default": "Here you go!"
       },
-      "completesStep": "s3",
       "end": true
     }
   ]

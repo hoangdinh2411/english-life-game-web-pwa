@@ -22,28 +22,33 @@ export class QuestsRepository {
 
   transaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> { return this.database.transaction(work); }
 
+  async content(client: PoolClient, questId: string): Promise<QuestContent> {
+    const result = await client.query<{ id: string; title: string; required_level: string; npc_id: string; rewards: unknown }>(
+      'SELECT id,title,required_level,npc_id,rewards FROM public.quests WHERE id=$1', [questId]);
+    const quest = result.rows[0];
+    if (!quest) throw new ServiceUnavailableException('Quest content is unavailable');
+    const steps = await client.query<{ id: string; description: string; done_when: unknown }>(
+      'SELECT id,description,done_when FROM public.quest_steps WHERE quest_id=$1 ORDER BY step_order', [questId]);
+    const parsed = questSchema.safeParse({ id: quest.id, title: quest.title, requiredLevel: quest.required_level,
+      npcId: quest.npc_id, rewards: quest.rewards,
+      steps: steps.rows.map(step => ({ id: step.id, description: step.description, doneWhen: step.done_when })) });
+    if (!parsed.success) throw new ServiceUnavailableException('Quest content is invalid');
+    return parsed.data;
+  }
+
   async load(client: PoolClient, userId: string): Promise<ArrivalSnapshot> {
     // Every arrival operation locks the same existing character, including first requests.
     const character = await client.query<{ current_city_id: string; current_location_id: string | null }>(
       'SELECT current_city_id,current_location_id FROM public.characters WHERE user_id=$1 FOR UPDATE', [userId]);
     const player = character.rows[0];
     if (!player) throw new ConflictException('Create a character before starting the arrival quest');
-    const content = await client.query<{ id: string; title: string; required_level: string; npc_id: string; rewards: unknown }>(
-      'SELECT id,title,required_level,npc_id,rewards FROM public.quests WHERE id=$1', [ARRIVAL_QUEST_ID]);
-    const quest = content.rows[0];
-    if (!quest) throw new ServiceUnavailableException('Arrival quest content is unavailable');
-    const steps = await client.query<{ id: string; description: string; done_when: unknown }>(
-      'SELECT id,description,done_when FROM public.quest_steps WHERE quest_id=$1 ORDER BY step_order', [ARRIVAL_QUEST_ID]);
-    const parsed = questSchema.safeParse({ id: quest.id, title: quest.title, requiredLevel: quest.required_level,
-      npcId: quest.npc_id, rewards: quest.rewards,
-      steps: steps.rows.map(step => ({ id: step.id, description: step.description, doneWhen: step.done_when })) });
-    if (!parsed.success) throw new ServiceUnavailableException('Arrival quest content is invalid');
+    const quest = await this.content(client, ARRIVAL_QUEST_ID);
     const location = await client.query<{ city_id: string }>('SELECT city_id FROM public.locations WHERE id=$1', [STATION_LOCATION_ID]);
     if (location.rows[0]?.city_id !== player.current_city_id) throw new ConflictException('Character is not in the arrival city');
     const progress = await client.query<ArrivalProgress>(
       'SELECT status,current_step_id,bus_ticket_issued_at,bus_ticket_used_at,rewards_granted_at FROM public.player_quests WHERE user_id=$1 AND quest_id=$2 FOR UPDATE',
       [userId, ARRIVAL_QUEST_ID]);
-    return { quest: parsed.data, progress: progress.rows[0], locationId: player.current_location_id ?? STATION_LOCATION_ID };
+    return { quest, progress: progress.rows[0], locationId: player.current_location_id ?? STATION_LOCATION_ID };
   }
 
   async save(client: PoolClient, userId: string, progress: ArrivalProgress): Promise<void> {

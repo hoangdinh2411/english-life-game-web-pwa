@@ -48,9 +48,18 @@
           "keywords": [
             "sick",
             "unwell",
-            "not feeling well"
+            "not feeling well",
+            "feel sick"
           ],
           "next": "global_health"
+        },
+        {
+          "name": "station",
+          "keywords": [
+            "station",
+            "train station"
+          ],
+          "next": "global_station"
         },
         {
           "name": "origin",
@@ -69,6 +78,14 @@
           "next": "global_goodbye"
         }
       ]
+    },
+    {
+      "id": "global_station",
+      "text": {
+        "default": "The station can be busy. Are you travelling somewhere?",
+        "cheerful": "There is always something happening at the station! Where are you going today?",
+        "shy": "The station is busy today. Are you waiting for a train?"
+      }
     }
   ]
 }

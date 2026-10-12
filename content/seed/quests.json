@@ -13,9 +13,9 @@
     "id": "q_order_coffee", "title": "Your First Coffee", "requiredLevel": "A1", "npcId": "npc_mia",
     "rewards": { "xp": 20, "coins": 5 },
     "steps": [
-      { "id": "s1", "description": "Greet Mia", "doneWhen": { "intent": "greet" } },
-      { "id": "s2", "description": "Order a drink", "doneWhen": { "intent": "order_drink" } },
-      { "id": "s3", "description": "Choose a size", "doneWhen": { "intent": "choose_size" } }
+      { "id": "coffee_greet", "description": "Greet the café cashier", "doneWhen": { "intent": "greet" } },
+      { "id": "coffee_order", "description": "Order a drink from Mia", "doneWhen": { "intent": "order_drink" } },
+      { "id": "coffee_pay", "description": "Confirm and pay for your drink", "doneWhen": { "intent": "pay_drink" } }
     ]
   },
   {

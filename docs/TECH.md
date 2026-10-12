@@ -192,9 +192,15 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
   clears the order and appends both messages. Price changes require a new order;
   insufficient funds keep the unpaid order. Goodbye clears it and closes the
   conversation. Historical message replay remains available after closing.
-  Store hours and per-message energy costs apply. Seller dialogue grants no quest
-  progress/rewards. Café map/UI integration remains T18; clothes purchases remain
-  T20. Six static shop NPC frames are in `apps/game/assets/npcs/shop-npcs.{png,json}`.
+  Store hours and per-message energy costs apply. T18 café progress is owned by
+  the quests module; its completion/reward and drink payment share this transaction.
+  Clothes purchase conversations remain T20. Shop maps use the uploaded
+  `shop-walk` atlas; dialogue portraits use the static `shop-npcs` sheet.
+- `GET /quests/coffee` (protected) returns `coffeeQuestStateSchema`: saved
+  status/current objective, arrival eligibility and authored rewards. Cashier
+  and waiter conversation responses also include `coffeeQuest`; no client
+  endpoint writes quest intents or grants rewards. Payment refreshes the
+  profile in the background to update XP without closing the dialogue.
 - `GET /conversations/:id`: returns the owner's ordered messages and current
   arrival state. Another owner's ID returns 404; all routes require Auth.
 - `POST /conversations/:id/messages` with `{ clientMessageId: <UUID>, text,

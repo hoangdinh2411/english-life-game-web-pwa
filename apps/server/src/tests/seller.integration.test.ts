@@ -49,6 +49,10 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     });
     assert.equal(login.error, null); assert.ok(login.data.session);
     const userId = login.data.session.user.id;
+    // T17 isolates shop payment from the later café quest reward; all changes roll back.
+    await client.query(`UPDATE player_quests SET status='not_started',current_step_id='arrival_greet',
+      bus_ticket_issued_at=null,bus_ticket_used_at=null,rewards_granted_at=null
+      WHERE user_id=$1 AND quest_id='q_station_arrival'`, [userId]);
     await client.query('UPDATE player_stats SET coins=500,energy=100 WHERE user_id=$1', [userId]);
     await client.query(`INSERT INTO player_life (user_id,clock_time,clock_anchor)
       VALUES ($1,'2026-10-11T10:00:00Z',now()) ON CONFLICT (user_id)
@@ -172,6 +176,35 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
       assert.equal(saved.messages[0]!.text, opened.messages[0]!.text);
     }
     assert.equal(new Set(greetings).size, 5);
+    const waiterResponse = await call('/conversations', { npcId: 'npc_cafe_waiter' });
+    assert.equal(waiterResponse.status, 201);
+    const waiter = conversationSchema.parse(await waiterResponse.json());
+    const waiterPath = `/conversations/${waiter.id}/messages`;
+    const smallTalk = [
+      ['How are you?', 'wellbeing'],
+      ['How is the weather?', 'weather'],
+      ['I feel tired.', 'feeling_tired'],
+      ['I feel fine.', 'feeling_fine'],
+      ['I feel sick.', 'health'],
+      ['Do you like the station?', 'station'],
+      ['Where are you from?', 'origin'],
+    ] as const;
+    for (const [text, intent] of smallTalk) {
+      const response = await call(waiterPath, { clientMessageId: randomUUID(), text, coach: false });
+      assert.equal(response.status, 201, text);
+      const turn = conversationTurnSchema.parse(await response.json());
+      assert.equal(turn.intent, intent, text);
+      assert.equal(turn.misunderstood, false, text);
+      assert.notEqual(turn.npcMessage.text, 'Sorry, can you say that again?', text);
+    }
+    const unknown = await call(waiterPath, {
+      clientMessageId: randomUUID(), text: 'purple flying sandwich', coach: false,
+    });
+    assert.equal(unknown.status, 201);
+    const fallback = conversationTurnSchema.parse(await unknown.json());
+    assert.equal(fallback.misunderstood, true);
+    assert.equal(fallback.npcMessage.text, 'Sorry, can you say that again?');
+
     await client.query('UPDATE characters SET current_location_id=$2 WHERE user_id=$1', [userId, 'loc_station']);
     const receptionist = await call('/conversations', { npcId: 'npc_receptionist' });
     assert.equal(receptionist.status, 201);

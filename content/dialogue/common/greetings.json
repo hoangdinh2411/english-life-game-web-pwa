@@ -31,15 +31,23 @@
       },
       "intents": [
         {
-          "name": "small_talk",
+          "name": "feeling_fine",
           "keywords": [
             "fine",
             "good",
             "great",
             "okay",
-            "tired"
+            "well"
           ],
-          "next": "global_nice"
+          "next": "global_fine"
+        },
+        {
+          "name": "feeling_tired",
+          "keywords": [
+            "tired",
+            "exhausted"
+          ],
+          "next": "global_tired"
         }
       ],
       "fallback": "global_repeat",

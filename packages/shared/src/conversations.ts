@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ARRIVAL_NPC_ID, arrivalStateSchema } from './quests';
+import { ARRIVAL_NPC_ID, arrivalStateSchema, coffeeQuestStateSchema } from './quests';
 
 export const SELLER_NPC_ID = 'npc_mia';
 export const SHOP_NPC_IDS = ['npc_mia', 'npc_cafe_waiter', 'npc_cafe_customer', 'npc_clothes_seller', 'npc_clothes_assistant', 'npc_clothes_customer'] as const;
@@ -27,6 +27,7 @@ export const turnMetadataSchema = z.object({
   intent: z.string().nullable(), misunderstood: z.boolean(), arrival: arrivalStateSchema,
   correction: z.object({ original: z.string(), improved: z.string(), reason: z.string(), question: z.string() }).strict().nullable(),
   seller: sellerStateSchema.optional(),
+  coffeeQuest: coffeeQuestStateSchema.optional(),
 }).strict();
 export const conversationTurnSchema = turnMetadataSchema.extend({
   playerMessage: conversationMessageSchema, npcMessage: conversationMessageSchema,
@@ -35,6 +36,7 @@ export const conversationSchema = z.object({
   id: z.string().uuid(), npcId: conversationNpcSchema,
   messages: z.array(conversationMessageSchema), arrival: arrivalStateSchema,
   seller: sellerStateSchema.optional(),
+  coffeeQuest: coffeeQuestStateSchema.optional(),
 }).strict();
 export type SendMessageRequest = z.infer<typeof sendMessageSchema>;
 export type ConversationMessage = z.infer<typeof conversationMessageSchema>;

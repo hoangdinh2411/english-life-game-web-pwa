@@ -5,15 +5,10 @@
     {
       "id": "global_origin",
       "text": {
-        "default": "I live here in Maplewood. Where are you from?"
-      },
-      "variations": [
-        "I live here in Maplewood. Where are you from?",
-        "I enjoy meeting people from other places. What is your hometown like?",
-        "Maplewood is a small town. Do you come from a city or a village?",
-        "Every place has something special. What do you like about your hometown?",
-        "I like exploring new places. What place would you recommend visiting?"
-      ]
+        "default": "I live here in Maplewood. Where are you from?",
+        "cheerful": "I love meeting people from other places! What is your hometown like?",
+        "shy": "I am from Maplewood. Do you come from a city or a village?"
+      }
     }
   ]
 }

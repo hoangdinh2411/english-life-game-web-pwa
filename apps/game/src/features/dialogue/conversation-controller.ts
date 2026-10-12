@@ -4,6 +4,7 @@ export interface ConversationApi {
   load: () => Promise<ArrivalState>;
   start: () => Promise<Conversation>;
   send: (id: string, body: SendMessageRequest) => Promise<ConversationTurn>;
+  read?: (id: string) => Promise<Conversation>;
   enter?: () => Promise<ArrivalState>;
 }
 export interface ConversationSnapshot {
@@ -76,11 +77,15 @@ export function createConversationController(api: ConversationApi) {
           throw failure;
         }
         // The API may replay an old snapshot; refresh persisted eligibility before exiting.
-        const arrival = await api.load();
+        const latest = api.read ? await api.read(conversation.id) : null;
+        const arrival = latest?.arrival ?? await api.load();
         retry = null;
         const messages = [...conversation.messages];
         for (const message of [turn.playerMessage, turn.npcMessage]) if (!messages.some((item) => item.id === message.id)) messages.push(message);
-        return { conversation: { ...conversation, messages, arrival, ...(turn.seller ? { seller: turn.seller } : {}) }, arrival, correction: turn.correction ?? null, retryMessage: null };
+        const seller = latest?.seller ?? turn.seller;
+        const coffeeQuest = latest?.coffeeQuest ?? turn.coffeeQuest;
+        return { conversation: { ...conversation, messages, arrival, ...(seller ? { seller } : {}),
+          ...(coffeeQuest ? { coffeeQuest } : {}) }, arrival, correction: turn.correction ?? null, retryMessage: null };
       });
     },
     enter: () => {

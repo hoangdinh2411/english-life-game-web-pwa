@@ -22,17 +22,16 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const manager = useMemo(() => createSessionManager({ refresh: refreshSession, persist: writeStoredSession,
     clear: clearSessionToken, onChange: (session) => setToken(session?.token ?? null) }), []);
 
-  const refreshPlayer = useCallback(async () => {
-    setPlayerError('');
-    setPlayerLoading(true);
+  const refreshPlayer = useCallback(async (background = false) => {
+    if (!background) { setPlayerError(''); setPlayerLoading(true); }
     try {
       const result = await manager.run(api.loadPlayer);
       setPlayer(result);
       return result;
     } catch (error) {
-      setPlayerError('Check your connection, then try again. Your saved game has not changed.');
+      if (!background) setPlayerError('Check your connection, then try again. Your saved game has not changed.');
       throw error;
-    } finally { setPlayerLoading(false); }
+    } finally { if (!background) setPlayerLoading(false); }
   }, [manager]);
 
   useEffect(() => {

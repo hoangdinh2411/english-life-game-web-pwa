@@ -3,30 +3,28 @@
   "scope": "global",
   "nodes": [
     {
-      "id": "global_nice",
-      "text": {
-        "default": "Nice to hear that!"
-      },
-      "variations": [
-        "Nice to hear that! What do you like doing in your free time?",
-        "Thanks for telling me. What are you looking forward to?",
-        "I understand. What helps you relax?",
-        "That sounds interesting. How do you usually spend your weekends?",
-        "Thanks for sharing. What would you like to talk about next?"
-      ]
-    },
-    {
       "id": "global_wellbeing",
       "text": {
-        "default": "I am doing well, thank you! How are you today?"
-      },
-      "variations": [
-        "I am doing well, thank you! How are you today?",
-        "It has been a busy morning. How has your morning been?",
-        "I feel cheerful today. What makes you happy?",
-        "I am enjoying a quiet moment. What helps you relax?",
-        "I am looking forward to the weekend. What are your plans?"
-      ]
+        "default": "I am doing well, thank you. How are you today?",
+        "cheerful": "I am great, thanks for asking! How is your day going?",
+        "shy": "I am doing okay, thank you. How are you?"
+      }
+    },
+    {
+      "id": "global_fine",
+      "text": {
+        "default": "I am glad you are doing well. What has been the best part of your day?",
+        "cheerful": "That is great! What made you feel good today?",
+        "shy": "Oh, good. What do you enjoy doing in your free time?"
+      }
+    },
+    {
+      "id": "global_tired",
+      "text": {
+        "default": "I hope you can have a quiet moment. What do you like doing when you feel tired?",
+        "cheerful": "I hope you get a chance to relax soon! What helps you unwind?",
+        "shy": "That sounds tiring. Would you like to talk about something relaxing?"
+      }
     }
   ]
 }

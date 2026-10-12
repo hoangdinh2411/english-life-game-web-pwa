@@ -11,9 +11,12 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
 - Authenticated character creation: select a starter city/avatar, enter a name,
   then start; resume existing characters from the server.
 - Authored content in `content/seed/`: one town; **Mia** (café), **Mr. Brown**
-  (housing), **Sam** (bank); **five later quests** and their ordered
-  steps/rewards. These quests are _seeded data_, **not yet playable server quest
-  gameplay**. The **station arrival quest**, receptionist, station/street
+  (housing), **Sam** (bank); **Your First Coffee** and four later quest
+  definitions. The four later quests remain seeded data. The café quest is
+  playable after arrival: greet Mia → order a drink → confirm/pay → receive its
+  reward once. The waiter chats and refers orders to Mia; both staff give
+  receptionist directions. Progress, payments and rewards survive reload.
+  The **station arrival quest**, receptionist, station/street
   locations and bus-ticket dialogue are also authored and seeded. The server
   dialogue engine recognizes requests with NPC → role → global fallback. Ordered
   server arrival steps, saved ticket entitlement and one-time rewards are

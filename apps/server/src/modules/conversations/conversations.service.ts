@@ -6,12 +6,13 @@ import { QuestsService } from '../quests/quests.service';
 import { ConversationsRepository, sellerState } from './conversations.repository';
 import { SellerService } from './seller.service';
 import { conversationNpcSchema } from '@life-abroad/shared';
+import { CoffeeQuestService } from '../quests/coffee-quest.service';
 
 @Injectable()
 export class ConversationsService {
   constructor(private readonly conversations: ConversationsRepository,
     private readonly dialogue: DialogueService, private readonly quests: QuestsService, private readonly life: LifeService,
-    private readonly seller: SellerService) {}
+    private readonly seller: SellerService, private readonly coffee: CoffeeQuestService) {}
 
   create(userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<Conversation> {
     return this.conversations.transaction(async client => {
@@ -21,14 +22,15 @@ export class ConversationsService {
         const id = await this.conversations.create(client, userId, npcId);
         const greeting = await this.conversations.append(client, id, 'npc', await this.seller.opening(context));
         return { id, npcId: SELLER_NPC_ID, messages: [greeting], arrival,
-          seller: { shop: 'cafe', pendingOrder: null, closed: false } };
+          seller: { shop: 'cafe', pendingOrder: null, closed: false }, coffeeQuest: await this.coffee.get(userId, client) };
       }
       if (npcId !== ARRIVAL_NPC_ID) {
         const context = { ...await this.conversations.context(client, npcId), variationIndex: await this.conversations.variationIndex(client, userId, npcId, true) };
         const opening = await this.dialogue.node(context, 'shop_start');
         const id = await this.conversations.create(client, userId, npcId);
         const greeting = await this.conversations.append(client, id, 'npc', opening.text);
-        return { id, npcId: conversationNpcSchema.parse(npcId), messages: [greeting], arrival };
+        return { id, npcId: conversationNpcSchema.parse(npcId), messages: [greeting], arrival,
+          ...(npcId === 'npc_cafe_waiter' ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
       }
       if (arrival.locationId !== STATION_LOCATION_ID) throw new ConflictException('Visit the station receptionist first');
       const context = await this.conversations.context(client);
@@ -45,7 +47,8 @@ export class ConversationsService {
       const row = await this.conversations.load(client, userId, id);
       return { id, npcId: conversationNpcSchema.parse(row.npc_id),
         arrival, messages: await this.conversations.messages(client, id),
-        ...(row.npc_id === SELLER_NPC_ID ? { seller: sellerState(row) } : {}) };
+        ...(row.npc_id === SELLER_NPC_ID ? { seller: sellerState(row) } : {}),
+        ...([SELLER_NPC_ID,'npc_cafe_waiter'].includes(row.npc_id) ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
     });
   }
 
@@ -70,7 +73,11 @@ export class ConversationsService {
       if (conversation.npc_id === SELLER_NPC_ID) {
         const reply = await this.seller.reply(client, userId, conversation, context, request.text);
         responseText = reply.text; nodeId = `seller_${reply.intent}`;
-        metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction };
+        const event = reply.intent === 'greet' ? 'greet' : reply.drinkPaid ? 'pay_drink' : reply.drinkOrdered ? 'order_drink'
+          : ['cancel','goodbye','price_changed','order'].includes(reply.intent) && !reply.drinkOrdered ? 'cancel_order' : undefined;
+        if (reply.greeted && event !== 'greet') await this.coffee.apply(client, userId, 'greet');
+        const coffeeQuest = event ? await this.coffee.apply(client, userId, event) : await this.coffee.get(userId, client);
+        metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction, coffeeQuest };
       } else {
         const reply = await this.dialogue.reply(context, request.text);
         responseText = reply.text; nodeId = reply.node.id;
@@ -81,7 +88,8 @@ export class ConversationsService {
             ? 'receptionist_directions_ticket_issued' : 'receptionist_ticket_issued');
           responseText = receipt.text; nodeId = receipt.node.id;
         }
-        metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, correction };
+        metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, correction,
+          ...(conversation.npc_id === 'npc_cafe_waiter' ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
       }
       const playerMessage = await this.conversations.append(client, id, 'player', request.text,
         request.clientMessageId, { coach: request.coach });

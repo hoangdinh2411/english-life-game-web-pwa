@@ -27,7 +27,7 @@ export interface SessionValue {
   options: OnboardingOptions | null;
   playerError: string;
   playerLoading: boolean;
-  refreshPlayer: () => Promise<PlayerResponse>;
+  refreshPlayer: (background?: boolean) => Promise<PlayerResponse>;
   authenticate: (email: string, password: string, displayName?: string) => Promise<'signed-in' | 'confirmation-required'>;
   signOut: () => Promise<void>;
   refreshOptions: () => Promise<OnboardingOptions>;

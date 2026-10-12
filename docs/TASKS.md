@@ -35,65 +35,44 @@ test@gmail.com / 12341234.
 
 ## DONE
 
-- [x] **Local Supabase migration (2026-10-12):** restored existing game data
-      and Auth users from `life-abroad-local` into `english-life-game`
-      (54321/54322); 30 stored files verified by SHA-256, all 15 active map/NPC
-      downloads verified through the running API. Existing test account login,
-      five distinct saved openings, five small-talk turns, persisted history
-      and replay-safe energy verified. Source volumes and ignored recovery
-      copies retained; no new test users.
-
-- [x] **Foundation:** monorepo, Vite/PWA client (D16), Supabase auth and NestJS
-      token check, health, database and access, onboarding options, `/me`,
-      character creation, migrations 001–004, authored seed, Zod content
-      validation, API rate limiting (T6).
-- [x] **Local `/practice` station:** three NPCs, optional browser speech,
-      recorded voice, Coach, portals, public-only PWA precache. No rewards, and
-      separate from the server quest state.
-- [x] **Arrival quest, end to end (T4, T5, T7, T8, T9):** receptionist dialogue
-      → bus ticket → Town Street → one-time XP/coins reward. Saved on the server
-      across reload and sign-in. Chat, optional Coach, ticket receipt, ordered
-      progress and blocked-exit messages in the UI.
-- [x] **T14 — Asset pipeline and dynamic map/NPC loading (experiment):**
-      versioned Storage packs, service-key uploads, generated-file cleanup,
-      station-only offline practice; unit/integration/PWA checks and ten browser
-      portal round trips verified (sizes and resource-memory measurements in
-      `TECH.md`).
-- [x] **T15 — Wallet and starting $500:** configurable atomic starter grant,
-      server-only transactional spending and wallet ledger; insufficient funds,
-      replay/concurrency, persistence and browser reload at 320/375/1024px
-      verified. Existing characters keep their balance.
-- [x] **T16 — Shop catalog:** 5 drinks, 5 pastries/snacks and 4 $30 colored
-      shirts at approved prices; Zod command rejects missing prices/unknown
-      shops, repeatable PostgreSQL seeding and server database reads verified.
-
-- [x] **Approved life gameplay extension (T16 follow-up):** database-backed
-      energy, instant eight-hour sleep, independent saved 2× UTC clock, direct
-      café purchases and shirt ownership/equipping with separate hair/trouser
-      colors. Store purchase hours enforced; organization/workplace hours are
-      shared rules for future actions. Transaction/replay/concurrency/auth/RLS
-      tests and browser purchase/message/sleep/ reload checks at 320/375/1024px
-      passed, plus ten appearance portal round trips. Full integration: 7/7
-      passed; generated-file checks preserve the `source` archive. Energy HUD
-      has a percentage indicator, low/empty guidance and free-practice label.
-      Sleep HUD follow-up: icon beside energy, touch/hover help, server-enforced
-      below-50% threshold, four-second fade and gradual refill. Focused UI 8/8
-      and rollback-only sleep DB check passed using the existing test account;
-      browser sleep and 320/375/768/1024px layouts verified.
-      Typecheck/lint/build passed.
+- [x] **Foundation:** monorepo, Vite/PWA client (D16), Supabase auth, NestJS
+      token check, `/me`, character creation, migrations 001–004, authored seed,
+      Zod content validation, API rate limiting (T6).
+- [x] **Local `/practice` station:** three NPCs, browser speech, recorded voice,
+      Coach, portals, public-only PWA precache. No rewards.
+- [x] **Arrival quest (T4, T5, T7, T8, T9):** receptionist → bus ticket → Town
+      Street → one-time XP/coins reward, saved on the server.
+- [x] **T14 — Asset pipeline:** versioned Storage packs, dynamic map/NPC
+      loading, station-only offline practice (measurements in `TECH.md`).
+- [x] **T15 — Wallet and starting $500:** atomic starter grant, server-only
+      spending, wallet ledger, replay/concurrency tests.
+- [x] **T16 — Shop catalog:** 5 drinks, 5 snacks, 4 $30 shirts; seeded and read
+      from the database.
+- [x] **Life gameplay extension:** energy, sleep (+8 hours, below 50% only),
+      saved 2× UTC clock, café purchases, shirt ownership/equipping, opening
+      hours for stores, energy HUD. Tests and 320/375/1024px checks passed.
+- [x] **T17 — Order and pay conversation (café seller):** saved orders, quantity
+      1–3, price/change/cancel/unknown item, atomic payment, replay,
+      insufficient funds, Coach correction. Six NPC atlas frames in shop maps.
+      Clothes purchase is T20.
+- [x] **T18 — Station café and Your First Coffee:** Mia cashier and waiter,
+      directions to the receptionist, greet → order → pay → one-time 20 XP/$5
+      reward. Browser flow, reload and 320/375/1024px verified.
+- [x] **Local Supabase migration (2026-10-12):** game data and Auth users moved
+      to `english-life-game` (54321/54322); 30 files and 15 asset downloads
+      verified. Source volumes and recovery copies kept.
+- [x] **T19 — Small-talk pools (scripted):** waiter topics for wellbeing,
+      weather, tired/fine/sick, the station and hometown, with three
+      personality replies each. Topic and fallback unit tests plus a seven-turn
+      rollback-only integration test using the existing account passed.
 
 ## NOW
 
-- [ ] **Shop polish follow-up:** café/clothes furniture and NPC collisions,
-      station-style map art and directional NPC walking, gender-matched voices,
-      shared topic files with five question variations and different openings.
-      Implementation and 173 unit tests verified; typecheck/lint/build and
-      content/PWA checks pass. Incomplete packs report missing NPC assets;
-      known opposite-gender browser voices are never used as a fallback.
-      Authenticated persistence/replay verified on the restored local instance.
-      Remaining: browser checks with the existing test account after refreshing
-      the old cached PWA, which still references the previous instance. Do not mark done
-      until both shop maps, conversations, movement and responsive layouts pass.
+- [ ] **Shop polish follow-up (browser checks only).** Code, 173 unit tests,
+      typecheck, lint, build, content and PWA checks already pass. Remaining:
+      refresh the old cached PWA, then check both shop maps, conversations, NPC
+      movement and 320/375/1024px layouts with the existing test account. Done
+      when: all these browser checks pass.
 
 ## APPROVED DESIGN (2026-10-10) — shops and money
 
@@ -112,11 +91,10 @@ test@gmail.com / 12341234.
   through one provider interface.
 - Item lists and prices live in content (`content/seed/shops.json`), never in
   code. Codex must not invent prices: the owner supplies or approves them.
-- **Approved 2026-10-11, implemented in the life gameplay extension:** energy is
-  0–100; each player message to an NPC costs 1 point, with retries charged once.
-  Drinks restore 20 points, food/snacks 50, and a drink + food purchase restores
-  80 total (10-point combination bonus), capped at 100. Consumables apply
-  immediately without inventory storage; payment/effects must be atomic.
+- Energy is 0–100; each player message to an NPC costs 1 point, with retries
+  charged once. Drinks restore 20, food/snacks 50, drink + food 80 total
+  (10-point bonus), capped at 100. Consumables apply immediately without
+  inventory; payment and effects must be atomic.
 - Sleep instantly advances the player's saved game clock by 8 hours and restores
   energy to 100. Opening hours use game time: organizations 08:00–16:00, stores
   08:00–20:00, workplaces 07:00–17:00.
@@ -126,73 +104,67 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
-- [x] **T17 — Order and pay conversation (seller role).** Greet → list the menu
-      → player names an item and a quantity (1 to 3) → seller repeats the order
-      and total → player confirms → server spends the money → hands over the
-      item. Also: ask a price, change or cancel, unknown item, not enough money,
-      goodbye. The pending order is server state. Done when: API tests cover a
-      full order (balance drops once), cancel, not enough money, a replayed
-      confirm, and a Coach correction for "I want buy coffee". Create assets for
-      main npcs and customer npcs in these stores. Verified café seller API with
-      the existing test account: saved orders, quantities 1–3,
-      price/change/cancel/unknown-item replies, atomic payment, replay,
-      insufficient funds, Coach, rollback and receptionist compatibility. Six
-      transparent NPC atlas frames displayed in shop maps, with click/nearby
-      dialogue and short patrols. Caf� ordering uses the T17 API; full caf�
-      quest and clothes purchases remain T18/T20. Typecheck, lint, unit tests,
-      content validation, build and PWA checks passed.
-- [ ] **T18 — Station café (two NPCs) and "Your First Coffee".** Café map with a
-      cashier (may reuse Mia) and a waiter. The waiter chats and sends orders to
-      the cashier. Both point to the receptionist when asked how to leave.
-      Update the seeded quest to: greet the cashier → order a drink → confirm
-      and pay → reward once. Done when: a signed-in player completes it by
-      typing, pays from the balance, gets the reward once, and a refresh keeps
-      everything.
-- [ ] **T19 — Small-talk pools (scripted).** Global and role-layer topics: how
-      are you, weather, feeling tired/fine/sick (a friendly reply only, no
-      medical advice), the station, where are you from. 2 or 3 replies per
-      topic, with personality styles. Done when: the waiter can chat 5 or more
-      turns without the fallback line, with tests for each topic and for unknown
-      input.
 - [ ] **T20 — Clothes shop (two NPCs) and minimal inventory.** Same pattern as
       the café. Add a small inventory table (user, item, quantity) and a "My
       items" list. Done when: buying a shirt lowers the balance once and the
       item is listed after reload. Equipping a shirt changes its color while
-      preserving the separate hair, skin and trouser appearance.
+      keeping the separate hair and trouser colors.
 - [ ] **T21 — Game clock speed and display.** Make the clock speed one config
-      value (now 2×; the owner approves the new value, test with 6×), not a
-      hardcoded number. Changing the speed must not make saved clocks jump:
-      store the game time, the real time and the speed at the last save. Keep
-      sleep (+8 hours). Use one shared function to check opening hours for
-      stores, organizations and workplaces. Show the game time (HH:MM and
-      weekday) in the HUD, and say the opening hours when a place is closed.
-      Done when: tests cover a speed change, sleep, a reload, and the opening
-      boundaries (07:59, 08:00, 19:59, 20:00 for stores); browser check at
-      320/375/1024px.
+      value (now 2×; the owner approves the new value, test with 6×). Changing
+      the speed must not make saved clocks jump: store the game time, the real
+      time and the speed at the last save. Keep sleep (+8 hours). Use one shared
+      function to check opening hours for stores, organizations and workplaces.
+      Show the game time (HH:MM and weekday) in the HUD, and say the opening
+      hours when a place is closed. Done when: tests cover a speed change,
+      sleep, a reload, and the store boundaries (07:59, 08:00, 19:59, 20:00);
+      browser check at 320/375/1024px.
+- [ ] **T22 — Order history (all shops except clothes).** Save every completed
+      purchase in one shared table: user, shop, items with quantity, price at
+      the time of purchase, total, and time. Write it in the same transaction as
+      the payment. Inspect the existing order storage first and reuse it if
+      possible. Done when: one purchase creates one record, a replayed confirm
+      creates none, a failed payment creates none, a later price change does not
+      change old orders, a player reads only their own orders, and records stay
+      after reload.
+- [ ] **T23 — Shop menu with images and order list (after T22).** In the seller
+      conversation, show the menu as cards with an image and a price, and a
+      short list of the player's recent orders. Images are listed in
+      `content/seed/shops.json`; the owner supplies or approves them. Show a
+      placeholder when an image is missing. Done when: all 10 café items show an
+      image and the correct price, recent orders show after reload, and the
+      browser check passes at 320/375/1024px.
 - [ ] **T12 — Minimal review screen.** Past corrections and the useful phrases
       the player used in shops ("I'd like…", "How much is…"). Store useful terms
       only, not every word. Done when: after ordering coffee, the screen shows
       the phrase and one correction.
-- [ ] **T10 — AI free chat, development provider.** `AiProvider` interface
-      (server only), `GeminiProvider` with a free key (fake data only), a mock
-      provider for tests, settings in `.env` (`AI_PROVIDER`, `AI_API_KEY`,
-      `AI_MODEL`), prompts in one file. SSE streaming, token usage saved,
-      free-chat cap and rate limit, scripted fallback on error, timeout or 429.
-      AI never changes money, items or quest state. Don't use Gemini-only
-      features (for example Google Search grounding). Include a 20-message
-      evaluation set and a command that runs it against a chosen provider. Done
-      when: text streams word by word, limits work with the mock, the fallback
-      works, and switching `AI_PROVIDER` needs no change outside the provider
-      class. Production use stays blocked (see Open decisions).
-- [ ] **Remaining authored quests** from the existing seed (Mr. Brown, Sam, the
-      heater). Add content before any new framework code.
-- [ ] **Real phone check (PWA):** Android Chrome and iOS Safari: install,
-      reopen, offline `/practice`, keyboard, update confirmation, microphone,
-      and performance on a low-end Android with the busiest map.
-- [ ] **Playtest build:** HTTPS hosting for the app and the server, a hosted
-      Supabase project (migrations, seed, production Auth settings), CORS,
-      rate-limit values, and a short privacy note (speech audio may go to the
-      browser vendor).
+- [ ] **T10a — AI provider interface and mock.** Server-only `AiProvider`
+      interface, a mock provider, and `.env` settings (`AI_PROVIDER`,
+      `AI_API_KEY`, `AI_MODEL`). On error, timeout or 429, return a scripted
+      fallback line. AI never changes money, items or quest state. Done when:
+      tests pass with the mock, and the fallback works.
+- [ ] **T10b — Gemini provider (after T10a and T19).** `GeminiProvider` with a
+      free key (fake data only). No Gemini-only features. Prompts in one file.
+      Done when: one NPC reply comes from Gemini, and changing `AI_PROVIDER`
+      needs no change outside the provider class.
+- [ ] **T10c — Streaming and limits (after T10b).** SSE streaming, saved token
+      usage, free-chat cap and rate limit. Done when: text streams word by word,
+      and the limits work with the mock.
+- [ ] **T10d — Evaluation set.** 20 test messages and one command that runs them
+      against a chosen provider. Done when: the command prints all 20 replies.
+- [ ] **Q1 — Mr. Brown quest.** Add content only, no new framework code. Done
+      when: the quest can be completed by typing, the reward is given once, and
+      a refresh keeps it.
+- [ ] **Q2 — Sam quest.** Content only. Same "Done when" as Q1.
+- [ ] **Q3 — Heater quest.** Content only. Same "Done when" as Q1.
+
+## BLOCKED — start only after the Open decisions below are answered
+
+- [ ] **P1 — Hosted Supabase.** Migrations, seed and production Auth settings.
+      Done when: a new account can sign in on the hosted project.
+- [ ] **P2 — Hosting, CORS and rate limits.** HTTPS for the app and the server.
+      Done when: the app works on a public address.
+- [ ] **P3 — Privacy note.** Short note: speech audio may go to the browser
+      vendor. Done when: the note is shown in the app.
 
 ## LATER — only when explicitly requested and policies are decided
 
@@ -215,12 +187,13 @@ test@gmail.com / 12341234.
 ## Open product decisions — ask only if they block the current task
 
 - Is AI free chat in the MVP, or after the first playtest?
+- Does an AI chat message cost 1 energy, like a normal NPC message?
 - AI chat audience and provider: adults 18+ only (paid tier), or a provider that
   allows teens, or no AI chat for minors. The free Gemini quota is for
   development with fake data only (its terms exclude EU/EEA/UK end users and
   apps likely used by under-18s).
 - Shops: future main-meal items and prices; whether old test characters get a
-  top-up to $500. Initial catalog and clothing-color behavior are approved.
+  top-up to $500.
 - Jobs: light interview only (suggested), or real jobs with pay and work time (a
   big feature, after the MVP).
 - XP-to-level thresholds/CEFR promotion and AI free-chat limits.
@@ -233,11 +206,3 @@ test@gmail.com / 12341234.
 
 D16 cancels native Expo/WebView delivery. Items in LATER are not authority to
 implement extra features during the current task.
-
-```
-
-```
-
-- Approved energy/consumption, saved game clock, sleep and opening-hour rules
-  above are implemented by the approved life gameplay extension; T16 itself
-  supplies catalog data.
