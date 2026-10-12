@@ -10,7 +10,7 @@ import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
 import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
-const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Maplewood · Train Station', cafe: 'Maplewood · Café', clothes: 'Maplewood · Clothes Shop', street: 'Maplewood · Town Street' };
+const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Maplewood · Train Station', cafe: 'Maplewood · Café', corner_cafe: 'Maplewood · Corner Cup Café', clothes: 'Maplewood · Clothes Shop', street: 'Maplewood · Town Street' };
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
   let activeLocation: MapLocation = callbacks.initialLocation ?? 'station';
@@ -20,7 +20,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let currentPack: MapPack | null = null;
   let packAnimations: string[] = [];
   let packRequest: AbortController | null = null;
-  const mapIds = { street: 'loc_town_street', cafe: 'loc_cafe', clothes: 'loc_clothes' };
+  const mapIds = { street: 'loc_town_street', cafe: 'loc_cafe', corner_cafe: 'loc_corner_cafe', clothes: 'loc_clothes' };
   let authorizing = false;
   const P = Phaser;
   let paused = false;
@@ -107,7 +107,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       }
       if (appearance) this.applyAppearance();
       for (const actor of resources?.actors ?? []) {
-        const definition = SHOP_NPCS.find(npc => npc.frame === actor.frame);
+        const definition = SHOP_NPCS.find(npc => npc.id === actor.npcId) ?? SHOP_NPCS.find(npc => npc.frame === actor.frame);
         const sprite = this.add.sprite(actor.x, actor.y, actor.texture, actor.frame)
           .setOrigin(0.5, 1).setScale(actor.scale).setDepth(actor.y);
         if (!definition) continue;
@@ -155,8 +155,15 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         this.labels.push(label);
         this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, shadow, label, elapsed: 0, idleFrame: '0-0', walkPrefix: `${npc.texture}-walk`, labelOffset: 108, clip: movePlayer });
       }
-      if (activeLocation === 'station') for (const portal of STATION_PORTALS) this.addPortalRing(portal);
-      else this.addPortalRing({ id: 'station', label: 'Train Station', x: 768, y: activeLocation === 'street' ? 130 : 930 });
+      for (const portal of this.portalsForLocation()) this.addPortalRing(portal);
+      if (activeLocation === 'street') this.add.text(1250, 318, 'CORNER CUP', {
+        fontFamily: 'sans-serif', fontSize: '26px', fontStyle: 'bold', color: '#fff7e8',
+        backgroundColor: '#315749', padding: { x: 14, y: 7 },
+      }).setOrigin(0.5).setDepth(1500);
+      if (activeLocation === 'corner_cafe') this.add.text(768, 147, 'CORNER CUP', {
+        fontFamily: 'sans-serif', fontSize: '32px', fontStyle: 'bold', color: '#fff7e8',
+        backgroundColor: '#315749', padding: { x: 18, y: 8 },
+      }).setOrigin(0.5).setDepth(1500);
       this.player = this.add.sprite(position.x, position.y, this.playerTexture, currentPack ? 0 : '0-0').setOrigin(0.5, 1).setScale(2);
       this.keys = this.input.keyboard?.createCursorKeys();
       if (this.input.keyboard) {
@@ -196,6 +203,15 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.add.text(portal.x, portal.y - 42, portal.label, { fontFamily: 'sans-serif', fontSize: '22px', color: '#263630', backgroundColor: '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
       this.tweens.add({ targets: halo, scale: 1.2, alpha: 0.72, duration: 750, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
+    private portalsForLocation(): StationPortal[] {
+      if (activeLocation === 'station') return STATION_PORTALS;
+      if (activeLocation === 'street') return [
+        { id: 'corner_cafe', label: 'Corner Cup Café', x: 1260, y: 548 },
+        { id: 'station', label: 'Train Station', x: 768, y: 130 },
+      ];
+      const destination: MapLocation = this.previousLocation === 'street' ? 'street' : 'station';
+      return [{ id: destination, label: destination === 'street' ? 'Town Street' : 'Train Station', x: 768, y: 930 }];
+    }
     private enterLocation(location: MapLocation) {
       if (this.transitionPending) return;
       if (callbacks.practice && location !== 'station') {
@@ -212,7 +228,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (location === 'station') {
         const portal = STATION_PORTALS.find((item) => item.id === this.previousLocation);
         position = portal ? { x: portal.x + (portal.id === 'cafe' ? 70 : portal.id === 'clothes' ? -70 : 0), y: portal.id === 'street' ? 850 : 750 } : { x: 768, y: 370 };
-      } else if (location === 'street') position = { x: 768, y: 210 };
+      } else if (location === 'street') position = this.previousLocation === 'street' ? { x: 1260, y: 600 } : { x: 768, y: 210 };
       else position = { x: 768, y: 860 };
       callbacks.onLocationChange(LOCATION_NAMES[location]);
       this.worldReady = false;
@@ -265,8 +281,12 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const id = selectedNpc; selectedNpc = null; destinationMapTarget = null;
         this.player.anims.stop(); this.marker.setVisible(false); callbacks.onTalk(id); return;
       }
-      const ring = { id: 'station', label: 'Train Station', x: 768, y: activeLocation === 'street' ? 130 : 930 };
-      if (portalAt(position, [ring])) { this.previousLocation = activeLocation; this.enterLocation('station'); return; }
+      const portal = portalAt(position, this.portalsForLocation());
+      if (portal) {
+        if (portal.id === 'station' || portal.id === 'corner_cafe') this.previousLocation = activeLocation;
+        this.enterLocation(portal.id as MapLocation);
+        return;
+      }
       destinationMapTarget = destinationMapTarget && Math.hypot(destinationMapTarget.x - position.x, destinationMapTarget.y - position.y) > 3 ? destinationMapTarget : null;
       if (!destinationMapTarget && route.length) destinationMapTarget = route.shift() ?? null;
       if (!destinationMapTarget) this.marker.setVisible(false);

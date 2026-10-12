@@ -9,7 +9,8 @@ export class ShopsService {
   async listItems(shop: Shop): Promise<ShopItem[]> {
     const validatedShop = shopSchema.parse(shop);
     const result = await this.database.query<ShopItem>(
-      'SELECT id,name,kind,price,shop,color FROM public.shop_items WHERE shop=$1 ORDER BY id', [validatedShop]);
-    return shopCatalogSchema.parse(result.rows.map(({ color, ...item }) => ({ ...item, ...(color ? { color } : {}) })));
+      'SELECT id,name,kind,price,shop,color,image FROM public.shop_items WHERE shop=$1 ORDER BY id', [validatedShop]);
+    return shopCatalogSchema.parse(result.rows.map(({ color, image, ...item }) => ({ ...item,
+      ...(color ? { color } : {}), ...(image ? { image } : {}) })));
   }
 }

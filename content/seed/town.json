@@ -8,6 +8,7 @@
     { "id": "loc_town_street", "name": "Maplewood Town Street", "type": "street" },
     { "id": "loc_cafe", "name": "Maple Cafe", "type": "cafe" },
     { "id": "loc_clothes", "name": "Clothes Shop", "type": "clothes" },
+    { "id": "loc_corner_cafe", "name": "Corner Cup Café", "type": "cafe" },
     { "id": "loc_bank", "name": "Maplewood Bank", "type": "bank" },
     { "id": "loc_housing", "name": "Brown Housing Office", "type": "housing" }
   ]

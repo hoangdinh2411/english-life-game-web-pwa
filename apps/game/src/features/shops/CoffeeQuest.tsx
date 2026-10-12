@@ -1,11 +1,19 @@
+import { useEffect } from 'react';
 import type { CoffeeQuestState } from '@life-abroad/shared';
 
-export function CoffeeQuest({ quest }: { quest: CoffeeQuestState }) {
-  return <aside aria-label="Your First Coffee quest" className="rounded-xl bg-[#e5eddf] p-2.5 text-sm leading-relaxed" aria-live="polite">
+export function shouldShowCoffeeQuestToast(previous: CoffeeQuestState | undefined, current: CoffeeQuestState | undefined): current is CoffeeQuestState {
+  return previous?.status !== 'done' && current?.status === 'done' && current.rewardsGranted;
+}
+
+export function CoffeeQuestToast({ quest, onDismiss }: { quest: CoffeeQuestState; onDismiss: () => void }) {
+  useEffect(() => {
+    const timeout = window.setTimeout(onDismiss, 4500);
+    return () => window.clearTimeout(timeout);
+  }, [onDismiss]);
+
+  return <aside role="status" aria-live="polite" aria-label={`${quest.title} complete`}
+    className="fixed left-1/2 top-[max(16px,_env(safe-area-inset-top))] z-[100] w-[min(360px,_calc(100%_-_24px))] -translate-x-1/2 rounded-xl border-2 border-[#aa8b57] bg-[#fff7e8] p-3 text-center text-sm text-[#384d3c] shadow-lg">
     <strong>{quest.title}</strong>
-    {!quest.available ? <p>First complete Welcome to Maplewood by taking the bus ticket to Town Street. You can still chat and order here.</p>
-      : quest.status === 'done' ? <p>Quest complete! {quest.rewardsGranted ? `Reward received once: ${quest.rewards.xp} XP and $${quest.rewards.coins}.` : 'Your saved progress is complete.'}</p>
-        : <><p>{quest.objective}. {quest.currentStepId === 'coffee_greet' ? 'Say hello to Mia, the cashier.' : quest.currentStepId === 'coffee_order' ? 'Ask Mia for the menu, then name a drink.' : 'Confirm your pending drink order with Mia to pay.'}</p>
-          <p>Reward: {quest.rewards.xp} XP and ${quest.rewards.coins}.</p></>}
+    <p className="m-0 mt-1">Quest complete · Reward: {quest.rewards.xp} XP and ${quest.rewards.coins}.</p>
   </aside>;
 }

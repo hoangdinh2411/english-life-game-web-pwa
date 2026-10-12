@@ -18,7 +18,7 @@ const furniture: Record<'cafe' | 'clothes', Bounds[]> = {
 export function shopCanWalk(location: MapLocation, point: Point, npcs: readonly Point[] = []): boolean {
   if (point.x < 180 || point.x > 1380 || point.y < 325 || point.y > 985) return false;
   if (point.y > 790 && (point.x < 650 || point.x > 890)) return false;
-  const obstacles = location === 'cafe' || location === 'clothes' ? furniture[location] : [];
+  const obstacles = location === 'cafe' || location === 'corner_cafe' ? furniture.cafe : location === 'clothes' ? furniture.clothes : [];
   return !obstacles.some(rect => point.x >= rect.left - 18 && point.x <= rect.right + 18 && point.y >= rect.top - 12 && point.y <= rect.bottom + 12)
     && !npcs.some(npc => Math.hypot(point.x - npc.x, point.y - npc.y) < 38);
 }

@@ -1,6 +1,6 @@
 import { saveMapAssets } from './generate-map-assets.mjs';
 
-const supportedMaps = ['loc_town_street', 'loc_cafe', 'loc_clothes'];
+const supportedMaps = ['loc_town_street', 'loc_cafe', 'loc_corner_cafe', 'loc_clothes'];
 const mapIds = process.argv.slice(2);
 if (mapIds.some((mapId) => !supportedMaps.includes(mapId))) {
   throw new Error(`Supported maps: ${supportedMaps.join(', ')}`);

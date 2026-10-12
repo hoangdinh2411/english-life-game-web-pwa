@@ -24,6 +24,9 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   connection are implemented. Typed receptionist replies use the server;
   entering Town Street waits for the saved ticket use and restores the saved
   location on reload.
+- Maplewood Town Street includes Corner Cup Café, a separately named second
+  café that reuses the seller/catalog flow and has an assistant and three
+  customer NPCs.
 - The existing Phaser **train station** is playable local practice with a
   receptionist and two passengers, sample conversations, Coach feedback,
   movement/portals, recorded audio, and optional browser speech-to-text. Its

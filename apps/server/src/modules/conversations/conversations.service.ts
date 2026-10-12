@@ -1,12 +1,14 @@
 import { LifeService } from '../life/life.service';
 import { ConflictException, Injectable } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, SELLER_NPC_ID, SHOP_NPC_IDS, checkGrammar, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID, TurnMetadata, venueHoursLabel } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, SHOP_NPC_IDS, checkGrammar, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID, TurnMetadata, venueHoursLabel } from '@life-abroad/shared';
 import { DialogueService } from '../dialogue/dialogue.service';
 import { QuestsService } from '../quests/quests.service';
 import { ConversationsRepository, sellerState } from './conversations.repository';
 import { SellerService } from './seller.service';
 import { conversationNpcSchema } from '@life-abroad/shared';
 import { CoffeeQuestService } from '../quests/coffee-quest.service';
+
+const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
 
 @Injectable()
 export class ConversationsService {
@@ -17,7 +19,7 @@ export class ConversationsService {
   create(userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<Conversation> {
     return this.conversations.transaction(async client => {
       const arrival = await this.quests.getArrival(userId, client);
-      if (npcId === SELLER_NPC_ID || npcId === 'npc_clothes_seller') {
+      if (isCafeSeller(npcId) || npcId === 'npc_clothes_seller') {
         const context = { ...await this.conversations.context(client, npcId), variationIndex: await this.conversations.variationIndex(client, userId, npcId, true) };
         const id = await this.conversations.create(client, userId, npcId);
         const greeting = await this.conversations.append(client, id, 'npc', await this.seller.opening(context));
@@ -49,7 +51,7 @@ export class ConversationsService {
       const row = await this.conversations.load(client, userId, id);
       return { id, npcId: conversationNpcSchema.parse(row.npc_id),
         arrival, messages: await this.conversations.messages(client, id),
-        ...([SELLER_NPC_ID, 'npc_clothes_seller'].includes(row.npc_id) ? { seller: sellerState(row) } : {}),
+        ...(isCafeSeller(row.npc_id) || row.npc_id === 'npc_clothes_seller' ? { seller: sellerState(row) } : {}),
         ...([SELLER_NPC_ID,'npc_cafe_waiter'].includes(row.npc_id) ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
     });
   }
@@ -77,17 +79,19 @@ export class ConversationsService {
         responseText = reply.text.replace('{hours}', venueHoursLabel('store'));
         nodeId = reply.node.id;
         metadata = { arrival, intent: 'shop_closed', misunderstood: false, correction,
-          ...([SELLER_NPC_ID, 'npc_clothes_seller'].includes(conversation.npc_id) ? { seller: sellerState(conversation) } : {}),
+          ...(isCafeSeller(conversation.npc_id) || conversation.npc_id === 'npc_clothes_seller' ? { seller: sellerState(conversation) } : {}),
           ...([SELLER_NPC_ID, 'npc_cafe_waiter'].includes(conversation.npc_id) ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
-      } else if (conversation.npc_id === SELLER_NPC_ID || conversation.npc_id === 'npc_clothes_seller') {
+      } else if (isCafeSeller(conversation.npc_id) || conversation.npc_id === 'npc_clothes_seller') {
         const reply = await this.seller.reply(client, userId, conversation, context, request.text);
         responseText = reply.text; nodeId = reply.nodeId ?? `seller_${reply.intent}`;
-        if (conversation.npc_id === SELLER_NPC_ID) {
+        if (isCafeSeller(conversation.npc_id)) {
           const event = reply.intent === 'greet' ? 'greet' : reply.drinkPaid ? 'pay_drink' : reply.drinkOrdered ? 'order_drink'
             : ['cancel','goodbye','price_changed','order'].includes(reply.intent) && !reply.drinkOrdered ? 'cancel_order' : undefined;
-          if (reply.greeted && event !== 'greet') await this.coffee.apply(client, userId, 'greet');
-          const coffeeQuest = event ? await this.coffee.apply(client, userId, event) : await this.coffee.get(userId, client);
-          metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction, coffeeQuest };
+          if (conversation.npc_id === SELLER_NPC_ID) {
+            if (reply.greeted && event !== 'greet') await this.coffee.apply(client, userId, 'greet');
+            const coffeeQuest = event ? await this.coffee.apply(client, userId, event) : await this.coffee.get(userId, client);
+            metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction, coffeeQuest };
+          } else metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction };
         } else metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction };
       } else {
         const reply = await this.dialogue.reply(context, request.text);

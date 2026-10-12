@@ -19,13 +19,16 @@ test('shared controller refreshes saved coffee completion instead of stale repla
 
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
 try {
-  const {CoffeeQuest}=await server.ssrLoadModule('/src/features/shops/CoffeeQuest.tsx');
-  test('coffee quest renders saved objective, prerequisite and one-time receipt', () => {
-    const render=state=>renderToStaticMarkup(createElement(CoffeeQuest,{quest:state}));
-    assert.match(render(quest),/Confirm and pay/);
-    assert.match(render({...quest,available:false}),/Welcome to Maplewood/);
-    assert.match(render(done),/Quest complete/);
-    assert.match(render(done),/20 XP and \$5/);
-    assert.match(render(done),/received once/);
+  const {CoffeeQuestToast,shouldShowCoffeeQuestToast}=await server.ssrLoadModule('/src/features/shops/CoffeeQuest.tsx');
+  test('coffee quest completion appears as a toast without showing quest hints', () => {
+    const render=state=>renderToStaticMarkup(createElement(CoffeeQuestToast,{quest:state,onDismiss:()=>{}}));
+    const html=render(done);
+    assert.match(html,/Your First Coffee/);
+    assert.match(html,/Quest complete/);
+    assert.match(html,/20 XP and \$5/);
+    assert.doesNotMatch(html,/Confirm and pay|Welcome to Maplewood/);
+    assert.equal(shouldShowCoffeeQuestToast(quest,done),true);
+    assert.equal(shouldShowCoffeeQuestToast(done,done),false);
+    assert.equal(shouldShowCoffeeQuestToast(quest,quest),false);
   });
 } finally {await server.close();}

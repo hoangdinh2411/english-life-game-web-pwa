@@ -54,6 +54,51 @@
     "bio": "A friendly person at the station shop."
   },
   {
+    "id": "npc_corner_cup_seller",
+    "name": "Corner Cup seller",
+    "role": "barista",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_corner_cafe",
+    "bio": "A welcoming barista at Corner Cup Café who helps visitors choose drinks and food."
+  },
+  {
+    "id": "npc_corner_cup_assistant",
+    "name": "Corner Cup assistant",
+    "role": "shop_companion",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_corner_cafe",
+    "bio": "A friendly café assistant who enjoys chatting with customers."
+  },
+  {
+    "id": "npc_corner_cup_customer_1",
+    "name": "Ava",
+    "role": "shop_companion",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_corner_cafe",
+    "bio": "A cheerful customer enjoying a drink at Corner Cup Café."
+  },
+  {
+    "id": "npc_corner_cup_customer_2",
+    "name": "Leo",
+    "role": "shop_companion",
+    "personality": "serious",
+    "speakingLevel": "A1",
+    "locationId": "loc_corner_cafe",
+    "bio": "A thoughtful customer taking a break at Corner Cup Café."
+  },
+  {
+    "id": "npc_corner_cup_customer_3",
+    "name": "Grace",
+    "role": "shop_companion",
+    "personality": "shy",
+    "speakingLevel": "A1",
+    "locationId": "loc_corner_cafe",
+    "bio": "A quiet customer enjoying a snack at Corner Cup Café."
+  },
+  {
     "id": "npc_clothes_seller",
     "name": "Clothes seller",
     "role": "shop_companion",

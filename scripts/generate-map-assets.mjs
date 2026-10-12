@@ -10,6 +10,7 @@ async function mapAssets(mapId) {
   const backgrounds = {
     loc_town_street: 'location_maplewood_street.png',
     loc_cafe: 'location_cafe_interior.png',
+    loc_corner_cafe: 'location_cafe_interior.png',
     loc_clothes: 'location_clothes_interior.png',
   };
   if (!Object.hasOwn(backgrounds, mapId)) throw new Error('Unsupported destination map');
@@ -20,8 +21,13 @@ async function mapAssets(mapId) {
     { name: 'animations.json', type: 'animation', mime: 'application/json', data: JSON.stringify({ animations: Array.from({ length: 4 }, (_, row) => ({ key: `walk-${row}`, texture: 'player', frames: Array.from({ length: 4 }, (_, column) => row * 4 + column), frameRate: 7, repeat: -1 })) }) },
   ];
   if (mapId !== 'loc_town_street') {
-    const cafe = mapId === 'loc_cafe';
-    const actors = cafe ? [
+    const actors = mapId === 'loc_corner_cafe' ? [
+      { npcId: 'npc_corner_cup_seller', frame: 'cafe_seller', x: 800, y: 390 },
+      { npcId: 'npc_corner_cup_assistant', frame: 'cafe_waiter', x: 1000, y: 460 },
+      { npcId: 'npc_corner_cup_customer_1', frame: 'cafe_customer', x: 430, y: 600 },
+      { npcId: 'npc_corner_cup_customer_2', frame: 'clothes_customer', x: 1080, y: 600 },
+      { npcId: 'npc_corner_cup_customer_3', frame: 'cafe_customer', x: 430, y: 750 },
+    ] : mapId === 'loc_cafe' ? [
       { frame: 'cafe_seller', x: 800, y: 390 },
       { frame: 'cafe_waiter', x: 1000, y: 460 },
       { frame: 'cafe_customer', x: 430, y: 600 },

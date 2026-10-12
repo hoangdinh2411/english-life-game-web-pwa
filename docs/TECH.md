@@ -239,11 +239,20 @@ a different charge returns 409. `spendInTransaction` lets life purchases charge 
 vocabulary; AI chat via SSE. Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
 
 **Shop catalog (T16):** `content/seed/shops.json` is a Zod-validated
-array of `{ id, name, kind, price, shop, color? }`; kind is `drink`, `food` or `clothing`,
+array of `{ id, name, kind, price, shop, color?, image? }`; kind is `drink`, `food` or `clothing`,
 shop is `cafe` or `clothes`, and prices are positive whole dollars. The catalog
 contains 5 drinks, 5 pastries/snacks and 4 colored shirts at owner-approved prices. `db:seed` upserts
 items by ID into `shop_items`. `ShopsService.listItems(shop)` reads that table
 for server callers; the authenticated life catalog exposes these rows without browser database access. Validation rejects missing prices, unknown shops and duplicate IDs.
+Optional images use approved local `/images/shops/` asset paths. Mia offers the
+café menu in conversation; its catalog cards and illustrated placeholders appear
+ after the player asks to see it or accepts her offer. Cards group drinks and
+ food in separate sections, and Mia points to them instead of repeating the list
+in dialogue. The player's last three saved café orders appear when they ask
+about past orders.
+Corner Cup Café on Town Street reuses the catalog and payment flow with its own
+seller conversation and map pack. Its assistant and customers use the existing
+shop companion scripts; the first coffee quest remains attached to Mia.
 
 ## Saved life and direct purchases
 

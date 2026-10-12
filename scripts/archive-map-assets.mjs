@@ -32,6 +32,7 @@ const filesByMap = {
     'runtime/suitcase.png',
   ],
   loc_cafe: ['locations/location_cafe_interior.png'],
+  loc_corner_cafe: ['locations/location_cafe_interior.png'],
   loc_clothes: ['locations/location_clothes_interior.png'],
   loc_town_street: ['locations/location_maplewood_street.png'],
   loc_tax_office: [

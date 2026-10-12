@@ -2,7 +2,13 @@ import { z } from 'zod';
 import { ARRIVAL_NPC_ID, arrivalStateSchema, coffeeQuestStateSchema } from './quests';
 
 export const SELLER_NPC_ID = 'npc_mia';
-export const SHOP_NPC_IDS = ['npc_mia', 'npc_cafe_waiter', 'npc_cafe_customer', 'npc_clothes_seller', 'npc_clothes_assistant', 'npc_clothes_customer'] as const;
+export const CAFE_SELLER_NPC_IDS = ['npc_mia', 'npc_corner_cup_seller'] as const;
+export const SHOP_NPC_IDS = [
+  ...CAFE_SELLER_NPC_IDS,
+  'npc_cafe_waiter', 'npc_cafe_customer',
+  'npc_corner_cup_assistant', 'npc_corner_cup_customer_1', 'npc_corner_cup_customer_2', 'npc_corner_cup_customer_3',
+  'npc_clothes_seller', 'npc_clothes_assistant', 'npc_clothes_customer',
+] as const;
 export const conversationNpcSchema = z.enum([ARRIVAL_NPC_ID, ...SHOP_NPC_IDS]);
 export const createConversationSchema = z.object({ npcId: conversationNpcSchema }).strict();
 export const pendingOrderSchema = z.object({

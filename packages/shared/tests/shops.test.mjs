@@ -15,3 +15,11 @@ test('shop catalog preserves authored data and rejects invalid money or ambiguou
   assert.equal(shopCatalogSchema.safeParse([{ ...item, price: undefined }]).success, false);
   assert.equal(shopCatalogSchema.safeParse([{ ...item, shop: 'unknown' }]).success, false);
 });
+
+test('shop catalog accepts approved local image paths and rejects external or malformed paths', () => {
+  assert.equal(shopCatalogSchema.parse([{ ...item, image: '/images/shops/espresso.webp' }])[0].image,
+    '/images/shops/espresso.webp');
+  for (const image of ['https://example.com/espresso.png', '../espresso.png', '/images/other/espresso.png', '/images/shops/espresso.jpg']) {
+    assert.equal(shopCatalogSchema.safeParse([{ ...item, image }]).success, false);
+  }
+});

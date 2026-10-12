@@ -19,7 +19,7 @@ export interface StationPortal extends Point {
   label: string;
 }
 export type Direction = 'left' | 'right' | 'up' | 'down';
-export type MapLocation = 'station' | 'cafe' | 'clothes' | 'street';
+export type MapLocation = 'station' | 'cafe' | 'corner_cafe' | 'clothes' | 'street';
 export interface StationCallbacks {
   appearance?: Appearance | undefined;
   practice?: boolean;

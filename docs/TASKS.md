@@ -62,12 +62,14 @@ test@gmail.com / 12341234.
       to `english-life-game` (54321/54322); 30 files and 15 asset downloads
       verified. Source volumes and recovery copies kept.
 - [x] **T19 — Small-talk pools (scripted):** waiter topics for wellbeing,
-      weather, tired/fine/sick, the station and hometown, with three
-      personality replies each. Topic and fallback unit tests plus a seven-turn
+      weather, tired/fine/sick, the station and hometown, with three personality
+      replies each. Topic and fallback unit tests plus a seven-turn
       rollback-only integration test using the existing account passed.
 - [x] **T20 — Clothes shop and wardrobe:** seller order/confirmation, atomic
       payment, owned shirt quantity and “My items” list; reload and outfit
       preservation verified with the existing account.
+- [x] **T24 — Corner Cup:** Town Street entrance to the new café, seller/menu,
+      assistant and three named customer NPCs with conversation access.
 
 ## NOW
 
@@ -107,6 +109,8 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
+- [ ] **T25 — Café product artwork.** Generate and add an individual image for
+      each of the ten café products, then verify the images in the menu.
 - [x] **T21 — Game clock speed and display.** Make the clock speed one config
       value (now 2×; the owner approves the new value, test with 6×). Changing
       the speed must not make saved clocks jump: store the game time, the real
@@ -124,13 +128,16 @@ test@gmail.com / 12341234.
       creates none, a failed payment creates none, a later price change does not
       change old orders, a player reads only their own orders, and records stay
       after reload.
-- [ ] **T23 — Shop menu with images and order list (after T22).** In the seller
-      conversation, show the menu as cards with an image and a price, and a
-      short list of the player's recent orders. Images are listed in
+- [x] **T23 — Menu cards and order list inside the seller chat (after T22).**
+      Use the existing `ShopConversation` panel. No new screen, no new menu
+      button. Show the menu as cards with an image and a price only after the
+      player asks to see it or accepts the seller's offer. When the player asks
+      about past orders, show a short list of recent orders in the same panel.
+      Images are listed in
       `content/seed/shops.json`; the owner supplies or approves them. Show a
       placeholder when an image is missing. Done when: all 10 café items show an
-      image and the correct price, recent orders show after reload, and the
-      browser check passes at 320/375/1024px.
+      image and the correct price in the seller chat, recent orders show after
+      reload, and the browser check passes at 320/375/1024px.
 - [ ] **T12 — Minimal review screen.** Past corrections and the useful phrases
       the player used in shops ("I'd like…", "How much is…"). Store useful terms
       only, not every word. Done when: after ordering coffee, the screen shows

@@ -15,7 +15,7 @@ export type MapAsset = z.infer<typeof mapAssetSchema>;
 export type MapPack = z.infer<typeof mapPackSchema>;
 export type AssetUpload = z.infer<typeof assetUploadSchema>;
 export const packActorsSchema = z.object({ actors: z.array(z.object({
-  texture: assetIdSchema, frame: assetIdSchema,
+  texture: assetIdSchema, frame: assetIdSchema, npcId: assetIdSchema.optional(),
   x: z.number().min(0).max(1536), y: z.number().min(0).max(1024),
   scale: z.number().positive().max(2),
 }).strict()).max(32) }).strict();

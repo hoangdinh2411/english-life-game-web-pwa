@@ -74,11 +74,11 @@
       ],
       "fallback": "seller_clarify",
       "variations": [
-        "Hi! Welcome to the café. Would you like to see our menu?",
-        "Welcome! What would you like to drink today?",
-        "Hello! Would you like a drink or something to eat?",
-        "Good to see you! What can I get for you?",
-        "Welcome to the café! Have you decided what to order?"
+        "Hi! Welcome to the café. Would you like to see the menu before ordering?",
+        "Welcome! Would you like to look at the menu before you order?",
+        "Hello! Would you like to see our menu before choosing a drink or snack?",
+        "Good to see you! Would you like to look at the menu before choosing?",
+        "Welcome to the café! Would you like to see the menu before deciding what to order?"
       ]
     },
     {
@@ -90,7 +90,7 @@
     {
       "id": "seller_ask_menu",
       "text": {
-        "default": "Here is our menu: {menu}. What would you like? Please name one item and a quantity from one to three."
+        "default": "You can see our drinks and food on the menu below. What would you like? Please name one item and a quantity from one to three."
       }
     },
     {
