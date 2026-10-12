@@ -117,27 +117,16 @@ export function LifeMenu({
           </button>
           <h3>Clothes shop</h3>
           <p>{open ? "Open until 20:00" : "Closed · Opens at 08:00"}</p>
-          <div className="life-options grid gap-2 [grid-template-columns:repeat(auto-fit,_minmax(min(100%,_180px),_1fr))]">
-            {life.catalog
-              .filter((item) => item.kind === "clothing")
-              .map((item) => (
-                <button
-                  key={item.id}
-                  disabled={
-                    disabled ||
-                    !open ||
-                    state.ownedShirts.includes(item.id) ||
-                    state.coins < item.price
-                  }
-                  onClick={() => purchase([item.id])}
-                >
-                  {state.ownedShirts.includes(item.id)
-                    ? "Owned: "
-                    : "Buy and wear: "}
-                  {item.name} · ${item.price}
-                </button>
-              ))}
-          </div>
+          <p>Choose a shirt in a conversation with the clothes seller.</p>
+          <h3>My items</h3>
+          {state.ownedShirts.length ? (
+            <ul className="m-0 list-disc pl-5">
+              {state.ownedShirts.map((id) => {
+                const item = life.catalog.find((candidate) => candidate.id === id);
+                return item ? <li key={id}>{item.name} · 1</li> : null;
+              })}
+            </ul>
+          ) : <p>You do not own any shirts yet.</p>}
           <h3>Appearance</h3>
           <label>
             Hair

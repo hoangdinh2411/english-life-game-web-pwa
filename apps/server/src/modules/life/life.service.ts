@@ -103,4 +103,19 @@ export class LifeService {
     await client.query('UPDATE player_stats SET energy=$2,last_energy_update=now() WHERE user_id=$1', [userId, energy]);
     return true;
   }
+
+  async fulfillClothesOrder(client: PoolClient, userId: string, item: ShopItem, orderId: string): Promise<boolean> {
+    await this.repository.lock(client, userId);
+    const state = await this.repository.state(client, userId);
+    if (item.shop !== 'clothes' || item.kind !== 'clothing' || !item.color) {
+      throw new BadRequestException('Choose a shirt from the clothes shop');
+    }
+    if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException('Stores open from 08:00 to 20:00 game time');
+    if (state.ownedShirts.includes(item.id)) throw new ConflictException('You already own this shirt');
+    if (state.coins < item.price) return false;
+    await this.economy.spendInTransaction(client, userId, item.price, 'shop_purchase', `clothes_order:${orderId}`, orderId);
+    await client.query('INSERT INTO owned_shirts (user_id,item_id,quantity) VALUES ($1,$2,1)', [userId, item.id]);
+    await client.query('UPDATE player_life SET shirt=$2 WHERE user_id=$1', [userId, item.color]);
+    return true;
+  }
 }

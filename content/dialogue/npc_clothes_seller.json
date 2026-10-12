@@ -6,7 +6,7 @@
     {
       "id": "clothes_seller_start",
       "text": {
-        "default": "How can I help you?"
+        "default": "Hello! Welcome to the clothes shop. Would you like to see our shirts?"
       },
       "intents": [
         {
@@ -15,8 +15,6 @@
             "order",
             "buy",
             "menu",
-            "coffee",
-            "drink",
             "shirt",
             "clothes",
             "color",
@@ -25,7 +23,6 @@
             "red",
             "yellow",
             "shirts",
-            "drinks",
             "what do you have",
             "what can i get"
           ],
@@ -36,8 +33,49 @@
     {
       "id": "clothes_seller_items",
       "text": {
-        "default": "We have blue, green, red, and yellow shirts. Which color are you looking for?"
+        "default": "We have {menu}. Which color would you like?"
       }
+    },
+    {
+      "id": "clothes_seller_price",
+      "text": { "default": "{item} costs ${price}. Would you like to order it?" }
+    },
+    {
+      "id": "clothes_seller_order",
+      "text": { "default": "You chose the {order}. The total is ${total}. Would you like to confirm and pay?" }
+    },
+    {
+      "id": "clothes_seller_paid",
+      "text": { "default": "Thank you! You paid ${total}. Here is your {order}. I have added it to My items and you are wearing it now." }
+    },
+    {
+      "id": "clothes_seller_cancel",
+      "text": { "default": "Your order is cancelled. You have not been charged. Which shirt would you like instead?" }
+    },
+    {
+      "id": "clothes_seller_insufficient_funds",
+      "text": { "default": "The shirt costs ${total}, but you do not have enough money. You have not been charged. Would you like to cancel?" }
+    },
+    {
+      "id": "clothes_seller_price_changed",
+      "text": { "default": "That shirt or its price has changed. You have not been charged. Please ask to see the shirts again." }
+    },
+    {
+      "id": "clothes_seller_no_order",
+      "text": { "default": "There is no shirt to confirm. Would you like to see our shirts?" }
+    },
+    {
+      "id": "clothes_seller_goodbye",
+      "text": { "default": "Goodbye! Any unpaid order is cancelled. Have a lovely day!" },
+      "end": true
+    },
+    {
+      "id": "clothes_seller_directions",
+      "text": { "default": "Please ask the receptionist at the station information desk for a bus ticket. Where would you like to go?" }
+    },
+    {
+      "id": "clothes_seller_clarify",
+      "text": { "default": "Would you like to see our shirts, ask about a color, or order one? Your current order stays unchanged." }
     }
   ]
 }

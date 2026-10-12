@@ -10,7 +10,7 @@ export const pendingOrderSchema = z.object({
   unitPrice: z.number().int().positive(), total: z.number().int().positive(),
 }).strict();
 export const sellerStateSchema = z.object({
-  shop: z.literal('cafe'), pendingOrder: pendingOrderSchema.nullable(), closed: z.boolean(),
+  shop: z.enum(['cafe', 'clothes']), pendingOrder: pendingOrderSchema.nullable(), closed: z.boolean(),
 }).strict();
 export type PendingOrder = z.infer<typeof pendingOrderSchema>;
 export type SellerState = z.infer<typeof sellerStateSchema>;

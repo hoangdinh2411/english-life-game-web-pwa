@@ -137,6 +137,51 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     assert.equal((await turn('Goodbye')).seller.closed, true);
     assert.deepEqual(await (await send('Yes please', false, key)).json(), receipt);
     assert.equal((await send('An espresso please')).status, 409);
+    // T20 clothing orders use the saved seller conversation and charge once.
+    // This test's outer transaction restores the existing account afterward.
+    await client.query('DELETE FROM owned_shirts WHERE user_id=$1', [userId]);
+    await client.query('UPDATE player_stats SET coins=500,energy=100 WHERE user_id=$1', [userId]);
+    await client.query("UPDATE player_life SET hair='blond',shirt=NULL,trousers='charcoal' WHERE user_id=$1", [userId]);
+    const wardrobeBefore = await (await call('/life')).json() as { coins: number };
+    const clothesOpenedResponse = await call('/conversations', { npcId: 'npc_clothes_seller' });
+    assert.equal(clothesOpenedResponse.status, 201);
+    const clothesOpened = conversationSchema.parse(await clothesOpenedResponse.json());
+    assert.equal(clothesOpened.seller?.shop, 'clothes');
+    const clothesPath = `/conversations/${clothesOpened.id}`;
+    const clothesTurn = async (text: string, clientMessageId = randomUUID()) => {
+      const response = await call(`${clothesPath}/messages`, { clientMessageId, text, coach: false });
+      assert.equal(response.status, 201, text);
+      return conversationTurnSchema.parse(await response.json());
+    };
+    assert.match((await clothesTurn('What shirts do you have?')).npcMessage.text,
+      /Blue Shirt.*\$30.*Green Shirt.*Red Shirt.*Yellow Shirt/);
+    const order = await clothesTurn('I would like a blue shirt, please.');
+    assert.equal(order.intent, 'order'); assert.equal(order.seller?.shop, 'clothes');
+    assert.equal(order.seller?.pendingOrder?.itemId, 'shirt_blue');
+    assert.equal((await (await call('/life')).json() as { coins: number }).coins, wardrobeBefore.coins);
+    assert.deepEqual((await (await call(clothesPath)).json() as { seller: unknown }).seller, order.seller);
+    const confirmId = randomUUID();
+    const purchased = await clothesTurn('Yes please', confirmId);
+    assert.equal(purchased.intent, 'paid'); assert.equal(purchased.seller?.pendingOrder, null);
+    assert.deepEqual(await clothesTurn('Yes please', confirmId), purchased);
+    const wardrobeAfterReload = await (await call('/life')).json() as {
+      coins: number; appearance: { hair: string; shirt: string | null; trousers: string }; ownedShirts: string[];
+    };
+    assert.equal(wardrobeAfterReload.coins, wardrobeBefore.coins - 30);
+    assert.ok(wardrobeAfterReload.ownedShirts.includes('shirt_blue'));
+    assert.deepEqual(wardrobeAfterReload.appearance, { hair: 'blond', shirt: 'blue', trousers: 'charcoal' });
+    assert.equal((await client.query<{ quantity: number }>(
+      'SELECT quantity FROM owned_shirts WHERE user_id=$1 AND item_id=$2', [userId, 'shirt_blue'])).rows[0]?.quantity, 1);
+    const greenOrder = await clothesTurn('I would like a green shirt, please.');
+    assert.equal(greenOrder.seller?.pendingOrder?.itemId, 'shirt_green');
+    assert.equal((await clothesTurn('Yes please')).intent, 'paid');
+    assert.equal((await (await call('/life')).json() as { coins: number }).coins, 440);
+    assert.equal((await call('/life/appearance', { key: randomUUID(), shirtItemId: 'shirt_blue' })).status, 201);
+    const reEquipped = await (await call('/life')).json() as {
+      appearance: { hair: string; shirt: string | null; trousers: string }; ownedShirts: string[];
+    };
+    assert.deepEqual(reEquipped.appearance, { hair: 'blond', shirt: 'blue', trousers: 'charcoal' });
+    assert.ok(reEquipped.ownedShirts.includes('shirt_green'));
     // Invalid NPCs/forged order state and unauthenticated calls are rejected.
     assert.equal((await call('/conversations', { npcId: 'npc_missing' })).status, 400);
     assert.equal((await call(path + '/messages', { text: 'yes', clientMessageId: randomUUID(), total: 1 })).status, 400);
@@ -163,7 +208,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
       const orderReply = await call(messagePath, { clientMessageId: randomUUID(), text: npcId.startsWith('npc_clothes_') ? 'What shirts do you have?' : 'Can I order coffee?', coach: true });
       assert.equal(orderReply.status, 201);
       const orderText = conversationTurnSchema.parse(await orderReply.json()).npcMessage.text;
-      assert.match(orderText, npcId === 'npc_clothes_seller' ? /blue.*green.*red.*yellow/ : /seller|Mia/);
+      assert.match(orderText, npcId === 'npc_clothes_seller' ? /blue.*green.*red.*yellow/i : /seller|Mia/);
     }
     // Keep the original receptionist API compatible without creating another user.
     const greetings = [];

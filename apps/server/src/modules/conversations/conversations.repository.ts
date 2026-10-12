@@ -9,7 +9,7 @@ interface MessageRow { id: string; sender: 'player' | 'npc'; text: string; creat
 export interface ConversationRow { id: string; npc_id: string; current_node_id: string | null; pending_order: unknown; ended_at: Date | null }
 
 export function sellerState(row: ConversationRow): SellerState {
-  return { shop: 'cafe', pendingOrder: row.pending_order ? pendingOrderSchema.parse(row.pending_order) : null,
+  return { shop: row.npc_id === 'npc_clothes_seller' ? 'clothes' : 'cafe', pendingOrder: row.pending_order ? pendingOrderSchema.parse(row.pending_order) : null,
     closed: row.ended_at !== null };
 }
 
@@ -43,7 +43,8 @@ export class ConversationsRepository {
     const result = await client.query<{ id: string }>(`INSERT INTO public.conversations
       (user_id,npc_id,quest_id,current_node_id) VALUES ($1,$2,$3,$4) RETURNING id`,
     [userId, npcId, npcId === ARRIVAL_NPC_ID ? ARRIVAL_QUEST_ID : null,
-      npcId === ARRIVAL_NPC_ID ? 'receptionist_start' : npcId === SELLER_NPC_ID ? 'seller_start' : 'shop_start']);
+      npcId === ARRIVAL_NPC_ID ? 'receptionist_start' : npcId === SELLER_NPC_ID ? 'seller_start'
+        : npcId === 'npc_clothes_seller' ? 'clothes_seller_start' : 'shop_start']);
     return result.rows[0]!.id;
   }
 

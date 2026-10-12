@@ -15,8 +15,6 @@
             "order",
             "buy",
             "menu",
-            "coffee",
-            "drink",
             "shirt",
             "clothes",
             "color",
@@ -25,7 +23,6 @@
             "red",
             "yellow",
             "shirts",
-            "drinks",
             "what do you have",
             "what can i get"
           ],
@@ -36,7 +33,7 @@
     {
       "id": "clothes_assistant_items",
       "text": {
-        "default": "Please ask the clothes seller about shirts. What color do you like?"
+        "default": "Please ask the clothes seller to order a shirt. Which color do you like?"
       }
     }
   ]

@@ -17,12 +17,14 @@ export class ConversationsService {
   create(userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<Conversation> {
     return this.conversations.transaction(async client => {
       const arrival = await this.quests.getArrival(userId, client);
-      if (npcId === SELLER_NPC_ID) {
+      if (npcId === SELLER_NPC_ID || npcId === 'npc_clothes_seller') {
         const context = { ...await this.conversations.context(client, npcId), variationIndex: await this.conversations.variationIndex(client, userId, npcId, true) };
         const id = await this.conversations.create(client, userId, npcId);
         const greeting = await this.conversations.append(client, id, 'npc', await this.seller.opening(context));
-        return { id, npcId: SELLER_NPC_ID, messages: [greeting], arrival,
-          seller: { shop: 'cafe', pendingOrder: null, closed: false }, coffeeQuest: await this.coffee.get(userId, client) };
+        const seller = { shop: npcId === 'npc_clothes_seller' ? 'clothes' as const : 'cafe' as const,
+          pendingOrder: null, closed: false };
+        return { id, npcId: conversationNpcSchema.parse(npcId), messages: [greeting], arrival, seller,
+          ...(npcId === SELLER_NPC_ID ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
       }
       if (npcId !== ARRIVAL_NPC_ID) {
         const context = { ...await this.conversations.context(client, npcId), variationIndex: await this.conversations.variationIndex(client, userId, npcId, true) };
@@ -47,7 +49,7 @@ export class ConversationsService {
       const row = await this.conversations.load(client, userId, id);
       return { id, npcId: conversationNpcSchema.parse(row.npc_id),
         arrival, messages: await this.conversations.messages(client, id),
-        ...(row.npc_id === SELLER_NPC_ID ? { seller: sellerState(row) } : {}),
+        ...([SELLER_NPC_ID, 'npc_clothes_seller'].includes(row.npc_id) ? { seller: sellerState(row) } : {}),
         ...([SELLER_NPC_ID,'npc_cafe_waiter'].includes(row.npc_id) ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
     });
   }
@@ -70,14 +72,16 @@ export class ConversationsService {
       let metadata: TurnMetadata;
       let responseText: string;
       let nodeId: string;
-      if (conversation.npc_id === SELLER_NPC_ID) {
+      if (conversation.npc_id === SELLER_NPC_ID || conversation.npc_id === 'npc_clothes_seller') {
         const reply = await this.seller.reply(client, userId, conversation, context, request.text);
-        responseText = reply.text; nodeId = `seller_${reply.intent}`;
-        const event = reply.intent === 'greet' ? 'greet' : reply.drinkPaid ? 'pay_drink' : reply.drinkOrdered ? 'order_drink'
-          : ['cancel','goodbye','price_changed','order'].includes(reply.intent) && !reply.drinkOrdered ? 'cancel_order' : undefined;
-        if (reply.greeted && event !== 'greet') await this.coffee.apply(client, userId, 'greet');
-        const coffeeQuest = event ? await this.coffee.apply(client, userId, event) : await this.coffee.get(userId, client);
-        metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction, coffeeQuest };
+        responseText = reply.text; nodeId = reply.nodeId ?? `seller_${reply.intent}`;
+        if (conversation.npc_id === SELLER_NPC_ID) {
+          const event = reply.intent === 'greet' ? 'greet' : reply.drinkPaid ? 'pay_drink' : reply.drinkOrdered ? 'order_drink'
+            : ['cancel','goodbye','price_changed','order'].includes(reply.intent) && !reply.drinkOrdered ? 'cancel_order' : undefined;
+          if (reply.greeted && event !== 'greet') await this.coffee.apply(client, userId, 'greet');
+          const coffeeQuest = event ? await this.coffee.apply(client, userId, event) : await this.coffee.get(userId, client);
+          metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction, coffeeQuest };
+        } else metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction };
       } else {
         const reply = await this.dialogue.reply(context, request.text);
         responseText = reply.text; nodeId = reply.node.id;

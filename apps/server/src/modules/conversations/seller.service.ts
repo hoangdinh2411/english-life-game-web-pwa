@@ -6,7 +6,7 @@ import { DialogueService, type DialogueContext } from '../dialogue/dialogue.serv
 import { LifeService } from '../life/life.service';
 import { ConversationsRepository, sellerState, type ConversationRow } from './conversations.repository';
 
-interface SellerReply { text: string; intent: string; misunderstood: boolean; seller: SellerState; drinkPaid?: boolean; drinkOrdered?: boolean; greeted?: boolean }
+interface SellerReply { text: string; intent: string; misunderstood: boolean; seller: SellerState; nodeId?: string; drinkPaid?: boolean; drinkOrdered?: boolean; greeted?: boolean }
 
 function words(text: string): string {
   return normalizeDialogue(text).toLowerCase().replace(/[^a-z0-9']/g, ' ').replace(/\s+/g, ' ').trim();
@@ -39,11 +39,13 @@ export class SellerService {
     private readonly conversations: ConversationsRepository) {}
 
   async opening(context: DialogueContext): Promise<string> {
-    return (await this.dialogue.node(context, 'seller_start')).text;
+    return (await this.dialogue.node(context,
+      context.npcId === 'npc_clothes_seller' ? 'clothes_seller_start' : 'seller_start')).text;
   }
 
   async reply(client: PoolClient, userId: string, row: ConversationRow,
     context: DialogueContext, input: string): Promise<SellerReply> {
+    if (context.npcId === 'npc_clothes_seller') return this.clothesReply(client, userId, row, context, input);
     const state = sellerState(row);
     if (state.closed) throw new ConflictException('This conversation has ended. Start a new conversation');
     const text = words(input);
@@ -116,5 +118,53 @@ export class SellerService {
     return { text: reply.text.replace(/\{(\w+)\}/g, (token, key: string) => values[key] ?? token), intent,
       misunderstood: ['clarify', 'unknown_item', 'invalid_quantity', 'one_item'].includes(intent),
       seller: { shop: 'cafe', pendingOrder: order, closed }, drinkPaid, drinkOrdered, greeted };
+  }
+
+  private async clothesReply(client: PoolClient, userId: string, row: ConversationRow,
+    context: DialogueContext, input: string): Promise<SellerReply> {
+    const state = sellerState(row);
+    if (state.closed) throw new ConflictException('This conversation has ended. Start a new conversation');
+    const text = words(input);
+    const catalog = await client.query<ShopItem>(
+      "SELECT id,name,kind,price,shop,color FROM public.shop_items WHERE shop='clothes' AND kind='clothing' ORDER BY id FOR SHARE");
+    const items = catalog.rows;
+    const matches = namedItems(text, items);
+    const affirmative = /^(?:yes|yes please|yes thank you|ok|okay|sure|confirm|go ahead|i confirm|that is correct|that's correct)$/.test(text);
+    const cancel = /^(?:no|no thanks|no thank you|cancel|cancel my order|never mind|nevermind)(?: please)?$/.test(text);
+    const goodbye = /^(?:goodbye|bye|see you)(?: soon)?$/.test(text);
+    let intent = 'clarify';
+    let order: PendingOrder | null = state.pendingOrder;
+    let closed = false;
+    const values: Record<string, string> = { menu: items.map(item => `${item.name} for $${item.price}`).join(', ') };
+    let nodeId = 'clothes_seller_clarify';
+
+    if (/\b(?:leave|exit|bus|town|receptionist)\b/.test(text)) { intent = 'directions'; nodeId = 'clothes_seller_directions'; }
+    else if (goodbye) { intent = 'goodbye'; order = null; closed = true; nodeId = 'clothes_seller_goodbye'; }
+    else if (cancel) { intent = 'cancel'; order = null; nodeId = 'clothes_seller_cancel'; }
+    else if (affirmative && order && row.current_node_id === 'clothes_seller_order') {
+      const item = items.find(candidate => candidate.id === order!.itemId);
+      if (!item || item.price !== order.unitPrice) { intent = 'price_changed'; order = null; nodeId = 'clothes_seller_price_changed'; }
+      else if (await this.life.fulfillClothesOrder(client, userId, item, order.orderId)) {
+        intent = 'paid'; values.order = item.name; values.total = String(item.price);
+        order = null; nodeId = 'clothes_seller_paid';
+      } else { intent = 'insufficient_funds'; values.total = String(item.price); nodeId = 'clothes_seller_insufficient_funds'; }
+    }
+    else if (affirmative && !order) { intent = 'no_order'; nodeId = 'clothes_seller_no_order'; }
+    else if (matches.length === 1) {
+      const item = matches[0]!;
+      if (/\b(?:want|like|order|buy|have|would like)\b/.test(text)) {
+        const orderId = randomUUID();
+        order = { orderId, itemId: item.id, quantity: 1, unitPrice: item.price, total: item.price };
+        intent = 'order'; nodeId = 'clothes_seller_order'; values.order = item.name; values.total = String(item.price);
+      } else { intent = 'ask_price'; nodeId = 'clothes_seller_price'; values.item = item.name; values.price = String(item.price); }
+    }
+    else if (matches.length > 1) { intent = 'ask_menu'; nodeId = 'clothes_seller_items'; }
+    else if (/\b(?:menu|shirt|shirts|clothes|what do you have|what can i get|what can i buy|what colors)\b/.test(text)) {
+      intent = 'ask_menu'; nodeId = 'clothes_seller_items';
+    }
+    const reply = await this.dialogue.node(context, nodeId);
+    await this.conversations.saveOrder(client, row.id, order, closed);
+    return { text: reply.text.replace(/\{(\w+)\}/g, (token, key: string) => values[key] ?? token), intent,
+      misunderstood: intent === 'clarify', nodeId, seller: { shop: 'clothes', pendingOrder: order, closed } };
   }
 }

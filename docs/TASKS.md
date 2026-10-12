@@ -65,6 +65,9 @@ test@gmail.com / 12341234.
       weather, tired/fine/sick, the station and hometown, with three
       personality replies each. Topic and fallback unit tests plus a seven-turn
       rollback-only integration test using the existing account passed.
+- [x] **T20 — Clothes shop and wardrobe:** seller order/confirmation, atomic
+      payment, owned shirt quantity and “My items” list; reload and outfit
+      preservation verified with the existing account.
 
 ## NOW
 
@@ -104,11 +107,6 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
-- [ ] **T20 — Clothes shop (two NPCs) and minimal inventory.** Same pattern as
-      the café. Add a small inventory table (user, item, quantity) and a "My
-      items" list. Done when: buying a shirt lowers the balance once and the
-      item is listed after reload. Equipping a shirt changes its color while
-      keeping the separate hair and trouser colors.
 - [ ] **T21 — Game clock speed and display.** Make the clock speed one config
       value (now 2×; the owner approves the new value, test with 6×). Changing
       the speed must not make saved clocks jump: store the game time, the real
