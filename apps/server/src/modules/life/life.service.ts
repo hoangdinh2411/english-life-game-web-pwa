@@ -1,10 +1,14 @@
 import { BadRequestException, ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { appearanceSchema, canSleep, isVenueOpen, restoredEnergy, SLEEP_HOURS, venueHoursLabel, type CustomizeRequest, type LifeState, type PurchaseRequest, type ShopItem, type VenueKind } from '@life-abroad/shared';
-import { PoolClient } from 'pg';
+import { appearanceSchema, canSleep, isVenueOpen, restoredEnergy, shopOrderListSchema, SLEEP_HOURS, venueHoursLabel, type CustomizeRequest, type LifeState, type PurchaseRequest, type Shop, type ShopItem, type VenueKind } from '@life-abroad/shared';
+import { PoolClient, type QueryResultRow } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { EconomyService } from '../economy/economy.service';
 import { ShopsService } from '../shops/shops.service';
 import { LifeRepository } from './life.repository';
+
+interface ShopOrderRow extends QueryResultRow {
+  id: string; shop: Shop; items: unknown; total: number; created_at: Date;
+}
 
 @Injectable()
 export class LifeService {
@@ -25,6 +29,23 @@ export class LifeService {
 
   async catalog(): Promise<ShopItem[]> {
     return [...await this.shops.listItems('cafe'), ...await this.shops.listItems('clothes')];
+  }
+
+  async recentOrders(userId: string) {
+    const result = await this.database.query<ShopOrderRow>(`SELECT id,shop,items,total,created_at
+      FROM public.shop_orders WHERE user_id=$1 ORDER BY created_at DESC,id DESC LIMIT 10`, [userId]);
+    return shopOrderListSchema.parse(result.rows.map(order => ({ id: order.id, shop: order.shop,
+      items: order.items, total: order.total, createdAt: order.created_at.toISOString() })));
+  }
+
+  private async recordOrder(client: PoolClient, userId: string, shop: Shop,
+    items: Array<{ item: ShopItem; quantity: number }>, idempotencyKey: string): Promise<void> {
+    const snapshots = items.map(({ item, quantity }) => ({
+      itemId: item.id, name: item.name, quantity, unitPrice: item.price,
+    }));
+    const total = snapshots.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    await client.query(`INSERT INTO public.shop_orders (user_id,shop,items,total,idempotency_key)
+      VALUES ($1,$2,$3::jsonb,$4,$5)`, [userId, shop, JSON.stringify(snapshots), total, idempotencyKey]);
   }
 
   private action(userId: string, key: string, kind: string, payload: object,
@@ -62,8 +83,12 @@ export class LifeService {
       const clothing = items.find(item => item.kind === 'clothing');
       if (clothing && !clothing.color) throw new ServiceUnavailableException('Shirt color is not configured');
       if (clothing && state.ownedShirts.includes(clothing.id)) throw new ConflictException('You already own this shirt');
-      await this.economy.spendInTransaction(client, userId, items.reduce((total, item) => total + item.price, 0),
+      const total = items.reduce((sum, item) => sum + item.price, 0);
+      await this.economy.spendInTransaction(client, userId, total,
         'shop_purchase', request.key);
+      if (items.every(item => item.shop !== 'clothes')) {
+        await this.recordOrder(client, userId, items[0]!.shop, items.map(item => ({ item, quantity: 1 })), request.key);
+      }
       if (clothing) {
         await client.query('INSERT INTO owned_shirts (user_id,item_id) VALUES ($1,$2)', [userId, clothing.id]);
         await client.query('UPDATE player_life SET shirt=$2 WHERE user_id=$1', [userId, clothing.color]);
@@ -105,6 +130,7 @@ export class LifeService {
     const total = item.price * quantity;
     if (state.coins < total) return false;
     await this.economy.spendInTransaction(client, userId, total, 'shop_purchase', `seller_order:${orderId}`, orderId);
+    await this.recordOrder(client, userId, item.shop, [{ item, quantity }], orderId);
     const energy = Math.min(100, state.energy + quantity * (item.kind === 'drink' ? 20 : 50));
     await client.query('UPDATE player_stats SET energy=$2,last_energy_update=now() WHERE user_id=$1', [userId, energy]);
     return true;

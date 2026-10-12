@@ -254,10 +254,11 @@ for server callers; the authenticated life catalog exposes these rows without br
   changing the configured rate rebases the clock without a jump. Browser
   wall-clock changes cannot mutate saved time.
 - Protected `GET /life/catalog` returns the seeded shop catalog.
+- Protected `GET /life/orders` returns the latest ten café orders for the signed-in player. Each order stores item names, quantities and unit prices as purchased, its total and timestamp.
 - `POST /life/sleep` takes `{ key: UUID }`, adds eight game hours immediately and restores 100 energy.
 - `POST /life/purchase` takes `{ key: UUID, itemIds: string[] }`: one item or one drink plus
   one food. Stores accept purchases only from 08:00 until 20:00. Prices come from PostgreSQL.
-  Payment and consumption/wardrobe changes share a transaction. Consumables create no inventory;
+  Payment, café order history and consumption/wardrobe changes share a transaction. Clothes purchases are not included in café order history. Consumables create no inventory;
   shirts enter `owned_shirts` and equip immediately.
 - `POST /life/appearance` takes `{ key: UUID, hair?, trousers?, shirtItemId? }`.
   Hair/trousers change freely; equipped shirts must already be owned. Skin stays unchanged.

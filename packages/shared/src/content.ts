@@ -83,8 +83,19 @@ export const shopItemSchema = z.object({
 }).strict();
 export const shopCatalogSchema = z.array(shopItemSchema).refine(uniqueIds, 'Shop item IDs must be unique');
 
+export const shopOrderItemSchema = z.object({
+  itemId: identifier, name: text, quantity: z.number().int().positive(), unitPrice: z.number().int().positive(),
+}).strict();
+export const shopOrderSchema = z.object({
+  id: z.string().uuid(), shop: shopSchema, items: z.array(shopOrderItemSchema).min(1),
+  total: z.number().int().positive(), createdAt: z.string().datetime(),
+}).strict().refine(order => order.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0) === order.total,
+  'Shop order total must match its item snapshots');
+export const shopOrderListSchema = z.array(shopOrderSchema).max(10);
+
 export type Shop = z.infer<typeof shopSchema>;
 export type ShopItem = z.infer<typeof shopItemSchema>;
+export type ShopOrder = z.infer<typeof shopOrderSchema>;
 
 export type NpcContent = z.infer<typeof npcSchema>;
 export type QuestContent = z.infer<typeof questSchema>;

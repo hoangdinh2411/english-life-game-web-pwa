@@ -11,6 +11,7 @@ export class LifeController {
   constructor(private readonly life: LifeService) {}
   @Get() get(@CurrentUser() userId: string) { return this.life.get(userId); }
   @Get('catalog') catalog() { return this.life.catalog(); }
+  @Get('orders') orders(@CurrentUser() userId: string) { return this.life.recentOrders(userId); }
   @Post('sleep') sleep(@CurrentUser() userId: string,
     @Body(new SchemaValidationPipe(lifeActionSchema)) body: { key: string }) { return this.life.sleep(userId, body.key); }
   @Post('purchase') purchase(@CurrentUser() userId: string,

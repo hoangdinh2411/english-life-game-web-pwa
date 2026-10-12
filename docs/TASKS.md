@@ -116,7 +116,7 @@ test@gmail.com / 12341234.
       hours when a place is closed. Done when: tests cover a speed change,
       sleep, a reload, and the store boundaries (07:59, 08:00, 19:59, 20:00);
       browser check at 320/375/1024px.
-- [ ] **T22 — Order history (all shops except clothes).** Save every completed
+- [x] **T22 — Order history (all shops except clothes).** Save every completed
       purchase in one shared table: user, shop, items with quantity, price at
       the time of purchase, total, and time. Write it in the same transaction as
       the payment. Inspect the existing order storage first and reuse it if

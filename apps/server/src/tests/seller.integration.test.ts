@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { Test } from '@nestjs/testing';
 import { createClient } from '@supabase/supabase-js';
 import { Pool, type PoolClient, type QueryResultRow } from 'pg';
-import { conversationSchema, conversationTurnSchema } from '@life-abroad/shared';
+import { conversationSchema, conversationTurnSchema, shopOrderListSchema } from '@life-abroad/shared';
 import { AppModule } from '../app.module';
 import { DatabaseService } from '../infrastructure/database/database.service';
 import { ConversationsRepository } from '../modules/conversations/conversations.repository';
@@ -106,8 +106,35 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     await turn('How much is an espresso?');
     assert.equal((await turn('Yes please')).intent, 'order', 'repeat the pending order after a price question before accepting payment');
     assert.equal((await stats()).coins, 500);
-    assert.equal((await turn("I don't want an espresso")).seller.pendingOrder?.total, 14);
-    await turn('Yes please');
+    const pendingCafeOrder = await turn("I don't want an espresso");
+    assert.equal(pendingCafeOrder.seller.pendingOrder?.total, 14);
+    const cafeOrderId = pendingCafeOrder.seller.pendingOrder!.orderId;
+    const ordersBeforePayment = await client.query<{ count: string }>(
+      'SELECT count(*) FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2', [userId, cafeOrderId]);
+    assert.equal(Number(ordersBeforePayment.rows[0]!.count), 0);
+    assert.equal((await turn('Yes please')).intent, 'order', 'repeat an unconfirmed order before paying');
+    const paidMessageId = randomUUID();
+    const paidResponse = await send('Yes please', false, paidMessageId);
+    assert.equal(paidResponse.status, 201);
+    const paidTurn = conversationTurnSchema.parse(await paidResponse.json());
+    assert.equal(paidTurn.intent, 'paid');
+    assert.deepEqual(await (await send('Yes please', false, paidMessageId)).json(), paidTurn,
+      'replayed payment confirmation returns its receipt without creating a second order');
+    const orderRow = await client.query<{ id: string; items: unknown; total: number }>(
+      'SELECT id,items,total FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2', [userId, cafeOrderId]);
+    assert.equal(orderRow.rows.length, 1);
+    assert.equal(orderRow.rows[0]!.total, 14);
+    assert.deepEqual(orderRow.rows[0]!.items, [{ itemId: 'cappuccino', name: 'Cappuccino', quantity: 2, unitPrice: 7 }]);
+    await client.query("UPDATE shop_items SET price=9 WHERE id='cappuccino'");
+    const historyResponse = await call('/life/orders');
+    assert.equal(historyResponse.status, 200, await historyResponse.clone().text());
+    const history = shopOrderListSchema.parse(await historyResponse.json());
+    const savedOrder = history.find(order => order.id === orderRow.rows[0]!.id);
+    assert.ok(savedOrder, 'authenticated order history survives a separate reload request');
+    assert.equal(savedOrder.total, 14); assert.equal(savedOrder.items[0]!.unitPrice, 7);
+    assert.deepEqual(shopOrderListSchema.parse(await (await call(`/life/orders?userId=${randomUUID()}`)).json()), history,
+      'the endpoint scopes results to the authenticated account and ignores forged user IDs');
+    await client.query("UPDATE shop_items SET price=7 WHERE id='cappuccino'");
     const before = await stats();
     const repository = app.get(ConversationsRepository);
     const append = repository.append.bind(repository);
@@ -129,10 +156,14 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     assert.equal((await send('different', false, key)).status, 409);
     assert.equal((await turn('Yes please')).intent, 'no_order');
     assert.equal((await stats()).coins, 486);
-    await turn('Three smoothies please');
+    const failedCafeOrder = await turn('Three smoothies please');
+    const failedOrderId = failedCafeOrder.seller.pendingOrder!.orderId;
     await client.query('UPDATE player_stats SET coins=1 WHERE user_id=$1', [userId]);
     assert.equal((await turn('Confirm')).intent, 'insufficient_funds');
     assert.equal((await stats()).coins, 1);
+    const failedHistory = await client.query<{ count: string }>(
+      'SELECT count(*) FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2', [userId, failedOrderId]);
+    assert.equal(Number(failedHistory.rows[0]!.count), 0, 'failed payment creates no history entry');
     assert.equal((await turn('Cancel')).seller.pendingOrder, null);
     assert.equal((await turn('Goodbye')).seller.closed, true);
     assert.deepEqual(await (await send('Yes please', false, key)).json(), receipt);
@@ -163,6 +194,10 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     const confirmId = randomUUID();
     const purchased = await clothesTurn('Yes please', confirmId);
     assert.equal(purchased.intent, 'paid'); assert.equal(purchased.seller?.pendingOrder, null);
+    const excludedClothesOrder = await client.query<{ count: string }>(
+      'SELECT count(*) FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2',
+      [userId, order.seller!.pendingOrder!.orderId]);
+    assert.equal(Number(excludedClothesOrder.rows[0]!.count), 0, 'clothes are excluded from café order history');
     assert.deepEqual(await clothesTurn('Yes please', confirmId), purchased);
     const wardrobeAfterReload = await (await call('/life')).json() as {
       coins: number; appearance: { hair: string; shirt: string | null; trousers: string }; ownedShirts: string[];
@@ -189,8 +224,13 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     for (const [time, expected] of [['07:59', 409], ['08:00', 201], ['19:59', 201], ['20:00', 409]] as const) {
       await setStoreTime(time);
       await client.query('UPDATE player_stats SET coins=500,energy=100 WHERE user_id=$1', [userId]);
-      const response = await call('/life/purchase', { key: randomUUID(), itemIds: ['espresso'] });
+      const purchaseKey = randomUUID();
+      const response = await call('/life/purchase', { key: purchaseKey, itemIds: ['espresso'] });
       assert.equal(response.status, expected, `store purchase at ${time}`);
+      const orderCount = await client.query<{ count: string }>(
+        'SELECT count(*) FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2', [userId, purchaseKey]);
+      assert.equal(Number(orderCount.rows[0]!.count), expected === 201 ? 1 : 0,
+        `direct café purchase history at ${time}`);
       if (expected === 409) assert.match(JSON.stringify(await response.json()), /08:00.*20:00/);
     }
     await setStoreTime('07:59');
