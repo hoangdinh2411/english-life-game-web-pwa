@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createNarrator } from '../src/speech/narration.ts';
+
+test('a male NPC never falls back to an explicitly female voice', () => {
+  const errors = [];
+  const narrator = createNarrator({ getVoices: () => [{ name: 'Microsoft Zira', lang: 'en-US' }], cancel: () => {}, speak: () => assert.fail('Wrong gender spoken') },
+    text => ({ text }), { onSpeaking: () => {}, onError: text => errors.push(text) });
+  narrator.speak('Welcome to the shop', 'male');
+  assert.match(errors[0], /male voice is unavailable/);
+});
 test('narration selects English, replaces previous speech and cancels on close', () => {
   const spoken = [], state = [];
   let cancelled = 0;

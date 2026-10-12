@@ -62,10 +62,15 @@ export function preparePack(scene: Phaser.Scene, pack: MapPack) {
   }
   for (const definition of definitions) scene.anims.create(definition);
   const actorAsset = pack.assets.find(asset => asset.key === 'actors' && asset.type === 'json' && asset.npcId === null);
+  const shop = pack.mapId === 'loc_cafe' || pack.mapId === 'loc_clothes';
+  if (shop && !actorAsset) throw new Error('Shop NPC assets are missing. Please retry after the map upload finishes.');
   const actors = actorAsset ? packActorsSchema.parse(scene.cache.json.get(packKey(pack, actorAsset))).actors.map(actor => {
     const texture = pack.assets.find(asset => asset.key === actor.texture && asset.type === 'image' && asset.npcId === null);
     if (!texture || !scene.textures.get(packKey(pack, texture)).has(actor.frame)) throw new Error('NPC atlas frame is missing from this pack.');
+    if (shop && Array.from({ length: 16 }, (_, index) => `${actor.frame}-${Math.floor(index / 4)}-${index % 4}`)
+      .some(frame => !scene.textures.get(packKey(pack, texture)).has(frame))) throw new Error('Shop NPC walking frames are missing. Please retry after the map upload finishes.');
     return { ...actor, texture: packKey(pack, texture) };
   }) : [];
+  if (shop && actors.length !== 3) throw new Error('Shop map needs its seller, assistant and customer assets.');
   return { background: packKey(pack, background), player: packKey(pack, player), walkPrefix, animationKeys, actors };
 }

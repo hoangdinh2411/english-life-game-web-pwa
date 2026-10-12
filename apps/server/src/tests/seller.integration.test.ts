@@ -15,7 +15,7 @@ import { ServiceUnavailableException } from '@nestjs/common';
 // and successful-looking replies when a transaction actually failed.
 test('T17 seller Auth/API: existing account, pending order, pay once, cancel, insufficient funds and Coach', async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
-  assert.equal(url.hostname, '127.0.0.1'); assert.equal(url.port, '55422');
+  assert.equal(url.hostname, '127.0.0.1'); assert.ok(['54322', '55422'].includes(url.port));
   const authUrl = process.env.SUPABASE_URL ?? '';
   assert.equal(new URL(authUrl).hostname, '127.0.0.1');
   const pool = new Pool({ connectionString: url.toString() });

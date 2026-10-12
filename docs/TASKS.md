@@ -27,12 +27,21 @@ Follow all applicable project instructions.
 
 Complete the task, verify the acceptance criteria, update its status if verified, report briefly, and stop.
 
+Do not start server here. The project is running on VS code terminal
 Do not create Git commits. Just suggest a commit message for me; I will commit manually.
 Please test using the account I provided. Don’t create a new user for each test.
 test@gmail.com / 12341234.
 ```
 
 ## DONE
+
+- [x] **Local Supabase migration (2026-10-12):** restored existing game data
+      and Auth users from `life-abroad-local` into `english-life-game`
+      (54321/54322); 30 stored files verified by SHA-256, all 15 active map/NPC
+      downloads verified through the running API. Existing test account login,
+      five distinct saved openings, five small-talk turns, persisted history
+      and replay-safe energy verified. Source volumes and ignored recovery
+      copies retained; no new test users.
 
 - [x] **Foundation:** monorepo, Vite/PWA client (D16), Supabase auth and NestJS
       token check, health, database and access, onboarding options, `/me`,
@@ -75,7 +84,16 @@ test@gmail.com / 12341234.
 
 ## NOW
 
-No active NOW item. Select another task only when requested.
+- [ ] **Shop polish follow-up:** café/clothes furniture and NPC collisions,
+      station-style map art and directional NPC walking, gender-matched voices,
+      shared topic files with five question variations and different openings.
+      Implementation and 173 unit tests verified; typecheck/lint/build and
+      content/PWA checks pass. Incomplete packs report missing NPC assets;
+      known opposite-gender browser voices are never used as a fallback.
+      Authenticated persistence/replay verified on the restored local instance.
+      Remaining: browser checks with the existing test account after refreshing
+      the old cached PWA, which still references the previous instance. Do not mark done
+      until both shop maps, conversations, movement and responsive layouts pass.
 
 ## APPROVED DESIGN (2026-10-10) — shops and money
 
@@ -115,12 +133,14 @@ No active NOW item. Select another task only when requested.
       goodbye. The pending order is server state. Done when: API tests cover a
       full order (balance drops once), cancel, not enough money, a replayed
       confirm, and a Coach correction for "I want buy coffee". Create assets for
-      main npcs and customer npcs in these stores.
-      Verified café seller API with the existing test account: saved orders,
-      quantities 1–3, price/change/cancel/unknown-item replies, atomic payment,
-      replay, insufficient funds, Coach, rollback and receptionist compatibility.
-      Six transparent NPC atlas frames displayed in shop maps, with click/nearby dialogue and short patrols. Caf� ordering uses the T17 API; full caf� quest and clothes purchases remain T18/T20.
-      Typecheck, lint, unit tests, content validation, build and PWA checks passed.
+      main npcs and customer npcs in these stores. Verified café seller API with
+      the existing test account: saved orders, quantities 1–3,
+      price/change/cancel/unknown-item replies, atomic payment, replay,
+      insufficient funds, Coach, rollback and receptionist compatibility. Six
+      transparent NPC atlas frames displayed in shop maps, with click/nearby
+      dialogue and short patrols. Caf� ordering uses the T17 API; full caf�
+      quest and clothes purchases remain T18/T20. Typecheck, lint, unit tests,
+      content validation, build and PWA checks passed.
 - [ ] **T18 — Station café (two NPCs) and "Your First Coffee".** Café map with a
       cashier (may reuse Mia) and a waiter. The waiter chats and sends orders to
       the cashier. Both point to the receptionist when asked how to leave.

@@ -314,6 +314,13 @@ a garbage-collection-controlled JavaScript heap profile. Physical phones remain
 unverified.
 
 ## Run locally
+Local Supabase uses project `english-life-game`: API/Auth/Storage on
+`127.0.0.1:54321`, PostgreSQL on `127.0.0.1:54322`. The previous
+`life-abroad-local` data and 30 stored asset objects were restored into this
+instance with verified file hashes; recovery copies remain in ignored
+`local-assets/database-transfer/`. Keep the old volumes until recovery copies
+are no longer needed.
+
 Install Node >=20.19, pnpm 11 and Docker (only needed for local Supabase):
 
 ```sh

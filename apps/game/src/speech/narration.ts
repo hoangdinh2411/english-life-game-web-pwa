@@ -20,8 +20,11 @@ export function createNarrator(synthesis: Synthesis | null, createUtterance: (te
       utterance.lang = 'en-US'; utterance.rate = 0.9; utterance.pitch = 1; utterance.volume = 1;
       const englishVoices = synthesis.getVoices().filter((candidate) => candidate.lang.toLowerCase().startsWith('en'));
       const voice = englishVoices.find((candidate) => voiceNames[gender].test(candidate.name)) ??
-        englishVoices.find((candidate) => !voiceNames[gender === 'female' ? 'male' : 'female'].test(candidate.name)) ??
-        englishVoices[0];
+        englishVoices.find((candidate) => !voiceNames[gender === 'female' ? 'male' : 'female'].test(candidate.name));
+      if (!voice) {
+        callbacks.onError(`An English ${gender} voice is unavailable. You can still read the dialogue.`);
+        return;
+      }
       // Browser voice names are inconsistent. A slight pitch lift helps when
       // the browser exposes no identifiable female voice for a female speaker.
       if (gender === 'female' && voice && !voiceNames.female.test(voice.name)) utterance.pitch = 1.18;
