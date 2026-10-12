@@ -1,6 +1,6 @@
 import { LifeService } from '../life/life.service';
 import { ConflictException, Injectable } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, SELLER_NPC_ID, checkGrammar, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID, TurnMetadata } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, SELLER_NPC_ID, SHOP_NPC_IDS, checkGrammar, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID, TurnMetadata, venueHoursLabel } from '@life-abroad/shared';
 import { DialogueService } from '../dialogue/dialogue.service';
 import { QuestsService } from '../quests/quests.service';
 import { ConversationsRepository, sellerState } from './conversations.repository';
@@ -72,7 +72,14 @@ export class ConversationsService {
       let metadata: TurnMetadata;
       let responseText: string;
       let nodeId: string;
-      if (conversation.npc_id === SELLER_NPC_ID || conversation.npc_id === 'npc_clothes_seller') {
+      if ((SHOP_NPC_IDS as readonly string[]).includes(conversation.npc_id) && !(await this.life.venueOpen(client, userId, 'store'))) {
+        const reply = await this.dialogue.node(context, 'global_store_closed');
+        responseText = reply.text.replace('{hours}', venueHoursLabel('store'));
+        nodeId = reply.node.id;
+        metadata = { arrival, intent: 'shop_closed', misunderstood: false, correction,
+          ...([SELLER_NPC_ID, 'npc_clothes_seller'].includes(conversation.npc_id) ? { seller: sellerState(conversation) } : {}),
+          ...([SELLER_NPC_ID, 'npc_cafe_waiter'].includes(conversation.npc_id) ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
+      } else if (conversation.npc_id === SELLER_NPC_ID || conversation.npc_id === 'npc_clothes_seller') {
         const reply = await this.seller.reply(client, userId, conversation, context, request.text);
         responseText = reply.text; nodeId = reply.nodeId ?? `seller_${reply.intent}`;
         if (conversation.npc_id === SELLER_NPC_ID) {

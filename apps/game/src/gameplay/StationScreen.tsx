@@ -118,6 +118,7 @@ export default function StationScreen({
           {...(life
             ? {
                 savedTime: life.time,
+                ...(life.state ? { clockRate: life.state.clockRate } : {}),
                 onSleep: () =>
                   void life.act({
                     path: "sleep",

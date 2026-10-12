@@ -247,10 +247,12 @@ for server callers; the authenticated life catalog exposes these rows without br
 
 ## Saved life and direct purchases
 
-- Protected `GET /life` returns `{ energy, coins, gameTime, serverTime, appearance, ownedShirts }`.
+- Protected `GET /life` returns `{ energy, coins, gameTime, serverTime, clockRate, appearance, ownedShirts }`.
   State initializes lazily for a character at 100 energy and 08:00 on game day 2000-01-01.
-  Its UTC clock advances at 2× elapsed server time, including time away from the app;
-  browser wall-clock changes cannot mutate saved time.
+  Its UTC clock advances at the configured rate (2× by default), including time
+  away from the app. The server persists game time, real-time anchor and rate;
+  changing the configured rate rebases the clock without a jump. Browser
+  wall-clock changes cannot mutate saved time.
 - Protected `GET /life/catalog` returns the seeded shop catalog.
 - `POST /life/sleep` takes `{ key: UUID }`, adds eight game hours immediately and restores 100 energy.
 - `POST /life/purchase` takes `{ key: UUID, itemIds: string[] }`: one item or one drink plus

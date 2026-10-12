@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isVenueOpen, type Appearance } from "@life-abroad/shared";
+import { isVenueOpen, venueHoursLabel, type Appearance, type VenueKind } from "@life-abroad/shared";
 import type { LifeControls } from "./useLife";
 export function LifeMenu({
   life,
@@ -13,6 +13,10 @@ export function LifeMenu({
   const state = life.state;
   const disabled = !online || life.pending || Boolean(life.retry) || !state;
   const open = life.time ? isVenueOpen("store", life.time) : false;
+  const formattedTime = life.time ? new Intl.DateTimeFormat(undefined, {
+    timeZone: "UTC", weekday: "long", hour: "2-digit", minute: "2-digit",
+  }).format(life.time) : "Loading";
+  const hours = (venue: VenueKind) => venueHoursLabel(venue);
   const selected = life.catalog.filter(
     (item) => item.id === drink || item.id === food,
   );
@@ -50,15 +54,14 @@ export function LifeMenu({
             Energy: {state.energy}% · Balance: ${state.coins}
           </p>
           <p>
-            Game time: {life.time?.toISOString().slice(0, 16).replace("T", " ")}{" "}
-            · 2× · UTC game clock
+            Game time: {formattedTime} UTC · {state.clockRate}×
           </p>
           <p>
-            Organizations 08:00–16:00 · Stores 08:00–20:00 · Workplaces
-            07:00–17:00
+            Organizations {hours("organization")} · Stores {hours("store")} ·
+            Workplaces {hours("workplace")}
           </p>
           <h3>Café</h3>
-          <p>{open ? "Open until 20:00" : "Closed · Opens at 08:00"}</p>
+          <p>{open ? `Open · ${hours("store")}` : `Closed · Store hours: ${hours("store")}`}</p>
           <label>
             Drink (+20 points)
             <select
@@ -116,7 +119,7 @@ export function LifeMenu({
             Buy and consume
           </button>
           <h3>Clothes shop</h3>
-          <p>{open ? "Open until 20:00" : "Closed · Opens at 08:00"}</p>
+          <p>{open ? `Open · ${hours("store")}` : `Closed · Store hours: ${hours("store")}`}</p>
           <p>Choose a shirt in a conversation with the clothes seller.</p>
           <h3>My items</h3>
           {state.ownedShirts.length ? (

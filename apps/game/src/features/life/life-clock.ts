@@ -1,6 +1,6 @@
-import { GAME_TIME_RATE, type LifeState } from '@life-abroad/shared';
+import type { LifeState } from '@life-abroad/shared';
 export function savedGameTime(state: LifeState, receivedAt: number, now: number): Date {
-  return new Date(Date.parse(state.gameTime) + Math.max(0, now - receivedAt) * GAME_TIME_RATE);
+  return new Date(Date.parse(state.gameTime) + Math.max(0, now - receivedAt) * state.clockRate);
 }
 export function isDefiniteRejection(error: unknown): boolean {
   if (typeof error !== 'object' || error === null || !('status' in error)) return false;

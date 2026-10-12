@@ -107,7 +107,7 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
-- [ ] **T21 — Game clock speed and display.** Make the clock speed one config
+- [x] **T21 — Game clock speed and display.** Make the clock speed one config
       value (now 2×; the owner approves the new value, test with 6×). Changing
       the speed must not make saved clocks jump: store the game time, the real
       time and the speed at the last save. Keep sleep (+8 hours). Use one shared

@@ -182,6 +182,25 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     };
     assert.deepEqual(reEquipped.appearance, { hair: 'blond', shirt: 'blue', trousers: 'charcoal' });
     assert.ok(reEquipped.ownedShirts.includes('shirt_green'));
+    const setStoreTime = async (time: string) => {
+      await client.query('UPDATE player_life SET clock_time=$2,clock_anchor=now(),clock_rate=2 WHERE user_id=$1',
+        [userId, `2000-01-01T${time}:00Z`]);
+    };
+    for (const [time, expected] of [['07:59', 409], ['08:00', 201], ['19:59', 201], ['20:00', 409]] as const) {
+      await setStoreTime(time);
+      await client.query('UPDATE player_stats SET coins=500,energy=100 WHERE user_id=$1', [userId]);
+      const response = await call('/life/purchase', { key: randomUUID(), itemIds: ['espresso'] });
+      assert.equal(response.status, expected, `store purchase at ${time}`);
+      if (expected === 409) assert.match(JSON.stringify(await response.json()), /08:00.*20:00/);
+    }
+    await setStoreTime('07:59');
+    const closedOpening = conversationSchema.parse(await (await call('/conversations', { npcId: 'npc_clothes_seller' })).json());
+    const closedReply = await call(`/conversations/${closedOpening.id}/messages`, {
+      text: 'What shirts do you have?', coach: false, clientMessageId: randomUUID(),
+    });
+    assert.equal(closedReply.status, 201);
+    assert.match(conversationTurnSchema.parse(await closedReply.json()).npcMessage.text, /08:00.*20:00/);
+    await setStoreTime('10:00');
     // Invalid NPCs/forged order state and unauthenticated calls are rejected.
     assert.equal((await call('/conversations', { npcId: 'npc_missing' })).status, 400);
     assert.equal((await call(path + '/messages', { text: 'yes', clientMessageId: randomUUID(), total: 1 })).status, 400);

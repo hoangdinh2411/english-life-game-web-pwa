@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { appearanceSchema, canSleep, isVenueOpen, restoredEnergy, SLEEP_HOURS, type CustomizeRequest, type LifeState, type PurchaseRequest, type ShopItem } from '@life-abroad/shared';
+import { appearanceSchema, canSleep, isVenueOpen, restoredEnergy, SLEEP_HOURS, venueHoursLabel, type CustomizeRequest, type LifeState, type PurchaseRequest, type ShopItem, type VenueKind } from '@life-abroad/shared';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { EconomyService } from '../economy/economy.service';
@@ -16,6 +16,11 @@ export class LifeService {
       await this.repository.lock(client, userId);
       return this.repository.state(client, userId);
     });
+  }
+
+  async venueOpen(client: PoolClient, userId: string, kind: VenueKind): Promise<boolean> {
+    const state = await this.repository.state(client, userId);
+    return isVenueOpen(kind, new Date(state.gameTime));
   }
 
   async catalog(): Promise<ShopItem[]> {
@@ -37,7 +42,8 @@ export class LifeService {
     return this.action(userId, key, 'sleep', {}, async (client, state) => {
       if (!canSleep(state.energy)) throw new ConflictException('Sleep is available below 50% energy');
       const advanced = new Date(Date.parse(state.gameTime) + SLEEP_HOURS * 3600000);
-      await client.query('UPDATE player_life SET clock_time=$2,clock_anchor=$3 WHERE user_id=$1', [userId, advanced, state.serverTime]);
+      await client.query('UPDATE player_life SET clock_time=$2,clock_anchor=$3,clock_rate=$4 WHERE user_id=$1',
+        [userId, advanced, state.serverTime, state.clockRate]);
       await client.query('UPDATE player_stats SET energy=100,last_energy_update=now() WHERE user_id=$1', [userId]);
     });
   }
@@ -45,7 +51,7 @@ export class LifeService {
   purchase(userId: string, request: PurchaseRequest): Promise<LifeState> {
     const itemIds = [...request.itemIds].sort();
     return this.action(userId, request.key, 'purchase', { itemIds }, async (client, state) => {
-      if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException('Stores open from 08:00 to 20:00 game time');
+      if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException(`Stores open from ${venueHoursLabel('store')} UTC game time`);
       const result = await client.query<ShopItem>('SELECT id,name,kind,price,shop,color FROM shop_items WHERE id=ANY($1::text[])', [itemIds]);
       const items = result.rows;
       if (items.length !== itemIds.length) throw new BadRequestException('Unknown shop item');
@@ -95,7 +101,7 @@ export class LifeService {
     quantity: number, orderId: string): Promise<boolean> {
     await this.repository.lock(client, userId);
     const state = await this.repository.state(client, userId);
-    if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException('Stores open from 08:00 to 20:00 game time');
+    if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException(`Stores open from ${venueHoursLabel('store')} UTC game time`);
     const total = item.price * quantity;
     if (state.coins < total) return false;
     await this.economy.spendInTransaction(client, userId, total, 'shop_purchase', `seller_order:${orderId}`, orderId);
@@ -110,7 +116,7 @@ export class LifeService {
     if (item.shop !== 'clothes' || item.kind !== 'clothing' || !item.color) {
       throw new BadRequestException('Choose a shirt from the clothes shop');
     }
-    if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException('Stores open from 08:00 to 20:00 game time');
+    if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException(`Stores open from ${venueHoursLabel('store')} UTC game time`);
     if (state.ownedShirts.includes(item.id)) throw new ConflictException('You already own this shirt');
     if (state.coins < item.price) return false;
     await this.economy.spendInTransaction(client, userId, item.price, 'shop_purchase', `clothes_order:${orderId}`, orderId);

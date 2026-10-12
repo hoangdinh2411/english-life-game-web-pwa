@@ -2,6 +2,14 @@ import { z } from 'zod';
 
 export const GAME_TIME_RATE = 2;
 export const SLEEP_HOURS = 8;
+export interface SavedGameClock { gameTime: Date; realTime: Date; rate: number }
+export function gameTimeAt(clock: SavedGameClock, realNow: Date): Date {
+  const elapsed = Math.max(0, realNow.getTime() - clock.realTime.getTime());
+  return new Date(clock.gameTime.getTime() + elapsed * clock.rate);
+}
+export function rebaseGameClock(clock: SavedGameClock, realNow: Date, nextRate: number): SavedGameClock {
+  return { gameTime: gameTimeAt(clock, realNow), realTime: realNow, rate: nextRate };
+}
 export function canSleep(energy: number): boolean { return energy < 50; }
 export const SHIRT_COLORS = ['blue', 'green', 'red', 'yellow'] as const;
 export const appearanceSchema = z.object({
@@ -17,6 +25,10 @@ export function isVenueOpen(kind: VenueKind, time: Date): boolean {
   const [opens, closes] = VENUE_HOURS[kind];
   return hour >= opens && hour < closes;
 }
+export function venueHoursLabel(kind: VenueKind): string {
+  const [opens, closes] = VENUE_HOURS[kind];
+  return `${String(opens).padStart(2, '0')}:00–${String(closes).padStart(2, '0')}:00`;
+}
 export function restoredEnergy(current: number, kinds: readonly string[]): number {
   const drink = kinds.includes('drink');
   const food = kinds.includes('food');
@@ -24,7 +36,7 @@ export function restoredEnergy(current: number, kinds: readonly string[]): numbe
 }
 export const lifeStateSchema = z.object({
   energy: z.number().int().min(0).max(100), coins: z.number().int().nonnegative(),
-  gameTime: z.string().datetime(), serverTime: z.string().datetime(),
+  gameTime: z.string().datetime(), serverTime: z.string().datetime(), clockRate: z.number().int().positive(),
   appearance: appearanceSchema, ownedShirts: z.array(z.string()),
 }).strict();
 export type LifeState = z.infer<typeof lifeStateSchema>;

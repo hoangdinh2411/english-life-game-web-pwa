@@ -31,6 +31,7 @@ export interface PlayerInfoCardProps {
   visible?: boolean;
   timeZone?: string;
   savedTime?: Date | null;
+  clockRate?: number;
   energy?: number;
   onSleep?: () => void;
   sleepDisabled?: boolean;

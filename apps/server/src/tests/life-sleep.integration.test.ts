@@ -12,7 +12,7 @@ import { ShopsService } from '../modules/shops/shops.service';
 
 test('sleep enforces below 50%, advances eight hours and safely replays at full energy', async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
-  assert.equal(url.hostname, '127.0.0.1'); assert.equal(url.port, '55422');
+  assert.equal(url.hostname, '127.0.0.1'); assert.ok(['54322', '55422'].includes(url.port));
   const pool = new Pool({ connectionString: url.toString() });
   const client = await pool.connect();
   try {
@@ -24,6 +24,17 @@ test('sleep enforces below 50%, advances eight hours and safely replays at full 
     const repository = new LifeRepository();
     const service = new LifeService(database as DatabaseService, repository, {} as EconomyService, {} as ShopsService);
     await repository.lock(client, id);
+    const anchor = new Date(Date.now() - 60_000);
+    const base = new Date('2000-01-01T08:00:00.000Z');
+    await client.query('UPDATE player_life SET clock_time=$2,clock_anchor=$3,clock_rate=2 WHERE user_id=$1', [id, base, anchor]);
+    const faster = await repository.state(client, id, 6);
+    assert.equal(faster.clockRate, 6);
+    assert.ok(Math.abs(Date.parse(faster.gameTime) - (base.getTime() + 120_000)) < 1500,
+      'rate change preserves elapsed time at the old 2x rate');
+    const afterReload = await repository.state(client, id);
+    assert.equal(afterReload.clockRate, 2);
+    assert.ok(Date.parse(afterReload.gameTime) >= Date.parse(faster.gameTime), 'reload at configured speed continues from saved game time');
+    assert.ok(Date.parse(afterReload.gameTime) - Date.parse(faster.gameTime) < 1500, 'reload does not jump the saved clock');
     for (const energy of [50, 100]) {
       await client.query('UPDATE player_stats SET energy=$2 WHERE user_id=$1', [id, energy]);
       const before = await repository.state(client, id);
