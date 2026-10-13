@@ -1,5 +1,17 @@
 import type { Bounds, Point, StationNpc, StationPortal } from '../types/gameplay/world';
 
+export const STREET_MAP_SCALE = 1.5;
+export const STREET_MAP_SIZE = { width: 1536 * STREET_MAP_SCALE, height: 1024 * STREET_MAP_SCALE };
+export function scaleStreetPoint(point: Point): Point {
+  return { x: point.x * STREET_MAP_SCALE, y: point.y * STREET_MAP_SCALE };
+}
+export function clampStreetPosition(point: Point): Point {
+  return {
+    x: Math.max(48 * STREET_MAP_SCALE, Math.min((1536 - 48) * STREET_MAP_SCALE, point.x)),
+    y: Math.max(110 * STREET_MAP_SCALE, Math.min((1024 - 39) * STREET_MAP_SCALE, point.y)),
+  };
+}
+
 export const STATION_NPCS: StationNpc[] = [
   { id: 'npc_passenger_backpack', name: 'Peter', texture: 'backpack', x: 592, y: 380 },
   { id: 'npc_passenger_suitcase', name: 'Emma', texture: 'suitcase', x: 950, y: 380 },

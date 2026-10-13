@@ -1,9 +1,15 @@
 import type { Bounds, MapLocation, Point } from '../../types/gameplay/world';
-import { isVenueOpen } from '@life-abroad/shared';
+import { isVenueOpen, type VenueKind } from '@life-abroad/shared';
 
-const storeLocations: readonly MapLocation[] = ['cafe', 'corner_cafe', 'clothes'];
+const locationVenueKinds: Partial<Record<MapLocation, VenueKind>> = {
+  cafe: 'store',
+  corner_cafe: 'store',
+  clothes: 'store',
+};
+
 export function canEnterLocation(location: MapLocation, gameTime: Date | null): boolean {
-  return !storeLocations.includes(location) || (gameTime !== null && isVenueOpen('store', gameTime));
+  const venueKind = locationVenueKinds[location];
+  return venueKind === undefined || (gameTime !== null && isVenueOpen(venueKind, gameTime));
 }
 
 // Feet coordinates, measured against the authored 1536×1024 interiors.

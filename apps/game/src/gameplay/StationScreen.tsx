@@ -15,10 +15,9 @@ import {
   practiceArrivalGoals,
 } from "./arrival-hud";
 import { usePwa } from "../pwa/PwaProvider";
-import { LifeMenu } from "../features/life/LifeMenu";
+import { PlayerProfileDialogue } from "../features/life/PlayerProfileDialogue";
 import { ShopConversation } from "../features/shops/ShopConversation";
 import { isShopNpc, type ShopNpcId } from "../features/shops/shop-npcs";
-import { WardrobePanel } from "../features/life/WardrobePanel";
 import { StoreClosedDialogue } from "../features/shops/StoreClosedDialogue";
 import type { StoreLocation } from "../types/gameplay/world";
 
@@ -54,7 +53,7 @@ export default function StationScreen({
   const [stationReady, setStationReady] = useState(false);
   const [location, setLocation] = useState("Maplewood · Train Station");
   const [menu, setMenu] = useState(false);
-  const [wardrobe, setWardrobe] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [closedStore, setClosedStore] = useState<StoreLocation | null>(null);
   const [goals, setGoals] = useState(false);
   const [sound, setSound] = useState(true);
@@ -67,7 +66,7 @@ export default function StationScreen({
     npcId !== null ||
     tutorial ||
     menu ||
-    wardrobe ||
+    profileOpen ||
     closedStore !== null ||
     goals ||
     exitReminder ||
@@ -123,26 +122,10 @@ export default function StationScreen({
         <PlayerInfoCard
           playerName={playerName}
           cityName={cityName}
-          xp={xp}
           coins={coins}
-          visible={!overlayOpen}
-          {...(life
-            ? {
-                savedTime: life.time,
-                ...(life.state ? { clockRate: life.state.clockRate } : {}),
-                onSleep: () =>
-                  void life.act({
-                    path: "sleep",
-                    body: { key: crypto.randomUUID() },
-                  }),
-                sleepDisabled:
-                  !pwa.online ||
-                  life.pending ||
-                  Boolean(life.retry) ||
-                  !life.state,
-              }
-            : {})}
-          {...(life?.state ? { energy: life.state.energy } : {})}
+          onOpenProfile={() => setProfileOpen(true)}
+          visible={!overlayOpen || profileOpen}
+          {...(life ? { savedTime: life.time, ...(life.state ? { clockRate: life.state.clockRate } : {}) } : {})}
         />
         <div className="station-tools [grid-column:2] [grid-row:1] [justify-self:end] flex gap-2 pointer-events-auto [@media(max-width:479px)]:gap-1">
           <OverlayButton
@@ -211,9 +194,16 @@ export default function StationScreen({
           onReturn={() => setClosedStore(null)}
         />
       ) : null}
-      {wardrobe && life ? (
-        <WardrobePanel life={life} online={arrival?.online ?? pwa.online} onClose={() => setWardrobe(false)} />
-      ) : null}
+      {profileOpen ? <PlayerProfileDialogue
+        playerName={playerName}
+        cityName={cityName}
+        xp={xp}
+        coins={coins}
+        {...(life ? { life } : {})}
+        online={arrival?.online ?? pwa.online}
+        practice={practice}
+        onClose={() => setProfileOpen(false)}
+      /> : null}
       {tutorial && stationReady ? (
         <TutorialDialogue
           playerName={playerName}
@@ -296,24 +286,7 @@ export default function StationScreen({
       ) : null}
       {menu ? (
         <DialogueFrame>
-          <h2>Game menu</h2>
-          <strong className="truncate">{playerName}</strong>
-          {practice ? (
-            <p>Local practice · No saved progress or rewards.</p>
-          ) : (
-            <p>
-              XP {xp} · $ {coins}
-            </p>
-          )}
-          {!practice && life ? (
-            <LifeMenu
-              life={life}
-              online={arrival?.online ?? pwa.online}
-            />
-          ) : null}
-          {!practice && life ? (
-            <GameButton label="Open wardrobe" onClick={() => { setMenu(false); setWardrobe(true); }} />
-          ) : null}
+          <h2 className="text-[18px] font-extrabold">Paused</h2>
           <GameButton
             label="Movement tutorial"
             onClick={() => {

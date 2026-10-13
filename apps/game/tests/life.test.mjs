@@ -6,8 +6,7 @@ import { createServer } from 'vite';
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', ssr: { external: ['@life-abroad/shared'] } });
 try {
   const { savedGameTime, isDefiniteRejection } = await server.ssrLoadModule('/src/features/life/life-clock.ts');
-  const { LifeMenu } = await server.ssrLoadModule('/src/features/life/LifeMenu.tsx');
-  const { WardrobePanel } = await server.ssrLoadModule('/src/features/life/WardrobePanel.tsx');
+  const { PlayerProfileDialogue } = await server.ssrLoadModule('/src/features/life/PlayerProfileDialogue.tsx');
   const { EnergyDisplay } = await server.ssrLoadModule('/src/features/life/EnergyDisplay.tsx');
   const { PlayerInfoCard } = await server.ssrLoadModule('/src/gameplay/PlayerInfoCard.tsx');
   const state = { energy: 50, coins: 500, gameTime: '2026-10-11T10:00:00.000Z', serverTime: '2026-10-11T08:00:00.000Z', clockRate: 2, appearance: { hair: 'brown', shirt: null, trousers: 'navy' }, ownedShirts: [] };
@@ -21,43 +20,7 @@ try {
     for (const error of [new Error('Network lost'), { status: 401 }, { status: 429 }, { status: 500 }]) assert.equal(isDefiniteRejection(error), false);
     for (const status of [400, 403, 404, 409, 422]) assert.equal(isDefiniteRejection({ status }), true);
   });
-  test('offline life menu displays saved values and disables all mutations', () => {
-    const html = renderToStaticMarkup(createElement(LifeMenu, { life: base, online: false }));
-    assert.match(html, /Energy: 50%/);
-    assert.match(html, /Balance: \$500/);
-    assert.match(html, /Consumed immediately/);
-    for (const control of html.matchAll(/<(button|select)\b[^>]*>/g)) assert.match(control[0], /disabled/);
-  });
-  test('life menu omits opening-hour schedules and appearance controls', () => {
-    const html = renderToStaticMarkup(createElement(LifeMenu, { life: base, online: true }));
-    assert.doesNotMatch(html, /Organizations|Workplaces|Store hours|Open ·|Closed ·/);
-    assert.doesNotMatch(html, /UTC/);
-    assert.doesNotMatch(html, /2×/);
-    assert.doesNotMatch(html, /Appearance|Wear |Change hair|Trousers/);
-  });
-  test('wardrobe keeps clothing and appearance changes in a separate panel', () => {
-    const html = renderToStaticMarkup(createElement(WardrobePanel, { life: base, online: true, onClose() {} }));
-    assert.match(html, /Wardrobe/);
-    assert.match(html, /Appearance/);
-    assert.match(html, /Hair/);
-    assert.match(html, /Trousers/);
-    assert.match(html, /You do not own any shirts yet/);
-  });
-  test('closed shops disable buying and sleep lives in the HUD', () => {
-    const html = renderToStaticMarkup(createElement(LifeMenu, { life: { ...base, time: new Date('2026-10-11T14:00:00.000Z') }, online: true }));
-    assert.doesNotMatch(html, /Closed|Open ·|Stores 08:00|Store hours/);
-    assert.match(html, /<button disabled="">Buy and consume/);
-    assert.doesNotMatch(html, /<button[^>]*>Sleep/);
-    assert.doesNotMatch(html, /Buy and wear/);
-  });
-  test('uncertain action blocks new purchases and exposes same-action retry', () => {
-    const retry = { path: 'purchase', body: { key: 'saved-key', itemIds: ['espresso'] } };
-    const html = renderToStaticMarkup(createElement(LifeMenu, { life: { ...base, retry }, online: true }));
-    assert.match(html, /without charging twice/);
-    assert.match(html, /<button>Retry previous action/);
-    assert.doesNotMatch(html, /<button[^>]*>Sleep/);
-  });
-  test('HUD energy is labelled, readable without color, and explains empty/low energy', () => {
+  test('energy is labelled, readable without color, and explains empty/low energy', () => {
     for (const energy of [0, 20, 100]) {
       const html = renderToStaticMarkup(createElement(EnergyDisplay, { energy }));
       assert.match(html, /role="progressbar"/);
@@ -80,18 +43,39 @@ try {
     }
     assert.match(renderToStaticMarkup(createElement(EnergyDisplay, { energy: 49, onSleep() {}, sleepDisabled: true })), /aria-disabled="true"/);
   });
-  test('player HUD distinguishes saved energy, loading, and free local practice', () => {
-    const props = { playerName: 'Learner', cityName: 'Maplewood', xp: 0, coins: 500 };
-    const saved = renderToStaticMarkup(createElement(PlayerInfoCard, { ...props, energy: 50, savedTime: new Date(state.gameTime) }));
-    assert.match(saved, /aria-valuenow="50"/);
+  test('player HUD card opens profile and keeps only a compact identity and clock', () => {
+    const props = { playerName: 'Learner', cityName: 'Maplewood', coins: 500, onOpenProfile() {} };
+    const saved = renderToStaticMarkup(createElement(PlayerInfoCard, { ...props, savedTime: new Date(state.gameTime) }));
+    assert.match(saved, /aria-label="Open Learner&#x27;s profile"/);
+    assert.match(saved, /Maplewood · \$500/);
+    assert.doesNotMatch(saved, /aria-valuenow|Experience|XP/);
     assert.doesNotMatch(saved, /UTC/);
     assert.doesNotMatch(saved, /2×|times real time/);
-    assert.doesNotMatch(saved, /No energy cost/);
-    const loading = renderToStaticMarkup(createElement(PlayerInfoCard, { ...props, savedTime: null }));
-    assert.match(loading, /Loading energy/);
-    const practice = renderToStaticMarkup(createElement(PlayerInfoCard, props));
-    assert.match(practice, /Local practice · No energy cost/);
-    assert.doesNotMatch(practice, /role="progressbar"/);
+  });
+  test('player profile shows sourced character status without wardrobe or shop ordering', () => {
+    const html = renderToStaticMarkup(createElement(PlayerProfileDialogue, {
+      playerName: 'Learner', cityName: 'Maplewood', xp: 42, coins: 500,
+      life: base, online: true, practice: false,
+      onClose() {},
+    }));
+    assert.match(html, /role="dialog" aria-modal="true" aria-label="Your character"/);
+    assert.match(html, /Your character/);
+    assert.match(html, /Learner/);
+    assert.match(html, /42 XP/);
+    assert.match(html, /\$500/);
+    assert.match(html, /aria-valuenow="50"/);
+    assert.doesNotMatch(html, /wardrobe|Appearance|Hair|Trousers/i);
+    assert.doesNotMatch(html, /Buy and consume|Drink \(\+|Café/);
+  });
+  test('player profile retains retry for an uncertain saved action', () => {
+    const retry = { path: 'sleep', body: { key: 'saved-key' } };
+    const html = renderToStaticMarkup(createElement(PlayerProfileDialogue, {
+      playerName: 'Learner', cityName: 'Maplewood', xp: 0, coins: 500,
+      life: { ...base, retry, error: 'The result is uncertain.' },
+      online: true, practice: false, onClose() {},
+    }));
+    assert.match(html, /role="alert"/);
+    assert.match(html, /Retry previous action/);
   });
 } finally { await server.close(); }
 

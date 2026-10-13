@@ -26,15 +26,12 @@ export interface OverlayButtonProps {
 export interface PlayerInfoCardProps {
   playerName: string;
   cityName: string;
-  xp: number;
   coins: number;
   visible?: boolean;
   timeZone?: string;
   savedTime?: Date | null;
   clockRate?: number;
-  energy?: number;
-  onSleep?: () => void;
-  sleepDisabled?: boolean;
+  onOpenProfile: () => void;
 }
 export interface DialogueMessageProps {
   portraitPosition?: string | undefined;

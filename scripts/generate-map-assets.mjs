@@ -8,7 +8,7 @@ const localAssetRoot = fileURLToPath(new URL('../local-assets/maps/', import.met
 // Package authored artwork byte-for-byte. Never substitute generated placeholders.
 async function mapAssets(mapId) {
   const backgrounds = {
-    loc_town_street: 'location_maplewood_street.png',
+    loc_town_street: 'location_maplewood_street_expanded.png',
     loc_cafe: 'location_cafe_interior.png',
     loc_corner_cafe: 'location_cafe_interior.png',
     loc_clothes: 'location_clothes_interior.png',

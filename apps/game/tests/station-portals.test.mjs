@@ -2,7 +2,14 @@ import assert from 'node:assert/strict';
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { canWalk, portalAt, STATION_PORTALS } from '../src/gameplay/station-navigation.ts';
+import * as navigation from '../src/gameplay/station-navigation.ts';
+const { canWalk, portalAt, STATION_PORTALS } = navigation;
+
+test('Town Street uses expanded world dimensions and clamps movement to its larger playable map', () => {
+  assert.deepEqual(navigation.STREET_MAP_SIZE, { width: 2304, height: 1536 });
+  assert.deepEqual(navigation.clampStreetPosition({ x: 2400, y: 20 }), { x: 2232, y: 165 });
+  assert.deepEqual(navigation.clampStreetPosition({ x: -20, y: 1550 }), { x: 72, y: 1477.5 });
+});
 
 test('each station portal is on a walkable part of the station map', () => {
   assert.deepEqual(STATION_PORTALS.map(({ id }) => id), ['cafe', 'clothes', 'street']);
@@ -21,6 +28,7 @@ test('map-only destination artwork is present and uses the station map dimension
     'location_cafe_interior.png',
     'location_clothes_interior.png',
     'location_maplewood_street.png',
+    'location_maplewood_street_expanded.png',
   ];
   for (const asset of assets) {
     const path = join(import.meta.dirname, '..', 'assets', 'locations', asset);

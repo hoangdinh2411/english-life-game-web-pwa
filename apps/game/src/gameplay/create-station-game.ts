@@ -5,7 +5,7 @@ import type { MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { loadPack, preparePack } from '../features/assets/phaser-pack';
-import { authorizeStreetExit, canWalk, findPath, movePlayer, movementDelta, nearestNpc, portalAt, STATION_NPCS, STATION_PORTALS } from './station-navigation';
+import { authorizeStreetExit, canWalk, clampStreetPosition, findPath, movePlayer, movementDelta, nearestNpc, portalAt, scaleStreetPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
 import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
@@ -26,7 +26,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let paused = false;
   let exitUnlocked = false;
   let blockedPortal: string | null = null;
-  let position: Point = { x: 768, y: activeLocation === 'street' ? 210 : 370 };
+  let position: Point = activeLocation === 'street' ? scaleStreetPoint({ x: 768, y: 210 }) : { x: 768, y: 370 };
   let destinationMapTarget: Point | null = null;
   let destination: Point | null = null;
   let route: Point[] = [];
@@ -98,7 +98,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.labels = [];
       this.npcActors = [];
       npcs = activeLocation === 'station' ? STATION_NPCS.map(npc => ({ ...npc })) : [];
-      this.add.image(0, 0, resources?.background ?? 'station').setOrigin(0);
+      const background = this.add.image(0, 0, resources?.background ?? 'station').setOrigin(0);
+      if (activeLocation === 'street') background.setScale(STREET_MAP_SCALE);
       this.marker = this.add.circle(0, 0, 16, 0xf6df9e, 0.5).setStrokeStyle(3, 0x426f61).setVisible(false);
       // Station animation frames stay bundled; destination definitions come from Storage.
       if (!currentPack) for (let row = 0; row < 4; row++) {
@@ -156,10 +157,13 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, shadow, label, elapsed: 0, idleFrame: '0-0', walkPrefix: `${npc.texture}-walk`, labelOffset: 108, clip: movePlayer });
       }
       for (const portal of this.portalsForLocation()) this.addPortalRing(portal);
-      if (activeLocation === 'street') this.add.text(1250, 318, 'CORNER CUP', {
-        fontFamily: 'sans-serif', fontSize: '26px', fontStyle: 'bold', color: '#fff7e8',
-        backgroundColor: '#315749', padding: { x: 14, y: 7 },
-      }).setOrigin(0.5).setDepth(1500);
+      if (activeLocation === 'street') {
+        const label = scaleStreetPoint({ x: 1250, y: 318 });
+        this.add.text(label.x, label.y, 'CORNER CUP', {
+          fontFamily: 'sans-serif', fontSize: '26px', fontStyle: 'bold', color: '#fff7e8',
+          backgroundColor: '#315749', padding: { x: 14, y: 7 },
+        }).setOrigin(0.5).setDepth(1500);
+      }
       if (activeLocation === 'corner_cafe') this.add.text(768, 147, 'CORNER CUP', {
         fontFamily: 'sans-serif', fontSize: '32px', fontStyle: 'bold', color: '#fff7e8',
         backgroundColor: '#315749', padding: { x: 18, y: 8 },
@@ -189,7 +193,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         this.cameras.main.setZoom(zoom);
         for (const label of this.labels) label.setFontSize(Math.round(13 / zoom));
       };
-      this.cameras.main.setBounds(0, 0, 1536, 1024).startFollow(this.player, false, 0.12, 0.12);
+      const mapSize = activeLocation === 'street' ? STREET_MAP_SIZE : { width: 1536, height: 1024 };
+      this.cameras.main.setBounds(0, 0, mapSize.width, mapSize.height).startFollow(this.player, false, 0.12, 0.12);
       resizeLabels();
       this.scale.on('resize', resizeLabels);
       this.events.once('shutdown', () => this.scale.off('resize', resizeLabels));
@@ -206,8 +211,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     private portalsForLocation(): StationPortal[] {
       if (activeLocation === 'station') return STATION_PORTALS;
       if (activeLocation === 'street') return [
-        { id: 'corner_cafe', label: 'Corner Cup Café', x: 1260, y: 548 },
-        { id: 'station', label: 'Train Station', x: 768, y: 130 },
+        { id: 'corner_cafe', label: 'Corner Cup Café', ...scaleStreetPoint({ x: 1260, y: 548 }) },
+        { id: 'station', label: 'Train Station', ...scaleStreetPoint({ x: 768, y: 130 }) },
       ];
       const destination: MapLocation = this.previousLocation === 'street' ? 'street' : 'station';
       return [{ id: destination, label: destination === 'street' ? 'Town Street' : 'Train Station', x: 768, y: 930 }];
@@ -241,7 +246,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (location === 'station') {
         const portal = STATION_PORTALS.find((item) => item.id === this.previousLocation);
         position = portal ? { x: portal.x + (portal.id === 'cafe' ? 70 : portal.id === 'clothes' ? -70 : 0), y: portal.id === 'street' ? 850 : 750 } : { x: 768, y: 370 };
-      } else if (location === 'street') position = this.previousLocation === 'street' ? { x: 1260, y: 600 } : { x: 768, y: 210 };
+      } else if (location === 'street') position = scaleStreetPoint(this.previousLocation === 'street' ? { x: 1260, y: 600 } : { x: 768, y: 210 });
       else position = { x: 768, y: 860 };
       callbacks.onLocationChange(LOCATION_NAMES[location]);
       this.worldReady = false;
@@ -282,7 +287,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const movement = movementDelta({ x: dx, y: dy }, 215 * Math.min(delta, 50) / 1000, Boolean(x || y));
       const previous = position;
       position = activeLocation === 'street'
-        ? { x: Math.max(48, Math.min(1488, position.x + movement.x)), y: Math.max(110, Math.min(985, position.y + movement.y)) }
+        ? clampStreetPosition({ x: position.x + movement.x, y: position.y + movement.y })
         : moveInShop(activeLocation, position, movement, npcs);
       const moved = Math.hypot(position.x - previous.x, position.y - previous.y) > 0.01;
       this.player.setPosition(position.x, position.y).setDepth(position.y);

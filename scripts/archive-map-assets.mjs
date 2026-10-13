@@ -34,7 +34,7 @@ const filesByMap = {
   loc_cafe: ['locations/location_cafe_interior.png'],
   loc_corner_cafe: ['locations/location_cafe_interior.png'],
   loc_clothes: ['locations/location_clothes_interior.png'],
-  loc_town_street: ['locations/location_maplewood_street.png'],
+  loc_town_street: ['locations/location_maplewood_street.png', 'locations/location_maplewood_street_expanded.png'],
   loc_tax_office: [
     'locations/location_tax_office_exterior_labeled.png',
     'locations/location_tax_office_interior_labeled.png',

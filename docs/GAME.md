@@ -24,14 +24,16 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   connection are implemented. Typed receptionist replies use the server;
   entering Town Street waits for the saved ticket use and restores the saved
   location on reload.
-- Maplewood Town Street includes Corner Cup Café, a separately named second
-  café that reuses the seller/catalog flow and has an assistant and three
-  customer NPCs.
-- Shop and station NPCs have individual names. Store interiors can be entered
-  only from 08:00 through 13:59 game time; closed entrances show the owner's
-  dialogue with opening hours
-  with the opening hours. The game menu keeps wardrobe controls in a separate
-  panel and does not list opening-hour schedules.
+- Maplewood Town Street is a larger, camera-following plaza map with connected
+  paths and added library, pharmacy, florist, post office, bakery and house
+  buildings around its original plaza. It includes Corner Cup Café, a separately
+  named second café that reuses the seller/catalog flow and has an assistant
+  and three customer NPCs.
+- Shop and station NPCs have individual names. Venue hours use game time:
+  organizations 08:00–16:00, stores 08:00–14:00 and workplaces 07:00–17:00.
+  The current playable map gates its store interiors; closed entrances show the
+  owner's dialogue with opening hours. The pause menu does not list
+  opening-hour schedules.
 - The existing Phaser **train station** is playable local practice with a
   receptionist and two passengers, sample conversations, Coach feedback,
   movement/portals, recorded audio, and optional browser speech-to-text. Its
@@ -39,15 +41,13 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   unlocked by that conversation—not by a bus ticket. This is **legacy practice
   behavior**, not the new opening quest. It works without an account and gives
   **no XP, coins, ticket ownership or saved progress**.
-- The signed-in game menu supports immediate café consumption, shirt purchases,
-  separate hair/shirt/trouser colors. The battery HUD has an icon-only Sleep
-  button, available only below 50% energy (enforced by the server). Hover/focus
-  explains the action; on touch screens, tap once for help and again to sleep.
-  Sleep advances eight game hours, fades out/in over about four seconds, then
-  displays the saved energy with a gradual refill; reduced motion skips
-  animation. Energy, wallet, wardrobe and the independent 2× game clock are
-  saved on the server. Local practice remains free and does not change saved
-  life.
+- Signed-in players open their character profile by selecting the player card
+  in the game HUD. The profile shows saved XP, wallet and energy; the pause menu
+  contains only game controls. Café orders stay in seller conversations.
+  Sleep is available below 50% energy and advances eight game hours with the
+  existing fade/refill animation; reduced motion skips the animation. Energy,
+  wallet and the independent 2× game clock are saved on the server. Local
+  practice remains free and does not change saved life.
 - Not in this MVP slice: native apps, multiplayer, subscriptions, general AI
   chat, deep NPC memory.
 
