@@ -70,6 +70,8 @@ test@gmail.com / 12341234.
       preservation verified with the existing account.
 - [x] **T24 — Corner Cup:** Town Street entrance to the new café, seller/menu,
       assistant and three named customer NPCs with conversation access.
+- [x] **T25 — Café product artwork:** Generated individual images for all ten
+      café products, wired them into the catalog and confirmed them in the menu.
 
 ## NOW
 
@@ -109,8 +111,6 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
-- [ ] **T25 — Café product artwork.** Generate and add an individual image for
-      each of the ten café products, then verify the images in the menu.
 - [x] **T21 — Game clock speed and display.** Make the clock speed one config
       value (now 2×; the owner approves the new value, test with 6×). Changing
       the speed must not make saved clocks jump: store the game time, the real
