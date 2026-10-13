@@ -7,7 +7,7 @@ import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { loadPack, preparePack } from '../features/assets/phaser-pack';
 import { authorizeStreetExit, canWalk, findPath, movePlayer, movementDelta, nearestNpc, portalAt, STATION_NPCS, STATION_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
-import { moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
+import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
 import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
 const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Maplewood · Train Station', cafe: 'Maplewood · Café', corner_cafe: 'Maplewood · Corner Cup Café', clothes: 'Maplewood · Clothes Shop', street: 'Maplewood · Town Street' };
@@ -149,7 +149,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           route = findPath(position, target); destination = route.shift() ?? null;
           this.marker.setPosition(target.x, target.y).setVisible(true);
         });
-        const name = npc.texture === 'backpack' ? 'Backpacker' : npc.texture === 'suitcase' ? 'Traveler' : 'Receptionist';
+        const name = npc.name;
         const needsTalk = npcNeedsTalk(npc.id);
         const label = this.add.text(npc.x, npc.y - 108, needsTalk ? `! ${name}` : name, { fontFamily: 'sans-serif', fontSize: '24px', fontStyle: needsTalk ? 'bold' : 'normal', color: '#263630', backgroundColor: needsTalk ? '#ffe08a' : '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
         this.labels.push(label);
@@ -214,6 +214,19 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     }
     private enterLocation(location: MapLocation) {
       if (this.transitionPending) return;
+      if (callbacks.getGameTime && !canEnterLocation(location, callbacks.getGameTime())) {
+        const portal = portalAt(position, this.portalsForLocation());
+        if (portal) position = { x: portal.x, y: portal.y + 55 };
+        destinationMapTarget = null;
+        route = [];
+        selectedNpc = null;
+        this.marker?.setVisible(false);
+        this.player?.setPosition(position.x, position.y).anims.stop();
+        if (location === 'cafe' || location === 'corner_cafe' || location === 'clothes') {
+          callbacks.onStoreClosed?.(location);
+        }
+        return;
+      }
       if (callbacks.practice && location !== 'station') {
         callbacks.onError('Local practice stays in the station. Sign in to visit other maps.');
         position = { x: 768, y: 370 };

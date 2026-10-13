@@ -5,12 +5,12 @@ import { useWindowDimensions } from '../hooks/use-window-size';
 import type { GameCanvasProps, StationGame } from '../types/gameplay/world';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { STATION_NPCS } from './station-navigation';
-export default function GameCanvas({ paused, exitUnlocked, onExitBlocked, onTalk, onReadyChange, onLocationChange, initialLocation = 'station', onEnterStreet, appearance }: GameCanvasProps) {
+export default function GameCanvas({ paused, exitUnlocked, onExitBlocked, onTalk, onReadyChange, onLocationChange, initialLocation = 'station', onEnterStreet, appearance, getGameTime, onStoreClosed }: GameCanvasProps) {
   const { width } = useWindowDimensions();
   const parent = useRef<HTMLDivElement>(null);
   const game = useRef<StationGame | null>(null);
-  const callbacks = useRef({ onTalk, onLocationChange, onExitBlocked, onReadyChange, onEnterStreet });
-  callbacks.current = { onTalk, onLocationChange, onExitBlocked, onReadyChange, onEnterStreet };
+  const callbacks = useRef({ onTalk, onLocationChange, onExitBlocked, onReadyChange, onEnterStreet, getGameTime, onStoreClosed });
+  callbacks.current = { onTalk, onLocationChange, onExitBlocked, onReadyChange, onEnterStreet, getGameTime, onStoreClosed };
   const pausedRef = useRef(paused); pausedRef.current = paused;
   const exitRef = useRef(exitUnlocked); exitRef.current = exitUnlocked;
   const appearanceRef = useRef(appearance); appearanceRef.current = appearance;
@@ -39,6 +39,10 @@ export default function GameCanvas({ paused, exitUnlocked, onExitBlocked, onTalk
         practice: !serverExit,
         onProgress: (value) => { if (!cancelled) setProgress(value); },
         ...(serverExit ? { onEnterStreet: () => callbacks.current.onEnterStreet?.() ?? Promise.resolve(false) } : {}),
+        ...(serverExit ? {
+          getGameTime: () => callbacks.current.getGameTime?.() ?? null,
+          onStoreClosed: (location) => callbacks.current.onStoreClosed?.(location),
+        } : {}),
         onNearby: (id) => { if (!cancelled) setNearby(id); },
         onTalk: (id) => { if (!cancelled) callbacks.current.onTalk(id); },
         onReady: () => { if (!cancelled) { setReady(true); callbacks.current.onReadyChange(true); } },

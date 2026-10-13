@@ -1,9 +1,9 @@
 import type { Bounds, Point, StationNpc, StationPortal } from '../types/gameplay/world';
 
 export const STATION_NPCS: StationNpc[] = [
-  { id: 'npc_passenger_backpack', name: 'Backpack passenger', texture: 'backpack', x: 592, y: 380 },
-  { id: 'npc_passenger_suitcase', name: 'Suitcase passenger', texture: 'suitcase', x: 950, y: 380 },
-  { id: 'npc_station_information', name: 'Receptionist', texture: 'receptionist', x: 850, y: 615 },
+  { id: 'npc_passenger_backpack', name: 'Peter', texture: 'backpack', x: 592, y: 380 },
+  { id: 'npc_passenger_suitcase', name: 'Emma', texture: 'suitcase', x: 950, y: 380 },
+  { id: 'npc_station_information', name: 'Ruth', texture: 'receptionist', x: 850, y: 615 },
 ];
 export const STATION_PORTALS: StationPortal[] = [
   { id: 'cafe', label: 'Café', x: 420, y: 750 },

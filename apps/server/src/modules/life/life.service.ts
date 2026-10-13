@@ -72,7 +72,7 @@ export class LifeService {
   purchase(userId: string, request: PurchaseRequest): Promise<LifeState> {
     const itemIds = [...request.itemIds].sort();
     return this.action(userId, request.key, 'purchase', { itemIds }, async (client, state) => {
-      if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException(`Stores open from ${venueHoursLabel('store')} UTC game time`);
+      if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException(`Stores open from ${venueHoursLabel('store')}`);
       const result = await client.query<ShopItem>('SELECT id,name,kind,price,shop,color FROM shop_items WHERE id=ANY($1::text[])', [itemIds]);
       const items = result.rows;
       if (items.length !== itemIds.length) throw new BadRequestException('Unknown shop item');
@@ -126,7 +126,7 @@ export class LifeService {
     quantity: number, orderId: string): Promise<boolean> {
     await this.repository.lock(client, userId);
     const state = await this.repository.state(client, userId);
-    if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException(`Stores open from ${venueHoursLabel('store')} UTC game time`);
+    if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException(`Stores open from ${venueHoursLabel('store')}`);
     const total = item.price * quantity;
     if (state.coins < total) return false;
     await this.economy.spendInTransaction(client, userId, total, 'shop_purchase', `seller_order:${orderId}`, orderId);
@@ -142,7 +142,7 @@ export class LifeService {
     if (item.shop !== 'clothes' || item.kind !== 'clothing' || !item.color) {
       throw new BadRequestException('Choose a shirt from the clothes shop');
     }
-    if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException(`Stores open from ${venueHoursLabel('store')} UTC game time`);
+    if (!isVenueOpen('store', new Date(state.gameTime))) throw new ConflictException(`Stores open from ${venueHoursLabel('store')}`);
     if (state.ownedShirts.includes(item.id)) throw new ConflictException('You already own this shirt');
     if (state.coins < item.price) return false;
     await this.economy.spendInTransaction(client, userId, item.price, 'shop_purchase', `clothes_order:${orderId}`, orderId);

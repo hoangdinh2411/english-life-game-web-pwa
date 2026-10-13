@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isVenueOpen, venueHoursLabel, type Appearance, type VenueKind } from "@life-abroad/shared";
+import { isVenueOpen } from "@life-abroad/shared";
 import type { LifeControls } from "./useLife";
 export function LifeMenu({
   life,
@@ -16,7 +16,6 @@ export function LifeMenu({
   const formattedTime = life.time ? new Intl.DateTimeFormat(undefined, {
     timeZone: "UTC", weekday: "long", hour: "2-digit", minute: "2-digit",
   }).format(life.time) : "Loading";
-  const hours = (venue: VenueKind) => venueHoursLabel(venue);
   const selected = life.catalog.filter(
     (item) => item.id === drink || item.id === food,
   );
@@ -24,15 +23,6 @@ export function LifeMenu({
     void life.act({
       path: "purchase",
       body: { key: crypto.randomUUID(), itemIds },
-    });
-  const customize = (change: {
-    hair?: Appearance["hair"];
-    trousers?: Appearance["trousers"];
-    shirtItemId?: string;
-  }) =>
-    void life.act({
-      path: "appearance",
-      body: { key: crypto.randomUUID(), ...change },
     });
   return (
     <section
@@ -54,14 +44,9 @@ export function LifeMenu({
             Energy: {state.energy}% · Balance: ${state.coins}
           </p>
           <p>
-            Game time: {formattedTime} UTC · {state.clockRate}×
-          </p>
-          <p>
-            Organizations {hours("organization")} · Stores {hours("store")} ·
-            Workplaces {hours("workplace")}
+            Game time: {formattedTime}
           </p>
           <h3>Café</h3>
-          <p>{open ? `Open · ${hours("store")}` : `Closed · Store hours: ${hours("store")}`}</p>
           <label>
             Drink (+20 points)
             <select
@@ -119,61 +104,7 @@ export function LifeMenu({
             Buy and consume
           </button>
           <h3>Clothes shop</h3>
-          <p>{open ? `Open · ${hours("store")}` : `Closed · Store hours: ${hours("store")}`}</p>
           <p>Choose a shirt in a conversation with the clothes seller.</p>
-          <h3>My items</h3>
-          {state.ownedShirts.length ? (
-            <ul className="m-0 list-disc pl-5">
-              {state.ownedShirts.map((id) => {
-                const item = life.catalog.find((candidate) => candidate.id === id);
-                return item ? <li key={id}>{item.name} · 1</li> : null;
-              })}
-            </ul>
-          ) : <p>You do not own any shirts yet.</p>}
-          <h3>Appearance</h3>
-          <label>
-            Hair
-            <select
-              disabled={disabled}
-              value={state.appearance.hair}
-              onChange={(event) =>
-                customize({ hair: event.target.value as Appearance["hair"] })
-              }
-            >
-              {(["brown", "black", "blond", "blue"] as const).map((color) => (
-                <option key={color}>{color}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Trousers
-            <select
-              disabled={disabled}
-              value={state.appearance.trousers}
-              onChange={(event) =>
-                customize({
-                  trousers: event.target.value as Appearance["trousers"],
-                })
-              }
-            >
-              {(["navy", "charcoal", "brown"] as const).map((color) => (
-                <option key={color}>{color}</option>
-              ))}
-            </select>
-          </label>
-          <div className="life-options grid gap-2 [grid-template-columns:repeat(auto-fit,_minmax(min(100%,_180px),_1fr))]">
-            {life.catalog
-              .filter((item) => state.ownedShirts.includes(item.id))
-              .map((item) => (
-                <button
-                  key={item.id}
-                  disabled={disabled}
-                  onClick={() => customize({ shirtItemId: item.id })}
-                >
-                  Wear {item.name}
-                </button>
-              ))}
-          </div>
         </>
       )}
       {life.retry ? (

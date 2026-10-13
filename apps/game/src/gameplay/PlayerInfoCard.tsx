@@ -38,18 +38,11 @@ export function PlayerInfoCard({
     hour: "2-digit",
     minute: "2-digit",
   }).format(gameTime);
-  const zoneLabel =
-    new Intl.DateTimeFormat(undefined, {
-      timeZone: resolvedTimeZone,
-      timeZoneName: "short",
-    })
-      .formatToParts(gameTime)
-      .find((part) => part.type === "timeZoneName")?.value ?? "";
   return (
     <aside
       hidden={!visible}
       className="player-card w-[min(320px,_100%)] min-w-0 flex flex-col items-start gap-1 [padding:8px_10px] bg-[rgba(255,_248,_233,_0.97)] [border:1px_solid_#aa8b57] rounded-[14px] [&[hidden]]:hidden [&_img]:shrink-0 [&_img]:[border:1px_solid_#d7c49b] [&_img]:rounded-[50%] [&_img]:bg-[#f3e4c2] [@media(max-width:479px)]:gap-2 [@media(max-width:479px)]:p-2"
-      aria-label={`Player ${playerName}, ${cityName}, ${coins} dollars, ${xp} XP. Game time ${timeLabel} ${zoneLabel}, running at ${rate} times real time.`}
+      aria-label={`Player ${playerName}, ${cityName}, ${coins} dollars, ${xp} XP. Game time ${timeLabel}.`}
     >
       <div className="player-details flex-1 min-w-0 flex [gap:4px_8px] text-[12px] text-[#52644f] tabular-nums [@media(max-width:479px)]:flex [@media(max-width:479px)]:flex-wrap [@media(max-width:479px)]:[gap:2px_8px] [@media(max-width:479px)]:[&_>_strong]:[flex-basis:100%] [@media(max-width:479px)]:[&_>_span:nth-child(2)]:[flex-basis:100%] [@media(max-width:479px)]:[&_>_strong]:text-[14px]">
         <img
@@ -68,8 +61,8 @@ export function PlayerInfoCard({
             $ {coins}
           </span>
         </div>
-        <span className="min-w-0 [@media(max-width:479px)]:[flex-basis:100%]" aria-label={`Game time ${timeLabel} ${zoneLabel} at ${rate} times real time`}>
-          ◷ {timeLabel} {zoneLabel} · {rate}×
+        <span className="min-w-0 [@media(max-width:479px)]:[flex-basis:100%]" aria-label={`Game time ${timeLabel}`}>
+          ◷ {timeLabel}
         </span>
       </div>
       {energy !== undefined || savedTime !== undefined ? (

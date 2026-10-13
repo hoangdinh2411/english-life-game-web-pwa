@@ -27,6 +27,11 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
 - Maplewood Town Street includes Corner Cup Café, a separately named second
   café that reuses the seller/catalog flow and has an assistant and three
   customer NPCs.
+- Shop and station NPCs have individual names. Store interiors can be entered
+  only from 08:00 through 13:59 game time; closed entrances show the owner's
+  dialogue with opening hours
+  with the opening hours. The game menu keeps wardrobe controls in a separate
+  panel and does not list opening-hour schedules.
 - The existing Phaser **train station** is playable local practice with a
   receptionist and two passengers, sample conversations, Coach feedback,
   movement/portals, recorded audio, and optional browser speech-to-text. Its
@@ -40,7 +45,7 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   explains the action; on touch screens, tap once for help and again to sleep.
   Sleep advances eight game hours, fades out/in over about four seconds, then
   displays the saved energy with a gradual refill; reduced motion skips
-  animation. Energy, wallet, wardrobe and the independent 2× UTC game clock are
+  animation. Energy, wallet, wardrobe and the independent 2× game clock are
   saved on the server. Local practice remains free and does not change saved
   life.
 - Not in this MVP slice: native apps, multiplayer, subscriptions, general AI

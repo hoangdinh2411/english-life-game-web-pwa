@@ -49,7 +49,7 @@ test@gmail.com / 12341234.
 - [x] **T16 — Shop catalog:** 5 drinks, 5 snacks, 4 $30 shirts; seeded and read
       from the database.
 - [x] **Life gameplay extension:** energy, sleep (+8 hours, below 50% only),
-      saved 2× UTC clock, café purchases, shirt ownership/equipping, opening
+      saved 2× game clock, café purchases, shirt ownership/equipping, opening
       hours for stores, energy HUD. Tests and 320/375/1024px checks passed.
 - [x] **T17 — Order and pay conversation (café seller):** saved orders, quantity
       1–3, price/change/cancel/unknown item, atomic payment, replay,
@@ -72,6 +72,10 @@ test@gmail.com / 12341234.
       assistant and three named customer NPCs with conversation access.
 - [x] **T25 — Café product artwork:** Generated individual images for all ten
       café products, wired them into the catalog and confirmed them in the menu.
+- [x] **T26 — Named NPCs and shop entry:** Named shop and station actors;
+      removed hours/style controls from the Life menu; moved wardrobe to its own
+      panel and gated closed-store entry with an hours dialogue. Tests and the
+      existing-account menu/wardrobe browser check passed.
 
 ## NOW
 
@@ -104,7 +108,7 @@ test@gmail.com / 12341234.
   inventory; payment and effects must be atomic.
 - Sleep instantly advances the player's saved game clock by 8 hours and restores
   energy to 100. Opening hours use game time: organizations 08:00–16:00, stores
-  08:00–20:00, workplaces 07:00–17:00.
+  08:00–14:00, workplaces 07:00–17:00.
 - Appearance uses separate hair, shirt and trouser colors, saved with the
   character. The first shop catalog has blue/green/red/yellow shirts at $30
   each.
@@ -118,7 +122,7 @@ test@gmail.com / 12341234.
       function to check opening hours for stores, organizations and workplaces.
       Show the game time (HH:MM and weekday) in the HUD, and say the opening
       hours when a place is closed. Done when: tests cover a speed change,
-      sleep, a reload, and the store boundaries (07:59, 08:00, 19:59, 20:00);
+      sleep, a reload, and the store boundaries (07:59, 08:00, 13:59, 14:00);
       browser check at 320/375/1024px.
 - [x] **T22 — Order history (all shops except clothes).** Save every completed
       purchase in one shared table: user, shop, items with quantity, price at

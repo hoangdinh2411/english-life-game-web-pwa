@@ -20,6 +20,7 @@ export interface StationPortal extends Point {
 }
 export type Direction = 'left' | 'right' | 'up' | 'down';
 export type MapLocation = 'station' | 'cafe' | 'corner_cafe' | 'clothes' | 'street';
+export type StoreLocation = Extract<MapLocation, 'cafe' | 'corner_cafe' | 'clothes'>;
 export interface StationCallbacks {
   appearance?: Appearance | undefined;
   practice?: boolean;
@@ -31,6 +32,8 @@ export interface StationCallbacks {
   onReady: () => void;
   onLocationChange: (location: string) => void;
   onError: (message: string) => void;
+  getGameTime?: () => Date | null;
+  onStoreClosed?: (location: StoreLocation) => void;
   onExitBlocked: () => void;
 }
 export interface StationGame {
@@ -50,4 +53,6 @@ export interface GameCanvasProps {
   onTalk: (id: string) => void;
   onReadyChange: (ready: boolean) => void;
   onLocationChange: (location: string) => void;
+  getGameTime?: () => Date | null;
+  onStoreClosed?: (location: StoreLocation) => void;
 }

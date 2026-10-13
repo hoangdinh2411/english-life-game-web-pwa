@@ -258,7 +258,7 @@ shop companion scripts; the first coffee quest remains attached to Mia.
 
 - Protected `GET /life` returns `{ energy, coins, gameTime, serverTime, clockRate, appearance, ownedShirts }`.
   State initializes lazily for a character at 100 energy and 08:00 on game day 2000-01-01.
-  Its UTC clock advances at the configured rate (2× by default), including time
+  Its game clock advances at the configured rate (2× by default), including time
   away from the app. The server persists game time, real-time anchor and rate;
   changing the configured rate rebases the clock without a jump. Browser
   wall-clock changes cannot mutate saved time.

@@ -1,4 +1,10 @@
 import type { Bounds, MapLocation, Point } from '../../types/gameplay/world';
+import { isVenueOpen } from '@life-abroad/shared';
+
+const storeLocations: readonly MapLocation[] = ['cafe', 'corner_cafe', 'clothes'];
+export function canEnterLocation(location: MapLocation, gameTime: Date | null): boolean {
+  return !storeLocations.includes(location) || (gameTime !== null && isVenueOpen('store', gameTime));
+}
 
 // Feet coordinates, measured against the authored 1536×1024 interiors.
 const furniture: Record<'cafe' | 'clothes', Bounds[]> = {

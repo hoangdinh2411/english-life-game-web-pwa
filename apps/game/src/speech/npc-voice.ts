@@ -12,7 +12,7 @@ export const npcVoice: Record<StationSpeaker | Conversation['npcId'], VoiceGende
   npc_cafe_customer: 'female',
   npc_corner_cup_assistant: 'male',
   npc_corner_cup_customer_1: 'female',
-  npc_corner_cup_customer_2: 'male',
+  npc_corner_cup_customer_2: 'female',
   npc_corner_cup_customer_3: 'female',
   npc_clothes_seller: 'male',
   npc_clothes_assistant: 'male',

@@ -38,7 +38,7 @@ export function SavedConversation({ state, sound, online, send, retry, shopNpc, 
   return <>
     <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 overflow-auto pr-1 [@media(max-height:480px)]:h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
       {state.conversation?.messages.map((message) => <DialogueMessage key={message.id}
-        name={message.sender === 'player' ? 'You' : shopNpc?.name ?? 'Receptionist'} text={message.text}
+        name={message.sender === 'player' ? 'You' : shopNpc?.name ?? 'Ruth'} text={message.text}
         player={message.sender === 'player'} portrait={message.sender === 'player' ? playerPortrait : shopNpc?.portrait ?? npcPortraits.npc_station_information}
         portraitPosition={message.sender === 'npc' ? shopNpc?.portraitPosition : undefined}
         onReplay={() => voice.listen(message.text)} replayDisabled={!sound || !voice.supported || state.pending || speech.listening} />)}

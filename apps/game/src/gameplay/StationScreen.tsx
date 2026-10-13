@@ -18,6 +18,9 @@ import { usePwa } from "../pwa/PwaProvider";
 import { LifeMenu } from "../features/life/LifeMenu";
 import { ShopConversation } from "../features/shops/ShopConversation";
 import { isShopNpc, type ShopNpcId } from "../features/shops/shop-npcs";
+import { WardrobePanel } from "../features/life/WardrobePanel";
+import { StoreClosedDialogue } from "../features/shops/StoreClosedDialogue";
+import type { StoreLocation } from "../types/gameplay/world";
 
 const TUTORIAL_KEY = "movementTutorialSeen";
 
@@ -51,6 +54,8 @@ export default function StationScreen({
   const [stationReady, setStationReady] = useState(false);
   const [location, setLocation] = useState("Maplewood · Train Station");
   const [menu, setMenu] = useState(false);
+  const [wardrobe, setWardrobe] = useState(false);
+  const [closedStore, setClosedStore] = useState<StoreLocation | null>(null);
   const [goals, setGoals] = useState(false);
   const [sound, setSound] = useState(true);
   const [exitUnlocked, setExitUnlocked] = useState(false);
@@ -62,6 +67,8 @@ export default function StationScreen({
     npcId !== null ||
     tutorial ||
     menu ||
+    wardrobe ||
+    closedStore !== null ||
     goals ||
     exitReminder ||
     Boolean(arrival?.pending || arrival?.error);
@@ -88,6 +95,10 @@ export default function StationScreen({
         onExitBlocked={() => setExitReminder(true)}
         onReadyChange={setStationReady}
         onLocationChange={setLocation}
+        {...(!practice && life ? {
+          getGameTime: () => life.time,
+          onStoreClosed: (store) => setClosedStore(store),
+        } : {})}
         paused={
           !stationReady ||
           overlayOpen ||
@@ -192,7 +203,17 @@ export default function StationScreen({
           )}
         </DialogueFrame>
       ) : null}
-      {!npcId && !tutorial && !goals ? arrival?.statusPanel : null}
+      {!npcId && !tutorial && !goals && closedStore === null ? arrival?.statusPanel : null}
+      {closedStore ? (
+        <StoreClosedDialogue
+          location={closedStore}
+          gameTimeAvailable={Boolean(life?.time)}
+          onReturn={() => setClosedStore(null)}
+        />
+      ) : null}
+      {wardrobe && life ? (
+        <WardrobePanel life={life} online={arrival?.online ?? pwa.online} onClose={() => setWardrobe(false)} />
+      ) : null}
       {tutorial && stationReady ? (
         <TutorialDialogue
           playerName={playerName}
@@ -214,7 +235,7 @@ export default function StationScreen({
       ) : npcId === "npc_station_information" && arrival ? (
         <DialogueFrame>
           <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0">
-            <h2>Receptionist</h2>
+            <h2>Ruth</h2>
             <GameButton
               label="Close"
               onClick={() => setNpcId(null)}
@@ -289,6 +310,9 @@ export default function StationScreen({
               life={life}
               online={arrival?.online ?? pwa.online}
             />
+          ) : null}
+          {!practice && life ? (
+            <GameButton label="Open wardrobe" onClick={() => { setMenu(false); setWardrobe(true); }} />
           ) : null}
           <GameButton
             label="Movement tutorial"

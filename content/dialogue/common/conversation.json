@@ -11,7 +11,7 @@
     {
       "id": "global_store_closed",
       "text": {
-        "default": "This shop is closed. Stores are open from {hours} UTC game time. Please come back then."
+        "default": "This shop is closed. Stores are open from {hours}. Please come back then."
       }
     },
     {

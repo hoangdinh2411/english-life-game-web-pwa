@@ -1,7 +1,7 @@
 [
   {
     "id": "npc_receptionist",
-    "name": "Station Receptionist",
+    "name": "Ruth",
     "role": "station_receptionist",
     "personality": "cheerful",
     "speakingLevel": "A1",
@@ -37,7 +37,7 @@
   },
   {
     "id": "npc_cafe_waiter",
-    "name": "Caf\u00e9 waiter",
+    "name": "Daniel",
     "role": "shop_companion",
     "personality": "cheerful",
     "speakingLevel": "A1",
@@ -46,7 +46,7 @@
   },
   {
     "id": "npc_cafe_customer",
-    "name": "Caf\u00e9 customer",
+    "name": "Olivia",
     "role": "shop_companion",
     "personality": "cheerful",
     "speakingLevel": "A1",
@@ -55,7 +55,7 @@
   },
   {
     "id": "npc_corner_cup_seller",
-    "name": "Corner Cup seller",
+    "name": "Elena",
     "role": "barista",
     "personality": "cheerful",
     "speakingLevel": "A1",
@@ -64,7 +64,7 @@
   },
   {
     "id": "npc_corner_cup_assistant",
-    "name": "Corner Cup assistant",
+    "name": "Samuel",
     "role": "shop_companion",
     "personality": "cheerful",
     "speakingLevel": "A1",
@@ -82,7 +82,7 @@
   },
   {
     "id": "npc_corner_cup_customer_2",
-    "name": "Leo",
+    "name": "Leah",
     "role": "shop_companion",
     "personality": "serious",
     "speakingLevel": "A1",
@@ -100,7 +100,7 @@
   },
   {
     "id": "npc_clothes_seller",
-    "name": "Clothes seller",
+    "name": "Ravi",
     "role": "shop_companion",
     "personality": "cheerful",
     "speakingLevel": "A1",
@@ -109,7 +109,7 @@
   },
   {
     "id": "npc_clothes_assistant",
-    "name": "Shop assistant",
+    "name": "Alex",
     "role": "shop_companion",
     "personality": "cheerful",
     "speakingLevel": "A1",
@@ -118,7 +118,7 @@
   },
   {
     "id": "npc_clothes_customer",
-    "name": "Shop customer",
+    "name": "Nora",
     "role": "shop_companion",
     "personality": "cheerful",
     "speakingLevel": "A1",

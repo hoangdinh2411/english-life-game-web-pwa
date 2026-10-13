@@ -18,7 +18,7 @@ export const appearanceSchema = z.object({
   trousers: z.enum(['navy', 'charcoal', 'brown']),
 }).strict();
 export type Appearance = z.infer<typeof appearanceSchema>;
-export const VENUE_HOURS = { organization: [8, 16], store: [8, 20], workplace: [7, 17] } as const;
+export const VENUE_HOURS = { organization: [8, 16], store: [8, 14], workplace: [7, 17] } as const;
 export type VenueKind = keyof typeof VENUE_HOURS;
 export function isVenueOpen(kind: VenueKind, time: Date): boolean {
   const hour = time.getUTCHours();

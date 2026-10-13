@@ -10,9 +10,9 @@ test('life rules restore approved energy and enforce exact opening boundaries', 
   assert.equal(life.restoredEnergy(90, ['drink']), 100);
   assert.equal(life.isVenueOpen('store', new Date('2000-01-01T07:59:00Z')), false);
   assert.equal(life.isVenueOpen('store', new Date('2000-01-01T08:00:00Z')), true);
-  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T19:59:00Z')), true);
-  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T20:00:00Z')), false);
-  assert.equal(life.venueHoursLabel('store'), '08:00–20:00');
+  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T13:59:00Z')), true);
+  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T14:00:00Z')), false);
+  assert.equal(life.venueHoursLabel('store'), '08:00–14:00');
   assert.equal(life.isVenueOpen('organization', new Date('2000-01-01T16:00:00Z')), false);
   assert.equal(life.isVenueOpen('workplace', new Date('2000-01-01T07:00:00Z')), true);
 });
