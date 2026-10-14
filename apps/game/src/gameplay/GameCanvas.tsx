@@ -1,21 +1,19 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { GameButton } from './GameButton';
-import { useWindowDimensions } from '../hooks/use-window-size';
-import type { GameCanvasProps, StationGame } from '../types/gameplay/world';
-import { SHOP_NPCS } from '../features/shops/shop-npcs';
-import { STATION_NPCS } from './station-navigation';
-export default function GameCanvas({ paused, exitUnlocked, onExitBlocked, onTalk, onReadyChange, onLocationChange, initialLocation = 'station', onEnterStreet, appearance, getGameTime, onStoreClosed }: GameCanvasProps) {
-  const { width } = useWindowDimensions();
+import type { GameCanvasProps, NpcTalkPrompt, StationGame } from '../types/gameplay/world';
+export default function GameCanvas({ paused, worldPaused = paused, conversationNpcId = null, exitUnlocked, onExitBlocked, onTalk, onReadyChange, onLocationChange, initialLocation = 'station', onEnterStreet, appearance, getGameTime, onStoreClosed }: GameCanvasProps) {
   const parent = useRef<HTMLDivElement>(null);
   const game = useRef<StationGame | null>(null);
   const callbacks = useRef({ onTalk, onLocationChange, onExitBlocked, onReadyChange, onEnterStreet, getGameTime, onStoreClosed });
   callbacks.current = { onTalk, onLocationChange, onExitBlocked, onReadyChange, onEnterStreet, getGameTime, onStoreClosed };
   const pausedRef = useRef(paused); pausedRef.current = paused;
+  const worldPausedRef = useRef(worldPaused); worldPausedRef.current = worldPaused;
+  const conversationRef = useRef(conversationNpcId); conversationRef.current = conversationNpcId;
   const exitRef = useRef(exitUnlocked); exitRef.current = exitUnlocked;
   const appearanceRef = useRef(appearance); appearanceRef.current = appearance;
   useEffect(() => { game.current?.setAppearance(appearance); }, [appearance]);
-  const [nearby, setNearby] = useState<string | null>(null);
+  const [talkPrompt, setTalkPrompt] = useState<NpcTalkPrompt | null>(null);
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
   const [locationLabel, setLocationLabel] = useState(initialLocation === 'street' ? 'Maplewood Town Street' : 'Maplewood train station');
@@ -28,7 +26,7 @@ export default function GameCanvas({ paused, exitUnlocked, onExitBlocked, onTalk
     const host = document.createElement('div');
     host.className = "phaser-host w-full h-full overflow-hidden bg-[#241f19] touch-none";
     parent.current?.append(host);
-    setReady(false); setError(''); setNearby(null);
+    setReady(false); setError(''); setTalkPrompt(null);
     callbacks.current.onReadyChange(false);
     const start = async () => {
       const { createStationGame } = await import('./create-station-game');
@@ -43,18 +41,23 @@ export default function GameCanvas({ paused, exitUnlocked, onExitBlocked, onTalk
           getGameTime: () => callbacks.current.getGameTime?.() ?? null,
           onStoreClosed: (location) => callbacks.current.onStoreClosed?.(location),
         } : {}),
-        onNearby: (id) => { if (!cancelled) setNearby(id); },
+        onNearby: () => {},
+        onTalkPrompt: (prompt) => {
+          if (!cancelled) setTalkPrompt(previous =>
+            previous?.npcId === prompt?.npcId && previous?.x === prompt?.x && previous?.y === prompt?.y
+              ? previous : prompt);
+        },
         onTalk: (id) => { if (!cancelled) callbacks.current.onTalk(id); },
         onReady: () => { if (!cancelled) { setReady(true); callbacks.current.onReadyChange(true); } },
-        onLocationChange: (location) => { if (!cancelled) { setLocationLabel(location); setNearby(null); setReady(false); callbacks.current.onReadyChange(false); callbacks.current.onLocationChange(location); } },
+        onLocationChange: (location) => { if (!cancelled) { setLocationLabel(location); setTalkPrompt(null); setReady(false); callbacks.current.onReadyChange(false); callbacks.current.onLocationChange(location); } },
         onError: (message) => { if (!cancelled) { setError(message); callbacks.current.onReadyChange(false); } },
         onExitBlocked: () => { if (!cancelled) callbacks.current.onExitBlocked(); },
       });
       game.current = instance;
-      instance.pause(pausedRef.current || document.hidden);
+      instance.pause(pausedRef.current || document.hidden, worldPausedRef.current || document.hidden, conversationRef.current);
       instance.unlockExit(exitRef.current);
     };
-    const visibility = () => instance?.pause(pausedRef.current || document.hidden);
+    const visibility = () => instance?.pause(pausedRef.current || document.hidden, worldPausedRef.current || document.hidden, conversationRef.current);
     document.addEventListener('visibilitychange', visibility);
     void start().catch((failure: unknown) => {
       if (!cancelled) { setError(`The station could not start. ${failure instanceof Error ? failure.message : 'Please retry.'}`); callbacks.current.onReadyChange(false); }
@@ -67,12 +70,18 @@ export default function GameCanvas({ paused, exitUnlocked, onExitBlocked, onTalk
       host.remove();
     };
   }, [attempt, initialLocation, serverExit]);
-  useEffect(() => { game.current?.pause(paused || document.hidden); }, [paused]);
+  useEffect(() => { game.current?.pause(paused || document.hidden, worldPaused || document.hidden, conversationNpcId); }, [paused, worldPaused, conversationNpcId]);
   useEffect(() => { game.current?.unlockExit(exitUnlocked); }, [exitUnlocked]);
-  const npc = [...STATION_NPCS, ...SHOP_NPCS].find((item) => item.id === nearby);
   return <div className="game-canvas absolute inset-0">
     <div ref={parent} className="canvas-parent absolute inset-0 w-full h-full overflow-hidden bg-[#241f19] touch-none" role="img" aria-label={`${locationLabel}. Tap the path to walk, or use arrow keys or WASD. An exclamation mark shows an NPC with an active or new goal. Approach a nearby NPC to talk.`} />
     {!ready || error ? <div className="station-loading absolute [top:40%] [left:50%] [transform:translateX(-50%)] bg-dialogue p-5 rounded-[16px] max-w-[calc(100%_-_24px)]">{error ? <><p role="alert">{error}</p><GameButton label="Retry map" onClick={() => setAttempt((value) => value + 1)} /></> : <p role="status">Loading map… {Math.round(progress * 100)}%</p>}</div> : null}
-    {ready && !error && npc && !paused ? <div className="talk-control absolute [bottom:max(24px,_env(safe-area-inset-bottom))] right-3"><GameButton label={width < 700 ? 'Talk' : `Talk to ${npc.name} · E`} ariaLabel={`Talk to ${npc.name}`} onClick={() => game.current?.talk()} /></div> : null}
+    {ready && !error && talkPrompt && !paused ? <button
+      type="button"
+      className="talk-control absolute z-10 cursor-pointer rounded-sm border-0 bg-[#315749] p-0 text-[12px] font-bold leading-tight text-[#fff8e7] hover:bg-[#244236] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe08a]"
+      style={{ left: talkPrompt.x, top: talkPrompt.y, transform: 'translate(-50%, -100%)' }}
+      aria-label={`Talk to ${talkPrompt.name}`}
+      aria-keyshortcuts="E"
+      onClick={() => game.current?.talk()}
+    >Talk</button> : null}
   </div>;
 }

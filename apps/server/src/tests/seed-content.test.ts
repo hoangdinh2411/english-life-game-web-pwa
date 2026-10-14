@@ -5,12 +5,14 @@ import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 import { loadSeedContent } from '../infrastructure/content/seed-content';
-import { SHOP_NPC_IDS } from '@life-abroad/shared';
+import { SHOP_NPC_IDS, TOWN_STREET_NPC_IDS } from '@life-abroad/shared';
 
 test('T2 committed content and all scope references validate', async () => {
   const content = await loadSeedContent(resolve('../../content'));
-  assert.equal(content.npcs.length, 14);
+  assert.equal(content.npcs.length, 29);
+  assert.equal(content.streetNpcs.npcs.length, 15);
   for (const id of SHOP_NPC_IDS) assert.ok(content.npcs.some(npc => npc.id === id));
+  for (const id of TOWN_STREET_NPC_IDS) assert.ok(content.streetNpcs.npcs.some(npc => npc.id === id));
   assert.equal(content.quests.length, 6);
   assert.deepEqual(new Set(content.dialogues.map(file => file.scope)), new Set(['global', 'npc', 'role']));
 });

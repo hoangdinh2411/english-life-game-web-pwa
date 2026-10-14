@@ -9,3 +9,8 @@ test('station NPC voices follow the genders shown in their portraits', () => {
     npc_passenger_suitcase: 'male',
   });
 });
+
+test('each data-authored Town Street resident has a configured voice', async () => {
+  const { STREET_NPCS } = await import('../src/features/npcs/street-npcs.ts');
+  for (const npc of STREET_NPCS) assert.equal(npcVoice[npc.id], npc.voice, npc.id);
+});

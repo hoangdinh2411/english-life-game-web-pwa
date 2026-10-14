@@ -20,6 +20,8 @@ import { ShopConversation } from "../features/shops/ShopConversation";
 import { isShopNpc, type ShopNpcId } from "../features/shops/shop-npcs";
 import { StoreClosedDialogue } from "../features/shops/StoreClosedDialogue";
 import type { StoreLocation } from "../types/gameplay/world";
+import { isStreetNpc, STREET_NPCS, type StreetNpcId } from "../features/npcs/street-npcs";
+import { TownspersonConversation } from "../features/npcs/TownspersonConversation";
 
 const TUTORIAL_KEY = "movementTutorialSeen";
 
@@ -48,7 +50,7 @@ export default function StationScreen({
   arrival,
   life,
 }: StationScreenProps) {
-  const [npcId, setNpcId] = useState<StationSpeaker | ShopNpcId | null>(null);
+  const [npcId, setNpcId] = useState<StationSpeaker | ShopNpcId | StreetNpcId | null>(null);
   const [tutorial, setTutorial] = useState(() => !hasSeenTutorial());
   const [stationReady, setStationReady] = useState(false);
   const [location, setLocation] = useState("Maplewood · Train Station");
@@ -62,8 +64,7 @@ export default function StationScreen({
   const [exitReminder, setExitReminder] = useState(false);
   const pwa = usePwa();
   const cityName = location.split(" · ")[0] ?? "Maplewood";
-  const overlayOpen =
-    npcId !== null ||
+  const worldPaused =
     tutorial ||
     menu ||
     profileOpen ||
@@ -71,6 +72,7 @@ export default function StationScreen({
     goals ||
     exitReminder ||
     Boolean(arrival?.pending || arrival?.error);
+  const overlayOpen = npcId !== null || worldPaused;
   const showGoals = shouldShowQuestBoard({
     tutorialOpen: overlayOpen,
     mapReady: stationReady,
@@ -98,6 +100,10 @@ export default function StationScreen({
           getGameTime: () => life.time,
           onStoreClosed: (store) => setClosedStore(store),
         } : {})}
+        conversationNpcId={npcId}
+        worldPaused={
+          !stationReady || worldPaused || Boolean(life?.sleepTransition) || Boolean(arrival && !arrival.online)
+        }
         paused={
           !stationReady ||
           overlayOpen ||
@@ -113,6 +119,7 @@ export default function StationScreen({
           )
             setNpcId(id);
           if (!practice && isShopNpc(id)) setNpcId(id);
+          if (!practice && isStreetNpc(id)) setNpcId(id);
         }}
       />
       <div
@@ -214,7 +221,15 @@ export default function StationScreen({
           }}
         />
       ) : null}
-      {npcId && isShopNpc(npcId) ? (
+      {npcId && isStreetNpc(npcId) ? (
+        <TownspersonConversation
+          key={npcId}
+          npc={STREET_NPCS.find((npc) => npc.id === npcId)!}
+          sound={sound}
+          onClose={() => setNpcId(null)}
+          onRefresh={async () => { await life?.refresh(); }}
+        />
+      ) : npcId && isShopNpc(npcId) ? (
         <ShopConversation
           key={npcId}
           npcId={npcId}

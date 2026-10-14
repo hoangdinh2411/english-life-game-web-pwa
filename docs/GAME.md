@@ -30,6 +30,13 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   named second café that reuses the seller/catalog flow and has an assistant
   and three customer NPCs. Players stay on the marked streets and plaza paths;
   building footprints, the fountain, and planters block movement.
+- Town Street has 15 named residents with distinct jobs and authored profiles,
+  portrait links, and road patrol routes. Each route has 12–14 waypoints, and
+  residents can be approached for scripted small talk about everyday topics.
+  NPC profiles and route data live in `content/seed/street-npcs.json`; resident
+  sprite art downloads by nearby atlas row as the player approaches, so distant
+  character artwork stays unloaded until needed. Portrait links can be changed
+  without rewriting gameplay code.
 - Shop and station NPCs have individual names. Venue hours use game time:
   organizations 08:00–16:00, stores 08:00–14:00 and workplaces 07:00–17:00.
   The current playable map gates its store interiors; closed entrances show the

@@ -48,6 +48,30 @@ test('T19 waiter small-talk topics support personality replies and at least five
   assert.equal(new Set(openings.map(reply => reply.text)).size, 5);
 });
 
+test('Town Street residents open casual conversations and understand common topics', async () => {
+  const { engine } = await fixture();
+  const context = { npcId: 'npc_mila_florist', roleId: 'townsperson', personality: 'cheerful' };
+  const opening = await engine.node(context, 'townsperson_start');
+  assert.match(opening.text, /Maplewood|meet someone new|exploring new places/i);
+  const topics = [
+    ['How are you?', 'global_wellbeing'],
+    ['How is the weather?', 'global_weather'],
+    ['What do you like to do in your free time?', 'townsperson_hobbies'],
+    ['What food do you like?', 'townsperson_food'],
+    ['What do you do for work?', 'townsperson_work'],
+    ['What places should I visit in Maplewood?', 'townsperson_maplewood'],
+    ['Do you like flowers?', 'townsperson_flowers'],
+  ] as const;
+  for (const [input, expectedNode] of topics) {
+    const reply = await engine.reply(context, input, false);
+    assert.equal(reply.node.id, expectedNode, input);
+    assert.equal(reply.misunderstood, false, input);
+  }
+  const personalities = await Promise.all(['cheerful', 'shy', 'serious'].map(personality =>
+    engine.reply({ ...context, personality }, 'What do you enjoy doing?', false)));
+  assert.equal(new Set(personalities.map(reply => reply.text)).size, 3);
+});
+
 async function fixture() {
   const content = await loadSeedContent(resolve('../../content'));
   const nodes: CachedDialogueNode[] = content.dialogues.flatMap(file => file.nodes.map(node => ({

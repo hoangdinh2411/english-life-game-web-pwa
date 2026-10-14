@@ -14,7 +14,7 @@ export async function fetchMapPack(mapId: string, signal: AbortSignal): Promise<
 }
 
 export interface PackCaches {
-  textures: { remove(key: string): unknown };
+  textures: { exists?(key: string): boolean; remove(key: string): unknown };
   cache: { audio: { remove(key: string): unknown }; json: { remove(key: string): unknown } };
   anims: { remove(key: string): unknown };
   sound: { removeByKey(key: string): unknown };
@@ -26,6 +26,6 @@ export function unloadPack(pack: MapPack, caches: PackCaches, animations: readon
     const key = packKey(pack, asset);
     if (asset.type === 'audio') { caches.sound.removeByKey(key); caches.cache.audio.remove(key); }
     else if (asset.type === 'json' || asset.type === 'animation') caches.cache.json.remove(key);
-    else caches.textures.remove(key);
+    else if (!caches.textures.exists || caches.textures.exists(key)) caches.textures.remove(key);
   }
 }

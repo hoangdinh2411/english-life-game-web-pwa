@@ -12,16 +12,16 @@ test('Town Street uses expanded world dimensions and clamps movement to its larg
 });
 
 test('street transition spawn positions are on valid walkable roads', () => {
-  for (const fromStreetPortal of [false, true]) {
-    const spawn = navigation.streetSpawnPoint(fromStreetPortal);
-    assert.equal(navigation.canWalkStreet(spawn), true, `street spawn from portal=${fromStreetPortal} must be walkable`);
+  for (const arrival of ['station', 'corner_cafe']) {
+    const spawn = navigation.streetSpawnPoint(arrival);
+    assert.equal(navigation.canWalkStreet(spawn), true, `street spawn from ${arrival} must be walkable`);
     const route = navigation.findPath(spawn, navigation.scaleStreetPoint({ x: 768, y: 944 }), navigation.canWalkStreet, navigation.moveOnStreet);
-    assert.ok(route.length > 0, `street spawn from portal=${fromStreetPortal} can reach the river road`);
+    assert.ok(route.length > 0, `street spawn from ${arrival} can reach the river road`);
   }
 });
 
 test('returning from Corner Cup spawns directly in front of the entrance without immediately re-entering', () => {
-  const spawn = navigation.streetSpawnPoint(true);
+  const spawn = navigation.streetSpawnPoint('corner_cafe');
   const distanceToPortal = Math.hypot(spawn.x - navigation.CORNER_CUP_PORTAL.x, spawn.y - navigation.CORNER_CUP_PORTAL.y);
   assert.equal(navigation.canWalkStreet(spawn), true, 'the return spawn stays on the upper street');
   assert.equal(spawn.x, navigation.CORNER_CUP_PORTAL.x, 'the player appears centered in front of the ring');
@@ -30,6 +30,14 @@ test('returning from Corner Cup spawns directly in front of the entrance without
   assert.equal(navigation.portalAt(spawn, [navigation.CORNER_CUP_PORTAL]), null, 'returning must not immediately bounce back into the café');
   const route = navigation.findPath(spawn, navigation.CORNER_CUP_PORTAL, navigation.canWalkStreet, navigation.moveOnStreet);
   assert.ok(route.length > 0, 'the player can step back into the Corner Cup entrance ring');
+});
+
+test('leaving the train station spawns at its street entrance instead of the Corner Cup ring', () => {
+  const spawn = navigation.streetSpawnPoint('station');
+  assert.deepEqual(spawn, navigation.scaleStreetPoint({ x: 768, y: 210 }));
+  assert.equal(navigation.canWalkStreet(spawn), true);
+  assert.ok(Math.hypot(spawn.x - navigation.CORNER_CUP_PORTAL.x, spawn.y - navigation.CORNER_CUP_PORTAL.y) > 38);
+  assert.equal(navigation.portalAt(spawn, [navigation.CORNER_CUP_PORTAL]), null);
 });
 
 test('Town Street allows its street entrances but blocks buildings, trees, water and the fountain', () => {

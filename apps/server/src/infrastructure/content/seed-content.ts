@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { dialogueSchema, npcCatalogSchema, questCatalogSchema, shopCatalogSchema, townSeedSchema } from '@life-abroad/shared';
+import { dialogueSchema, npcCatalogSchema, questCatalogSchema, shopCatalogSchema, streetNpcContentSchema, townSeedSchema } from '@life-abroad/shared';
 
 async function json(path: string): Promise<unknown> {
   try { return JSON.parse(await readFile(path, 'utf8')) as unknown; }
@@ -9,7 +9,12 @@ async function json(path: string): Promise<unknown> {
 
 export async function loadSeedContent(root: string) {
   const town = townSeedSchema.parse(await json(join(root, 'seed/town.json')));
-  const npcs = npcCatalogSchema.parse(await json(join(root, 'seed/npcs.json')));
+  const catalogNpcs = npcCatalogSchema.parse(await json(join(root, 'seed/npcs.json')));
+  const streetNpcs = streetNpcContentSchema.parse(await json(join(root, 'seed/street-npcs.json')));
+  const npcs = npcCatalogSchema.parse([...catalogNpcs, ...streetNpcs.npcs.map(npc => ({
+    id: npc.id, name: npc.name, role: npc.role, personality: npc.personality,
+    speakingLevel: npc.speakingLevel, locationId: npc.locationId, bio: npc.bio,
+  }))]);
   const quests = questCatalogSchema.parse(await json(join(root, 'seed/quests.json')));
   const shops = shopCatalogSchema.parse(await json(join(root, 'seed/shops.json')));
   const dialogues = [];
@@ -46,7 +51,7 @@ export async function loadSeedContent(root: string) {
       }), `${node.id}: unknown applicable quest step ${node.completesStep}`);
     }
   }
-  return { town, roles, npcs, quests, shops, dialogues };
+  return { town, roles, npcs, streetNpcs, quests, shops, dialogues };
 }
 
 export type SeedContent = Awaited<ReturnType<typeof loadSeedContent>>;

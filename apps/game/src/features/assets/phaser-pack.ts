@@ -3,6 +3,13 @@ import type { MapPack } from '@life-abroad/shared';
 import { packActorsSchema, packAnimationsSchema } from '@life-abroad/shared';
 import { packKey } from './map-pack';
 import { SHOP_NPCS } from '../shops/shop-npcs';
+import { findStreetNpc, STREET_NPCS } from '../npcs/street-npcs';
+
+export function isDeferredStreetNpcAsset(pack: MapPack, asset: MapPack['assets'][number]): boolean {
+  return pack.mapId === 'loc_town_street'
+    && asset.key.startsWith('street-npcs-')
+    && (asset.type === 'image' || (asset.type === 'json' && asset.key.endsWith('-atlas')));
+}
 
 export function loadPack(scene: Phaser.Scene, pack: MapPack, progress: (value: number) => void, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -26,6 +33,7 @@ export function loadPack(scene: Phaser.Scene, pack: MapPack, progress: (value: n
     scene.load.on('loaderror', error);
     scene.load.once('complete', complete);
     for (const asset of pack.assets) {
+      if (isDeferredStreetNpcAsset(pack, asset)) continue;
       const key = packKey(pack, asset);
       const atlas = asset.type === 'image' ? pack.assets.find(item =>
         item.type === 'json' && item.key === `${asset.key}-atlas` && item.npcId === asset.npcId && item.version === asset.version) : undefined;
@@ -66,15 +74,22 @@ export function preparePack(scene: Phaser.Scene, pack: MapPack) {
   const shop = pack.mapId === 'loc_cafe' || pack.mapId === 'loc_corner_cafe' || pack.mapId === 'loc_clothes';
   if (shop && !actorAsset) throw new Error('Shop NPC assets are missing. Please retry after the map upload finishes.');
   const actors = actorAsset ? packActorsSchema.parse(scene.cache.json.get(packKey(pack, actorAsset))).actors.map(actor => {
-    const definition = actor.npcId ? SHOP_NPCS.find(npc => npc.id === actor.npcId) : SHOP_NPCS.find(npc => npc.frame === actor.frame);
+    const streetNpc = pack.mapId === 'loc_town_street' && actor.npcId ? findStreetNpc(actor.npcId) : undefined;
+    const definition = streetNpc ?? (actor.npcId ? SHOP_NPCS.find(npc => npc.id === actor.npcId) : SHOP_NPCS.find(npc => npc.frame === actor.frame));
     if (!definition || definition.frame !== actor.frame) throw new Error('Shop NPC identity or atlas frame is invalid.');
     const texture = pack.assets.find(asset => asset.key === actor.texture && asset.type === 'image' && asset.npcId === null);
-    if (!texture || !scene.textures.get(packKey(pack, texture)).has(actor.frame)) throw new Error('NPC atlas frame is missing from this pack.');
-    if (shop && Array.from({ length: 16 }, (_, index) => `${actor.frame}-${Math.floor(index / 4)}-${index % 4}`)
-      .some(frame => !scene.textures.get(packKey(pack, texture)).has(frame))) throw new Error('Shop NPC walking frames are missing. Please retry after the map upload finishes.');
+    const atlas = texture && pack.assets.find(asset => asset.key === `${texture.key}-atlas` && asset.type === 'json' && asset.npcId === texture.npcId && asset.version === texture.version);
+    if (!texture || (streetNpc && !atlas)) throw new Error('NPC atlas is missing from this pack.');
+    if (!streetNpc) {
+      const textureKey = packKey(pack, texture);
+      if (!scene.textures.get(textureKey).has(actor.frame)) throw new Error('NPC atlas frame is missing from this pack.');
+      if (shop && Array.from({ length: 16 }, (_, index) => `${actor.frame}-${Math.floor(index / 4)}-${index % 4}`)
+        .some(frame => !scene.textures.get(textureKey).has(frame))) throw new Error('Shop NPC walking frames are missing. Please retry after the map upload finishes.');
+    }
     return { ...actor, npcId: definition.id, texture: packKey(pack, texture) };
   }) : [];
   const expectedActors = pack.mapId === 'loc_corner_cafe' ? 5 : shop ? 3 : null;
   if (expectedActors !== null && actors.length !== expectedActors) throw new Error(`Shop map needs ${expectedActors} configured NPC assets.`);
+  if (pack.mapId === 'loc_town_street' && actors.length !== STREET_NPCS.length) throw new Error(`Town Street needs ${STREET_NPCS.length} configured resident NPC assets.`);
   return { background: packKey(pack, background), player: packKey(pack, player), walkPrefix, animationKeys, actors };
 }

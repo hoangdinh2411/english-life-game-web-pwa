@@ -9,7 +9,14 @@ export const SHOP_NPC_IDS = [
   'npc_corner_cup_assistant', 'npc_corner_cup_customer_1', 'npc_corner_cup_customer_2', 'npc_corner_cup_customer_3',
   'npc_clothes_seller', 'npc_clothes_assistant', 'npc_clothes_customer',
 ] as const;
-export const conversationNpcSchema = z.enum([ARRIVAL_NPC_ID, ...SHOP_NPC_IDS]);
+export const TOWN_STREET_NPC_IDS = [
+  'npc_mila_florist', 'npc_amir_courier', 'npc_ethan_baker',
+  'npc_lina_librarian', 'npc_ben_gardener', 'npc_maya_teacher',
+  'npc_raj_pharmacist', 'npc_nora_bookseller', 'npc_leo_driver',
+  'npc_dani_mechanic', 'npc_amara_market_vendor', 'npc_owen_post_worker',
+  'npc_sara_artist', 'npc_jamal_dog_walker', 'npc_tara_musician',
+] as const;
+export const conversationNpcSchema = z.enum([ARRIVAL_NPC_ID, ...SHOP_NPC_IDS, ...TOWN_STREET_NPC_IDS]);
 export const createConversationSchema = z.object({ npcId: conversationNpcSchema }).strict();
 export const pendingOrderSchema = z.object({
   orderId: z.string().uuid(), itemId: z.string(), quantity: z.number().int().min(1).max(3),

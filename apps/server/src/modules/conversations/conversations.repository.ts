@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, type PendingOrder, type SellerState } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, TOWN_STREET_NPC_IDS, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, type PendingOrder, type SellerState } from '@life-abroad/shared';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { DialogueContext } from '../dialogue/dialogue.service';
@@ -44,7 +44,8 @@ export class ConversationsRepository {
       (user_id,npc_id,quest_id,current_node_id) VALUES ($1,$2,$3,$4) RETURNING id`,
     [userId, npcId, npcId === ARRIVAL_NPC_ID ? ARRIVAL_QUEST_ID : null,
       npcId === ARRIVAL_NPC_ID ? 'receptionist_start' : (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId) ? 'seller_start'
-        : npcId === 'npc_clothes_seller' ? 'clothes_seller_start' : 'shop_start']);
+        : npcId === 'npc_clothes_seller' ? 'clothes_seller_start'
+          : (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId) ? 'townsperson_start' : 'shop_start']);
     return result.rows[0]!.id;
   }
 

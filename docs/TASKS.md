@@ -76,6 +76,9 @@ test@gmail.com / 12341234.
       removed hours/style controls from the Life menu; moved wardrobe to its own
       panel and gated closed-store entry with an hours dialogue. Tests and the
       existing-account menu/wardrobe browser check passed.
+- [x] **T27 — Town Street residents:** 15 named residents across five road
+      patrol routes, with editable profile/art links and authenticated scripted
+      small talk. Content, movement, pack, type, build, and browser checks passed.
 
 ## NOW
 

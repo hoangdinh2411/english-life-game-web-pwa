@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import type { Point, StationNpc } from '../../types/gameplay/world';
-import { advanceNpc } from './npc-motion';
+import { advanceNpc, NPC_STOP_DISTANCE, type NpcPatrol } from './npc-motion';
 
 export interface NpcActor {
   npc: StationNpc;
@@ -12,13 +12,29 @@ export interface NpcActor {
   labelOffset: number;
   idleFrame: string;
   walkPrefix?: string;
+  artTextureKey?: string;
+  artFrame?: string;
   clip?: (anchor: Point, offset: Point) => Point;
+  patrol?: NpcPatrol;
 }
 
-export function updateNpcActors(actors: NpcActor[], player: Point, delta: number, paused: boolean, selected: string | null): void {
+export function updateNpcActors(actors: NpcActor[], player: Point, delta: number, paused: boolean, conversationNpcId: string | null = null): void {
+  let nearest: NpcActor | undefined;
+  let nearestDistance = NPC_STOP_DISTANCE;
+  if (conversationNpcId === null) {
+    for (const actor of actors) {
+      if (actor.sprite.visible === false) continue;
+      const distance = Math.hypot(actor.npc.x - player.x, actor.npc.y - player.y);
+      if (distance <= nearestDistance && (!nearest || distance < nearestDistance)) {
+        nearest = actor;
+        nearestDistance = distance;
+      }
+    }
+  }
+  const stoppedNpcId = conversationNpcId ?? nearest?.npc.id ?? null;
   for (const actor of actors) {
     const state = { x: actor.npc.x, y: actor.npc.y, elapsed: actor.elapsed };
-    const pose = advanceNpc(actor.npc.id, state, actor.anchor, player, delta, paused, selected, actor.clip);
+    const pose = advanceNpc(actor.npc.id, state, actor.anchor, player, delta, paused, stoppedNpcId, actor.clip, actor.patrol, false);
     actor.elapsed = state.elapsed;
     actor.npc.x = pose.x; actor.npc.y = pose.y;
     actor.sprite.setPosition(pose.x, pose.y).setDepth(pose.y);

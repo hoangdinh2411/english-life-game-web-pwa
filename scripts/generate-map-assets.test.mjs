@@ -35,3 +35,39 @@ test('Corner Cup map reuses café art and packages three additional customers', 
     await rm(rootDirectory, { recursive: true, force: true });
   }
 });
+
+test('Town Street map packages all data-authored residents at their route start points', async () => {
+  const rootDirectory = await mkdtemp(join(tmpdir(), 'life-abroad-street-npcs-test-'));
+  try {
+    const directory = await generator.saveMapAssets('loc_town_street', rootDirectory);
+    const catalog = JSON.parse(await readFile(new URL('../content/seed/street-npcs.json', import.meta.url), 'utf8'));
+    const actors = JSON.parse(await readFile(join(directory, 'actors.json'), 'utf8')).actors;
+    const frames = [...new Set(catalog.npcs.map(npc => npc.frame))];
+    const textureByFrame = new Map(frames.map((frame, index) => [frame, `street-npcs-${index + 1}`]));
+    assert.equal(actors.length, 15);
+    assert.equal(new Set(actors.map(actor => actor.npcId)).size, 15);
+    assert.ok(catalog.npcs.every(npc => npc.job && npc.imageUrl && npc.topics.length >= 3));
+    for (const npc of catalog.npcs) {
+      const route = catalog.routes.find(route => route.id === npc.routeId);
+      assert.ok(route.points.length >= 10 && route.points.length <= 15);
+      assert.deepEqual(actors.find(actor => actor.npcId === npc.id), {
+        npcId: npc.id, frame: npc.frame, ...route.points[npc.startWaypoint], texture: textureByFrame.get(npc.frame), scale: 0.6,
+      });
+    }
+    const source = await readFile(new URL('../apps/game/assets/npcs/shop-walk.png', import.meta.url));
+    assert.equal(frames.length, 6);
+    for (const [index, frame] of frames.entries()) {
+      const image = await readFile(join(directory, `street-npcs-${index + 1}.png`));
+      const atlas = JSON.parse(await readFile(join(directory, `street-npcs-${index + 1}-atlas.json`), 'utf8'));
+      assert.equal(image.toString('ascii', 1, 4), 'PNG');
+      assert.equal(image.readUInt32BE(16), 1536);
+      assert.ok(image.readUInt32BE(20) < 1024, `${frame} should download as a cropped atlas row`);
+      assert.ok(image.byteLength < source.byteLength, `${frame} should be smaller than the full resident atlas`);
+      assert.ok(Object.keys(atlas.frames).length >= 17);
+      assert.ok(Object.keys(atlas.frames).every(name => name === frame || name.startsWith(`${frame}-`)));
+      assert.ok(Object.values(atlas.frames).every(({ frame: item }) => item.y < image.readUInt32BE(20)), `${frame} atlas coordinates fit the cropped image`);
+    }
+  } finally {
+    await rm(rootDirectory, { recursive: true, force: true });
+  }
+});

@@ -13,12 +13,13 @@ export const CORNER_CUP_PORTAL: StationPortal = {
   ...scaleStreetPoint({ x: 1150, y: 400 }),
 };
 export const CORNER_CUP_LABEL_POSITION = scaleStreetPoint({ x: 1150, y: 315 });
-export function streetSpawnPoint(returningFromStreetPortal: boolean): Point {
-  if (returningFromStreetPortal) {
+export function streetSpawnPoint(arrival: 'station' | 'corner_cafe'): Point {
+  if (arrival === 'corner_cafe') {
     // Place the player directly in front of the café ring on the cross street,
     // just outside its auto-entry radius so returning does not reopen the café.
     return { x: CORNER_CUP_PORTAL.x, y: CORNER_CUP_PORTAL.y + 45 };
   }
+  // Station arrivals use the north-south street entrance, far from the café.
   return scaleStreetPoint({ x: 768, y: 210 });
 }
 export function clampStreetPosition(point: Point): Point {

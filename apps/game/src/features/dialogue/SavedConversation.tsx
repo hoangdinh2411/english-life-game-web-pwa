@@ -9,10 +9,10 @@ import { useNarration } from '../../speech/use-narration';
 import { useSpeech } from '../../speech/use-speech';
 import { npcVoice } from '../../speech/npc-voice';
 
-export function SavedConversation({ state, sound, online, send, retry, shopNpc, completed = false, details }: {
+export function SavedConversation({ state, sound, online, send, retry, displayNpc, completed = false, details }: {
   state: ConversationSnapshot; sound: boolean; online: boolean;
   send: (text: string, coach: boolean) => Promise<boolean>; retry: () => void;
-  shopNpc?: { name: string; portrait: string; portraitPosition: string };
+  displayNpc?: { name: string; portrait: string; portraitPosition: string };
   completed?: boolean; details?: ReactNode;
 }) {
   const [text, setText] = useState(state.retryMessage?.text ?? '');
@@ -38,9 +38,9 @@ export function SavedConversation({ state, sound, online, send, retry, shopNpc, 
   return <>
     <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 overflow-auto pr-1 [@media(max-height:480px)]:h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
       {state.conversation?.messages.map((message) => <DialogueMessage key={message.id}
-        name={message.sender === 'player' ? 'You' : shopNpc?.name ?? 'Ruth'} text={message.text}
-        player={message.sender === 'player'} portrait={message.sender === 'player' ? playerPortrait : shopNpc?.portrait ?? npcPortraits.npc_station_information}
-        portraitPosition={message.sender === 'npc' ? shopNpc?.portraitPosition : undefined}
+        name={message.sender === 'player' ? 'You' : displayNpc?.name ?? 'Ruth'} text={message.text}
+        player={message.sender === 'player'} portrait={message.sender === 'player' ? playerPortrait : displayNpc?.portrait ?? npcPortraits.npc_station_information}
+        portraitPosition={message.sender === 'npc' ? displayNpc?.portraitPosition : undefined}
         onReplay={() => voice.listen(message.text)} replayDisabled={!sound || !voice.supported || state.pending || speech.listening} />)}
     </div>
     {details}

@@ -72,6 +72,35 @@ export const dialogueSchema = z.discriminatedUnion('scope', [
 export const npcCatalogSchema = z.array(npcSchema).min(1).refine(uniqueIds, 'NPC IDs must be unique');
 export const questCatalogSchema = z.array(questSchema).min(1).refine(uniqueIds, 'Quest IDs must be unique');
 
+const mapPointSchema = z.object({ x: z.number().min(0).max(1536), y: z.number().min(0).max(1024) }).strict();
+const streetRouteSchema = z.object({ id: identifier, points: z.array(mapPointSchema).min(10).max(15) }).strict();
+const streetNpcFrameSchema = z.enum(['cafe_seller', 'cafe_waiter', 'cafe_customer', 'clothes_seller', 'clothes_assistant', 'clothes_customer']);
+const streetNpcSchema = npcSchema.extend({
+  job: text,
+  imageUrl: z.string().min(1).max(500).refine(value => /^npcs\/[a-zA-Z0-9_-]+\.png$/.test(value) || /^https:\/\//.test(value), 'Use a local NPC asset path or an HTTPS image URL'),
+  frame: streetNpcFrameSchema,
+  portraitFrame: streetNpcFrameSchema,
+  voice: z.enum(['female', 'male']),
+  routeId: identifier,
+  startWaypoint: z.number().int().nonnegative(),
+  stationary: z.boolean().default(false),
+  topics: z.array(identifier).min(3).refine(values => new Set(values).size === values.length, 'NPC topics must be unique'),
+}).strict();
+export const streetNpcContentSchema = z.object({
+  version: z.literal(1),
+  atlasUrl: z.string().min(1).max(500).refine(value => /^npcs\/[a-zA-Z0-9_-]+\.json$/.test(value) || /^https:\/\//.test(value), 'Use a local NPC atlas path or an HTTPS atlas URL'),
+  routes: z.array(streetRouteSchema).min(1).refine(uniqueIds, 'Street route IDs must be unique'),
+  npcs: z.array(streetNpcSchema).min(10).max(20).refine(uniqueIds, 'Street NPC IDs must be unique'),
+}).strict().superRefine((catalog, context) => {
+  const routes = new Map(catalog.routes.map(route => [route.id, route]));
+  for (const [index, npc] of catalog.npcs.entries()) {
+    const route = routes.get(npc.routeId);
+    if (!route) context.addIssue({ code: 'custom', path: ['npcs', index, 'routeId'], message: `Unknown street route ${npc.routeId}` });
+    else if (npc.startWaypoint >= route.points.length) context.addIssue({ code: 'custom', path: ['npcs', index, 'startWaypoint'], message: 'Start waypoint must be part of the NPC route' });
+    if (npc.locationId !== 'loc_town_street') context.addIssue({ code: 'custom', path: ['npcs', index, 'locationId'], message: 'Street NPCs must belong to loc_town_street' });
+  }
+});
+
 export const shopSchema = z.enum(['cafe', 'clothes']);
 export const shopItemSchema = z.object({
   id: identifier,
@@ -99,5 +128,7 @@ export type ShopItem = z.infer<typeof shopItemSchema>;
 export type ShopOrder = z.infer<typeof shopOrderSchema>;
 
 export type NpcContent = z.infer<typeof npcSchema>;
+export type StreetNpcContent = z.infer<typeof streetNpcSchema>;
+export type StreetNpcCatalog = z.infer<typeof streetNpcContentSchema>;
 export type QuestContent = z.infer<typeof questSchema>;
 export type DialogueContent = z.infer<typeof dialogueSchema>;

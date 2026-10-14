@@ -1,6 +1,9 @@
 import type { Direction, Point } from '../../types/gameplay/world';
 
+export const NPC_STOP_DISTANCE = 60;
+
 type Motion = { path: readonly Point[]; speed: number; wait: number };
+export interface NpcPatrol { points: readonly Point[]; startWaypoint: number }
 const still: Motion = { path: [], speed: 0, wait: 0 };
 const horizontal = (distance: number, speed: number, wait: number): Motion => ({ path: [{ x: distance, y: 0 }, { x: -distance, y: 0 }, { x: 0, y: 0 }], speed, wait });
 const vertical = (distance: number, speed: number, wait: number): Motion => ({ path: [{ x: 0, y: distance }, { x: 0, y: -distance }, { x: 0, y: 0 }], speed, wait });
@@ -22,6 +25,47 @@ const profiles: Record<string, Motion> = {
 };
 export interface MotionState { x: number; y: number; elapsed: number }
 export type NpcPose = Point & { direction: Direction; moving: boolean };
+
+export function patrolPose(patrol: NpcPatrol, elapsed: number, speed = 46, wait = 200): NpcPose {
+  if (patrol.points.length < 2 || patrol.startWaypoint >= patrol.points.length) {
+    const point = patrol.points[patrol.startWaypoint] ?? patrol.points[0] ?? { x: 0, y: 0 };
+    return { ...point, direction: 'down', moving: false };
+  }
+  const points = patrol.points;
+  const start = patrol.startWaypoint;
+  const cycle = [
+    ...points.slice(start),
+    ...points.slice(0, -1).reverse(),
+    ...points.slice(1, start),
+  ].filter((point, index, path) => index === 0 || point.x !== path[index - 1]?.x || point.y !== path[index - 1]?.y);
+  if (cycle.at(-1)?.x === cycle[0]?.x && cycle.at(-1)?.y === cycle[0]?.y) cycle.pop();
+  const segments = cycle.map((origin, index) => {
+    const destination = cycle[(index + 1) % cycle.length] ?? origin;
+    const dx = destination.x - origin.x;
+    const dy = destination.y - origin.y;
+    return { origin, destination, dx, dy, duration: Math.hypot(dx, dy) / speed * 1000 };
+  }).filter(segment => segment.duration > 0);
+  const duration = segments.reduce((sum, segment) => sum + segment.duration + wait, 0);
+  let clock = Math.max(0, elapsed) % duration;
+  for (const segment of segments) {
+    const direction: Direction = Math.abs(segment.dx) > Math.abs(segment.dy)
+      ? segment.dx < 0 ? 'left' : 'right'
+      : segment.dy < 0 ? 'up' : 'down';
+    if (clock < segment.duration) {
+      const amount = clock / segment.duration;
+      return {
+        x: segment.origin.x + segment.dx * amount,
+        y: segment.origin.y + segment.dy * amount,
+        direction,
+        moving: true,
+      };
+    }
+    clock -= segment.duration;
+    if (clock < wait) return { ...segment.destination, direction, moving: false };
+    clock -= wait;
+  }
+  return { ...cycle[0]!, direction: 'down', moving: false };
+}
 
 // All maps use the same route clock. A map may clip authored offsets to its walkable area.
 export function npcPose(id: string, anchor: Point, elapsed: number, clip: (anchor: Point, offset: Point) => Point = (origin, offset) => ({ x: origin.x + offset.x, y: origin.y + offset.y })): NpcPose {
@@ -48,10 +92,10 @@ export function npcPose(id: string, anchor: Point, elapsed: number, clip: (ancho
   return { x: anchor.x, y: anchor.y, direction: 'down', moving: false };
 }
 
-export function advanceNpc(id: string, state: MotionState, anchor: Point, player: Point, delta: number, paused: boolean, selected: string | null, clip?: (anchor: Point, offset: Point) => Point): NpcPose {
-  if (paused || selected === id || Math.hypot(player.x - state.x, player.y - state.y) <= 140) return { x: state.x, y: state.y, direction: 'down', moving: false };
+export function advanceNpc(id: string, state: MotionState, anchor: Point, player: Point, delta: number, paused: boolean, selected: string | null, clip?: (anchor: Point, offset: Point) => Point, patrol?: NpcPatrol, stopWhenNearby = true): NpcPose {
+  if (paused || selected === id || (stopWhenNearby && Math.hypot(player.x - state.x, player.y - state.y) <= NPC_STOP_DISTANCE)) return { x: state.x, y: state.y, direction: 'down', moving: false };
   state.elapsed += Math.max(0, Math.min(delta, 50));
-  const pose = npcPose(id, anchor, state.elapsed, clip);
+  const pose = patrol ? patrolPose(patrol, state.elapsed) : npcPose(id, anchor, state.elapsed, clip);
   state.x = pose.x; state.y = pose.y;
   return pose;
 }

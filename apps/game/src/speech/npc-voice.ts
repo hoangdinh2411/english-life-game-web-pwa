@@ -1,5 +1,8 @@
 import type { StationSpeaker, Conversation } from '@life-abroad/shared';
 import type { VoiceGender } from '../types/speech/narration';
+import { STREET_NPCS, type StreetNpcId } from '../features/npcs/street-npcs';
+
+const streetNpcVoices = Object.fromEntries(STREET_NPCS.map(npc => [npc.id, npc.voice])) as Record<StreetNpcId, VoiceGender>;
 
 export const npcVoice: Record<StationSpeaker | Conversation['npcId'], VoiceGender> = {
   npc_station_information: 'female',
@@ -17,4 +20,5 @@ export const npcVoice: Record<StationSpeaker | Conversation['npcId'], VoiceGende
   npc_clothes_seller: 'male',
   npc_clothes_assistant: 'male',
   npc_clothes_customer: 'female',
+  ...streetNpcVoices,
 };

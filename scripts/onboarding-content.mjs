@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { parseOnboardingOptions, dialogueSchema, npcCatalogSchema, questCatalogSchema, shopCatalogSchema, practiceDialogueNodeSchema } from '../packages/shared/dist/index.js';
+import { parseOnboardingOptions, dialogueSchema, npcCatalogSchema, questCatalogSchema, shopCatalogSchema, streetNpcContentSchema, practiceDialogueNodeSchema } from '../packages/shared/dist/index.js';
 
 async function readJson(file) {
   try {
@@ -18,7 +18,14 @@ function validate(file, schema, content) {
   }
 }
 
-validate('content/seed/npcs.json', npcCatalogSchema, await readJson('content/seed/npcs.json'));
+const npcCatalog = await readJson('content/seed/npcs.json');
+const streetNpcContent = await readJson('content/seed/street-npcs.json');
+validate('content/seed/street-npcs.json', streetNpcContentSchema, streetNpcContent);
+validate('content/seed/npcs.json', npcCatalogSchema, npcCatalog);
+validate('content/seed/npcs.json + street-npcs.json', npcCatalogSchema, [
+  ...npcCatalog,
+  ...streetNpcContent.npcs.map(({ id, name, role, personality, speakingLevel, locationId, bio }) => ({ id, name, role, personality, speakingLevel, locationId, bio })),
+]);
 validate('content/seed/quests.json', questCatalogSchema, await readJson('content/seed/quests.json'));
 validate('content/seed/shops.json', shopCatalogSchema, await readJson('content/seed/shops.json'));
 
