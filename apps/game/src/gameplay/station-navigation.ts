@@ -5,11 +5,71 @@ export const STREET_MAP_SIZE = { width: 1536 * STREET_MAP_SCALE, height: 1024 * 
 export function scaleStreetPoint(point: Point): Point {
   return { x: point.x * STREET_MAP_SCALE, y: point.y * STREET_MAP_SCALE };
 }
+export function streetSpawnPoint(returningFromStreetPortal: boolean): Point {
+  return scaleStreetPoint(returningFromStreetPortal ? { x: 1260, y: 620 } : { x: 768, y: 210 });
+}
 export function clampStreetPosition(point: Point): Point {
   return {
     x: Math.max(48 * STREET_MAP_SCALE, Math.min((1536 - 48) * STREET_MAP_SCALE, point.x)),
     y: Math.max(110 * STREET_MAP_SCALE, Math.min((1024 - 39) * STREET_MAP_SCALE, point.y)),
   };
+}
+
+// Match the station map's walkable-rectangle + obstacle-rectangle model. These
+// rectangles follow the visible center walk, cross streets, and river walk in
+// the 1536×1024 map art; areas behind buildings are not treated as roads.
+const streetRoads: Bounds[] = [
+  { left: 700, right: 836, top: 90, bottom: 960 }, // Main north-south walk
+  { left: 520, right: 1016, top: 300, bottom: 550 }, // Central plaza around fountain
+  { left: 0, right: 1536, top: 395, bottom: 435 }, // Upper cross street
+  { left: 0, right: 1536, top: 600, bottom: 645 }, // Street below the middle buildings
+  { left: 0, right: 1536, top: 880, bottom: 930 }, // River walk
+  { left: 1238, right: 1300, top: 415, bottom: 610 }, // Corner Cup approach
+];
+const streetObstacles: Bounds[] = [
+  { left: 711, right: 825, top: 389, bottom: 467 }, // Fountain basin, leaving its paved circular walk open
+  { left: 630, right: 680, top: 292, bottom: 370 }, // North-west plaza tree
+  { left: 856, right: 906, top: 292, bottom: 370 }, // North-east plaza tree
+  { left: 510, right: 550, top: 448, bottom: 520 }, // South-west plaza tree
+  { left: 986, right: 1026, top: 448, bottom: 520 }, // South-east plaza tree
+  { left: 0, right: 225, top: 0, bottom: 290 }, // North-west homes and shop
+  { left: 280, right: 590, top: 205, bottom: 390 }, // North-west market
+  { left: 940, right: 1220, top: 205, bottom: 390 }, // North-east shop
+  { left: 1300, right: 1536, top: 0, bottom: 300 }, // North-east pharmacy
+  { left: 270, right: 455, top: 440, bottom: 595 }, // Middle-left house
+  { left: 1035, right: 1250, top: 435, bottom: 595 }, // Corner Cup building
+  { left: 1315, right: 1536, top: 370, bottom: 590 }, // Post office building
+  { left: 0, right: 235, top: 690, bottom: 875 }, // South-west shop
+  { left: 260, right: 460, top: 690, bottom: 875 }, // South-west house
+  { left: 475, right: 700, top: 690, bottom: 875 }, // South-centre shop
+  { left: 900, right: 1100, top: 690, bottom: 875 }, // South-east house
+  { left: 1200, right: 1536, top: 690, bottom: 875 }, // South-east homes
+];
+const insideStreet = (point: Point, rect: Bounds): boolean => point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
+
+export function canWalkStreet(point: Point): boolean {
+  const sourcePoint = { x: point.x / STREET_MAP_SCALE, y: point.y / STREET_MAP_SCALE };
+  return streetRoads.some((road) => insideStreet(sourcePoint, road))
+    && !streetObstacles.some((obstacle) => insideStreet(sourcePoint, obstacle));
+}
+
+export function moveOnStreet(point: Point, delta: Point): Point {
+  const steps = Math.max(1, Math.ceil(Math.hypot(delta.x, delta.y) / 4));
+  let result = { ...point };
+  for (let step = 0; step < steps; step++) {
+    const next = { x: result.x + delta.x / steps, y: result.y + delta.y / steps };
+    if (canWalkStreet(next)) result = next;
+    else {
+      const horizontal = { x: next.x, y: result.y };
+      const vertical = { x: result.x, y: next.y };
+      if (canWalkStreet(horizontal)) result = horizontal;
+      if (canWalkStreet(vertical)) result = vertical;
+    }
+  }
+  // Movement substeps already enforce the map edge because no road corridor
+  // extends outside it. Clamping here would teleport an invalid position back
+  // across an obstacle or onto a non-road point.
+  return result;
 }
 
 export const STATION_NPCS: StationNpc[] = [

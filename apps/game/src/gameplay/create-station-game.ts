@@ -5,7 +5,7 @@ import type { MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { loadPack, preparePack } from '../features/assets/phaser-pack';
-import { authorizeStreetExit, canWalk, clampStreetPosition, findPath, movePlayer, movementDelta, nearestNpc, portalAt, scaleStreetPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS } from './station-navigation';
+import { authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, scaleStreetPoint, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
 import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
@@ -182,9 +182,18 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const target = { x: pointer.worldX, y: pointer.worldY };
         if (activeLocation !== 'station') {
           selectedNpc = null;
-          if (activeLocation === 'street' || shopCanWalk(activeLocation, target, npcs)) {
-            route = activeLocation === 'street' ? [target] : findPath(position, target, point => shopCanWalk(activeLocation, point, npcs), (point, delta) => moveInShop(activeLocation, point, delta, npcs));
-            destinationMapTarget = route.shift() ?? null; this.marker.setPosition(target.x, target.y).setVisible(true);
+          const street = activeLocation === 'street';
+          const walkable = street ? canWalkStreet(target) : shopCanWalk(activeLocation, target, npcs);
+          if (walkable) {
+            route = street
+              ? findPath(position, target, canWalkStreet, moveOnStreet)
+              : findPath(position, target, point => shopCanWalk(activeLocation, point, npcs), (point, delta) => moveInShop(activeLocation, point, delta, npcs));
+            destinationMapTarget = route.shift() ?? null;
+            if (destinationMapTarget) this.marker.setPosition(target.x, target.y).setVisible(true);
+          } else {
+            route = [];
+            destinationMapTarget = null;
+            this.marker.setVisible(false);
           }
         } else if (canWalk(target)) { route = findPath(position, target); destination = route.shift() ?? null; selectedNpc = null; this.marker.setPosition(target.x, target.y).setVisible(true); }
       });
@@ -221,7 +230,9 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (this.transitionPending) return;
       if (callbacks.getGameTime && !canEnterLocation(location, callbacks.getGameTime())) {
         const portal = portalAt(position, this.portalsForLocation());
-        if (portal) position = { x: portal.x, y: portal.y + 55 };
+        if (portal) position = activeLocation === 'street'
+          ? streetSpawnPoint(true)
+          : { x: portal.x, y: portal.y + 55 };
         destinationMapTarget = null;
         route = [];
         selectedNpc = null;
@@ -246,7 +257,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (location === 'station') {
         const portal = STATION_PORTALS.find((item) => item.id === this.previousLocation);
         position = portal ? { x: portal.x + (portal.id === 'cafe' ? 70 : portal.id === 'clothes' ? -70 : 0), y: portal.id === 'street' ? 850 : 750 } : { x: 768, y: 370 };
-      } else if (location === 'street') position = scaleStreetPoint(this.previousLocation === 'street' ? { x: 1260, y: 600 } : { x: 768, y: 210 });
+      } else if (location === 'street') position = streetSpawnPoint(this.previousLocation === 'street');
       else position = { x: 768, y: 860 };
       callbacks.onLocationChange(LOCATION_NAMES[location]);
       this.worldReady = false;
@@ -287,7 +298,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const movement = movementDelta({ x: dx, y: dy }, 215 * Math.min(delta, 50) / 1000, Boolean(x || y));
       const previous = position;
       position = activeLocation === 'street'
-        ? clampStreetPosition({ x: position.x + movement.x, y: position.y + movement.y })
+        ? moveOnStreet(position, movement)
         : moveInShop(activeLocation, position, movement, npcs);
       const moved = Math.hypot(position.x - previous.x, position.y - previous.y) > 0.01;
       this.player.setPosition(position.x, position.y).setDepth(position.y);

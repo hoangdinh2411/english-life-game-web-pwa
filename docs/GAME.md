@@ -28,7 +28,8 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   paths and added library, pharmacy, florist, post office, bakery and house
   buildings around its original plaza. It includes Corner Cup Café, a separately
   named second café that reuses the seller/catalog flow and has an assistant
-  and three customer NPCs.
+  and three customer NPCs. Players stay on the marked streets and plaza paths;
+  building footprints, the fountain, and planters block movement.
 - Shop and station NPCs have individual names. Venue hours use game time:
   organizations 08:00–16:00, stores 08:00–14:00 and workplaces 07:00–17:00.
   The current playable map gates its store interiors; closed entrances show the
