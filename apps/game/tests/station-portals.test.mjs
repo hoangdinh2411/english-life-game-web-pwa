@@ -20,20 +20,37 @@ test('street transition spawn positions are on valid walkable roads', () => {
   }
 });
 
+test('returning from Corner Cup spawns directly in front of the entrance without immediately re-entering', () => {
+  const spawn = navigation.streetSpawnPoint(true);
+  const distanceToPortal = Math.hypot(spawn.x - navigation.CORNER_CUP_PORTAL.x, spawn.y - navigation.CORNER_CUP_PORTAL.y);
+  assert.equal(navigation.canWalkStreet(spawn), true, 'the return spawn stays on the upper street');
+  assert.equal(spawn.x, navigation.CORNER_CUP_PORTAL.x, 'the player appears centered in front of the ring');
+  assert.ok(spawn.y > navigation.CORNER_CUP_PORTAL.y, 'the player appears on the street side of the ring');
+  assert.ok(distanceToPortal > 38 && distanceToPortal <= 60, 'the player appears just outside the ring automatic entry radius');
+  assert.equal(navigation.portalAt(spawn, [navigation.CORNER_CUP_PORTAL]), null, 'returning must not immediately bounce back into the café');
+  const route = navigation.findPath(spawn, navigation.CORNER_CUP_PORTAL, navigation.canWalkStreet, navigation.moveOnStreet);
+  assert.ok(route.length > 0, 'the player can step back into the Corner Cup entrance ring');
+});
+
 test('Town Street allows its street entrances but blocks buildings, trees, water and the fountain', () => {
   assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 768, y: 210 })), true, 'station entrance path');
-  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 1260, y: 548 })), true, 'Corner Cup entrance path');
+  assert.deepEqual(navigation.CORNER_CUP_PORTAL, { id: 'corner_cafe', label: 'Corner Cup Café', ...navigation.scaleStreetPoint({ x: 1150, y: 400 }) }, 'the entrance ring sits slightly higher on the upper cross street');
+  assert.equal(navigation.canWalkStreet(navigation.CORNER_CUP_PORTAL), true, 'Corner Cup entrance is on the upper cross street outside the storefront');
+  assert.deepEqual(navigation.CORNER_CUP_LABEL_POSITION, navigation.scaleStreetPoint({ x: 1150, y: 315 }), 'Corner Cup title is anchored above its doorway');
+  assert.equal(navigation.canWalkStreet(navigation.CORNER_CUP_LABEL_POSITION), false, 'the title sits on the storefront facade, not on the road');
+  assert.equal(navigation.portalAt(navigation.CORNER_CUP_PORTAL, [navigation.CORNER_CUP_PORTAL])?.id, 'corner_cafe', 'standing at the doorway activates the café portal');
+  assert.ok(Math.hypot(navigation.CORNER_CUP_PORTAL.x - navigation.scaleStreetPoint({ x: 1260, y: 548 }).x, navigation.CORNER_CUP_PORTAL.y - navigation.scaleStreetPoint({ x: 1260, y: 548 }).y) > 100, 'Corner Cup must not use the lower-right building marker');
   assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 350, y: 620 })), true, 'middle cross street stays open past the left houses');
-  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 1145, y: 620 })), true, 'middle cross street stays open below Corner Cup');
+  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 1145, y: 620 })), true, 'middle cross street stays open below the lower-east building');
   assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 350, y: 620 })), true, 'middle cross street remains walkable across the west side');
   assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 1400, y: 620 })), true, 'middle cross street remains walkable across the east side');
-  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 1145, y: 533 })), false, 'Corner Cup frontage where the screenshot shows the player standing');
+  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 1145, y: 533 })), false, 'lower-east building footprint');
   for (const obstruction of [
     { x: 768, y: 420 }, // central fountain
     { x: 350, y: 533 }, // middle-left house
     { x: 100, y: 180 }, // northwest homes/shop
     { x: 400, y: 300 }, // northwest market
-    { x: 1080, y: 300 }, // northeast shop
+    { x: 1080, y: 300 }, // Corner Cup storefront
     { x: 1400, y: 500 }, // post office building
     { x: 1400, y: 780 }, // southeast homes
     { x: 600, y: 780 }, // south-centre shop
@@ -48,8 +65,8 @@ test('the station and Corner Cup entrances are connected by walkable street path
   for (const destination of [
     { x: 600, y: 420 }, // paved loop around the fountain
     { x: 350, y: 620 }, // west side of the middle cross street
-    { x: 1145, y: 620 }, // east side, below Corner Cup
-    { x: 1260, y: 548 }, // café entrance
+    { x: 1145, y: 620 }, // east side, below the lower-east building
+    { x: 1150, y: 400 }, // Corner Cup entrance
     { x: 768, y: 944 }, // river walk / street exit
     { x: 1400, y: 620 }, // east side of the cross street
   ]) {
@@ -66,12 +83,12 @@ test('street movement cannot cross from a walkable road into a building', () => 
   assert.ok(result.y > navigation.scaleStreetPoint({ x: 1400, y: 590 }).y, 'movement stops at the post office frontage');
 });
 
-test('street movement stops at the Corner Cup frontage despite the adjoining road strip', () => {
+test('street movement stops at the lower-east building despite the adjoining road strip', () => {
   const start = navigation.scaleStreetPoint({ x: 1145, y: 620 });
   assert.equal(navigation.canWalkStreet(start), true, 'the approach is on the road');
   const result = navigation.moveOnStreet(start, navigation.scaleStreetPoint({ x: 0, y: -120 }));
   assert.equal(navigation.canWalkStreet(result), true);
-  assert.ok(result.y > navigation.scaleStreetPoint({ x: 1145, y: 595 }).y, 'movement stops before entering the café footprint');
+  assert.ok(result.y > navigation.scaleStreetPoint({ x: 1145, y: 595 }).y, 'movement stops before entering the building footprint');
   assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 1145, y: 533 })), false, 'the player position in the screenshot is blocked');
 });
 

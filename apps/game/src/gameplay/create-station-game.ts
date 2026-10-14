@@ -5,7 +5,7 @@ import type { MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { loadPack, preparePack } from '../features/assets/phaser-pack';
-import { authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, scaleStreetPoint, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS } from './station-navigation';
+import { authorizeStreetExit, canWalk, canWalkStreet, CORNER_CUP_LABEL_POSITION, CORNER_CUP_PORTAL, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, scaleStreetPoint, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
 import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
@@ -156,10 +156,9 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         this.labels.push(label);
         this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, shadow, label, elapsed: 0, idleFrame: '0-0', walkPrefix: `${npc.texture}-walk`, labelOffset: 108, clip: movePlayer });
       }
-      for (const portal of this.portalsForLocation()) this.addPortalRing(portal);
+      for (const portal of this.portalsForLocation()) this.addPortalRing(portal, portal.id !== 'corner_cafe');
       if (activeLocation === 'street') {
-        const label = scaleStreetPoint({ x: 1250, y: 318 });
-        this.add.text(label.x, label.y, 'CORNER CUP', {
+        this.add.text(CORNER_CUP_LABEL_POSITION.x, CORNER_CUP_LABEL_POSITION.y, 'CORNER CUP', {
           fontFamily: 'sans-serif', fontSize: '26px', fontStyle: 'bold', color: '#fff7e8',
           backgroundColor: '#315749', padding: { x: 14, y: 7 },
         }).setOrigin(0.5).setDepth(1500);
@@ -211,16 +210,16 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.worldReady = true;
       callbacks.onReady();
     }
-    private addPortalRing(portal: StationPortal) {
+    private addPortalRing(portal: StationPortal, showLabel = true) {
       const halo = this.add.circle(portal.x, portal.y, 34, 0x73dfa0, 0.3).setStrokeStyle(4, 0x9cffbd, 0.85).setDepth(5);
       this.add.circle(portal.x, portal.y, 22, 0xc3ffd5, 0.14).setStrokeStyle(2, 0xd3ffe0, 0.75).setDepth(5);
-      this.add.text(portal.x, portal.y - 42, portal.label, { fontFamily: 'sans-serif', fontSize: '22px', color: '#263630', backgroundColor: '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
+      if (showLabel) this.add.text(portal.x, portal.y - 42, portal.label, { fontFamily: 'sans-serif', fontSize: '22px', color: '#263630', backgroundColor: '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
       this.tweens.add({ targets: halo, scale: 1.2, alpha: 0.72, duration: 750, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
     private portalsForLocation(): StationPortal[] {
       if (activeLocation === 'station') return STATION_PORTALS;
       if (activeLocation === 'street') return [
-        { id: 'corner_cafe', label: 'Corner Cup Café', ...scaleStreetPoint({ x: 1260, y: 548 }) },
+        CORNER_CUP_PORTAL,
         { id: 'station', label: 'Train Station', ...scaleStreetPoint({ x: 768, y: 130 }) },
       ];
       const destination: MapLocation = this.previousLocation === 'street' ? 'street' : 'station';

@@ -5,8 +5,21 @@ export const STREET_MAP_SIZE = { width: 1536 * STREET_MAP_SCALE, height: 1024 * 
 export function scaleStreetPoint(point: Point): Point {
   return { x: point.x * STREET_MAP_SCALE, y: point.y * STREET_MAP_SCALE };
 }
+// The portal sits on the upper street directly in front of the striped-awning
+// Corner Cup storefront; keep the title above that same doorway.
+export const CORNER_CUP_PORTAL: StationPortal = {
+  id: 'corner_cafe',
+  label: 'Corner Cup Café',
+  ...scaleStreetPoint({ x: 1150, y: 400 }),
+};
+export const CORNER_CUP_LABEL_POSITION = scaleStreetPoint({ x: 1150, y: 315 });
 export function streetSpawnPoint(returningFromStreetPortal: boolean): Point {
-  return scaleStreetPoint(returningFromStreetPortal ? { x: 1260, y: 620 } : { x: 768, y: 210 });
+  if (returningFromStreetPortal) {
+    // Place the player directly in front of the café ring on the cross street,
+    // just outside its auto-entry radius so returning does not reopen the café.
+    return { x: CORNER_CUP_PORTAL.x, y: CORNER_CUP_PORTAL.y + 45 };
+  }
+  return scaleStreetPoint({ x: 768, y: 210 });
 }
 export function clampStreetPosition(point: Point): Point {
   return {
@@ -24,7 +37,7 @@ const streetRoads: Bounds[] = [
   { left: 0, right: 1536, top: 395, bottom: 435 }, // Upper cross street
   { left: 0, right: 1536, top: 600, bottom: 645 }, // Street below the middle buildings
   { left: 0, right: 1536, top: 880, bottom: 930 }, // River walk
-  { left: 1238, right: 1300, top: 415, bottom: 610 }, // Corner Cup approach
+  { left: 1238, right: 1300, top: 415, bottom: 610 }, // East-side lane
 ];
 const streetObstacles: Bounds[] = [
   { left: 711, right: 825, top: 389, bottom: 467 }, // Fountain basin, leaving its paved circular walk open
@@ -34,10 +47,10 @@ const streetObstacles: Bounds[] = [
   { left: 986, right: 1026, top: 448, bottom: 520 }, // South-east plaza tree
   { left: 0, right: 225, top: 0, bottom: 290 }, // North-west homes and shop
   { left: 280, right: 590, top: 205, bottom: 390 }, // North-west market
-  { left: 940, right: 1220, top: 205, bottom: 390 }, // North-east shop
+  { left: 940, right: 1220, top: 205, bottom: 390 }, // Corner Cup storefront
   { left: 1300, right: 1536, top: 0, bottom: 300 }, // North-east pharmacy
   { left: 270, right: 455, top: 440, bottom: 595 }, // Middle-left house
-  { left: 1035, right: 1250, top: 435, bottom: 595 }, // Corner Cup building
+  { left: 1035, right: 1250, top: 435, bottom: 595 }, // Lower-east building
   { left: 1315, right: 1536, top: 370, bottom: 590 }, // Post office building
   { left: 0, right: 235, top: 690, bottom: 875 }, // South-west shop
   { left: 260, right: 460, top: 690, bottom: 875 }, // South-west house
