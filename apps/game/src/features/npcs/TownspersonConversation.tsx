@@ -37,7 +37,7 @@ export function TownspersonConversation({ npc, sound, onClose, onRefresh }: {
   }, [controller]);
   const portraitIndex = Math.max(0, portraitFrames.indexOf(npc.portraitFrame as typeof portraitFrames[number]));
   const portraitPosition = `${portraitIndex % 3 * 50}% ${Math.floor(portraitIndex / 3) * 100}%`;
-  return <DialogueFrame>
+  return <DialogueFrame soundControl>
     <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0">
       <div className="min-w-0"><h2>{npc.name}</h2><p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{npc.job}</p></div>
       <GameButton label="Close" disabled={state.pending} onClick={onClose} />

@@ -56,7 +56,7 @@ export function ShopConversation({ npcId, sound, onClose, onRefresh }: {
     {isCafeSeller ? <ShopMenuPanel refreshKey={ordersRefreshKey} showMenu={panelVisibility.menu} showOrders={panelVisibility.orders} /> : null}
   </>;
   return <>
-    <DialogueFrame>
+    <DialogueFrame soundControl>
       <div className="dialogue-header flex items-center justify-between gap-2"><h2>{npc.name}</h2><GameButton label="Close" disabled={state.pending} onClick={onClose} /></div>
       <SavedConversation state={state} sound={sound} online={online} send={send}
         details={details}

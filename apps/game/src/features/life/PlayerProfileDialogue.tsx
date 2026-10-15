@@ -50,6 +50,7 @@ export function PlayerProfileDialogue({
       <Stat label="Wallet" value={`$${state?.coins ?? coins}`} />
       {state ? <Stat label="Energy" value={`${state.energy}%`} /> : life ? <Stat label="Energy" value="Loading" /> : null}
     </dl>
+    {state ? <div className="lg:hidden"><h3 className="font-bold">Appearance</h3><p className="text-sm [overflow-wrap:anywhere]">Hair: {state.appearance.hair} · Shirt: {state.appearance.shirt ?? 'default'} · Trousers: {state.appearance.trousers}</p></div> : null}
     {life?.error ? <p role="alert" className="text-[14px] text-[#843514]">{life.error}</p> : null}
     {life?.retry ? <div className="flex flex-col gap-2">
       <p className="text-[13px] text-[#52644f]">The previous action may have saved. Retry to check safely.</p>

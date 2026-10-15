@@ -12,10 +12,14 @@ import { thinkingSpeaker } from './conversation-history';
 import { useNarration } from '../speech/use-narration';
 import { npcVoice } from '../speech/npc-voice';
 import { MessageComposer } from './MessageComposer';
+import { usePreferences } from '../features/hud/usePreferences';
 export default function ConversationPanel({ npcId, playerName, sound, onClose, onDirections }: ConversationPanelProps) {
   const history = useRef<HTMLDivElement>(null);
   const [text, setText] = useState('');
   const [coach, setCoach] = useState(false);
+  const { coach: coachEnabled } = usePreferences();
+  const [mobileFeedback, setMobileFeedback] = useState(true);
+  useEffect(() => { setMobileFeedback(true); }, [coachEnabled]);
   const [finalizing, setFinalizing] = useState(false);
   const sending = useRef(false);
   const conversation = useStationConversation(npcId);
@@ -36,7 +40,7 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
       if (reply !== null && conversation.send(reply)) { setText(''); setCoach(false); }
     } finally { sending.current = false; setFinalizing(false); }
   };
-  return <DialogueFrame>
+  return <DialogueFrame soundControl>
     <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0"><h2>{npcName}</h2><GameButton label="Close" onClick={() => { speech.stop(); voice.stop(); onClose(); }} /></div>
     <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 overflow-auto pr-1 [@media(max-height:480px)]:h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
       {conversation.messages.map((message) => {
@@ -51,7 +55,8 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
     {speech.supported ? <p className="hint text-muted text-[13px] leading-[1.4]">{finalizing ? 'Finishing recording…' : speech.listening ? 'Recording… Tap Send to finish, or Stop to review.' : 'Voice may use an online speech service. Review before sending.'}</p> : null}
     {speech.error ? <p role="alert" className="error text-[#a43f34] text-[15px] leading-[1.4]">{speech.error}</p> : null}
     {voice.error ? <p role="status" className="hint text-muted text-[13px] leading-[1.4]">{voice.error}</p> : null}
-    {conversation.exchange.correction ? <GameButton label={coach ? 'Hide Coach' : 'Coach'} onClick={() => setCoach(!coach)} /> : null}
-    {coach && conversation.exchange.correction ? <p>{conversation.exchange.correction.improved} {conversation.exchange.correction.reason}</p> : null}
+    <div className="hidden lg:contents">{conversation.exchange.correction ? <GameButton label={coach ? 'Hide Coach' : 'Coach'} onClick={() => setCoach(!coach)} /> : null}
+    {coach && conversation.exchange.correction ? <p>{conversation.exchange.correction.improved} {conversation.exchange.correction.reason}</p> : null}</div>
+    {coachEnabled ? <div className="lg:hidden"><GameButton label="Coach" onClick={() => setMobileFeedback(!mobileFeedback)} />{conversation.exchange.correction && mobileFeedback ? <aside aria-label="Coach feedback">{conversation.exchange.correction.improved} {conversation.exchange.correction.reason}</aside> : null}</div> : null}
   </DialogueFrame>;
 }

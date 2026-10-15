@@ -1,5 +1,5 @@
 import type { StationScreenProps } from "../types/ui/gameplay";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { StationSpeaker } from "@life-abroad/shared";
 import GameCanvas from "./GameCanvas";
 import ConversationPanel from "./ConversationPanel";
@@ -23,6 +23,8 @@ import type { StoreLocation } from "../types/gameplay/world";
 import { isStreetNpc, STREET_NPCS, type StreetNpcId } from "../features/npcs/street-npcs";
 import { TownspersonConversation } from "../features/npcs/TownspersonConversation";
 import { ReviewDialogue } from "../features/learning/ReviewDialogue";
+import { usePreferences } from "../features/hud/usePreferences";
+import { Settings } from "../features/hud/Settings";
 
 const TUTORIAL_KEY = "movementTutorialSeen";
 
@@ -60,7 +62,16 @@ export default function StationScreen({
   const [reviewOpen, setReviewOpen] = useState(false);
   const [closedStore, setClosedStore] = useState<StoreLocation | null>(null);
   const [goals, setGoals] = useState(false);
-  const [sound, setSound] = useState(true);
+  const { sound, set: setPreference } = usePreferences();
+  const menuWasOpen = useRef(false);
+  const closeMenu = useCallback(() => setMenu(false), []);
+  useEffect(() => {
+    if (menu) { menuWasOpen.current = true; return; }
+    if (menuWasOpen.current) {
+      menuWasOpen.current = false;
+      document.querySelector<HTMLButtonElement>('button[aria-label="Menu"]')?.focus();
+    }
+  }, [menu]);
   const [exitUnlocked, setExitUnlocked] = useState(false);
   const [practiceDirectionsAsked, setPracticeDirectionsAsked] = useState(false);
   const [exitReminder, setExitReminder] = useState(false);
@@ -138,22 +149,29 @@ export default function StationScreen({
           {...(life ? { savedTime: life.time, ...(life.state ? { clockRate: life.state.clockRate } : {}) } : {})}
         />
         <div className="station-tools [grid-column:2] [grid-row:1] [justify-self:end] flex gap-2 pointer-events-auto [@media(max-width:479px)]:gap-1">
-          <OverlayButton
+          <div className="hidden lg:block"><OverlayButton
             label={sound ? "Sound on" : "Sound off"}
             icon={sound ? "🔊" : "🔇"}
-            onClick={() => setSound(!sound)}
-          />
-          {!overlayOpen ? (
+            onClick={() => setPreference('sound', !sound)}
+          /></div>
+          {!overlayOpen || menu ? (
+            <span className={menu ? 'relative lg:hidden' : 'relative'}>
             <OverlayButton
               label="Menu"
               icon="≡"
-              onClick={() => setMenu(true)}
+              onClick={() => { if (menu) closeMenu(); else setMenu(true); }}
             />
+            {!sound ? <span aria-hidden="true" className="pointer-events-none absolute -bottom-0.5 -right-0.5 rounded-full bg-dialogue text-[10px] lg:hidden">🔇</span> : null}
+            </span>
           ) : null}
         </div>
       </div>
       {showGoals ? (
         <div className="goals-control absolute [bottom:max(24px,_env(safe-area-inset-bottom))] left-3 flex flex-col items-start gap-1 [@media(max-width:479px)]:[&_.game-button]:[padding:8px_12px] [@media(max-width:479px)]:[&_.game-button]:text-[14px]">
+          <button type="button" onClick={() => setGoals(true)} aria-label={arrival ? `Open saved arrival goals, ${arrival.goalsLabel}` : 'Open goals'} className="flex min-h-11 items-center gap-1.5 rounded-xl border-0 bg-[#315749] px-3 py-1 text-[13px] font-bold text-[#fff8e7] lg:hidden">
+            Goals <span className="rounded-md bg-[#ffe08a] px-1.5 py-1 text-[10px] text-ink">{arrival?.goalsLabel ?? (notice.fresh ? `${notice.fresh} new` : notice.active ? `${notice.active} active` : 'Your quests')}</span>
+          </button>
+          <div className="hidden lg:flex flex-col items-start gap-1">
           <span className="goal-notice bg-[#ffe08a] rounded-[8px] [padding:4px_8px] text-[12px] font-bold">
             {arrival?.goalsLabel ??
               (notice.fresh
@@ -177,6 +195,7 @@ export default function StationScreen({
             }
             onClick={() => setGoals(true)}
           />
+          </div>
         </div>
       ) : null}
       {goals ? (
@@ -241,7 +260,7 @@ export default function StationScreen({
           onRefresh={() => life?.refresh() ?? Promise.resolve()}
         />
       ) : npcId === "npc_station_information" && arrival ? (
-        <DialogueFrame>
+        <DialogueFrame soundControl>
           <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0">
             <h2>Ruth</h2>
             <GameButton
@@ -303,8 +322,9 @@ export default function StationScreen({
         </DialogueFrame>
       ) : null}
       {menu ? (
-        <DialogueFrame>
+        <DialogueFrame onClose={closeMenu}>
           <h2 className="text-[18px] font-extrabold">Paused</h2>
+          <div className="lg:hidden"><Settings /></div>
           {!practice ? <GameButton label="English review" onClick={() => { setMenu(false); setReviewOpen(true); }} /> : null}
           <GameButton
             label="Movement tutorial"
@@ -315,7 +335,7 @@ export default function StationScreen({
           />
           <GameButton
             label="Return to game"
-            onClick={() => setMenu(false)}
+            onClick={closeMenu}
           />
           {pwa.updateReady ? (
             <GameButton

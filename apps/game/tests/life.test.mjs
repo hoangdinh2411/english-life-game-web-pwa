@@ -64,7 +64,9 @@ try {
     assert.match(html, /42 XP/);
     assert.match(html, /\$500/);
     assert.match(html, /aria-valuenow="50"/);
-    assert.doesNotMatch(html, /wardrobe|Appearance|Hair|Trousers/i);
+    assert.match(html, /Hair:.*brown/);
+    assert.match(html, /Trousers:.*navy/);
+    assert.doesNotMatch(html, /wardrobe/i);
     assert.doesNotMatch(html, /Buy and consume|Drink \(\+|Café/);
   });
   test('player profile retains retry for an uncertain saved action', () => {

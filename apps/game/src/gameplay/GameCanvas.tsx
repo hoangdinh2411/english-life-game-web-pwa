@@ -77,11 +77,11 @@ export default function GameCanvas({ paused, worldPaused = paused, conversationN
     {!ready || error ? <div className="station-loading absolute [top:40%] [left:50%] [transform:translateX(-50%)] bg-dialogue p-5 rounded-[16px] max-w-[calc(100%_-_24px)]">{error ? <><p role="alert">{error}</p><GameButton label="Retry map" onClick={() => setAttempt((value) => value + 1)} /></> : <p role="status">Loading map… {Math.round(progress * 100)}%</p>}</div> : null}
     {ready && !error && talkPrompt && !paused ? <button
       type="button"
-      className="talk-control absolute z-10 cursor-pointer rounded-sm border-0 bg-[#315749] p-0 text-[12px] font-bold leading-tight text-[#fff8e7] hover:bg-[#244236] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe08a]"
+      className="talk-control absolute z-10 min-w-11 cursor-pointer rounded-sm border-0 bg-[#315749] p-0 text-[12px] font-bold leading-tight text-[#fff8e7] lg:bg-transparent hover:bg-[#244236] lg:hover:bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe08a]"
       style={{ left: talkPrompt.x, top: talkPrompt.y, transform: 'translate(-50%, -100%)' }}
       aria-label={`Talk to ${talkPrompt.name}`}
       aria-keyshortcuts="E"
       onClick={() => game.current?.talk()}
-    >Talk</button> : null}
+    ><span className="lg:inline-flex lg:h-11 lg:items-center lg:bg-[#315749]">Talk</span></button> : null}
   </div>;
 }

@@ -52,6 +52,10 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
 - Signed-in players open their character profile by selecting the player card
   in the game HUD. The profile shows saved XP, wallet and energy; the pause menu
   contains only game controls. Café orders stay in seller conversations.
+  Below 1024px the card is compact, Goals includes its status badge, and the
+  single menu button opens Sound/Coach Settings saved on this device. Dialogue
+  Settings remain reachable during conversations; full profile details include
+  appearance. The normal desktop HUD keeps its existing layout.
   Sleep is available below 50% energy and advances eight game hours with the
   existing fade/refill animation; reduced motion skips the animation. Energy,
   wallet and the independent 2× game clock are saved on the server. Local

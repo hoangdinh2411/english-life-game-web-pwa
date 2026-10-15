@@ -106,6 +106,9 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
 `content/`; don't hide it in TypeScript components or controllers.
 
 ## Trust and data boundaries
+- Client-only Sound/Coach preferences live under `life-abroad.preferences` in
+  device `localStorage` (`src/features/hud`). Invalid/blocked storage falls back
+  to defaults/in-memory state; no account data or tokens are stored with them.
 - Browser calls **Supabase SDK only for authentication** (`apps/game/src/api/supabase-auth.ts`).
   Tokens and expiry persist in `localStorage` for PWA reopen; one-time
   `sessionStorage` migration; both stores clear on sign-out. Never place

@@ -134,7 +134,7 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
-- [ ] **T28 — Tidy mobile HUD (before the minimap).** Same information, fewer
+- [x] **T28 — Tidy mobile HUD (before the minimap).** Same information, fewer
       parts on screen. Inspect the current HUD first and keep everything
       reachable. Screens below 1024 px wide change; 1024 px and wider stays as
       it is.
@@ -164,7 +164,10 @@ test@gmail.com / 12341234.
       320, 375, 768 and 1024 px on the station, the café and Town Street: no
       overlaps, no horizontal scroll, buttons 44px or larger, a 30-character name
       and `$99,999` are not clipped, text zoom at 200% still works, and the
-      1024 px layout is unchanged.
+      1024 px layout is unchanged. Verified with the existing account across all
+      three maps/four widths; saved switches, narration mute, Coach visibility,
+      Escape/focus, long-name/wallet and 200% text checks passed. Game tests,
+      typecheck, changed-file lint, production build and PWA checks passed.
 - [ ] **T29 — Minimap (after T28).** A small map that shows where the player is
       and where the other NPCs are on the **current** map. Client only: no new
       API, content or assets. Code under `src/features/minimap`.
