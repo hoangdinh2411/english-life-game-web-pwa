@@ -35,6 +35,9 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   residents can be approached for scripted small talk about everyday topics.
   Walking NPCs continue through route waypoints without timed stops; nearby
   interaction, conversations and world pause still stop movement.
+  Three residents stay within each outer neighborhood (northwest, northeast,
+  southwest and southeast); three others occupy the middle streets/plaza.
+  Separate west/east routes keep the lower-left populated as residents walk.
   NPC profiles and route data live in `content/seed/street-npcs.json`; resident
   sprite art downloads by nearby atlas row as the player approaches, so distant
   character artwork stays unloaded until needed. Portrait links can be changed

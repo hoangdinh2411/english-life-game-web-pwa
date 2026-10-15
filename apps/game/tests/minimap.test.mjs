@@ -17,15 +17,26 @@ test('Map labels include NPCs and exits at readable device-scaled sizes, using a
   const previousWindow = globalThis.window;
   globalThis.window = { devicePixelRatio: 2 };
   try {
-    const texts = [];
-    const context = { font: '', setTransform() {}, clearRect() {}, drawImage() {}, beginPath() {}, rect() {}, arc() {}, fill() {}, stroke() {}, moveTo() {}, lineTo() {}, fillRect() {}, strokeText() {},
-      measureText(text) { return { width: text.length * 6 }; }, fillText(text, x, y) { texts.push({ text, x, y, font: this.font }); } };
+    const texts = [], backgrounds = [], lines = [];
+    const context = { font: '', setTransform() {}, clearRect() {}, drawImage() {}, beginPath() {}, rect() {}, arc() {}, fill() {}, stroke() {}, moveTo() {}, lineTo(...args) { lines.push(args); }, fillRect(...args) { backgrounds.push(args); }, strokeText() {},
+      measureText(text) { return { width: text.length * 6 }; }, fillText(text, x, y) { texts.push({ text, x, y, font: this.font, align: this.textAlign }); } };
     const canvas = { width: 0, height: 0, clientWidth: 280, getContext: () => context };
-    const snapshot = { width: 1536, height: 1024, image: {}, player: { x: 768, y: 500 }, npcs: [{ name: 'Maya', x: 1200, y: 400 }], portals: [{ label: 'Train Station', x: 1536, y: 0 }] };
+    const snapshot = { width: 1536, height: 1024, image: {}, player: { x: 768, y: 500 }, npcs: [{ name: 'Maya', x: 1200, y: 400 }], portals: [{ label: 'Train Station', x: 768, y: 512 }] };
     drawMinimap(canvas, snapshot);
     assert.equal(canvas.width, 560); assert.equal(canvas.height, 373);
     assert.ok(texts.some(label => label.text === 'Maya' && label.font === '11px sans-serif'));
-    assert.ok(texts.some(label => label.text === '↗ Train Station'));
+    const exit = texts.find(label => label.text === 'Train Station');
+    assert.ok(exit);
+    assert.equal(exit.align, 'center'); assert.equal(exit.x, 140);
+    assert.ok(exit.y < 280 / 3 - 4, 'Exit name must be above its circle');
+    assert.equal(exit.font, '800 12px sans-serif');
+    assert.ok(exit.y <= 280 / 3 - 25, 'Building label must leave a clear gap above NPC names');
+    const npc = texts.find(label => label.text === 'Maya');
+    assert.equal(npc.align, 'center');
+    assert.equal(npc.x, 218.75);
+    assert.ok(npc.y < 400 * 280 / 1536, 'NPC name must sit above its dot');
+    assert.equal(backgrounds.length, 0, 'NPC and exit labels must have no backgrounds');
+    assert.equal(lines.length, 0, 'NPC labels must not draw connecting lines');
     assert.ok(texts.every(label => label.x >= 0 && label.x <= 280 && label.y >= 0 && label.y <= 187));
     texts.length = 0; canvas.clientWidth = 560;
     drawMinimap(canvas, snapshot);

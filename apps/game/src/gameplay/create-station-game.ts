@@ -202,7 +202,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       }
       for (const portal of this.portalsForLocation()) this.addPortalRing(portal, portal.id !== 'corner_cafe');
       if (activeLocation === 'street') {
-        this.add.text(CORNER_CUP_LABEL_POSITION.x, CORNER_CUP_LABEL_POSITION.y, 'CORNER CUP', {
+        this.add.text(CORNER_CUP_LABEL_POSITION.x, CORNER_CUP_LABEL_POSITION.y - 18, 'CORNER CUP', {
           fontFamily: 'sans-serif', fontSize: '26px', fontStyle: 'bold', color: '#fff7e8',
           backgroundColor: '#315749', padding: { x: 14, y: 7 },
         }).setOrigin(0.5).setDepth(1500);
@@ -287,7 +287,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     private addPortalRing(portal: StationPortal, showLabel = true) {
       const halo = this.add.circle(portal.x, portal.y, 34, 0x73dfa0, 0.3).setStrokeStyle(4, 0x9cffbd, 0.85).setDepth(5);
       this.add.circle(portal.x, portal.y, 22, 0xc3ffd5, 0.14).setStrokeStyle(2, 0xd3ffe0, 0.75).setDepth(5);
-      if (showLabel) this.add.text(portal.x, portal.y - 42, portal.label, { fontFamily: 'sans-serif', fontSize: '22px', color: '#263630', backgroundColor: '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
+      if (showLabel) this.add.text(portal.x, portal.y - 64, portal.label, { fontFamily: 'sans-serif', fontSize: '22px', fontStyle: 'bold', color: '#263630', backgroundColor: '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
       this.tweens.add({ targets: halo, scale: 1.2, alpha: 0.72, duration: 750, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
     private portalsForLocation(): StationPortal[] {

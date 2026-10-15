@@ -90,7 +90,14 @@ run.onclick = async () => {
       // Wait for one published 10 Hz snapshot, then compare against the real scene.
       const expected = scene().npcActors.map(actor => actor.npc.name);
       await until(() => document.querySelector('#minimap-content canvas')?.getAttribute('data-map-id') === map && document.querySelector('#minimap-content canvas')?.getAttribute('aria-label')?.startsWith(`Current map: ${expected.length} people.`), 'Stale map markers');
-      if (map === 'street') assert(STREET_NPCS.every(npc => expected.includes(npc.name)), 'Missing Town Street resident');
+      if (map === 'street') {
+        assert(STREET_NPCS.every(npc => expected.includes(npc.name)), 'Missing Town Street resident');
+        const positions = scene().npcActors.map(actor => ({ x: actor.npc.x / 1.5, y: actor.npc.y / 1.5 }));
+        for (const contains of [point => point.x < 700 && point.y < 500, point => point.x > 900 && point.y < 500,
+          point => point.x < 700 && point.y > 800, point => point.x > 900 && point.y > 800]) {
+          assert(positions.filter(contains).length === 3, 'Served actor positions do not populate all four neighborhoods');
+        }
+      }
       const description = document.querySelector('#minimap-content canvas').getAttribute('aria-label');
       assert(expected.every(name => description.includes(name)), 'Missing accessible NPC name');
       assert(document.querySelector('#minimap-content h2')?.textContent.includes('Maplewood'), 'Map title missing');

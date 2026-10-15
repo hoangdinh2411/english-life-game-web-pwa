@@ -186,8 +186,10 @@ test@gmail.com / 12341234.
         from the existing portal data. The NPC of the current objective gets the
         same yellow `!` as its name tag. **No second Phaser camera.** Redraw about
         10 times a second, only while visible; pause when the tab is hidden.
-      - **Labels:** NPC names scale with the rendered map/device. Label exits
-        directly on the map. Place the map name above the artwork, aligned right.
+      - **Labels:** NPC names scale with the rendered map/device and sit centred
+        above their dots, without backgrounds or connecting lines. Label exits
+        directly above their circles with centred, background-free text. Place
+        the map name above the artwork, aligned right, without a background.
         No closest-person list, exit list, or visible legend.
       - **Data:** positions come from the scene; the NPC list comes from the
         current map only. On a map change it clears and shows the new map. It also

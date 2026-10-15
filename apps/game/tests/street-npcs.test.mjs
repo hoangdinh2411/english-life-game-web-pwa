@@ -5,6 +5,22 @@ import { updateNpcActors } from '../src/features/npcs/npc-actors.ts';
 import { advanceNpc, patrolPose } from '../src/features/npcs/npc-motion.ts';
 import { canWalkStreet, scaleStreetPoint } from '../src/gameplay/station-navigation.ts';
 
+test('Residents keep all four outer neighborhoods populated without crowding the central plaza', () => {
+  for (let elapsed = 0; elapsed <= 600000; elapsed += 1000) {
+    const positions = STREET_NPCS.map(npc => {
+      const points = STREET_NPC_ROUTES.find(route => route.id === npc.routeId).points;
+      return npc.stationary ? points[npc.startWaypoint] : patrolPose({ points, startWaypoint: npc.startWaypoint }, elapsed, 46 / 1.5);
+    });
+    for (const [name, contains] of [
+      ['northwest', point => point.x < 700 && point.y < 500],
+      ['northeast', point => point.x > 900 && point.y < 500],
+      ['southwest', point => point.x < 700 && point.y > 800],
+      ['southeast', point => point.x > 900 && point.y > 800],
+    ]) assert.equal(positions.filter(contains).length, 3, `${name} needs three residents at ${elapsed}ms`);
+    assert.ok(positions.filter(point => point.x >= 660 && point.x <= 900 && point.y >= 300 && point.y <= 550).length <= 1, 'Central plaza must not attract most residents');
+  }
+});
+
 test('Town Street residents have distinct profiles and 10–15 walkable route steps', () => {
   assert.equal(STREET_NPCS.length, 15);
   assert.equal(new Set(STREET_NPCS.map(npc => npc.id)).size, 15);
