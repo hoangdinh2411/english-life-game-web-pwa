@@ -21,7 +21,7 @@ Native/Expo/WebView tasks are retired.
 Example task request:
 
 ```text
-Read MASTER_PROMPT.md and implement task T4 from docs/TASKS.md.
+Read docs/MASTER_PROMPT.md and implement task T4 from docs/TASKS.md.
 
 Follow all applicable project instructions.
 
@@ -56,6 +56,12 @@ test@gmail.com / 12341234.
       focused tests, server build and changed-file lint passed. Existing-account
       rollback integration passed with mock and live `gemini-3.5-flash-lite`;
       saved replay and unchanged money/items/quests verified.
+- [x] **T10c — Script-first AI routing:** every NPC checks pending state,
+      authored scripts and content-derived topic words before AI; prompts use
+      database persona, place/open status, learner level and six redacted turns.
+      Verified with 27 NPCs × 7 scripted examples and the existing account;
+      seller/receptionist/resident AI, replay, disabled AI and pending states
+      passed in a rollback-only integration test.
 - [x] **T10a — AI provider interface and mock:** server-only text provider,
       mock/default configuration and authored fallback on errors, 429 or
       timeout. AI/dialogue tests (13), server build/typecheck and changed-file
@@ -165,32 +171,6 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
-- [ ] **T10c — Script-first routing and NPC prompt builder (after T10b).**
-      Inspect what T10b already does for Town Street residents and extend it to
-      every NPC; do not rewrite it. Every NPC may use AI, but the server
-      **always checks the scripts first**. No AI call and no network call
-      happens before step 4. Order of checks for each message: 1. An order or a
-      quest step is pending → scripted only. 2. A script matches (greeting,
-      small-talk pool, order, price, menu, tickets, directions, opening hours,
-      quests) → scripted answer. 3. No script matched, but the message uses a
-      script-topic word (words come from existing content: shop item names and
-      intent keywords, no new hand-written list) → scripted clarification line,
-      never AI. 4. Otherwise → AI, only if `AI_ENABLED` is on (default off; add
-      it if missing) and the limits allow. One server function builds the prompt
-      from database data: NPC name, role, personality, speaking level, place and
-      its opening status, the player's English level, and the last 6 turns. It
-      never includes the player's email, real name or user id. The prompt tells
-      the NPC to stay in character, to keep to the job (never state prices or
-      promise items), and to repeat the correct form naturally (no extra AI call
-      for corrections). Done when tests show: every scripted example from the
-      content never reaches AI (greeting, weather, how are you, order, price,
-      tickets); "I want a coffee" and "how much is the tea?" never reach AI for
-      any NPC; "coffe plz two" gets a scripted clarification; mid-order messages
-      stay scripted; "Do you like football?" reaches AI for a seller, the
-      receptionist and a Town Street resident; the AI is called after the
-      scripts, never before; the prompt has persona and level; no personal
-      identifiers; history is cut to 6 turns; nothing reaches AI while
-      `AI_ENABLED` is off.
 - [ ] **T10d — Safety layer (after T10c).** Input: trimmed, at most 300
       characters. Output checks: plain text only, English, about 40 words at
       most, no markdown, no claims about prices, items, rewards or quests, no

@@ -227,7 +227,7 @@ export default function GameCanvas({
       {ready && !error && talkPrompt && !paused ? (
         <button
           type="button"
-          className="talk-control absolute z-10 min-w-11 cursor-pointer rounded-sm border-0 bg-[#315749] p-0 text-[12px] font-bold leading-tight text-[#fff8e7] lg:bg-transparent hover:bg-[#244236] lg:hover:bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe08a]"
+          className="talk-control absolute z-10 cursor-pointer rounded-sm border-0 bg-[#315749] p-0 text-[12px] font-bold leading-tight text-[#fff8e7] lg:bg-transparent hover:bg-[#244236] lg:hover:bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe08a]"
           style={{
             left: talkPosition?.x,
             top: talkPosition?.y,
@@ -237,7 +237,7 @@ export default function GameCanvas({
           aria-keyshortcuts="E"
           onClick={() => game.current?.talk()}
         >
-          <span className="lg:inline-flex p-2 rounded lg:items-center lg:bg-[#315749]">
+          <span className="inline-flex p-1.5  rounded lg:items-center lg:bg-[#315749]">
             Talk
           </span>
         </button>

@@ -55,3 +55,18 @@ test('blocked audio remains readable and late playback cannot restart a stopped 
   blocked.speak('Hello'); await Promise.resolve(); await Promise.resolve();
   assert.match(errors[0], /speaker icon/);
 });
+
+test('recorded narration reports playback progress and completes at one', async () => {
+  const progress = [];
+  let audio;
+  const narrator = createRecordedNarrator(() => 'voice.wav', () => {
+    audio = { currentTime: 0, duration: 10, pause() {}, play: async () => {} };
+    return audio;
+  }, { speak() {}, stop() {} }, { onSpeaking() {}, onError() {}, onProgress: value => progress.push(value) });
+  narrator.speak('Hello');
+  await Promise.resolve();
+  audio.currentTime = 5;
+  audio.ontimeupdate();
+  audio.onended();
+  assert.deepEqual(progress, [0, 0.5, 1]);
+});

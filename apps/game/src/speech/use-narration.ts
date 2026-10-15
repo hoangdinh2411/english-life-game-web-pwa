@@ -12,6 +12,8 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
   const currentText = useRef(text); currentText.current = text;
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState('');
+  const [playback, setPlayback] = useState<{ revision: string | number | null; progress: number }>({ revision: null, progress: 1 });
+  const automaticRevision = useRef<string | number | null>(null);
   const [voicesReady, setVoicesReady] = useState(false);
   const [audioCatalog, setAudioCatalog] = useState<StationAudioCatalog | null>(null);
   const audioCatalogRef = useRef(audioCatalog);
@@ -21,9 +23,14 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
   const supported = typeof Audio !== 'undefined' && audioCatalog !== null;
   const narrationReady = audioCatalog !== null && (Boolean(findClip(text, gender, audioCatalog)) || !street && voicesReady);
   const narrator = useMemo(() => {
+    const callbacks = { onSpeaking: setSpeaking, onError: (message: string) => { setError(message); },
+      onProgress: (progress: number) => {
+        const active = automaticRevision.current;
+        if (active !== null) setPlayback(current => ({ revision: active,
+          progress: current.revision === active ? Math.max(current.progress, progress) : progress }));
+      } };
     const fallback = createNarrator(browserVoice ? window.speechSynthesis : null,
-    (message) => new SpeechSynthesisUtterance(message),
-    { onSpeaking: setSpeaking, onError: setError });
+      (message) => new SpeechSynthesisUtterance(message), callbacks);
     // A missing/broken authored street clip must not silently switch the NPC
     // back to the browser voice. Player-written replay can still use TTS.
     const recordedFallback = street ? { ...fallback, speak: (message: string, voiceGender: VoiceGender = 'male') => {
@@ -34,7 +41,7 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
     return createRecordedNarrator((message, voiceGender) => {
       const catalog = audioCatalogRef.current;
       return catalog ? findClip(message, voiceGender, catalog) : null;
-    }, (url) => new Audio(url), recordedFallback, { onSpeaking: setSpeaking, onError: setError });
+    }, (url) => new Audio(url), recordedFallback, callbacks);
   }, [browserVoice, street]);
   useEffect(() => {
     let cancelled = false;
@@ -63,9 +70,25 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
     if (!enabled) { narrator.stop(); return; }
     if (!narrationReady || lastRevision.current === revision) return;
     lastRevision.current = revision;
+    automaticRevision.current = revision;
+    setPlayback({ revision, progress: 0 });
     setError(''); narrator.speak(text, gender);
-    return () => narrator.stop();
+    const recorded = Boolean(findClip(text, gender, audioCatalogRef.current ?? []));
+    const estimatedDuration = Math.min(8000, Math.max(1200, Array.from(text).length / 14 * 1000));
+    const startedAt = Date.now();
+    const timer = !recorded && !street ? window.setInterval(() => {
+      const active = automaticRevision.current;
+      if (active !== revision) return;
+      const progress = Math.min(0.98, (Date.now() - startedAt) / estimatedDuration);
+      setPlayback(current => current.revision === revision && progress > current.progress ? { revision, progress } : current);
+    }, 80) : null;
+    return () => { if (timer !== null) window.clearInterval(timer); narrator.stop(); };
   }, [text, enabled, revision, narrator, narrationReady, gender]);
   useEffect(() => () => { lastRevision.current = null; narrator.stop(); }, [narrator]);
-  return { supported, speaking, error, stop: narrator.stop, listen: (message: string = text) => { setError(''); if (enabled && audioCatalog !== null) narrator.speak(message, gender); } };
+  const stop = () => { automaticRevision.current = null; setPlayback(current => ({ ...current, progress: 1 })); narrator.stop(); };
+  return { supported, speaking, error, ready: narrationReady, playback, stop, listen: (message: string = text) => {
+    automaticRevision.current = null;
+    setPlayback(current => ({ ...current, progress: 1 }));
+    setError(''); if (enabled && audioCatalog !== null) narrator.speak(message, gender);
+  } };
 }

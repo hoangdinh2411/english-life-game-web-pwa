@@ -23,7 +23,6 @@ export function TownspersonConversation({ npc, sound, onClose, onRefresh }: {
   const [controller] = useState(() => createConversationController({
     load: () => run(loadArrival),
     start: () => run(async token => conversationSchema.parse(await request('conversations', { npcId: npc.id }, token))),
-    read: id => run(async token => conversationSchema.parse(await request(`conversations/${encodeURIComponent(id)}`, undefined, token))),
     send: async (id, body) => {
       const turn = await run(token => sendArrivalMessage(token, id, body));
       await onRefresh();

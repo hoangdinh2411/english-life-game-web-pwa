@@ -26,12 +26,17 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
   let enabled = true;
   const order: string[] = [];
   const scripted = { text: 'Scripted reply', node: { id: 'global_repeat' }, intent: null, misunderstood: true };
-  const arrival = { locationId: 'loc_station' };
+  let arrival = { locationId: 'loc_station' };
+  const replayedArrival = { locationId: 'loc_station' };
   const module = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(ConversationsRepository).useValue({
       transaction: async (work: (client: unknown) => Promise<unknown>) => work(undefined),
       load: async () => ({ npc_id: npcId }),
-      replay: async () => replay ? { replayed: true } : null,
+      replay: async () => replay ? {
+        arrival: replayedArrival, intent: null, misunderstood: false, correction: null,
+        playerMessage: { sender: 'player', text: 'Tell me about autumn' },
+        npcMessage: { sender: 'npc', text: 'Saved reply' },
+      } : null,
       context: async () => ({ npcId, roleId: 'townsperson', personality: 'cheerful' }),
       variationIndex: async () => 0,
       pendingQuest: async () => pending,
@@ -70,8 +75,10 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
     assert.equal(energyCharges, 1);
     assert.deepEqual(order, ['script', 'ai']);
     replay = true;
-    await send();
+    arrival = { locationId: 'loc_town_street' };
+    assert.deepEqual((await send()).arrival, arrival);
     assert.equal(aiCalls, 1); assert.equal(energyCharges, 1);
+    arrival = { locationId: 'loc_station' };
     replay = false; understood = true;
     assert.equal((await send()).npcMessage.text, 'Scripted reply');
     understood = false;

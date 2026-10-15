@@ -5,7 +5,7 @@ export function createRecordedNarrator(findClip: (text: string, gender: VoiceGen
   let version = 0;
   const stop = () => {
     version++;
-    if (current) { current.onended = null; current.onerror = null; current.pause(); current.currentTime = 0; current = null; }
+    if (current) { current.onended = null; current.onerror = null; current.ontimeupdate = null; current.pause(); current.currentTime = 0; current = null; }
     fallback.stop(); callbacks.onSpeaking(false);
   };
   return {
@@ -17,7 +17,11 @@ export function createRecordedNarrator(findClip: (text: string, gender: VoiceGen
       const audio = createAudio(url);
       const request = version;
       current = audio;
-      audio.onended = () => { if (request === version) { current = null; callbacks.onSpeaking(false); } };
+      callbacks.onProgress?.(0);
+      audio.ontimeupdate = () => {
+        if (request === version && Number.isFinite(audio.duration) && audio.duration > 0) callbacks.onProgress?.(Math.min(1, audio.currentTime / audio.duration));
+      };
+      audio.onended = () => { if (request === version) { callbacks.onProgress?.(1); current = null; callbacks.onSpeaking(false); } };
       audio.onerror = () => { if (request === version) { stop(); fallback.speak(text, gender); } };
       void audio.play().then(() => { if (request === version) callbacks.onSpeaking(true); }).catch(() => {
         if (request !== version) return;

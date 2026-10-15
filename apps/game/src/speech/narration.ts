@@ -8,7 +8,7 @@ const voiceNames: Record<VoiceGender, RegExp> = {
 export function createNarrator(synthesis: Synthesis | null, createUtterance: (text: string) => Utterance, callbacks: NarrationCallbacks): Narrator {
   let current: Utterance | null = null;
   const stop = () => {
-    if (current) { current.onstart = null; current.onend = null; current.onerror = null; current = null; synthesis?.cancel(); }
+    if (current) { current.onstart = null; current.onend = null; current.onerror = null; current.onboundary = null; current = null; synthesis?.cancel(); }
     callbacks.onSpeaking(false);
   };
   return {
@@ -30,8 +30,10 @@ export function createNarrator(synthesis: Synthesis | null, createUtterance: (te
       if (gender === 'female' && voice && !voiceNames.female.test(voice.name)) utterance.pitch = 1.18;
       if (voice) utterance.voice = voice;
       current = utterance;
+      callbacks.onProgress?.(0);
       utterance.onstart = () => { if (current === utterance) callbacks.onSpeaking(true); };
-      utterance.onend = () => { if (current === utterance) { current = null; callbacks.onSpeaking(false); } };
+      utterance.onboundary = (event) => { if (current === utterance) callbacks.onProgress?.(Math.min(1, event.charIndex / text.length)); };
+      utterance.onend = () => { if (current === utterance) { callbacks.onProgress?.(1); current = null; callbacks.onSpeaking(false); } };
       utterance.onerror = () => {
         if (current !== utterance) return;
         current = null; callbacks.onSpeaking(false);

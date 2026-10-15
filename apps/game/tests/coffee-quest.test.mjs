@@ -9,10 +9,9 @@ const quest = {questId:'q_order_coffee',title:'Your First Coffee',status:'active
 const done = {...quest,status:'done',currentStepId:null,objective:null,rewardsGranted:true};
 const arrival = {questId:'q_station_arrival',status:'done',currentStepId:null,ticket:{issued:true,used:true},canEnterTownStreet:true,locationId:'loc_town_street',rewardsGranted:true};
 
-test('shared controller refreshes saved coffee completion instead of stale replay metadata', async () => {
+test('shared controller uses authoritative coffee completion returned by the message request', async () => {
   const controller = createConversationController({load:async()=>arrival,start:async()=>({id:'session',npcId:'npc_mia',arrival,messages:[],coffeeQuest:quest}),
-    send:async()=>({arrival,coffeeQuest:quest,playerMessage:{id:'player',sender:'player',text:'Confirm'},npcMessage:{id:'npc',sender:'npc',text:'Paid'}}),
-    read:async()=>({id:'session',npcId:'npc_mia',arrival,messages:[],coffeeQuest:done})});
+    send:async()=>({arrival,coffeeQuest:done,playerMessage:{id:'player',sender:'player',text:'Confirm'},npcMessage:{id:'npc',sender:'npc',text:'Paid'}})});
   await controller.load(); await controller.start(); await controller.send('Confirm');
   assert.deepEqual(controller.getSnapshot().conversation.coffeeQuest,done);
 });

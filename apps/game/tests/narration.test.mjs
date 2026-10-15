@@ -28,3 +28,15 @@ test('unavailable or blocked narration preserves readable dialogue', () => {
   createNarrator({ getVoices: () => [], cancel: () => {}, speak: () => { throw new Error('blocked'); } }, (text) => ({ text }), callbacks).speak('Hello');
   assert.match(errors[0], /read/);
 });
+
+test('browser narration reports text progress from word boundaries and completion', () => {
+  const progress = [];
+  let utterance;
+  const narrator = createNarrator({ getVoices: () => [{ name: 'English Voice', lang: 'en-US' }], cancel() {}, speak: value => { utterance = value; } },
+    text => ({ text }), { onSpeaking() {}, onError() {}, onProgress: value => progress.push(value) });
+  narrator.speak('Hello world');
+  utterance.onstart();
+  utterance.onboundary({ charIndex: 6 });
+  utterance.onend();
+  assert.deepEqual(progress, [0, 6 / 11, 1]);
+});

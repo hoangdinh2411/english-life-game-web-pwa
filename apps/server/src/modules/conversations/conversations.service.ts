@@ -71,7 +71,11 @@ export class ConversationsService {
       let arrival = await this.quests.getArrival(userId, client);
       const conversation = await this.conversations.load(client, userId, id);
       const replay = await this.conversations.replay(client, id, request);
-      if (replay) return replay;
+      if (replay) return { ...replay, arrival,
+        ...(isCafeSeller(conversation.npc_id) || conversation.npc_id === 'npc_clothes_seller'
+          ? { seller: sellerState(conversation) } : {}),
+        ...([SELLER_NPC_ID, 'npc_cafe_waiter'].includes(conversation.npc_id)
+          ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
       const receptionist = conversation.npc_id === ARRIVAL_NPC_ID;
       if (conversation.ended_at) throw new ConflictException('This conversation has ended. Start a new conversation');
       if (receptionist && arrival.locationId !== STATION_LOCATION_ID) throw new ConflictException('Visit the station receptionist first');

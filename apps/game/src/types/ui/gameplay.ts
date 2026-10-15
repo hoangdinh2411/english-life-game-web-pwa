@@ -38,6 +38,8 @@ export interface DialogueMessageProps {
   name: string;
   portrait: string;
   text: string;
+  fullText?: string;
+  revealing?: boolean;
   player?: boolean;
   thinking?: boolean;
   onReplay?: () => void;

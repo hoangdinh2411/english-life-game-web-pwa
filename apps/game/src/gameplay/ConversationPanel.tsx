@@ -13,6 +13,7 @@ import { useNarration } from '../speech/use-narration';
 import { npcVoice } from '../speech/npc-voice';
 import { MessageComposer } from './MessageComposer';
 import { usePreferences } from '../features/hud/usePreferences';
+import { shouldUseTypingFallback, useNpcMessageReveal } from '../features/dialogue/use-npc-message-reveal';
 export default function ConversationPanel({ npcId, playerName, sound, onClose, onDirections }: ConversationPanelProps) {
   const history = useRef<HTMLDivElement>(null);
   const [text, setText] = useState('');
@@ -29,6 +30,9 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
   useEffect(() => { if (history.current) history.current.scrollTop = history.current.scrollHeight; }, [conversation.messages, conversation.pending]);
   const speech = useSpeech(setText);
   const voice = useNarration(conversation.exchange.text, sound && !speech.listening && !conversation.pending, conversation.messages.at(-1)?.id ?? 0, npcVoice[npcId]);
+  const latestMessage = conversation.messages.at(-1);
+  const reveal = useNpcMessageReveal(latestMessage ? { id: latestMessage.id, text: latestMessage.text, npc: latestMessage.speaker === 'npc' } : null,
+    voice.playback, shouldUseTypingFallback(sound, voice.ready, voice.error));
   const npcName = STATION_NPCS.find((npc) => npc.id === npcId)?.name ?? 'Receptionist';
   const thinking = thinkingSpeaker(speech.listening, conversation.pending);
   const send = async () => {
@@ -45,7 +49,10 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
     <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 overflow-auto pr-1 [@media(max-height:480px)]:h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
       {conversation.messages.map((message) => {
         const displayText = message.speaker === 'player' ? formatPlayerMessage(message.text) : message.text;
-        return <DialogueMessage key={message.id} name={message.speaker === 'player' ? playerName : npcName} portrait={message.speaker === 'player' ? playerPortrait : npcPortraits[npcId]} text={displayText} player={message.speaker === 'player'} onReplay={() => voice.listen(displayText)} replayDisabled={!sound || !voice.supported || speech.listening || conversation.pending} />;
+        return <DialogueMessage key={message.id} name={message.speaker === 'player' ? playerName : npcName} portrait={message.speaker === 'player' ? playerPortrait : npcPortraits[npcId]}
+          text={reveal?.messageId === message.id ? reveal.visibleText : displayText} fullText={displayText}
+          revealing={reveal?.messageId === message.id && reveal.revealing}
+          player={message.speaker === 'player'} onReplay={() => voice.listen(displayText)} replayDisabled={!sound || !voice.supported || speech.listening || conversation.pending} />;
       })}
       {thinking ? <DialogueMessage name={thinking === 'player' ? playerName : npcName} portrait={thinking === 'player' ? playerPortrait : npcPortraits[npcId]} player={thinking === 'player'} thinking text="Thinking…" /> : null}
       {speech.interim ? <p>{speech.interim}</p> : null}

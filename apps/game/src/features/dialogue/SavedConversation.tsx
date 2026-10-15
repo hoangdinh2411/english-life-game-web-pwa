@@ -9,6 +9,7 @@ import { useNarration } from '../../speech/use-narration';
 import { useSpeech } from '../../speech/use-speech';
 import { npcVoice } from '../../speech/npc-voice';
 import { usePreferences } from '../hud/usePreferences';
+import { shouldUseTypingFallback, useNpcMessageReveal } from './use-npc-message-reveal';
 
 export function SavedConversation({ state, sound, online, send, retry, displayNpc, completed = false, details }: {
   state: ConversationSnapshot; sound: boolean; online: boolean;
@@ -27,6 +28,9 @@ export function SavedConversation({ state, sound, online, send, retry, displayNp
   const blocked = state.pending || finalizing || !online || completed || Boolean(state.conversation?.seller?.closed) || !state.conversation;
   const lastNpc = state.conversation?.messages.findLast((message) => message.sender === 'npc');
   const voice = useNarration(lastNpc?.text ?? '', sound && !state.pending && !speech.listening, lastNpc?.id ?? '', npcVoice[state.conversation?.npcId ?? 'npc_station_information'], state.conversation?.npcId);
+  const latestMessage = state.conversation?.messages.at(-1);
+  const reveal = useNpcMessageReveal(latestMessage ? { id: latestMessage.id, text: latestMessage.text, npc: latestMessage.sender === 'npc' } : null,
+    voice.playback, shouldUseTypingFallback(sound, voice.ready, voice.error));
   useEffect(() => { if (history.current) history.current.scrollTop = history.current.scrollHeight; }, [state.conversation?.messages]);
   const submit = async (original = false) => {
     if (sending.current || blocked) return;
@@ -41,7 +45,9 @@ export function SavedConversation({ state, sound, online, send, retry, displayNp
   return <>
     <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 overflow-auto pr-1 [@media(max-height:480px)]:h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
       {state.conversation?.messages.map((message) => <DialogueMessage key={message.id}
-        name={message.sender === 'player' ? 'You' : displayNpc?.name ?? 'Ruth'} text={message.text}
+        name={message.sender === 'player' ? 'You' : displayNpc?.name ?? 'Ruth'}
+        text={reveal?.messageId === message.id ? reveal.visibleText : message.text} fullText={message.text}
+        revealing={reveal?.messageId === message.id && reveal.revealing}
         player={message.sender === 'player'} portrait={message.sender === 'player' ? playerPortrait : displayNpc?.portrait ?? npcPortraits.npc_station_information}
         portraitPosition={message.sender === 'npc' ? displayNpc?.portraitPosition : undefined}
         onReplay={() => voice.listen(message.text)} replayDisabled={!sound || !voice.supported || state.pending || speech.listening} />)}

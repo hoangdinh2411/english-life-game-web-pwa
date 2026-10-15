@@ -4,7 +4,8 @@
 @source "./";
 
 @theme {
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --color-paper: #f6f0e4;
   --color-card: #fffaf0;
   --color-ink: #263630;
@@ -16,23 +17,75 @@
 
 /* Preserve browser form defaults; importing Preflight would change existing controls. */
 @layer base {
-:root { @apply font-sans text-ink bg-paper [font-synthesis:none]; }
-*, *::before, *::after { @apply box-border; }
-body { @apply m-0; }
-button, input, textarea { @apply [font:inherit]; }
-button { @apply cursor-pointer min-h-11; }
-button:disabled { @apply cursor-default opacity-[0.45]; }
-button:active:not(:disabled) { @apply [filter:brightness(0.9)]; }
-:focus-visible { @apply [outline:3px_solid_#426f61] outline-offset-[3px]; }
-h1, h2, h3, p { @apply m-0; }
-h2 { @apply text-[17px]; }
-a { @apply text-green; }
-#root { @apply min-h-dvh; }
-label { @apply flex flex-col [gap:7px] text-[15px] font-bold; }
-input { @apply w-full min-w-0 min-h-[54px] [border:2px_solid_var(--color-border)] rounded-[14px] bg-card text-ink text-[17px] font-normal [padding:12px_15px]; }
-input[aria-invalid="true"] { @apply border-[#a43f34]; }
-canvas { @apply block; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { @apply scroll-auto!; } }
+  :root {
+    @apply font-sans text-ink bg-paper [font-synthesis:none];
+  }
+  *,
+  *::before,
+  *::after {
+    @apply box-border;
+  }
+  body {
+    @apply m-0;
+  }
+  button,
+  input,
+  textarea {
+    @apply [font:inherit];
+  }
+  button {
+    @apply cursor-pointer min-h-auto lg:min-h-10;
+  }
+  button:disabled {
+    @apply cursor-default opacity-[0.45];
+  }
+  button:active:not(:disabled) {
+    @apply [filter:brightness(0.9)];
+  }
+  :focus-visible {
+    @apply [outline:3px_solid_#426f61] outline-offset-[3px];
+  }
+  h1,
+  h2,
+  h3,
+  p {
+    @apply m-0;
+  }
+  h2 {
+    @apply text-[17px];
+  }
+  a {
+    @apply text-green;
+  }
+  #root {
+    @apply min-h-dvh;
+  }
+  label {
+    @apply flex flex-col [gap:7px] text-[15px] font-bold;
+  }
+  input {
+    @apply w-full min-w-0 min-h-[54px] [border:2px_solid_var(--color-border)] rounded-[14px] bg-card text-ink text-[17px] font-normal [padding:12px_15px];
+  }
+  input[aria-invalid="true"] {
+    @apply border-[#a43f34];
+  }
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+  }
+  textarea {
+    resize: none !important;
+  }
+  canvas {
+    @apply block;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      @apply scroll-auto!;
+    }
+  }
 }
 
 /* Gameplay transition keyframes are consumed by Tailwind animation utilities. */
