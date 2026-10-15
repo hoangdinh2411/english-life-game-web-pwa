@@ -104,12 +104,16 @@ reward/claim key protects retries/concurrency. Auth stays Supabase-first;
 
 **AI foundation (T10a):** `modules/ai` exports `AiService.reply(context, text)`
 and accepts a text-only provider through dependency injection. `AI_PROVIDER`
-defaults to `mock`; unsupported values fail startup. `AI_API_KEY` and `AI_MODEL`
-are server-only settings reserved for a live adapter. Replies time out after five
+defaults to `mock`; `gemini` selects the REST adapter using server-only
+`AI_API_KEY` and `AI_MODEL` (both required); unsupported values fail startup.
+Prompts live in `modules/ai/prompts.ts`. Replies time out after five
 seconds and abort the provider request; errors (including 429), timeouts and
 empty output return the authored `global_repeat` line. The module has no gameplay
-write dependencies. Live NPC conversations remain scripted; live provider and
-conversation wiring follow in T10b, with streaming/limits in T10c.
+write dependencies. Unrecognized Town Street resident small talk uses the selected
+provider; recognized scripts, shop assistants, sellers and the receptionist keep
+their scripted behavior. AI text is saved/replayed as dialogue and never interpreted
+as gameplay commands. No conversation history or account identity goes to Gemini.
+Use free Gemini keys with fictional development data only. Streaming/limits are T10c.
 
 `packages/shared` contains only contracts, Zod schemas and pure rules actually
 consumed across client/server. Authored quest/NPC/dialogue content stays in
@@ -392,6 +396,11 @@ to the phone, not the computer.
 - `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm content:validate`,
   `pnpm build`: project validation/build.
 - `pnpm test:integration`: real local Supabase/Postgres tests; requires setup.
+  The rollback-only T10b test reuses `test@gmail.com`: from `apps/server`, set
+  `T10_TEST_PASSWORD`, build, then run
+  `node --import ./scripts/load-env.mjs --test dist/tests/ai.integration.test.js`.
+  It uses the mock by default; set `T10_LIVE_TEST=true` to require a real Gemini
+  reply with the configured key/model. Neither mode starts an HTTP server.
   The T17 seller test reuses an existing account (`T17_TEST_EMAIL`, default
   `test@gmail.com`; required `T17_TEST_PASSWORD`) and rolls back all game-data
   changes. To run only it without older tests that create temporary accounts,

@@ -10,6 +10,7 @@ import { AiProvider, AI_PROVIDER } from '../modules/ai/ai-provider';
 import { AiModule } from '../modules/ai/ai.module';
 import { AiService, AI_REPLY_TIMEOUT_MS } from '../modules/ai/ai.service';
 import { DialogueService } from '../modules/dialogue/dialogue.service';
+import { GeminiProvider } from '../modules/ai/gemini.provider';
 
 const context = { npcId: 'npc_cafe_waiter', roleId: 'shop_companion', personality: 'cheerful' };
 
@@ -40,7 +41,18 @@ test('T10a mock is the default and explicit provider; returns dialogue only', as
 
 test('T10a unknown providers fail configuration without leaking their value', async () => {
   await assert.rejects(fixture(undefined, { AI_PROVIDER: 'secret-unsupported-value' }),
-    { message: 'Unsupported AI_PROVIDER; use mock.' });
+    { message: 'Unsupported AI_PROVIDER; use mock or gemini.' });
+});
+
+test('T10b config selects Gemini without changing callers, and HTTP 429 uses authored fallback', async () => {
+  const selected = await fixture(undefined, { AI_PROVIDER: 'gemini', AI_API_KEY: 'test', AI_MODEL: 'test-model' });
+  try { assert.ok(selected.module.get<unknown>(AI_PROVIDER) instanceof GeminiProvider); }
+  finally { await selected.module.close(); }
+  const provider = new GeminiProvider(new ConfigService({ AI_API_KEY: 'test', AI_MODEL: 'test-model' }),
+    async () => new Response('private error', { status: 429 }));
+  const { module, service, dialogue } = await fixture(provider);
+  try { assert.equal(await service.reply(context, 'Hello'), (await dialogue.node(context, 'global_repeat')).text); }
+  finally { await module.close(); }
 });
 
 test('T10a errors, 429, synchronous throws and empty replies use authored fallback', async () => {

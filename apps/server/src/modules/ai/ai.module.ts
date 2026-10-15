@@ -4,6 +4,7 @@ import { DialogueModule } from '../dialogue/dialogue.module';
 import { AI_PROVIDER, AiProvider } from './ai-provider';
 import { AiService } from './ai.service';
 import { MockProvider } from './mock.provider';
+import { GeminiProvider } from './gemini.provider';
 
 @Module({
   imports: [ConfigModule, DialogueModule],
@@ -13,9 +14,9 @@ import { MockProvider } from './mock.provider';
       inject: [ConfigService],
       useFactory: (config: ConfigService): AiProvider => {
         const provider = config.get<string>('AI_PROVIDER')?.trim() || 'mock';
-        // Live providers will consume AI_API_KEY / AI_MODEL in their adapter.
-        if (provider !== 'mock') throw new Error('Unsupported AI_PROVIDER; use mock.');
-        return new MockProvider();
+        if (provider === 'mock') return new MockProvider();
+        if (provider === 'gemini') return new GeminiProvider(config);
+        throw new Error('Unsupported AI_PROVIDER; use mock or gemini.');
       },
     },
     AiService,

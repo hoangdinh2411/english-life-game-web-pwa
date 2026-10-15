@@ -8,6 +8,7 @@ import { SellerService } from './seller.service';
 import { conversationNpcSchema } from '@life-abroad/shared';
 import { CoffeeQuestService } from '../quests/coffee-quest.service';
 import type { LearningHistoryTurn } from '@life-abroad/shared';
+import { AiService } from '../ai/ai.service';
 
 const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
 
@@ -15,7 +16,8 @@ const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonl
 export class ConversationsService {
   constructor(private readonly conversations: ConversationsRepository,
     private readonly dialogue: DialogueService, private readonly quests: QuestsService, private readonly life: LifeService,
-    private readonly seller: SellerService, private readonly coffee: CoffeeQuestService) {}
+    private readonly seller: SellerService, private readonly coffee: CoffeeQuestService,
+    private readonly ai: AiService) {}
 
   learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
     return this.conversations.learningHistory(userId);
@@ -102,6 +104,11 @@ export class ConversationsService {
       } else {
         const reply = await this.dialogue.reply(context, request.text);
         responseText = reply.text; nodeId = reply.node.id;
+        // AI supplies wording only for resident small talk. Never interpret its
+        // output as an intent, node transition, purchase or quest command.
+        if (reply.misunderstood && (TOWN_STREET_NPC_IDS as readonly string[]).includes(conversation.npc_id)) {
+          responseText = await this.ai.reply(context, request.text);
+        }
         if (receptionist && reply.intent) arrival = await this.quests.applyReceptionistIntent(userId, ARRIVAL_NPC_ID, reply.intent, client);
         if (receptionist && (reply.intent === 'request_bus_ticket' || reply.intent === 'ask_town_directions')) {
           arrival = await this.quests.issueArrivalTicket(userId, client);

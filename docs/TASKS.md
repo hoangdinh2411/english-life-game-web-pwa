@@ -35,6 +35,11 @@ test@gmail.com / 12341234.
 
 ## DONE
 
+- [x] **T10b — Gemini provider:** centralized prompts and configuration-selected
+      mock/Gemini adapter for unknown Town Street resident small talk. All 19
+      focused tests, server build and changed-file lint passed. Existing-account
+      rollback integration passed with mock and live `gemini-3.5-flash-lite`;
+      saved replay and unchanged money/items/quests verified.
 - [x] **T10a — AI provider interface and mock:** server-only text provider,
       mock/default configuration and authored fallback on errors, 429 or timeout.
       AI/dialogue tests (13), server build/typecheck and changed-file lint passed.
@@ -219,10 +224,6 @@ test@gmail.com / 12341234.
       cleanup tests passed. Revised Town Street frame median/p95: 7.1/15.1 ms.
       All 143 game tests, game typecheck, changed-file lint, build and PWA checks
       passed; no additional precache files.
-- [ ] **T10b — Gemini provider (after T10a and T19).** `GeminiProvider` with a
-      free key (fake data only). No Gemini-only features. Prompts in one file.
-      Done when: one NPC reply comes from Gemini, and changing `AI_PROVIDER`
-      needs no change outside the provider class.
 - [ ] **T10c — Streaming and limits (after T10b).** SSE streaming, saved token
       usage, free-chat cap and rate limit. Done when: text streams word by word,
       and the limits work with the mock.

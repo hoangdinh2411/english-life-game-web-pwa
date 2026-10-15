@@ -8,7 +8,8 @@ import { ConversationsController } from './conversations.controller';
 import { ConversationsRepository } from './conversations.repository';
 import { ConversationsService } from './conversations.service';
 import { SellerService } from './seller.service';
+import { AiModule } from '../ai/ai.module';
 
-@Module({ imports: [DatabaseModule, AuthModule, DialogueModule, QuestsModule, LifeModule],
+@Module({ imports: [DatabaseModule, AuthModule, DialogueModule, QuestsModule, LifeModule, AiModule],
   controllers: [ConversationsController], providers: [ConversationsRepository, ConversationsService, SellerService], exports: [ConversationsService] })
 export class ConversationsModule {}
