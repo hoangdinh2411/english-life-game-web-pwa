@@ -7,8 +7,10 @@ import { findStreetNpc, STREET_NPCS } from '../npcs/street-npcs';
 
 export function isDeferredStreetNpcAsset(pack: MapPack, asset: MapPack['assets'][number]): boolean {
   return pack.mapId === 'loc_town_street'
-    && asset.key.startsWith('street-npcs-')
-    && (asset.type === 'image' || (asset.type === 'json' && asset.key.endsWith('-atlas')));
+    && (asset.type === 'audio' && asset.key.startsWith('street-voice-')
+      || asset.type === 'json' && asset.key === 'street-voices'
+      || asset.key.startsWith('street-npcs-')
+        && (asset.type === 'image' || (asset.type === 'json' && asset.key.endsWith('-atlas'))));
 }
 
 export function loadPack(scene: Phaser.Scene, pack: MapPack, progress: (value: number) => void, signal: AbortSignal): Promise<void> {

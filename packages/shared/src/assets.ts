@@ -14,6 +14,12 @@ export const mapPackSchema = z.object({ mapId: assetIdSchema, assets: z.array(ma
 export type MapAsset = z.infer<typeof mapAssetSchema>;
 export type MapPack = z.infer<typeof mapPackSchema>;
 export type AssetUpload = z.infer<typeof assetUploadSchema>;
+export const recordedVoiceManifestSchema = z.object({
+  version: z.literal(1),
+  clips: z.array(z.object({ key: assetIdSchema, text: z.string().trim().min(1),
+    gender: z.enum(['female', 'male']) }).strict()).min(1).max(1000)
+    .refine(clips => new Set(clips.map(clip => clip.key)).size === clips.length, 'Recording keys must be unique'),
+}).strict();
 export const packActorsSchema = z.object({ actors: z.array(z.object({
   texture: assetIdSchema, frame: assetIdSchema, npcId: assetIdSchema.optional(),
   x: z.number().min(0).max(1536), y: z.number().min(0).max(1024),

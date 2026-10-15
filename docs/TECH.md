@@ -318,7 +318,7 @@ The upload script generates experimental SVG backgrounds, 32×48 player frames
 and JSON walking definitions in `local-assets/maps/<mapId>/`, then uploads each
 through NestJS. The ignored local copies remain available to inspect, back up or
 upload again. Failed uploads leave the files in place for retry.
-Original map artwork and station NPC atlases, portraits, and Koko-generated voice
+Original map artwork and station NPC atlases, portraits, and Kokoro-generated voice
 clips can be copied from `apps/game/assets` into map-organized ignored folders
 with `pnpm assets:archive`. Station voice clips are grouped under each matching
 NPC by the scripted dialogue text; shared lines are copied to each NPC that uses
@@ -330,6 +330,16 @@ Destination packs require a map background, `player` spritesheet and an animatio
 JSON asset defining `walk-0` through `walk-3`; definitions contain `key`, `texture`,
 numeric `frames`, `frameRate` and `repeat`. Optional NPC art/voices and JSON are
 loaded with the same pack; shop conversations remain separate later tasks.
+
+Town Street dialogue uses Kokoro recordings (`af_heart` / `am_michael`, speed
+0.95), matching the station's generator. `pnpm voices:street -- --upload`
+generates the authored role/global lines in `local-assets/maps/loc_town_street/audio`
+and registers audio plus `street-voices.json` through the existing local asset
+API. `pnpm voices:street:check` decodes every clip and checks silence/clipping.
+The client resolves text/gender through that manifest and streams only the
+requested MP3; these files are excluded from Phaser's eager pack download and
+the station PWA precache. Failed NPC recordings show a retry message instead of
+silently switching to a browser voice. Station recordings remain unchanged.
 
 Measured 2026-10-10: initial built asset payload **15,047,847 → 7,121,361 bytes**
 (14.35 → 6.79 MiB; uncompressed bytes, not network timing). Public precache:

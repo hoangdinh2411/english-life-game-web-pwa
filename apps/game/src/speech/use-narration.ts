@@ -3,10 +3,13 @@ import type { StationAudioCatalog, VoiceGender } from '../types/speech/narration
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createNarrator } from './narration';
 import { createRecordedNarrator } from './recorded-narration';
+import { TOWN_STREET_NPC_IDS } from '@life-abroad/shared';
 function findClip(text: string, gender: VoiceGender, catalog: StationAudioCatalog): string | null {
   return catalog.find((clip) => clip.text === text && clip.gender === gender)?.asset ?? null;
 }
-export function useNarration(text: string, enabled: boolean, revision: string | number = text, gender: VoiceGender = 'male') {
+export function useNarration(text: string, enabled: boolean, revision: string | number = text, gender: VoiceGender = 'male', npcId?: string) {
+  const street = (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId ?? '');
+  const currentText = useRef(text); currentText.current = text;
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState('');
   const [voicesReady, setVoicesReady] = useState(false);
@@ -16,27 +19,37 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
   const lastRevision = useRef<string | number | null>(null);
   const browserVoice = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
   const supported = typeof Audio !== 'undefined' && audioCatalog !== null;
-  const narrationReady = audioCatalog !== null && (Boolean(findClip(text, gender, audioCatalog)) || voicesReady);
+  const narrationReady = audioCatalog !== null && (Boolean(findClip(text, gender, audioCatalog)) || !street && voicesReady);
   const narrator = useMemo(() => {
     const fallback = createNarrator(browserVoice ? window.speechSynthesis : null,
     (message) => new SpeechSynthesisUtterance(message),
     { onSpeaking: setSpeaking, onError: setError });
+    // A missing/broken authored street clip must not silently switch the NPC
+    // back to the browser voice. Player-written replay can still use TTS.
+    const recordedFallback = street ? { ...fallback, speak: (message: string, voiceGender: VoiceGender = 'male') => {
+      if (message === currentText.current || findClip(message, voiceGender, audioCatalogRef.current ?? [])) {
+        setSpeaking(false); setError('This recording could not play. You can still read the dialogue; retry the speaker or reopen the conversation.');
+      } else fallback.speak(message, voiceGender);
+    } } : fallback;
     return createRecordedNarrator((message, voiceGender) => {
       const catalog = audioCatalogRef.current;
       return catalog ? findClip(message, voiceGender, catalog) : null;
-    }, (url) => new Audio(url), fallback, { onSpeaking: setSpeaking, onError: setError });
-  }, [browserVoice]);
+    }, (url) => new Audio(url), recordedFallback, { onSpeaking: setSpeaking, onError: setError });
+  }, [browserVoice, street]);
   useEffect(() => {
     let cancelled = false;
-    void import('./station-audio').then(({ stationAudio }) => {
-      if (!cancelled) setAudioCatalog(stationAudio);
+    setAudioCatalog(null);
+    const loading = street ? import('../features/npcs/street-audio').then(module => module.loadStreetAudio())
+      : import('./station-audio').then(({ stationAudio }) => stationAudio);
+    void loading.then(catalog => {
+      if (!cancelled) setAudioCatalog(catalog);
     }).catch(() => {
-      if (!cancelled) { setAudioCatalog([]); setError('Recorded voices could not load. The browser voice may be used instead.'); }
+      if (!cancelled) { setAudioCatalog([]); setError(street ? 'Street recordings could not load. Reopen the conversation to retry. Text remains available.' : 'Recorded voices could not load. The browser voice may be used instead.'); }
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [street]);
   useEffect(() => {
-    if (!browserVoice) return;
+    if (!browserVoice || street) return;
     const synthesis = window.speechSynthesis;
     const update = () => setVoicesReady(synthesis.getVoices().some((voice) => voice.lang.toLowerCase().startsWith('en')));
     update();
@@ -45,7 +58,7 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
       if (!findClip(text, gender, audioCatalogRef.current ?? []) && !synthesis.getVoices().some((voice) => voice.lang.toLowerCase().startsWith('en'))) setError('No English fallback voice is available yet. Text remains available.');
     }, 3000);
     return () => { clearTimeout(timeout); synthesis.removeEventListener('voiceschanged', update); };
-  }, [browserVoice, text, gender]);
+  }, [browserVoice, street, text, gender]);
   useEffect(() => {
     if (!enabled) { narrator.stop(); return; }
     if (!narrationReady || lastRevision.current === revision) return;

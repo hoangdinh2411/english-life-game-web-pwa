@@ -64,12 +64,20 @@ test('Street patrols travel long routes smoothly and remain on their authored ro
     let previous = start;
     for (let time = 25; time <= 60000; time += 25) {
       const current = patrolPose(patrol, time);
+      assert.equal(current.moving, true, `${npc.id} paused at a waypoint at ${time}ms`);
       assert.ok(canWalkStreet(current), `${npc.id} left its road at ${time}ms`);
       assert.ok(Math.hypot(current.x - previous.x, current.y - previous.y) <= 1.16, `${npc.id} jumped`);
       distance += Math.hypot(current.x - previous.x, current.y - previous.y);
       previous = current;
     }
     assert.ok(distance >= 1200, `${npc.id} should travel a long route`);
+  }
+});
+
+test('Street patrols cross waypoints and turnarounds at constant speed without an idle frame', () => {
+  const patrol = { points: [{ x: 0, y: 0 }, { x: 46, y: 0 }, { x: 92, y: 0 }], startWaypoint: 0 };
+  for (const [time, x, direction] of [[1000, 46, 'right'], [1500, 69, 'right'], [2000, 92, 'left'], [2500, 69, 'left'], [4000, 0, 'right'], [4500, 23, 'right']]) {
+    assert.deepEqual(patrolPose(patrol, time), { x, y: 0, direction, moving: true });
   }
 });
 

@@ -33,6 +33,8 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
 - Town Street has 15 named residents with distinct jobs and authored profiles,
   portrait links, and road patrol routes. Each route has 12–14 waypoints, and
   residents can be approached for scripted small talk about everyday topics.
+  Walking NPCs continue through route waypoints without timed stops; nearby
+  interaction, conversations and world pause still stop movement.
   NPC profiles and route data live in `content/seed/street-npcs.json`; resident
   sprite art downloads by nearby atlas row as the player approaches, so distant
   character artwork stays unloaded until needed. Portrait links can be changed

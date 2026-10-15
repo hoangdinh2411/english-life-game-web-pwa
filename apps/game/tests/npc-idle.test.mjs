@@ -16,20 +16,18 @@ test('station patrols remain walkable and counter staff stay stationary', () => 
   }
 });
 
-test('NPC profiles use distinct routes, speeds and pauses without jumping', () => {
+test('Walking NPCs use distinct routes and speeds without waypoint pauses or jumps', () => {
   const anchor = { x: 800, y: 500 };
   const ids = ['npc_cafe_waiter', 'npc_clothes_assistant', 'npc_clothes_customer'];
   assert.equal(new Set(ids.map(id => JSON.stringify(npcPose(id, anchor, 1000)))).size, 3);
-  for (const id of ids) {
-    let waited = false, moved = false;
+  for (const id of [...ids, 'npc_passenger_backpack', 'npc_passenger_suitcase', 'npc_corner_cup_assistant', 'npc_corner_cup_customer_1', 'npc_corner_cup_customer_3']) {
     for (let time = 0; time < 60000; time += 50) {
       const pose = npcPose(id, anchor, time);
       const next = npcPose(id, anchor, time + 50);
       assert.ok(Math.hypot(next.x - pose.x, next.y - pose.y) <= 1.501);
       assert.ok(Math.abs(pose.x - anchor.x) <= 40 && Math.abs(pose.y - anchor.y) <= 40);
-      waited ||= !pose.moving; moved ||= pose.moving;
+      assert.equal(pose.moving, true, `${id} stopped at ${time}ms`);
     }
-    assert.ok(waited && moved);
   }
 });
 

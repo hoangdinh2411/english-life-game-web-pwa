@@ -2,31 +2,31 @@ import type { Direction, Point } from '../../types/gameplay/world';
 
 export const NPC_STOP_DISTANCE = 60;
 
-type Motion = { path: readonly Point[]; speed: number; wait: number };
+type Motion = { path: readonly Point[]; speed: number };
 export interface NpcPatrol { points: readonly Point[]; startWaypoint: number }
-const still: Motion = { path: [], speed: 0, wait: 0 };
-const horizontal = (distance: number, speed: number, wait: number): Motion => ({ path: [{ x: distance, y: 0 }, { x: -distance, y: 0 }, { x: 0, y: 0 }], speed, wait });
-const vertical = (distance: number, speed: number, wait: number): Motion => ({ path: [{ x: 0, y: distance }, { x: 0, y: -distance }, { x: 0, y: 0 }], speed, wait });
+const still: Motion = { path: [], speed: 0 };
+const horizontal = (distance: number, speed: number): Motion => ({ path: [{ x: distance, y: 0 }, { x: -distance, y: 0 }, { x: 0, y: 0 }], speed });
+const vertical = (distance: number, speed: number): Motion => ({ path: [{ x: 0, y: distance }, { x: 0, y: -distance }, { x: 0, y: 0 }], speed });
 const profiles: Record<string, Motion> = {
   npc_station_information: still,
-  npc_passenger_backpack: horizontal(40, 28, 900),
-  npc_passenger_suitcase: vertical(28, 20, 1500),
+  npc_passenger_backpack: horizontal(40, 28),
+  npc_passenger_suitcase: vertical(28, 20),
   npc_mia: still,
-  npc_cafe_waiter: { path: [{ x: 28, y: 0 }, { x: 28, y: 24 }, { x: 0, y: 24 }, { x: 0, y: 0 }], speed: 30, wait: 500 },
+  npc_cafe_waiter: { path: [{ x: 28, y: 0 }, { x: 28, y: 24 }, { x: 0, y: 24 }, { x: 0, y: 0 }], speed: 30 },
   npc_cafe_customer: still,
   npc_corner_cup_seller: still,
-  npc_corner_cup_assistant: { path: [{ x: 20, y: 0 }, { x: 20, y: 18 }, { x: 0, y: 18 }, { x: 0, y: 0 }], speed: 22, wait: 1100 },
-  npc_corner_cup_customer_1: horizontal(16, 10, 1800),
+  npc_corner_cup_assistant: { path: [{ x: 20, y: 0 }, { x: 20, y: 18 }, { x: 0, y: 18 }, { x: 0, y: 0 }], speed: 22 },
+  npc_corner_cup_customer_1: horizontal(16, 10),
   npc_corner_cup_customer_2: still,
-  npc_corner_cup_customer_3: vertical(12, 8, 2300),
+  npc_corner_cup_customer_3: vertical(12, 8),
   npc_clothes_seller: still,
-  npc_clothes_assistant: vertical(24, 22, 1300),
-  npc_clothes_customer: horizontal(20, 12, 2300),
+  npc_clothes_assistant: vertical(24, 22),
+  npc_clothes_customer: horizontal(20, 12),
 };
 export interface MotionState { x: number; y: number; elapsed: number }
 export type NpcPose = Point & { direction: Direction; moving: boolean };
 
-export function patrolPose(patrol: NpcPatrol, elapsed: number, speed = 46, wait = 200): NpcPose {
+export function patrolPose(patrol: NpcPatrol, elapsed: number, speed = 46): NpcPose {
   if (patrol.points.length < 2 || patrol.startWaypoint >= patrol.points.length) {
     const point = patrol.points[patrol.startWaypoint] ?? patrol.points[0] ?? { x: 0, y: 0 };
     return { ...point, direction: 'down', moving: false };
@@ -45,7 +45,7 @@ export function patrolPose(patrol: NpcPatrol, elapsed: number, speed = 46, wait 
     const dy = destination.y - origin.y;
     return { origin, destination, dx, dy, duration: Math.hypot(dx, dy) / speed * 1000 };
   }).filter(segment => segment.duration > 0);
-  const duration = segments.reduce((sum, segment) => sum + segment.duration + wait, 0);
+  const duration = segments.reduce((sum, segment) => sum + segment.duration, 0);
   let clock = Math.max(0, elapsed) % duration;
   for (const segment of segments) {
     const direction: Direction = Math.abs(segment.dx) > Math.abs(segment.dy)
@@ -61,8 +61,6 @@ export function patrolPose(patrol: NpcPatrol, elapsed: number, speed = 46, wait 
       };
     }
     clock -= segment.duration;
-    if (clock < wait) return { ...segment.destination, direction, moving: false };
-    clock -= wait;
   }
   return { ...cycle[0]!, direction: 'down', moving: false };
 }
@@ -76,7 +74,7 @@ export function npcPose(id: string, anchor: Point, elapsed: number, clip: (ancho
     const start = points[index]!;
     return { start, end, duration: Math.hypot(end.x - start.x, end.y - start.y) / profile.speed * 1000 };
   });
-  const cycle = segments.reduce((sum, segment) => sum + segment.duration + profile.wait, 0);
+  const cycle = segments.reduce((sum, segment) => sum + segment.duration, 0);
   let clock = Math.max(0, elapsed) % cycle;
   for (const segment of segments) {
     const dx = segment.end.x - segment.start.x, dy = segment.end.y - segment.start.y;
@@ -86,8 +84,6 @@ export function npcPose(id: string, anchor: Point, elapsed: number, clip: (ancho
       return { x: segment.start.x + dx * amount, y: segment.start.y + dy * amount, direction, moving: true };
     }
     clock -= segment.duration;
-    if (clock < profile.wait) return { ...segment.end, direction, moving: false };
-    clock -= profile.wait;
   }
   return { x: anchor.x, y: anchor.y, direction: 'down', moving: false };
 }

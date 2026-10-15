@@ -11,6 +11,8 @@
     "assets:generate": "node scripts/save-map-assets.mjs",
     "assets:archive": "node scripts/archive-map-assets.mjs",
     "voices:build": "pnpm --filter @life-abroad/shared build && pnpm --filter game exec node --import tsx ../../scripts/generate-station-voices.mjs",
+    "voices:street": "pnpm --filter @life-abroad/shared build && node scripts/generate-street-voices.mjs",
+    "voices:street:check": "node scripts/verify-street-voices.mjs",
     "dev": "pnpm --filter @life-abroad/shared build && pnpm --parallel --filter game --filter server dev",
     "dev:game": "pnpm --filter @life-abroad/shared build && pnpm --filter game dev",
     "dev:server": "pnpm --filter @life-abroad/shared build && pnpm --filter server dev",
