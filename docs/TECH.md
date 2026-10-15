@@ -102,7 +102,7 @@ for one-time rewards **inside the same PostgreSQL transaction**. A unique
 reward/claim key protects retries/concurrency. Auth stays Supabase-first;
   external AI is isolated behind the server-only `AiProvider` interface.
 
-**AI foundation (T10a–T10c):** `modules/ai` exports `AiService.reply(context, text, prompt?)`
+**AI foundation (T10a–T10d):** `modules/ai` exports `AiService.reply(context, text, prompt?)`
 and accepts a text-only provider through dependency injection. `AI_PROVIDER`
 defaults to `mock`; `gemini` selects the REST adapter using server-only
 `AI_API_KEY` and `AI_MODEL` (both required); unsupported values fail startup.
@@ -120,8 +120,14 @@ complete conversation turns. Account identifiers, known player names and emails
 are removed from both the current input and history. The provider gets no profile
 record. Free Gemini keys remain for fictional development data only. Streaming and
 limits are T10e; the current client continues using the saved-conversation API.
+The AI safety boundary trims input and rejects empty, over-300-character,
+non-English, emoji-spam, prompt-injection, economy-manipulation, personal-data
+and medical requests before a provider call. Generated replies must be plain
+English text of at most 40 words, without Markdown, gameplay/economy claims,
+personal-data requests or medical advice. Rejected input/output uses the authored
+`global_repeat` line.
 Migration `016` reserves server-only usage storage and is already applied locally;
-no T10c code writes to it.
+no current AI code writes to it.
 
 `packages/shared` contains only contracts, Zod schemas and pure rules actually
 consumed across client/server. Authored quest/NPC/dialogue content stays in
