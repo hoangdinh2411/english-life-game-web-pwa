@@ -79,6 +79,18 @@ test@gmail.com / 12341234.
 - [x] **T27 — Town Street residents:** 15 named residents across five road
       patrol routes, with editable profile/art links and authenticated scripted
       small talk. Content, movement, pack, type, build, and browser checks passed.
+- [x] **T21 — Game clock speed and display:** clock speed is one config value;
+      saved clocks do not jump when it changes; one shared opening-hours check;
+      the HUD shows game time and weekday; closed places say their hours.
+- [x] **T22 — Order history (all shops except clothes):** one shared purchase
+      table written in the payment transaction; price at purchase time kept;
+      players read only their own orders; replay and failed payment create none.
+- [x] **T23 — Menu cards and order list in the seller chat:** cards with image
+      and price for all 10 café items, recent orders in the same panel,
+      placeholder when an image is missing. Browser checks passed.
+- [x] **T12 — Minimal review screen:** past corrections and useful shop phrases.
+      Verified: saved-account coffee integration, ownership/replay, reload
+      persistence and 320/375/1024px browser checks.
 
 ## NOW
 
@@ -115,40 +127,81 @@ test@gmail.com / 12341234.
 - Appearance uses separate hair, shirt and trouser colors, saved with the
   character. The first shop catalog has blue/green/red/yellow shirts at $30
   each.
+- **Mobile HUD (2026-10-14, T28/T29):** below 1024 px there is one menu button
+  (top-right). Sound and Coach on/off live in Settings inside the menu. The
+  profile card is compact. The top-right column under the menu button is kept
+  free for the minimap.
 
 ## NEXT
 
-- [x] **T21 — Game clock speed and display.** Make the clock speed one config
-      value (now 2×; the owner approves the new value, test with 6×). Changing
-      the speed must not make saved clocks jump: store the game time, the real
-      time and the speed at the last save. Keep sleep (+8 hours). Use one shared
-      function to check opening hours for stores, organizations and workplaces.
-      Show the game time (HH:MM and weekday) in the HUD, and say the opening
-      hours when a place is closed. Done when: tests cover a speed change,
-      sleep, a reload, and the store boundaries (07:59, 08:00, 13:59, 14:00);
-      browser check at 320/375/1024px.
-- [x] **T22 — Order history (all shops except clothes).** Save every completed
-      purchase in one shared table: user, shop, items with quantity, price at
-      the time of purchase, total, and time. Write it in the same transaction as
-      the payment. Inspect the existing order storage first and reuse it if
-      possible. Done when: one purchase creates one record, a replayed confirm
-      creates none, a failed payment creates none, a later price change does not
-      change old orders, a player reads only their own orders, and records stay
-      after reload.
-- [x] **T23 — Menu cards and order list inside the seller chat (after T22).**
-      Use the existing `ShopConversation` panel. No new screen, no new menu
-      button. Show the menu as cards with an image and a price only after the
-      player asks to see it or accepts the seller's offer. When the player asks
-      about past orders, show a short list of recent orders in the same panel.
-      Images are listed in
-      `content/seed/shops.json`; the owner supplies or approves them. Show a
-      placeholder when an image is missing. Done when: all 10 café items show an
-      image and the correct price in the seller chat, recent orders show after
-      reload, and the browser check passes at 320/375/1024px.
-- [ ] **T12 — Minimal review screen.** Past corrections and the useful phrases
-      the player used in shops ("I'd like…", "How much is…"). Store useful terms
-      only, not every word. Done when: after ordering coffee, the screen shows
-      the phrase and one correction.
+- [ ] **T28 — Tidy mobile HUD (before the minimap).** Same information, fewer
+      parts on screen. Inspect the current HUD first and keep everything
+      reachable. Screens below 1024 px wide change; 1024 px and wider stays as
+      it is.
+      - **Profile card becomes compact.** Smaller avatar, one line for the name
+        (cut with "…" when long) and the `$` money, and the game clock
+        (`Sat 15:46`) as a small second item. No wider than about half the screen
+        at 320 and 375 px. City, energy, outfit and other details move to a
+        profile section that opens when the card is tapped (reuse the menu panel;
+        no new screen).
+      - **One menu button (top-right).** Remove the separate sound button. The
+        menu gets a **Settings** section with **Sound on/off** and **Coach
+        on/off** (switches, saved on this device as today). If sound is off, the
+        menu button shows a small muted mark.
+      - **Sound stays reachable during a dialogue** (a small speaker switch in
+        the dialogue header, or a way to open Settings). Muting still stops
+        narration. If Coach on/off currently lives in the chat panel, move the
+        switch to Settings but keep the Coach button visible when Coach is on.
+      - **Goals (bottom-left):** smaller button, and the status chip (for example
+        "Arrival complete") becomes a small badge on it. Goal logic is unchanged.
+      - **Free right column:** keep the top-right space under the menu button
+        empty for the minimap (T29).
+      Done when these tests pass: sound and Coach settings are saved and restored
+      after reload; muting from Settings stops narration; Coach off hides
+      corrections and on shows them; the muted mark appears; the switches have
+      `role="switch"` and `aria-checked`; Escape closes the menu and focus
+      returns to the menu button. Browser check with the existing test account at
+      320, 375, 768 and 1024 px on the station, the café and Town Street: no
+      overlaps, no horizontal scroll, buttons 44px or larger, a 30-character name
+      and `$99,999` are not clipped, text zoom at 200% still works, and the
+      1024 px layout is unchanged.
+- [ ] **T29 — Minimap (after T28).** A small map that shows where the player is
+      and where the other NPCs are on the **current** map. Client only: no new
+      API, content or assets. Code under `src/features/minimap`.
+      - **Placement:** the top-right column, directly under the menu button, with
+        a small gap. No overlap with the profile card, energy, game clock, Talk
+        button, Goals or dialogue. It hides while the tutorial, a dialogue, the
+        menu, the wardrobe, goals or a shop panel are open.
+      - **States:** collapsed (one 44px button), normal (about 120 to 160 px
+        wide), expanded (up to 90% of the screen width, max about 360 px, with a
+        short legend). Toggle with the button, tap outside to collapse, key `M`
+        on desktop. Default: collapsed below 1024 px, normal above. Remember the
+        last choice.
+      - **Drawing:** one small canvas with a downscaled copy of the map image that
+        is already loaded (bundled station or a Storage pack from T14), plus
+        markers: the player (clear colour), NPCs (small dots), and entrances/exits
+        from the existing portal data. The NPC of the current objective gets the
+        same yellow `!` as its name tag. **No second Phaser camera.** Redraw about
+        10 times a second, only while visible; pause when the tab is hidden.
+      - **Many NPCs:** Town Street has 15 residents plus shop actors. Names show
+        only in the expanded view, with a text list of the 8 closest people.
+      - **Data:** positions come from the scene; the NPC list comes from the
+        current map only. On a map change it clears and shows the new map. It also
+        works in `/practice`. No new files in the PWA precache.
+      - **Accessibility:** 44px buttons, `aria-label` and `aria-expanded`,
+        keyboard use, a text list for people who cannot see the picture, and no
+        pulsing when the user prefers reduced motion.
+      - **Out of scope:** tap-to-walk, fog of war, other players, a world map,
+        store opening hours.
+      Done when these tests pass: the conversion from map position to minimap
+      position is correct at the corners, for different map sizes and aspect
+      ratios, and never leaves the box; markers contain the player and the NPCs of
+      the current map only (including Town Street); the three states work and are
+      remembered; it hides during the tutorial, dialogue, menus and shop panels;
+      ten map switches leave no old markers and no leaked listeners; updates are
+      throttled. Browser check at 320, 375 and 1024 px on the station, the café, a
+      shop and Town Street: no overlap, no horizontal scroll, and a stable frame
+      rate on Town Street.
 - [ ] **T10a — AI provider interface and mock.** Server-only `AiProvider`
       interface, a mock provider, and `.env` settings (`AI_PROVIDER`,
       `AI_API_KEY`, `AI_MODEL`). On error, timeout or 429, return a scripted

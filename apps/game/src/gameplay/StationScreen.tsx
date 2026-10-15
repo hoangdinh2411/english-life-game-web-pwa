@@ -22,6 +22,7 @@ import { StoreClosedDialogue } from "../features/shops/StoreClosedDialogue";
 import type { StoreLocation } from "../types/gameplay/world";
 import { isStreetNpc, STREET_NPCS, type StreetNpcId } from "../features/npcs/street-npcs";
 import { TownspersonConversation } from "../features/npcs/TownspersonConversation";
+import { ReviewDialogue } from "../features/learning/ReviewDialogue";
 
 const TUTORIAL_KEY = "movementTutorialSeen";
 
@@ -56,6 +57,7 @@ export default function StationScreen({
   const [location, setLocation] = useState("Maplewood · Train Station");
   const [menu, setMenu] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [closedStore, setClosedStore] = useState<StoreLocation | null>(null);
   const [goals, setGoals] = useState(false);
   const [sound, setSound] = useState(true);
@@ -68,6 +70,7 @@ export default function StationScreen({
     tutorial ||
     menu ||
     profileOpen ||
+    reviewOpen ||
     closedStore !== null ||
     goals ||
     exitReminder ||
@@ -302,6 +305,7 @@ export default function StationScreen({
       {menu ? (
         <DialogueFrame>
           <h2 className="text-[18px] font-extrabold">Paused</h2>
+          {!practice ? <GameButton label="English review" onClick={() => { setMenu(false); setReviewOpen(true); }} /> : null}
           <GameButton
             label="Movement tutorial"
             onClick={() => {
@@ -325,6 +329,7 @@ export default function StationScreen({
           />
         </DialogueFrame>
       ) : null}
+      {reviewOpen ? <ReviewDialogue onClose={() => setReviewOpen(false)} /> : null}
       {life?.sleepTransition ? (
         <div
           className={`sleep-transition fixed inset-0 z-[1000] grid place-items-center bg-[#080d12] text-card [animation:sleep-darken_2s_ease-in-out_forwards] [&.waking]:[animation:sleep-wake_2s_ease-in-out_forwards] [@media(prefers-reduced-motion:reduce)]:[animation-duration:0.01ms] [@media(prefers-reduced-motion:reduce)]:[&.waking]:[animation-duration:0.01ms]  ${life.sleepTransition}`}

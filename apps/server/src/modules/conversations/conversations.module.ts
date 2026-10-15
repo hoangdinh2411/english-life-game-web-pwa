@@ -10,5 +10,5 @@ import { ConversationsService } from './conversations.service';
 import { SellerService } from './seller.service';
 
 @Module({ imports: [DatabaseModule, AuthModule, DialogueModule, QuestsModule, LifeModule],
-  controllers: [ConversationsController], providers: [ConversationsRepository, ConversationsService, SellerService] })
+  controllers: [ConversationsController], providers: [ConversationsRepository, ConversationsService, SellerService], exports: [ConversationsService] })
 export class ConversationsModule {}

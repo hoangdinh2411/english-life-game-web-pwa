@@ -56,3 +56,8 @@ export type ConversationMessage = z.infer<typeof conversationMessageSchema>;
 export type TurnMetadata = z.infer<typeof turnMetadataSchema>;
 export type ConversationTurn = z.infer<typeof conversationTurnSchema>;
 export type Conversation = z.infer<typeof conversationSchema>;
+
+// Server-side history seam for learning; raw metadata is validated by its consumer.
+export interface LearningHistoryTurn {
+  id: string; createdAt: string; npcId: string; text: string; metadata: unknown;
+}

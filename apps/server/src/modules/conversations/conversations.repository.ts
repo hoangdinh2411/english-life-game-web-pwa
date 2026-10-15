@@ -1,9 +1,10 @@
 import { ConflictException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, TOWN_STREET_NPC_IDS, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, type PendingOrder, type SellerState } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, TOWN_STREET_NPC_IDS, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, type PendingOrder, type SellerState } from '@life-abroad/shared';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { DialogueContext } from '../dialogue/dialogue.service';
 import { conversationNpcSchema } from '@life-abroad/shared';
+import { SHOP_NPC_IDS, type LearningHistoryTurn } from '@life-abroad/shared';
 
 interface MessageRow { id: string; sender: 'player' | 'npc'; text: string; created_at: Date; metadata: unknown }
 export interface ConversationRow { id: string; npc_id: string; current_node_id: string | null; pending_order: unknown; ended_at: Date | null }
@@ -21,6 +22,20 @@ function message(row: MessageRow): ConversationMessage {
 export class ConversationsRepository {
   constructor(private readonly database: DatabaseService) {}
   transaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> { return this.database.transaction(work); }
+
+  async learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
+    const result = await this.database.query<MessageRow & { npc_id: string }>(`SELECT n.id,n.created_at,c.npc_id,p.text,n.metadata
+      FROM public.conversations c
+      JOIN public.messages n ON n.conversation_id=c.id AND n.sender='npc'
+      JOIN public.messages p ON p.conversation_id=c.id AND p.sender='player'
+        AND p.client_message_id=n.client_message_id
+      WHERE c.user_id=$1 AND (
+        n.metadata->'correction' IS NOT NULL AND n.metadata->'correction' <> 'null'::jsonb
+        OR c.npc_id=ANY($2::text[]) AND n.metadata->>'intent' IN ('order','ask_price'))
+      ORDER BY n.created_at DESC,n.sequence DESC LIMIT 100`, [userId, [...SHOP_NPC_IDS]]);
+    return result.rows.map(row => ({ id: row.id, createdAt: row.created_at.toISOString(),
+      npcId: row.npc_id, text: row.text, metadata: row.metadata }));
+  }
 
   async variationIndex(client: PoolClient, userId: string, npcId: string, opening = false): Promise<number> {
     const result = await client.query<{ count: string }>(opening

@@ -7,6 +7,7 @@ import { ConversationsRepository, sellerState } from './conversations.repository
 import { SellerService } from './seller.service';
 import { conversationNpcSchema } from '@life-abroad/shared';
 import { CoffeeQuestService } from '../quests/coffee-quest.service';
+import type { LearningHistoryTurn } from '@life-abroad/shared';
 
 const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
 
@@ -15,6 +16,10 @@ export class ConversationsService {
   constructor(private readonly conversations: ConversationsRepository,
     private readonly dialogue: DialogueService, private readonly quests: QuestsService, private readonly life: LifeService,
     private readonly seller: SellerService, private readonly coffee: CoffeeQuestService) {}
+
+  learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
+    return this.conversations.learningHistory(userId);
+  }
 
   create(userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<Conversation> {
     return this.conversations.transaction(async client => {

@@ -86,7 +86,7 @@ apps/server/src/
     conversations/        # scripted session + append-only messages (implemented)
     quests/               # ordered arrival steps + bus-ticket entitlement (implemented)
     economy/              # transactional one-time quest rewards (implemented)
-    learning/             # optional corrections/feedback (planned)
+    learning/             # saved corrections and useful shop phrase review (implemented)
   infrastructure/         # database, content cache, external adapters
   common/                 # truly cross-cutting filters/pipes/guards
 ```
@@ -235,8 +235,14 @@ positive integer charges lock the balance row in a transaction, reject insuffici
 funds with 409, and replay matching keys without charging again. Reusing a key for
 a different charge returns 409. `spendInTransaction` lets life purchases charge inside their effect transaction.
 
-**Planned (not callable yet):** other quest endpoints; corrections history/
-vocabulary; AI chat via SSE. Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
+**Learning review (T12):** protected `GET /learning/review` returns deduplicated
+useful shop phrases with saved examples and up to 20 recent Coach corrections.
+It reads the latest 100 relevant conversation turns through the conversations
+service; no separate vocabulary storage or migration is needed. The paused game
+menu opens **English review**; private review data stays network-only.
+
+**Planned (not callable yet):** other quest endpoints; vocabulary journal;
+AI chat via SSE. Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
 
 **Shop catalog (T16):** `content/seed/shops.json` is a Zod-validated
 array of `{ id, name, kind, price, shop, color?, image? }`; kind is `drink`, `food` or `clothing`,

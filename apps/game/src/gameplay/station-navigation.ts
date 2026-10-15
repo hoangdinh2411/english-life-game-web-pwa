@@ -96,6 +96,9 @@ export const STATION_PORTALS: StationPortal[] = [
   { id: 'clothes', label: 'Clothes Shop', x: 1090, y: 750 },
   { id: 'street', label: 'Town Street', x: 768, y: 944 },
 ];
+export function stationStoreReturnPoint(portal: StationPortal): Point {
+  return { x: portal.x + (portal.id === 'cafe' ? 70 : -70), y: portal.y };
+}
 export function portalAt(point: Point, portals: StationPortal[], radius = 38): StationPortal | null {
   return portals.find((portal) => Math.hypot(point.x - portal.x, point.y - portal.y) <= radius) ?? null;
 }

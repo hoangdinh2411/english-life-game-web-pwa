@@ -5,6 +5,18 @@ import test from 'node:test';
 import * as navigation from '../src/gameplay/station-navigation.ts';
 const { canWalk, portalAt, STATION_PORTALS } = navigation;
 
+test('denied station shop entry returns to a walkable point with keyboard and pointer escape routes', () => {
+  assert.equal(typeof navigation.stationStoreReturnPoint, 'function', 'closed-store return position is missing');
+  for (const portal of STATION_PORTALS.filter(portal => portal.id !== 'street')) {
+    const start = navigation.stationStoreReturnPoint(portal);
+    assert.equal(canWalk(start), true, `${portal.id} return point must stay on the station path`);
+    assert.equal(portalAt(start, STATION_PORTALS), null, 'closing the dialogue must not immediately reopen it');
+    const delta = { x: portal.id === 'cafe' ? 4 : -4, y: 0 };
+    assert.notDeepEqual(navigation.movePlayer(start, delta), start, 'keyboard movement can resume');
+    assert.ok(navigation.findPath(start, { x: 768, y: 750 }).length > 0, 'pointer movement can reach the main aisle');
+  }
+});
+
 test('Town Street uses expanded world dimensions and clamps movement to its larger playable map', () => {
   assert.deepEqual(navigation.STREET_MAP_SIZE, { width: 2304, height: 1536 });
   assert.deepEqual(navigation.clampStreetPosition({ x: 2400, y: 20 }), { x: 2232, y: 165 });

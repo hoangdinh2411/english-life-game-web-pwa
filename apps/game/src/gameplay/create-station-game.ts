@@ -5,7 +5,7 @@ import type { MapAsset, MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../features/assets/phaser-pack';
-import { authorizeStreetExit, canWalk, canWalkStreet, CORNER_CUP_LABEL_POSITION, CORNER_CUP_PORTAL, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, scaleStreetPoint, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS } from './station-navigation';
+import { authorizeStreetExit, canWalk, canWalkStreet, CORNER_CUP_LABEL_POSITION, CORNER_CUP_PORTAL, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, scaleStreetPoint, stationStoreReturnPoint, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
 import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
@@ -291,7 +291,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const portal = portalAt(position, this.portalsForLocation());
         if (portal) position = activeLocation === 'street'
           ? streetSpawnPoint('corner_cafe')
-          : { x: portal.x, y: portal.y + 55 };
+          : stationStoreReturnPoint(portal);
         destinationMapTarget = null;
         route = [];
         selectedNpc = null;
