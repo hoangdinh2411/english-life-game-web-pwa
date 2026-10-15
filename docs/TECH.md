@@ -58,6 +58,7 @@ apps/game/src/
       api/                # calls to server for authenticated arrival
     dialogue/             # reusable conversation feature UI
     npcs/                 # shared movement engine and per-NPC patrol profiles
+    minimap/              # visible-only 10 Hz scene snapshots and canvas HUD
     quests/               # quest/ticket status UI
   shared/                 # reused UI/hooks/helpers ONLY when necessary
 ```

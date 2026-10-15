@@ -99,6 +99,7 @@ export default function StationScreen({
       aria-label={location}
     >
       <GameCanvas
+        minimapVisible={!overlayOpen && !life?.sleepTransition}
         {...(life?.state ? { appearance: life.state.appearance } : {})}
         {...(arrival
           ? {

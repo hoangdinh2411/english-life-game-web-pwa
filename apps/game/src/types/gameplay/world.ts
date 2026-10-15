@@ -1,4 +1,5 @@
 import type { Appearance } from '@life-abroad/shared';
+import type { MinimapSnapshot } from '../../features/minimap/model';
 export interface Point {
   x: number;
   y: number;
@@ -42,6 +43,7 @@ export interface StationCallbacks {
   onExitBlocked: () => void;
 }
 export interface StationGame {
+  readMinimap: () => MinimapSnapshot | null;
   setAppearance: (appearance: Appearance | undefined) => void;
   destroy: () => void;
   pause: (paused: boolean, worldPaused?: boolean, conversationNpcId?: string | null) => void;
@@ -49,6 +51,7 @@ export interface StationGame {
   talk: () => void;
 }
 export interface GameCanvasProps {
+  minimapVisible?: boolean;
   appearance?: Appearance | undefined;
   initialLocation?: 'station' | 'street';
   onEnterStreet?: () => Promise<boolean>;

@@ -11,6 +11,7 @@ import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
 import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
 import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
+import type { MinimapSnapshot } from '../features/minimap/model';
 const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Maplewood · Train Station', cafe: 'Maplewood · Café', corner_cafe: 'Maplewood · Corner Cup Café', clothes: 'Maplewood · Clothes Shop', street: 'Maplewood · Town Street' };
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
@@ -18,6 +19,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let destroyed = false;
   let appearance = callbacks.practice ? undefined : callbacks.appearance;
   let refreshAppearance: (() => void) | undefined;
+  let readMinimap: () => MinimapSnapshot | null = () => null;
   let currentPack: MapPack | null = null;
   let packAnimations: string[] = [];
   let packRequest: AbortController | null = null;
@@ -64,6 +66,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const stationOwned = activeLocation === 'station';
       this.events.once('shutdown', () => {
         this.worldReady = false;
+        readMinimap = () => null;
         refreshAppearance = undefined;
         this.npcArtQueue.clear();
         this.npcArtRetryAt.clear();
@@ -243,6 +246,17 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         for (const label of this.labels) label.setFontSize(Math.round(13 / zoom));
       };
       const mapSize = activeLocation === 'street' ? STREET_MAP_SIZE : { width: 1536, height: 1024 };
+      const minimapImage = background.texture.getSourceImage();
+      const minimapLocation = activeLocation;
+      readMinimap = () => this.worldReady && !this.transitionPending && (minimapImage instanceof HTMLImageElement || minimapImage instanceof HTMLCanvasElement) ? {
+        mapId: minimapLocation,
+        name: LOCATION_NAMES[minimapLocation],
+        ...mapSize,
+        image: minimapImage,
+        player: { ...position },
+        npcs: this.npcActors.map(actor => ({ id: actor.npc.id, name: actor.npc.name, x: actor.npc.x, y: actor.npc.y, objective: actor.label.text.startsWith('!') })),
+        portals: this.portalsForLocation().map(portal => ({ ...portal })),
+      } : null;
       this.cameras.main.setBounds(0, 0, mapSize.width, mapSize.height).startFollow(this.player, false, 0.12, 0.12);
       resizeLabels();
       this.scale.on('resize', resizeLabels);
@@ -520,5 +534,6 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   const game = new P.Game({ type: P.AUTO, parent, width: parent.clientWidth, height: parent.clientHeight, backgroundColor: '#e4cda9', scene: StationScene,
     scale: { mode: P.Scale.RESIZE, autoCenter: P.Scale.CENTER_BOTH }, render: { pixelArt: false }, loader: { timeout: 15000 } });
   return { destroy: () => { destroyed = true; packRequest?.abort(); game.destroy(true); }, pause: (value, pauseWorld = value, talkingNpc = null) => { paused = value; worldPaused = pauseWorld; conversationNpcId = talkingNpc; }, unlockExit: (value) => { exitUnlocked = value; }, talk,
+    readMinimap: () => destroyed ? null : readMinimap(),
     setAppearance: (value) => { if (callbacks.practice) return; appearance = value; refreshAppearance?.(); } };
 }

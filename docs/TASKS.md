@@ -168,43 +168,52 @@ test@gmail.com / 12341234.
       three maps/four widths; saved switches, narration mute, Coach visibility,
       Escape/focus, long-name/wallet and 200% text checks passed. Game tests,
       typecheck, changed-file lint, production build and PWA checks passed.
-- [ ] **T29 — Minimap (after T28).** A small map that shows where the player is
+- [x] **T29 — Minimap (after T28).** A small map that shows where the player is
       and where the other NPCs are on the **current** map. Client only: no new
       API, content or assets. Code under `src/features/minimap`.
       - **Placement:** the top-right column, directly under the menu button, with
         a small gap. No overlap with the profile card, energy, game clock, Talk
         button, Goals or dialogue. It hides while the tutorial, a dialogue, the
         menu, the wardrobe, goals or a shop panel are open.
-      - **States:** collapsed (one 44px button), normal (about 120 to 160 px
-        wide), expanded (up to 90% of the screen width, max about 360 px, with a
-        short legend). Toggle with the button, tap outside to collapse, key `M`
-        on desktop. Default: collapsed below 1024 px, normal above. Remember the
-        last choice.
+      - **States (revised by owner):** shown or hidden, with one responsive map
+        size. Use up to 90% width on mobile and a larger desktop map (up to
+        640 px), limited by available game height. Toggle with the 44px button
+        or `M`; tap outside or press Escape to hide. Default: hidden below
+        1024 px, shown above. Remember the choice; migrate previous size settings.
       - **Drawing:** one small canvas with a downscaled copy of the map image that
         is already loaded (bundled station or a Storage pack from T14), plus
         markers: the player (clear colour), NPCs (small dots), and entrances/exits
         from the existing portal data. The NPC of the current objective gets the
         same yellow `!` as its name tag. **No second Phaser camera.** Redraw about
         10 times a second, only while visible; pause when the tab is hidden.
-      - **Many NPCs:** Town Street has 15 residents plus shop actors. Names show
-        only in the expanded view, with a text list of the 8 closest people.
+      - **Labels:** NPC names scale with the rendered map/device. Label exits
+        directly on the map. Place the map name above the artwork, aligned right.
+        No closest-person list, exit list, or visible legend.
       - **Data:** positions come from the scene; the NPC list comes from the
         current map only. On a map change it clears and shows the new map. It also
         works in `/practice`. No new files in the PWA precache.
       - **Accessibility:** 44px buttons, `aria-label` and `aria-expanded`,
-        keyboard use, a text list for people who cannot see the picture, and no
+        keyboard use, an accessible canvas description of people and exits, and no
         pulsing when the user prefers reduced motion.
       - **Out of scope:** tap-to-walk, fog of war, other players, a world map,
         store opening hours.
       Done when these tests pass: the conversion from map position to minimap
       position is correct at the corners, for different map sizes and aspect
       ratios, and never leaves the box; markers contain the player and the NPCs of
-      the current map only (including Town Street); the three states work and are
+      the current map only (including Town Street); show/hide works and is
       remembered; it hides during the tutorial, dialogue, menus and shop panels;
       ten map switches leave no old markers and no leaked listeners; updates are
       throttled. Browser check at 320, 375 and 1024 px on the station, the café, a
       shop and Town Street: no overlap, no horizontal scroll, and a stable frame
       rate on Town Street.
+      Verified 2026-10-15: real scene/HUD fixture passed show/hide at
+      320, 375 and 1024 px across station, café, clothes shop and Town Street;
+      ten switches retained correct markers and stable listener counts. Existing
+      test-account sign-in, keyboard/persistence and overlay checks passed;
+      `/practice` also displays the minimap. Visible-only 10 Hz polling and
+      cleanup tests passed. Revised Town Street frame median/p95: 7.1/15.1 ms.
+      All 143 game tests, game typecheck, changed-file lint, build and PWA checks
+      passed; no additional precache files.
 - [ ] **T10a — AI provider interface and mock.** Server-only `AiProvider`
       interface, a mock provider, and `.env` settings (`AI_PROVIDER`,
       `AI_API_KEY`, `AI_MODEL`). On error, timeout or 429, return a scripted
