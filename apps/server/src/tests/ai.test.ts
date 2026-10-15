@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolve } from 'node:path';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { loadSeedContent } from '../infrastructure/content/seed-content';
 import { CachedDialogueNode, DialogueCacheService } from '../infrastructure/content/dialogue-cache.service';
@@ -21,8 +21,8 @@ async function fixture(provider?: AiProvider, settings: Record<string, string> =
     roleId: file.scope === 'role' ? file.role : null,
     npcId: file.scope === 'npc' ? file.npcId : null,
   })));
-  const builder = Test.createTestingModule({ imports: [AiModule], providers: [ConfigService] })
-    .overrideProvider(ConfigService).useValue(new ConfigService(settings))
+  const builder = Test.createTestingModule({ imports: [ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: true }), AiModule] })
+    .overrideProvider(ConfigService).useValue(new ConfigService({ AI_ENABLED: 'true', ...settings }))
     .overrideProvider(DialogueCacheService).useValue({ getNodes: async () => nodes });
   if (provider) builder.overrideProvider(AI_PROVIDER).useValue(provider);
   const module = await builder.compile();
@@ -42,6 +42,16 @@ test('T10a mock is the default and explicit provider; returns dialogue only', as
 test('T10a unknown providers fail configuration without leaking their value', async () => {
   await assert.rejects(fixture(undefined, { AI_PROVIDER: 'secret-unsupported-value' }),
     { message: 'Unsupported AI_PROVIDER; use mock or gemini.' });
+});
+
+test('T10c AI is off by default and never calls a provider while disabled', async () => {
+  let calls = 0;
+  const { module, service, dialogue } = await fixture({ reply: async () => { calls++; return 'Unexpected'; } }, { AI_ENABLED: 'false' });
+  try {
+    assert.equal(service.enabled, false);
+    assert.equal(await service.reply(context, 'Football?'), (await dialogue.node(context, 'global_repeat')).text);
+    assert.equal(calls, 0);
+  } finally { await module.close(); }
 });
 
 test('T10b config selects Gemini without changing callers, and HTTP 429 uses authored fallback', async () => {

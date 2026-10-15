@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DialogueContext, DialogueService } from '../dialogue/dialogue.service';
-import { AI_PROVIDER, AiProvider } from './ai-provider';
+import { AI_PROVIDER, AiProvider, AiPrompt } from './ai-provider';
 
 export const AI_REPLY_TIMEOUT_MS = 5_000;
 
@@ -9,12 +10,16 @@ export class AiService {
   constructor(
     @Inject(AI_PROVIDER) private readonly provider: AiProvider,
     private readonly dialogue: DialogueService,
+    private readonly config: ConfigService,
   ) {}
 
-  async reply(context: DialogueContext, text: string): Promise<string> {
+  get enabled(): boolean { return this.config.get<string>('AI_ENABLED') === 'true'; }
+
+  async reply(context: DialogueContext, text: string, prompt?: AiPrompt): Promise<string> {
     // Resolve authored fallback before calling an external provider. Never expose
     // provider errors (which may contain keys or private text) to clients/logs.
     const fallback = await this.dialogue.node(context, 'global_repeat');
+    if (!this.enabled) return fallback.text;
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
@@ -26,7 +31,7 @@ export class AiService {
       });
       // Race also bounds providers that fail to honor cancellation.
       const reply = await Promise.race([
-        this.provider.reply({ npcId: context.npcId, text }, controller.signal),
+        this.provider.reply({ npcId: context.npcId, text, ...(prompt ? { prompt } : {}) }, controller.signal),
         timeout,
       ]);
       return typeof reply === 'string' && reply.trim() ? reply.trim() : fallback.text;

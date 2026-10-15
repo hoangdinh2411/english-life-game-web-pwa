@@ -9,6 +9,7 @@ import { conversationNpcSchema } from '@life-abroad/shared';
 import { CoffeeQuestService } from '../quests/coffee-quest.service';
 import type { LearningHistoryTurn } from '@life-abroad/shared';
 import { AiService } from '../ai/ai.service';
+import { NpcPromptService } from '../ai/npc-prompt.service';
 
 const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
 
@@ -17,7 +18,7 @@ export class ConversationsService {
   constructor(private readonly conversations: ConversationsRepository,
     private readonly dialogue: DialogueService, private readonly quests: QuestsService, private readonly life: LifeService,
     private readonly seller: SellerService, private readonly coffee: CoffeeQuestService,
-    private readonly ai: AiService) {}
+    private readonly ai: AiService, private readonly prompts: NpcPromptService) {}
 
   learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
     return this.conversations.learningHistory(userId);
@@ -104,11 +105,6 @@ export class ConversationsService {
       } else {
         const reply = await this.dialogue.reply(context, request.text);
         responseText = reply.text; nodeId = reply.node.id;
-        // AI supplies wording only for resident small talk. Never interpret its
-        // output as an intent, node transition, purchase or quest command.
-        if (reply.misunderstood && (TOWN_STREET_NPC_IDS as readonly string[]).includes(conversation.npc_id)) {
-          responseText = await this.ai.reply(context, request.text);
-        }
         if (receptionist && reply.intent) arrival = await this.quests.applyReceptionistIntent(userId, ARRIVAL_NPC_ID, reply.intent, client);
         if (receptionist && (reply.intent === 'request_bus_ticket' || reply.intent === 'ask_town_directions')) {
           arrival = await this.quests.issueArrivalTicket(userId, client);
@@ -118,6 +114,17 @@ export class ConversationsService {
         }
         metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, correction,
           ...(conversation.npc_id === 'npc_cafe_waiter' ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
+      }
+      // All NPC roles reach this gate only after their authoritative scripts.
+      // AI changes wording only; intents, node state and rewards stay scripted.
+      if (this.ai.enabled && metadata.misunderstood && !conversation.pending_order && !metadata.seller?.pendingOrder
+        && !metadata.seller?.closed && !await this.conversations.pendingQuest(client, userId, conversation.npc_id)) {
+        const itemNames = (await this.life.catalog()).map(item => item.name);
+        if (!await this.dialogue.isScriptTopic(request.text, itemNames)) {
+          const prompt = await this.prompts.build(client, userId, conversation.npc_id, id, request.text);
+          responseText = await this.ai.reply(context, prompt.text, prompt.prompt);
+          metadata = { ...metadata, intent: null };
+        }
       }
       const playerMessage = await this.conversations.append(client, id, 'player', request.text,
         request.clientMessageId, { coach: request.coach });

@@ -44,6 +44,24 @@ test('T10b malformed, blocked, empty, incomplete and HTTP failures reject for sc
   }
 });
 
+test('T10c Gemini consumes the provider-neutral persona and history without adding identifiers', async () => {
+  const provider = new GeminiProvider(settings, async (_url, init) => {
+    const body: unknown = JSON.parse(String(init?.body));
+    assert.deepEqual(body, {
+      system_instruction: { parts: [{ text: 'Persona and levels' }] },
+      contents: [
+        { role: 'user', parts: [{ text: 'Earlier question' }] },
+        { role: 'model', parts: [{ text: 'Earlier reply' }] },
+        { role: 'user', parts: [{ text: 'Football?' }] },
+      ],
+    });
+    return response([{ text: 'Yes!' }]);
+  });
+  assert.equal(await provider.reply({ npcId: 'npc_mia', text: 'Football?', prompt: {
+    system: 'Persona and levels', history: [{ speaker: 'player', text: 'Earlier question' }, { speaker: 'npc', text: 'Earlier reply' }],
+  } }, new AbortController().signal), 'Yes!');
+});
+
 test('T10b requires explicit key and model without exposing configuration values', () => {
   for (const values of [{}, { AI_API_KEY: 'secret' }, { AI_MODEL: 'model' },
     { AI_API_KEY: 'secret', AI_MODEL: '../invalid?key=secret' }]) {

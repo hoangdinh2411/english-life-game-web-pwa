@@ -162,6 +162,10 @@ export class SellerService {
     else if (/\b(?:menu|shirt|shirts|clothes|what do you have|what can i get|what can i buy|what colors)\b/.test(text)) {
       intent = 'ask_menu'; nodeId = 'clothes_seller_items';
     }
+    if (intent === 'clarify') {
+      const common = await this.dialogue.reply(context, input, true);
+      if (common.intent) return { text: common.text, intent: common.intent, misunderstood: false, seller: state, nodeId: common.node.id };
+    }
     const reply = await this.dialogue.node(context, nodeId);
     await this.conversations.saveOrder(client, row.id, order, closed);
     return { text: reply.text.replace(/\{(\w+)\}/g, (token, key: string) => values[key] ?? token), intent,

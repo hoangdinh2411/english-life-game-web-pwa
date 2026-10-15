@@ -102,18 +102,26 @@ for one-time rewards **inside the same PostgreSQL transaction**. A unique
 reward/claim key protects retries/concurrency. Auth stays Supabase-first;
   external AI is isolated behind the server-only `AiProvider` interface.
 
-**AI foundation (T10a):** `modules/ai` exports `AiService.reply(context, text)`
+**AI foundation (T10a–T10c):** `modules/ai` exports `AiService.reply(context, text, prompt?)`
 and accepts a text-only provider through dependency injection. `AI_PROVIDER`
 defaults to `mock`; `gemini` selects the REST adapter using server-only
 `AI_API_KEY` and `AI_MODEL` (both required); unsupported values fail startup.
 Prompts live in `modules/ai/prompts.ts`. Replies time out after five
 seconds and abort the provider request; errors (including 429), timeouts and
-empty output return the authored `global_repeat` line. The module has no gameplay
-write dependencies. Unrecognized Town Street resident small talk uses the selected
-provider; recognized scripts, shop assistants, sellers and the receptionist keep
-their scripted behavior. AI text is saved/replayed as dialogue and never interpreted
-as gameplay commands. No conversation history or account identity goes to Gemini.
-Use free Gemini keys with fictional development data only. Streaming/limits are T10c.
+empty output return the authored `global_repeat` line. `AI_ENABLED` defaults off;
+set it to `true` only for intentional development tests. All supported NPCs check
+server scripts first. Pending orders/active NPC quests stay scripted. Unmatched
+messages containing authored topic words or catalog names (including one-character
+typos in longer words) get scripted clarification; vocabulary comes from content.
+Only other small talk reaches the provider. AI text never becomes a gameplay intent.
+`NpcPromptService.build` reads NPC name, role, personality, speaking level, place,
+opening status and the player's English level from the database, plus the last six
+complete conversation turns. Account identifiers, known player names and emails
+are removed from both the current input and history. The provider gets no profile
+record. Free Gemini keys remain for fictional development data only. Streaming and
+limits are T10e; the current client continues using the saved-conversation API.
+Migration `016` reserves server-only usage storage and is already applied locally;
+no T10c code writes to it.
 
 `packages/shared` contains only contracts, Zod schemas and pure rules actually
 consumed across client/server. Authored quest/NPC/dialogue content stays in
@@ -396,7 +404,7 @@ to the phone, not the computer.
 - `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm content:validate`,
   `pnpm build`: project validation/build.
 - `pnpm test:integration`: real local Supabase/Postgres tests; requires setup.
-  The rollback-only T10b test reuses `test@gmail.com`: from `apps/server`, set
+  The rollback-only T10c test reuses `test@gmail.com`: from `apps/server`, set
   `T10_TEST_PASSWORD`, build, then run
   `node --import ./scripts/load-env.mjs --test dist/tests/ai.integration.test.js`.
   It uses the mock by default; set `T10_LIVE_TEST=true` to require a real Gemini

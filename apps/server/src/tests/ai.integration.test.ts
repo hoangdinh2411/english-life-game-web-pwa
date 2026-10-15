@@ -13,8 +13,9 @@ import { ConversationsService } from '../modules/conversations/conversations.ser
 import { AI_PROVIDER, type AiProvider } from '../modules/ai/ai-provider';
 import { GeminiProvider } from '../modules/ai/gemini.provider';
 import { MockProvider } from '../modules/ai/mock.provider';
+import { conversationNpcSchema } from '@life-abroad/shared';
 
-test('T10b resident reply, saved replay and unchanged rewards with existing account (rollback only)', {
+test('T10c existing account: persona reply, replay, script routing for every NPC and pending-state protection (rollback only)', {
   skip: !process.env.T10_TEST_PASSWORD,
 }, async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
@@ -42,6 +43,7 @@ test('T10b resident reply, saved replay and unchanged rewards with existing acco
     transaction: <T>(work: (connection: PoolClient) => Promise<T>): Promise<T> => work(client),
   };
   const module = await Test.createTestingModule({ imports: [AppModule] })
+    .overrideProvider(ConfigService).useValue(new ConfigService({ AI_ENABLED: 'true' }))
     .overrideProvider(DatabaseService).useValue(database)
     .overrideProvider(AI_PROVIDER).useValue(provider).compile();
   try {
@@ -68,6 +70,45 @@ test('T10b resident reply, saved replay and unchanged rewards with existing acco
     assert.ok(generated, 'A provider reply is required; scripted fallback does not satisfy this test.');
     assert.equal(turn.npcMessage.text, generated);
     console.log(`Verified ${live ? 'Gemini' : 'mock'} NPC reply:`, generated);
+    if (!live) {
+      await client.query("UPDATE characters SET current_location_id='loc_station' WHERE user_id=$1", [userId]);
+      await client.query("UPDATE player_life SET clock_time='2026-10-15T10:00:00Z',clock_anchor=now() WHERE user_id=$1", [userId]);
+      await client.query("UPDATE player_quests SET status='done',current_step_id=null WHERE user_id=$1", [userId]);
+      const scriptedExamples = ['Hello', 'How is the weather?', 'How are you?', 'I want a coffee', 'how much is the tea?', 'coffe plz two', 'bus ticket'];
+      for (const npcId of conversationNpcSchema.options) {
+        const conversation = await conversations.create(userId, npcId);
+        for (const text of scriptedExamples) {
+          const previous: number = calls;
+          await client.query('SAVEPOINT scripted_case');
+          try {
+            await conversations.send(userId, conversation.id, { text, clientMessageId: randomUUID(), coach: false });
+            assert.equal(calls, previous, `${npcId}: ${text}`);
+          } finally { await client.query('ROLLBACK TO SAVEPOINT scripted_case'); }
+        }
+      }
+      for (const npcId of ['npc_mia', 'npc_receptionist', 'npc_mila_florist'] as const) {
+        const conversation = await conversations.create(userId, npcId);
+        const previous: number = calls;
+        const baseline = await snapshot();
+        await conversations.send(userId, conversation.id, { text: 'Do you like football?', clientMessageId: randomUUID(), coach: false });
+        assert.equal(calls, previous + 1, `${npcId}: football must reach AI`);
+        assert.deepEqual(await snapshot(), baseline);
+      }
+      const seller = await conversations.create(userId, 'npc_mia');
+      await conversations.send(userId, seller.id, { text: 'One espresso please', clientMessageId: randomUUID(), coach: false });
+      const previous = calls;
+      await conversations.send(userId, seller.id, { text: 'Do you like football?', clientMessageId: randomUUID(), coach: false });
+      assert.equal(calls, previous, 'pending orders stay scripted');
+      await client.query("UPDATE player_quests SET status='active',current_step_id='arrival_ask' WHERE user_id=$1 AND quest_id='q_station_arrival'", [userId]);
+      const receptionist = await conversations.create(userId, 'npc_receptionist');
+      await conversations.send(userId, receptionist.id, { text: 'Do you like football?', clientMessageId: randomUUID(), coach: false });
+      assert.equal(calls, previous, 'pending quests stay scripted');
+      module.get(ConfigService).set('AI_ENABLED', 'false');
+      const disabled = await conversations.create(userId, 'npc_mila_florist');
+      await conversations.send(userId, disabled.id, { text: 'Do you like football?', clientMessageId: randomUUID(), coach: false });
+      assert.equal(calls, previous, 'disabled AI never reaches the provider');
+      console.log(`Verified ${conversationNpcSchema.options.length} NPCs × ${scriptedExamples.length} scripted examples; seller/receptionist/resident AI; pending orders and quests.`);
+    }
   } finally {
     await client.query('ROLLBACK');
     await module.close(); client.release(); await pool.end();

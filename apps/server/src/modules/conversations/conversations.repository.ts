@@ -23,6 +23,14 @@ export class ConversationsRepository {
   constructor(private readonly database: DatabaseService) {}
   transaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> { return this.database.transaction(work); }
 
+  async pendingQuest(client: PoolClient, userId: string, npcId: string): Promise<boolean> {
+    const result = await client.query<{ pending: boolean }>(`SELECT EXISTS (
+      SELECT 1 FROM public.player_quests p JOIN public.quests q ON q.id=p.quest_id
+      WHERE p.user_id=$1 AND q.npc_id=$2 AND p.status='active' AND p.current_step_id IS NOT NULL
+    ) AS pending`, [userId, npcId]);
+    return result.rows[0]!.pending;
+  }
+
   async learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
     const result = await this.database.query<MessageRow & { npc_id: string }>(`SELECT n.id,n.created_at,c.npc_id,p.text,n.metadata
       FROM public.conversations c

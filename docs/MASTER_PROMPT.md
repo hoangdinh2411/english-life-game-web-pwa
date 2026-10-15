@@ -32,7 +32,7 @@ Before changing code:
 3. Read `docs/TECH.md` and `docs/GAME.md` only to the extent relevant to the
    selected task.
 4. Read any applicable nested `AGENTS.md` files.
-5. Work on a new branch that have been checked out from
+5. Work on a new branch checked out from dev and merge into dev when completed.
 6. Inspect the relevant existing source code, tests, contracts, and data
    structures.
 

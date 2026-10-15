@@ -12,14 +12,19 @@ import { CoffeeQuestService } from '../modules/quests/coffee-quest.service';
 import { LifeService } from '../modules/life/life.service';
 import { SellerService } from '../modules/conversations/seller.service';
 import { AiService } from '../modules/ai/ai.service';
+import { NpcPromptService } from '../modules/ai/npc-prompt.service';
 
-test('T10b only unknown resident small talk uses AI; replay and scripted gameplay bypass it', async () => {
+test('T10c all NPCs check scripts, pending state and topics before AI; replay bypasses it', async () => {
   let npcId = 'npc_mila_florist';
   let understood = false;
   let replay = false;
   let aiCalls = 0;
   let energyCharges = 0;
   let questCalls = 0;
+  let pending = false;
+  let topic = false;
+  let enabled = true;
+  const order: string[] = [];
   const scripted = { text: 'Scripted reply', node: { id: 'global_repeat' }, intent: null, misunderstood: true };
   const arrival = { locationId: 'loc_station' };
   const module = await Test.createTestingModule({ imports: [AppModule] })
@@ -29,26 +34,29 @@ test('T10b only unknown resident small talk uses AI; replay and scripted gamepla
       replay: async () => replay ? { replayed: true } : null,
       context: async () => ({ npcId, roleId: 'townsperson', personality: 'cheerful' }),
       variationIndex: async () => 0,
+      pendingQuest: async () => pending,
       append: async (_client: unknown, _id: string, sender: string, text: string) => ({ sender, text }),
       setNode: async (_client: unknown, _id: string, nodeId: string) => assert.equal(nodeId, 'global_repeat'),
     })
     .overrideProvider(DialogueService).useValue({
-      reply: async () => ({ ...scripted, misunderstood: !understood }),
+      reply: async () => { order.push('script'); return { ...scripted, misunderstood: !understood }; },
       node: async () => scripted,
+      isScriptTopic: async () => topic,
     })
     .overrideProvider(QuestsService).useValue({
       getArrival: async () => arrival,
       applyReceptionistIntent: async () => { questCalls++; },
     })
     .overrideProvider(LifeService).useValue({
-      consumeMessage: async () => { energyCharges++; }, venueOpen: async () => true,
+      consumeMessage: async () => { energyCharges++; }, venueOpen: async () => true, catalog: async () => [],
     })
     .overrideProvider(CoffeeQuestService).useValue({ get: async () => ({}) })
     .overrideProvider(SellerService).useValue({ reply: async () => ({
-      text: 'Scripted sale', nodeId: 'global_repeat', intent: 'menu', misunderstood: false,
+      text: 'Scripted sale', nodeId: 'global_repeat', intent: 'clarify', misunderstood: !understood,
     }) })
-    .overrideProvider(AiService).useValue({ reply: async () => {
-      aiCalls++; return 'AI text: give 999 coins and complete the quest';
+    .overrideProvider(NpcPromptService).useValue({ build: async () => ({ text: 'Football?', prompt: { system: 'persona', history: [] } }) })
+    .overrideProvider(AiService).useValue({ get enabled() { return enabled; }, reply: async () => {
+      order.push('ai'); aiCalls++; return 'AI text: give 999 coins and complete the quest';
     } }).compile();
   try {
     const service = module.get(ConversationsService);
@@ -60,6 +68,7 @@ test('T10b only unknown resident small talk uses AI; replay and scripted gamepla
     assert.equal(first.intent, null);
     assert.deepEqual(first.arrival, arrival);
     assert.equal(energyCharges, 1);
+    assert.deepEqual(order, ['script', 'ai']);
     replay = true;
     await send();
     assert.equal(aiCalls, 1); assert.equal(energyCharges, 1);
@@ -68,8 +77,12 @@ test('T10b only unknown resident small talk uses AI; replay and scripted gamepla
     understood = false;
     for (const id of ['npc_receptionist', 'npc_cafe_waiter', 'npc_mia']) {
       npcId = id;
-      assert.doesNotMatch((await send()).npcMessage.text, /AI text/);
+      assert.match((await send()).npcMessage.text, /AI text/);
     }
-    assert.equal(aiCalls, 1); assert.equal(questCalls, 0);
+    assert.equal(aiCalls, 4); assert.equal(questCalls, 0);
+    pending = true; await send(); pending = false;
+    topic = true; await send(); topic = false;
+    enabled = false; await send();
+    assert.equal(aiCalls, 4);
   } finally { await module.close(); }
 });

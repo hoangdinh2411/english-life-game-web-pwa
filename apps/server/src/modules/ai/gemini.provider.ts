@@ -36,8 +36,10 @@ export class GeminiProvider implements AiProvider {
         method: 'POST', signal,
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': this.apiKey },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: NPC_SYSTEM_PROMPT }] },
-          contents: [{ role: 'user', parts: [{ text: npcUserPrompt(input) }] }],
+          system_instruction: { parts: [{ text: input.prompt?.system ?? NPC_SYSTEM_PROMPT }] },
+          contents: [...(input.prompt?.history ?? []).map(message => ({
+            role: message.speaker === 'player' ? 'user' : 'model', parts: [{ text: message.text }],
+          })), { role: 'user', parts: [{ text: npcUserPrompt(input) }] }],
         }),
       },
     );

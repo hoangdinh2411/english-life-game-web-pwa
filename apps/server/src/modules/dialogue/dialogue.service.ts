@@ -1,6 +1,7 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { normalizeDialogue } from '@life-abroad/shared';
 import { CachedDialogueNode, DialogueCacheService } from '../../infrastructure/content/dialogue-cache.service';
+import { hasScriptTopic } from './script-topics';
 
 export interface DialogueContext {
   npcId: string;
@@ -36,6 +37,11 @@ function asksForDirections(input: string): boolean {
 @Injectable()
 export class DialogueService {
   constructor(private readonly cache: DialogueCacheService) {}
+
+  async isScriptTopic(input: string, itemNames: string[]): Promise<boolean> {
+    const keywords = (await this.cache.getNodes()).flatMap(entry => entry.node.intents?.flatMap(intent => intent.keywords) ?? []);
+    return hasScriptTopic(input, keywords, itemNames);
+  }
 
   async node(context: DialogueContext, id: string): Promise<DialogueReply> {
     const entry = (await this.cache.getNodes()).find(item => item.node.id === id &&
