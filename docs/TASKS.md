@@ -35,6 +35,9 @@ test@gmail.com / 12341234.
 
 ## DONE
 
+- [x] **T10a — AI provider interface and mock:** server-only text provider,
+      mock/default configuration and authored fallback on errors, 429 or timeout.
+      AI/dialogue tests (13), server build/typecheck and changed-file lint passed.
 - [x] **Foundation:** monorepo, Vite/PWA client (D16), Supabase auth, NestJS
       token check, `/me`, character creation, migrations 001–004, authored seed,
       Zod content validation, API rate limiting (T6).
@@ -216,11 +219,6 @@ test@gmail.com / 12341234.
       cleanup tests passed. Revised Town Street frame median/p95: 7.1/15.1 ms.
       All 143 game tests, game typecheck, changed-file lint, build and PWA checks
       passed; no additional precache files.
-- [ ] **T10a — AI provider interface and mock.** Server-only `AiProvider`
-      interface, a mock provider, and `.env` settings (`AI_PROVIDER`,
-      `AI_API_KEY`, `AI_MODEL`). On error, timeout or 429, return a scripted
-      fallback line. AI never changes money, items or quest state. Done when:
-      tests pass with the mock, and the fallback works.
 - [ ] **T10b — Gemini provider (after T10a and T19).** `GeminiProvider` with a
       free key (fake data only). No Gemini-only features. Prompts in one file.
       Done when: one NPC reply comes from Gemini, and changing `AI_PROVIDER`

@@ -100,7 +100,16 @@ imports. `conversations` orchestrates dialogue and asks `quests` to apply
 recognized intents; `quests` performs step/ticket changes and calls `economy`
 for one-time rewards **inside the same PostgreSQL transaction**. A unique
 reward/claim key protects retries/concurrency. Auth stays Supabase-first;
-  external AI stays a future server-only adapter, not a mandatory module.
+  external AI is isolated behind the server-only `AiProvider` interface.
+
+**AI foundation (T10a):** `modules/ai` exports `AiService.reply(context, text)`
+and accepts a text-only provider through dependency injection. `AI_PROVIDER`
+defaults to `mock`; unsupported values fail startup. `AI_API_KEY` and `AI_MODEL`
+are server-only settings reserved for a live adapter. Replies time out after five
+seconds and abort the provider request; errors (including 429), timeouts and
+empty output return the authored `global_repeat` line. The module has no gameplay
+write dependencies. Live NPC conversations remain scripted; live provider and
+conversation wiring follow in T10b, with streaming/limits in T10c.
 
 `packages/shared` contains only contracts, Zod schemas and pure rules actually
 consumed across client/server. Authored quest/NPC/dialogue content stays in
