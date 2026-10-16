@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
-import { CAFE_SELLER_NPC_IDS, conversationSchema, type CoffeeQuestState } from '@life-abroad/shared';
+import { CAFE_SELLER_NPC_IDS, type CoffeeQuestState } from '@life-abroad/shared';
 import { useSession } from '../../session/session-provider';
 import { usePwa } from '../../pwa/PwaProvider';
-import { loadArrival, request, sendArrivalMessage } from '../../api/client';
+import { loadArrival, openConversation, sendArrivalMessage } from '../../api/client';
 import { createConversationController } from '../dialogue/conversation-controller';
 import { SavedConversation } from '../dialogue/SavedConversation';
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
@@ -12,6 +12,7 @@ import shopPortraits from '../../../assets/npcs/shop-npcs.png';
 import { CoffeeQuestToast, shouldShowCoffeeQuestToast } from './CoffeeQuest';
 import { ShopMenuPanel } from './ShopMenuPanel';
 import { sellerPanelVisibility } from './seller-panel-visibility';
+import { streamChat } from '../dialogue/chat-stream';
 
 export function ShopConversation({ npcId, sound, onClose, onRefresh }: {
   npcId: ShopNpcId; sound: boolean; onClose: () => void; onRefresh: () => Promise<void>;
@@ -23,9 +24,18 @@ export function ShopConversation({ npcId, sound, onClose, onRefresh }: {
   const dismissQuestToast = useCallback(() => setQuestToast(null), []);
   const [controller] = useState(() => createConversationController({
     load: () => run(loadArrival),
-    start: () => run(async token => conversationSchema.parse(await request('conversations', { npcId }, token))),
+    start: () => run(token => openConversation(token, npcId)),
     send: async (id, body) => {
       const turn = await run(token => sendArrivalMessage(token, id, body));
+      await onRefresh();
+      if (turn.intent === 'paid') {
+        await refreshPlayer(true);
+        setOrdersRefreshKey(value => value + 1);
+      }
+      return turn;
+    },
+    stream: async (id, conversationNpcId, body, onToken, signal) => {
+      const turn = await run(token => streamChat(token, { ...body, conversationId: id, npcId: conversationNpcId }, onToken, signal));
       await onRefresh();
       if (turn.intent === 'paid') {
         await refreshPlayer(true);
@@ -56,7 +66,7 @@ export function ShopConversation({ npcId, sound, onClose, onRefresh }: {
   </>;
   return <>
     <DialogueFrame soundControl>
-      <div className="dialogue-header flex items-center justify-between gap-2"><h2>{npc.name}</h2><GameButton label="Close" disabled={state.pending} onClick={onClose} /></div>
+      <div className="dialogue-header flex items-center justify-between gap-2"><h2>{npc.name}</h2><GameButton label="Close" onClick={onClose} /></div>
       <SavedConversation state={state} sound={sound} online={online} send={send}
         details={details}
         retry={() => void controller.start()} displayNpc={{ name: npc.name, portrait: shopPortraits, portraitPosition: `${SHOP_NPCS.indexOf(npc) % 3 * 50}% ${Math.floor(SHOP_NPCS.indexOf(npc) / 3) * 100}%` }} />

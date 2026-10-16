@@ -22,7 +22,7 @@ export function MessageComposer({ text, onChange, onSend, onRecord, voiceSupport
         if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) {
           event.preventDefault(); if (!pending) send();
         }
-      }} disabled={pending || listening} maxLength={500} rows={2} />
+      }} disabled={pending || listening} maxLength={300} rows={2} />
     <div className="composer-actions flex gap-1">
       {voiceSupported ? <ComposerAction label={listening ? 'Stop recording' : 'Record'} kind={listening ? 'stop' : 'microphone'} disabled={pending} onClick={onRecord} /> : null}
       <ComposerAction label="Send" kind="send" disabled={(!text.trim() && !listening) || pending} onClick={send} />

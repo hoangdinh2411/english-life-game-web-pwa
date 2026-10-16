@@ -4,6 +4,8 @@ export interface ConversationApi {
   load: () => Promise<ArrivalState>;
   start: () => Promise<Conversation>;
   send: (id: string, body: SendMessageRequest) => Promise<ConversationTurn>;
+  stream?: (id: string, npcId: Conversation['npcId'], body: SendMessageRequest,
+    onToken: (text: string) => void, signal: AbortSignal) => Promise<ConversationTurn>;
   enter?: () => Promise<ArrivalState>;
 }
 export interface ConversationSnapshot {
@@ -13,14 +15,19 @@ export interface ConversationSnapshot {
   error: string;
   correction: ConversationTurn['correction'];
   retryMessage: SendMessageRequest | null;
+  streaming: boolean;
+  streamedReply: string;
+  announcement: string;
 }
 
 // Private state lives only in memory. All mutations come from authenticated API responses.
 export function createConversationController(api: ConversationApi) {
-  let state: ConversationSnapshot = { arrival: null, conversation: null, pending: false, error: '', correction: null, retryMessage: null };
+  let state: ConversationSnapshot = { arrival: null, conversation: null, pending: false, error: '', correction: null, retryMessage: null,
+    streaming: false, streamedReply: '', announcement: '' };
   let epoch = 0;
   let disposed = false;
   let retry: SendMessageRequest | null = null;
+  let streamCancellation: AbortController | null = null;
   const listeners = new Set<() => void>();
   const update = (patch: Partial<ConversationSnapshot>) => {
     state = { ...state, ...patch };
@@ -68,7 +75,14 @@ export function createConversationController(api: ConversationApi) {
       update({ retryMessage: body });
       return run(async () => {
         let turn: ConversationTurn;
-        try { turn = await api.send(conversation.id, body); }
+        try {
+          if (api.stream) {
+            streamCancellation = new AbortController();
+            update({ streaming: true, streamedReply: '', announcement: '' });
+            turn = await api.stream(conversation.id, conversation.npcId, body,
+              token => update({ streamedReply: state.streamedReply + token }), streamCancellation.signal);
+          } else turn = await api.send(conversation.id, body);
+        }
         catch (failure) {
           // Validation/ordering failures commit nothing; let the learner change their reply.
           const status = typeof failure === 'object' && failure !== null && 'status' in failure ? failure.status : null;
@@ -83,6 +97,10 @@ export function createConversationController(api: ConversationApi) {
         const coffeeQuest = turn.coffeeQuest;
         return { conversation: { ...conversation, messages, arrival, ...(seller ? { seller } : {}),
           ...(coffeeQuest ? { coffeeQuest } : {}) }, arrival, correction: turn.correction ?? null, retryMessage: null };
+      }).finally(() => {
+        streamCancellation = null;
+        if (!disposed) update({ streaming: false, streamedReply: '',
+          announcement: state.conversation?.messages.at(-1)?.ai ? 'AI reply complete.' : '' });
       });
     },
     enter: () => {
@@ -94,6 +112,7 @@ export function createConversationController(api: ConversationApi) {
         return { arrival };
       });
     },
-    dispose: () => { disposed = true; epoch++; state = { ...state, pending: false }; listeners.clear(); },
+    dispose: () => { disposed = true; epoch++; streamCancellation?.abort(); streamCancellation = null;
+      state = { ...state, pending: false, streaming: false, streamedReply: '' }; listeners.clear(); },
   };
 }

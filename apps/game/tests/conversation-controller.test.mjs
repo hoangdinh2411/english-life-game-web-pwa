@@ -36,6 +36,33 @@ try {
     assert.deepEqual(snapshot.arrival, updatedArrival);
     assert.deepEqual(snapshot.conversation?.messages, [openingMessage, playerMessage, npcMessage]);
   });
+
+  test('T10f exposes streamed words, marks the AI reply, and cancels it on dispose', async () => {
+    const arrival = { questId: 'q_station_arrival', status: 'active', currentStepId: null,
+      ticket: { issued: false, used: false }, canEnterTownStreet: false, locationId: 'loc_station', rewardsGranted: false };
+    const conversation = { id: globalThis.crypto.randomUUID(), npcId: 'npc_receptionist', messages: [], arrival };
+    let release;
+    let capturedSignal;
+    const controller = createConversationController({ load: async () => arrival, start: async () => conversation,
+      send: async () => { throw new Error('Non-streaming API must not be used'); },
+      stream: async (_id, _npcId, body, onToken, signal) => {
+        capturedSignal = signal;
+        onToken('Hello '); onToken('there.');
+        await new Promise(resolve => { release = resolve; });
+        return { playerMessage: { id: globalThis.crypto.randomUUID(), sender: 'player', text: body.text, createdAt: new Date().toISOString() },
+          npcMessage: { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'Hello there.', createdAt: new Date().toISOString(), ai: true },
+          intent: null, misunderstood: false, correction: null, arrival, ai: true };
+      } });
+    await controller.start();
+    const sending = controller.send('Hi');
+    await new Promise(resolve => globalThis.setTimeout(resolve, 0));
+    assert.equal(controller.getSnapshot().streamedReply, 'Hello there.');
+    assert.equal(controller.getSnapshot().streaming, true);
+    controller.dispose();
+    assert.equal(capturedSignal.aborted, true);
+    release();
+    assert.equal(await sending, false);
+  });
 } finally {
   await server.close();
 }

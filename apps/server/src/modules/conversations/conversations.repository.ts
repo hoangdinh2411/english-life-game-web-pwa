@@ -15,7 +15,8 @@ export function sellerState(row: ConversationRow): SellerState {
 }
 
 function message(row: MessageRow): ConversationMessage {
-  return { id: row.id, sender: row.sender, text: row.text, createdAt: row.created_at.toISOString() };
+  const ai = row.sender === 'npc' && (row.metadata as { ai?: unknown } | null)?.ai === true;
+  return { id: row.id, sender: row.sender, text: row.text, createdAt: row.created_at.toISOString(), ...(ai ? { ai: true as const } : {}) };
 }
 
 @Injectable()

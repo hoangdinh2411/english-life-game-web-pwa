@@ -10,6 +10,7 @@ import { arrivalPresentation } from './arrival-presentation';
 import { usePwa } from '../../pwa/PwaProvider';
 import { router } from '../../navigation/router';
 import { useLife } from '../life/useLife';
+import { streamChat } from '../dialogue/chat-stream';
 
 export default function ArrivalStation({ onSignOut }: { onSignOut: () => void }) {
   const session = useSession();
@@ -20,6 +21,11 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
     load: () => run(api.loadArrival), start: () => run(api.startArrivalConversation),
     send: async (id, body) => {
       const result = await run((token) => api.sendArrivalMessage(token, id, body));
+      await life.refresh();
+      return result;
+    },
+    stream: async (id, npcId, body, onToken, signal) => {
+      const result = await run(token => streamChat(token, { ...body, conversationId: id, npcId }, onToken, signal));
       await life.refresh();
       return result;
     },

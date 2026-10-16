@@ -71,6 +71,11 @@ test@gmail.com / 12341234.
       SSE, atomic complete-reply persistence, AI usage/daily limits, one active
       stream per user, idempotent retry charging and disconnect rollback. Mock
       and rollback-only existing-account integration tests passed.
+- [x] **T10f — Client AI chat UI:** existing saved dialogue streams words with
+      thinking/cancel/error/offline states, confirmed AI labels, browser speech,
+      completion announcements and a development disclosure. Conversation IDs
+      resume authenticated history after reload. Browser checks passed at 320,
+      375 and 1024 px with the existing account and fictional limit fixture.
 - [x] **T10a — AI provider interface and mock:** server-only text provider,
       mock/default configuration and authored fallback on errors, 429 or
       timeout. AI/dialogue tests (13), server build/typecheck and changed-file
@@ -180,15 +185,6 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
-- [ ] **T10f — Client AI chat UI (after T10e).** In the existing chat panel:
-      words appear as they arrive, a thinking state, closing the dialogue
-      cancels the stream, limit and error messages, a small "AI reply" label,
-      reading aloud with the browser voice (recorded clips stay for scripted
-      lines), and a screen-reader announcement when the reply is complete. A
-      dev-only banner "AI test mode: chat text is sent to an AI service" while
-      the dev key is used. Done when: browser check with the existing account at
-      320, 375 and 1024 px shows streaming, cancel, a limit message, offline
-      behaviour, and the saved conversation after reload.
 - [ ] **T10g — Evaluation set (after T10d).** 20 test messages plus the safety
       messages from T10d, and one command that runs them against a chosen
       provider and flags replies that fail the T10d output checks. Done when:

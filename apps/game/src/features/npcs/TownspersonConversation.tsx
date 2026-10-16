@@ -1,14 +1,15 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { conversationSchema } from '@life-abroad/shared';
 import { usePwa } from '../../pwa/PwaProvider';
 import { useSession } from '../../session/session-provider';
-import { loadArrival, request, sendArrivalMessage } from '../../api/client';
+import { loadArrival, openConversation, sendArrivalMessage } from '../../api/client';
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
 import { GameButton } from '../../gameplay/GameButton';
 import { SavedConversation } from '../dialogue/SavedConversation';
 import { createConversationController } from '../dialogue/conversation-controller';
 import type { StreetNpcContent } from '@life-abroad/shared';
+import { conversationNpcSchema } from '@life-abroad/shared';
 import portraits from '../../../assets/npcs/shop-npcs.png';
+import { streamChat } from '../dialogue/chat-stream';
 
 const portraitFrames = ['cafe_seller', 'cafe_waiter', 'cafe_customer', 'clothes_seller', 'clothes_assistant', 'clothes_customer'] as const;
 
@@ -22,9 +23,14 @@ export function TownspersonConversation({ npc, sound, onClose, onRefresh }: {
   const { online } = usePwa();
   const [controller] = useState(() => createConversationController({
     load: () => run(loadArrival),
-    start: () => run(async token => conversationSchema.parse(await request('conversations', { npcId: npc.id }, token))),
+    start: () => run(token => openConversation(token, conversationNpcSchema.parse(npc.id))),
     send: async (id, body) => {
       const turn = await run(token => sendArrivalMessage(token, id, body));
+      await onRefresh();
+      return turn;
+    },
+    stream: async (id, npcId, body, onToken, signal) => {
+      const turn = await run(token => streamChat(token, { ...body, conversationId: id, npcId }, onToken, signal));
       await onRefresh();
       return turn;
     },

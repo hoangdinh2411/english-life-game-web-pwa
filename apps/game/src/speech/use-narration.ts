@@ -7,8 +7,8 @@ import { TOWN_STREET_NPC_IDS } from '@life-abroad/shared';
 function findClip(text: string, gender: VoiceGender, catalog: StationAudioCatalog): string | null {
   return catalog.find((clip) => clip.text === text && clip.gender === gender)?.asset ?? null;
 }
-export function useNarration(text: string, enabled: boolean, revision: string | number = text, gender: VoiceGender = 'male', npcId?: string) {
-  const street = (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId ?? '');
+export function useNarration(text: string, enabled: boolean, revision: string | number = text, gender: VoiceGender = 'male', npcId?: string, browserOnly = false) {
+  const street = !browserOnly && (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId ?? '');
   const currentText = useRef(text); currentText.current = text;
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState('');

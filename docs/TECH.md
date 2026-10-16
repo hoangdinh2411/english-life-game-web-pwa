@@ -123,8 +123,12 @@ free chat streams word by word through `POST /chat/stream`; complete replies and
 usage are saved atomically, retries replay without another charge, and disconnects
 roll back partial replies. One stream per user is allowed. Optional positive
 `AI_DAILY_CHAT_LIMIT` and `AI_DAILY_TOKEN_LIMIT` settings enforce daily limits
-through `ai_usage_daily`; unset values impose no unapproved cap. The current
-client continues using the saved-conversation API until T10f.
+through `ai_usage_daily`; unset values impose no unapproved cap. The client uses
+the SSE endpoint for saved NPC dialogue, aborts it when the panel closes, labels
+only server-confirmed AI replies and resumes the authenticated conversation after
+reload from an opaque per-NPC ID in session storage. AI replies use browser speech;
+authored replies keep recorded narration. `VITE_AI_TEST_MODE=true` shows the
+development-only AI disclosure.
 The AI safety boundary trims input and rejects empty, over-300-character,
 non-English, emoji-spam, prompt-injection, economy-manipulation, personal-data
 and medical requests before a provider call. Generated replies must be plain

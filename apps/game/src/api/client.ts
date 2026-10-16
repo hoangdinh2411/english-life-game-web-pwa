@@ -1,5 +1,5 @@
 import type { CreateCharacterRequest, OnboardingOptions, PlayerResponse, PlayerState } from '@life-abroad/shared';
-import { parseOnboardingOptions, arrivalStateSchema, conversationSchema, conversationTurnSchema, ARRIVAL_NPC_ID, type SendMessageRequest } from '@life-abroad/shared';
+import { parseOnboardingOptions, arrivalStateSchema, conversationSchema, conversationTurnSchema, ARRIVAL_NPC_ID, type Conversation, type SendMessageRequest } from '@life-abroad/shared';
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
 
@@ -30,7 +30,24 @@ export const createCharacter = (token: string, body: CreateCharacterRequest) => 
 
 export const loadArrival = async (token: string) => arrivalStateSchema.parse(await request('quests/arrival', undefined, token));
 export const enterTownStreet = async (token: string) => arrivalStateSchema.parse(await request('quests/arrival/enter-town-street', {}, token));
-export const startArrivalConversation = async (token: string) => conversationSchema.parse(await request('conversations', { npcId: ARRIVAL_NPC_ID }, token));
+const conversationKey = (npcId: string): string => `life-abroad.conversation.${npcId}`;
+export async function openConversation(token: string, npcId: Conversation['npcId']): Promise<Conversation> {
+  let savedId: string | null = null;
+  try { savedId = sessionStorage.getItem(conversationKey(npcId)); } catch { /* storage is optional */ }
+  if (savedId) {
+    try {
+      const saved = conversationSchema.parse(await request(`conversations/${encodeURIComponent(savedId)}`, undefined, token));
+      if (saved.npcId === npcId && !saved.seller?.closed) return saved;
+    } catch (error) {
+      const status = typeof error === 'object' && error !== null && 'status' in error ? error.status : null;
+      if (status !== 404) throw error;
+    }
+  }
+  const conversation = conversationSchema.parse(await request('conversations', { npcId }, token));
+  try { sessionStorage.setItem(conversationKey(npcId), conversation.id); } catch { /* continue in memory */ }
+  return conversation;
+}
+export const startArrivalConversation = (token: string) => openConversation(token, ARRIVAL_NPC_ID);
 export const sendArrivalMessage = async (token: string, id: string, body: SendMessageRequest) =>
   conversationTurnSchema.parse(await request(`conversations/${encodeURIComponent(id)}/messages`, body, token));
 

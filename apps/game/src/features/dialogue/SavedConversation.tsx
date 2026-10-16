@@ -27,7 +27,7 @@ export function SavedConversation({ state, sound, online, send, retry, displayNp
   const speech = useSpeech(setText);
   const blocked = state.pending || finalizing || !online || completed || Boolean(state.conversation?.seller?.closed) || !state.conversation;
   const lastNpc = state.conversation?.messages.findLast((message) => message.sender === 'npc');
-  const voice = useNarration(lastNpc?.text ?? '', sound && !state.pending && !speech.listening, lastNpc?.id ?? '', npcVoice[state.conversation?.npcId ?? 'npc_station_information'], state.conversation?.npcId);
+  const voice = useNarration(lastNpc?.text ?? '', sound && !state.pending && !speech.listening, lastNpc?.id ?? '', npcVoice[state.conversation?.npcId ?? 'npc_station_information'], state.conversation?.npcId, Boolean(lastNpc?.ai));
   const latestMessage = state.conversation?.messages.at(-1);
   const reveal = useNpcMessageReveal(latestMessage ? { id: latestMessage.id, text: latestMessage.text, npc: latestMessage.sender === 'npc' } : null,
     voice.playback, shouldUseTypingFallback(sound, voice.ready, voice.error));
@@ -46,15 +46,20 @@ export function SavedConversation({ state, sound, online, send, retry, displayNp
     <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 overflow-auto pr-1 [@media(max-height:480px)]:h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
       {state.conversation?.messages.map((message) => <DialogueMessage key={message.id}
         name={message.sender === 'player' ? 'You' : displayNpc?.name ?? 'Ruth'}
-        text={reveal?.messageId === message.id ? reveal.visibleText : message.text} fullText={message.text}
-        revealing={reveal?.messageId === message.id && reveal.revealing}
+        text={!message.ai && reveal?.messageId === message.id ? reveal.visibleText : message.text} fullText={message.text}
+        revealing={!message.ai && reveal?.messageId === message.id && reveal.revealing}
+        ai={Boolean(message.ai)}
         player={message.sender === 'player'} portrait={message.sender === 'player' ? playerPortrait : displayNpc?.portrait ?? npcPortraits.npc_station_information}
         portraitPosition={message.sender === 'npc' ? displayNpc?.portraitPosition : undefined}
         onReplay={() => voice.listen(message.text)} replayDisabled={!sound || !voice.supported || state.pending || speech.listening} />)}
+      {state.streaming ? <DialogueMessage name={displayNpc?.name ?? 'Ruth'} text={state.streamedReply} thinking={!state.streamedReply}
+        portrait={displayNpc?.portrait ?? npcPortraits.npc_station_information} portraitPosition={displayNpc?.portraitPosition} /> : null}
     </div>
     {details}
+    {import.meta.env.DEV && import.meta.env.VITE_AI_TEST_MODE === 'true' ? <p className="rounded-lg border border-[#aa8b57] bg-[#fff0c9] px-2 py-1 text-[12px] font-bold">AI test mode: chat text is sent to an AI service</p> : null}
+    <p className="sr-only" role="status" aria-live="polite">{state.announcement}</p>
     {!online ? <p role="alert" className="error text-[#a43f34] text-[15px] leading-[1.4]">You’re offline. Reconnect to send replies or use your ticket. Your draft stays here; nothing is queued.</p> : null}
-    {state.pending ? <p role="status">Waiting for the station server…</p> : null}
+    {state.pending && !state.streaming ? <p role="status">Waiting for the server…</p> : null}
     {state.error ? <p role="alert" className="error text-[#a43f34] text-[15px] leading-[1.4]">{state.error}</p> : null}
     {state.retryMessage && !state.pending ? <GameButton label="Retry previous reply" disabled={!online} onClick={() => void submit(true)} /> : null}
     {!state.conversation && !state.pending ? <GameButton label="Retry conversation" disabled={!online} onClick={retry} /> : null}
