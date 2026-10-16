@@ -10,6 +10,8 @@ import { CoffeeQuestService } from '../quests/coffee-quest.service';
 import type { LearningHistoryTurn } from '@life-abroad/shared';
 import { AiService } from '../ai/ai.service';
 import { NpcPromptService } from '../ai/npc-prompt.service';
+import { AiUsageService } from '../ai/ai-usage.service';
+import type { AiReplyResult } from '../ai/ai.service';
 
 const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
 
@@ -18,7 +20,8 @@ export class ConversationsService {
   constructor(private readonly conversations: ConversationsRepository,
     private readonly dialogue: DialogueService, private readonly quests: QuestsService, private readonly life: LifeService,
     private readonly seller: SellerService, private readonly coffee: CoffeeQuestService,
-    private readonly ai: AiService, private readonly prompts: NpcPromptService) {}
+    private readonly ai: AiService, private readonly prompts: NpcPromptService,
+    private readonly aiUsage: AiUsageService) {}
 
   learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
     return this.conversations.learningHistory(userId);
@@ -66,16 +69,30 @@ export class ConversationsService {
   }
 
   send(userId: string, id: string, request: SendMessageRequest): Promise<ConversationTurn> {
+    return this.sendInternal(userId, id, request);
+  }
+
+  sendStreaming(userId: string, id: string, npcId: string, request: SendMessageRequest,
+    beforeSave: (text: string) => Promise<void>, signal: AbortSignal): Promise<ConversationTurn> {
+    return this.sendInternal(userId, id, request, { npcId, beforeSave, signal });
+  }
+
+  private sendInternal(userId: string, id: string, request: SendMessageRequest,
+    stream?: { npcId: string; beforeSave: (text: string) => Promise<void>; signal: AbortSignal }): Promise<ConversationTurn> {
     return this.conversations.transaction(async client => {
       // Always lock the character before the conversation, matching quest lock order.
       let arrival = await this.quests.getArrival(userId, client);
       const conversation = await this.conversations.load(client, userId, id);
+      if (stream && conversation.npc_id !== stream.npcId) throw new ConflictException('Conversation NPC does not match');
       const replay = await this.conversations.replay(client, id, request);
-      if (replay) return { ...replay, arrival,
+      if (replay) {
+        if (stream) await stream.beforeSave(replay.npcMessage.text);
+        return { ...replay, arrival,
         ...(isCafeSeller(conversation.npc_id) || conversation.npc_id === 'npc_clothes_seller'
           ? { seller: sellerState(conversation) } : {}),
         ...([SELLER_NPC_ID, 'npc_cafe_waiter'].includes(conversation.npc_id)
           ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
+      }
       const receptionist = conversation.npc_id === ARRIVAL_NPC_ID;
       if (conversation.ended_at) throw new ConflictException('This conversation has ended. Start a new conversation');
       if (receptionist && arrival.locationId !== STATION_LOCATION_ID) throw new ConflictException('Visit the station receptionist first');
@@ -87,6 +104,7 @@ export class ConversationsService {
       let metadata: TurnMetadata;
       let responseText: string;
       let nodeId: string;
+      let aiResult: AiReplyResult | undefined;
       if ((SHOP_NPC_IDS as readonly string[]).includes(conversation.npc_id) && !(await this.life.venueOpen(client, userId, 'store'))) {
         const reply = await this.dialogue.node(context, 'global_store_closed');
         responseText = reply.text.replace('{hours}', venueHoursLabel('store'));
@@ -125,15 +143,28 @@ export class ConversationsService {
         && !metadata.seller?.closed && !await this.conversations.pendingQuest(client, userId, conversation.npc_id)) {
         const itemNames = (await this.life.catalog()).map(item => item.name);
         if (!await this.dialogue.isScriptTopic(request.text, itemNames)) {
-          const prompt = await this.prompts.build(client, userId, conversation.npc_id, id, request.text);
-          responseText = await this.ai.reply(context, prompt.text, prompt.prompt);
-          metadata = { ...metadata, intent: null };
+          if (await this.aiUsage.limited(client, userId)) {
+            const limit = await this.dialogue.node(context, 'global_ai_limit');
+            responseText = limit.text; nodeId = limit.node.id;
+            metadata = { ...metadata, intent: null, misunderstood: false };
+          } else {
+            const prompt = await this.prompts.build(client, userId, conversation.npc_id, id, request.text);
+            aiResult = await this.ai.replyTracked(context, prompt.text, prompt.prompt, stream?.signal);
+            responseText = aiResult.text;
+            metadata = { ...metadata, intent: null, ...(aiResult.usedProvider ? { ai: true as const } : {}) };
+          }
         }
+      }
+      if (stream) {
+        if (stream.signal.aborted) throw stream.signal.reason ?? new Error('Chat stream cancelled.');
+        await stream.beforeSave(responseText);
+        if (stream.signal.aborted) throw stream.signal.reason ?? new Error('Chat stream cancelled.');
       }
       const playerMessage = await this.conversations.append(client, id, 'player', request.text,
         request.clientMessageId, { coach: request.coach });
       const npcMessage = await this.conversations.append(client, id, 'npc', responseText, request.clientMessageId, metadata);
       await this.conversations.setNode(client, id, nodeId);
+      if (aiResult) await this.aiUsage.record(client, userId, id, request.clientMessageId, aiResult);
       return { ...metadata, playerMessage, npcMessage };
     });
   }

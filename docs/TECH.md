@@ -102,7 +102,7 @@ for one-time rewards **inside the same PostgreSQL transaction**. A unique
 reward/claim key protects retries/concurrency. Auth stays Supabase-first;
   external AI is isolated behind the server-only `AiProvider` interface.
 
-**AI foundation (T10a–T10d):** `modules/ai` exports `AiService.reply(context, text, prompt?)`
+**AI foundation (T10a–T10e):** `modules/ai` exports `AiService.reply(context, text, prompt?)`
 and accepts a text-only provider through dependency injection. `AI_PROVIDER`
 defaults to `mock`; `gemini` selects the REST adapter using server-only
 `AI_API_KEY` and `AI_MODEL` (both required); unsupported values fail startup.
@@ -118,16 +118,20 @@ Only other small talk reaches the provider. AI text never becomes a gameplay int
 opening status and the player's English level from the database, plus the last six
 complete conversation turns. Account identifiers, known player names and emails
 are removed from both the current input and history. The provider gets no profile
-record. Free Gemini keys remain for fictional development data only. Streaming and
-limits are T10e; the current client continues using the saved-conversation API.
+record. Free Gemini keys remain for fictional development data only. Authenticated
+free chat streams word by word through `POST /chat/stream`; complete replies and
+usage are saved atomically, retries replay without another charge, and disconnects
+roll back partial replies. One stream per user is allowed. Optional positive
+`AI_DAILY_CHAT_LIMIT` and `AI_DAILY_TOKEN_LIMIT` settings enforce daily limits
+through `ai_usage_daily`; unset values impose no unapproved cap. The current
+client continues using the saved-conversation API until T10f.
 The AI safety boundary trims input and rejects empty, over-300-character,
 non-English, emoji-spam, prompt-injection, economy-manipulation, personal-data
 and medical requests before a provider call. Generated replies must be plain
 English text of at most 40 words, without Markdown, gameplay/economy claims,
 personal-data requests or medical advice. Rejected input/output uses the authored
 `global_repeat` line.
-Migration `016` reserves server-only usage storage and is already applied locally;
-no current AI code writes to it.
+Migration `016` provides server-only usage storage used by streamed AI chat.
 
 `packages/shared` contains only contracts, Zod schemas and pure rules actually
 consumed across client/server. Authored quest/NPC/dialogue content stays in
@@ -247,6 +251,11 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
   return 409. Replay includes the original arrival snapshot; GET gives current
   state. After entering Town Street, history/replay remain readable but new
   station messages are rejected. No edit/delete message endpoints are exposed.
+- `POST /chat/stream` with `{ npcId, conversationId, clientMessageId, text,
+  coach? }` (protected): emits SSE `token` events word by word, then `done`, or
+  `error`. Only complete replies persist. AI messages carry `metadata.ai: true`;
+  provider/model token estimates are recorded in `ai_usage` and daily totals.
+  Exact retries replay the saved response without another energy or usage charge.
 
 `QuestsService.applyReceptionistIntent` and `issueArrivalTicket` are server-only
 entry points for T7 orchestration; no public endpoint accepts dialogue intents,
@@ -272,8 +281,8 @@ It reads the latest 100 relevant conversation turns through the conversations
 service; no separate vocabulary storage or migration is needed. The paused game
 menu opens **English review**; private review data stays network-only.
 
-**Planned (not callable yet):** other quest endpoints; vocabulary journal;
-AI chat via SSE. Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
+**Planned (not callable yet):** other quest endpoints; vocabulary journal.
+Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
 
 **Shop catalog (T16):** `content/seed/shops.json` is a Zod-validated
 array of `{ id, name, kind, price, shop, color?, image? }`; kind is `drink`, `food` or `clothing`,
@@ -410,7 +419,7 @@ to the phone, not the computer.
 - `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm content:validate`,
   `pnpm build`: project validation/build.
 - `pnpm test:integration`: real local Supabase/Postgres tests; requires setup.
-  The rollback-only T10c test reuses `test@gmail.com`: from `apps/server`, set
+  The rollback-only T10c–T10e test reuses `test@gmail.com`: from `apps/server`, set
   `T10_TEST_PASSWORD`, build, then run
   `node --import ./scripts/load-env.mjs --test dist/tests/ai.integration.test.js`.
   It uses the mock by default; set `T10_LIVE_TEST=true` to require a real Gemini
@@ -435,5 +444,5 @@ Physical Android/iOS install, standalone reopen and airplane-mode testing are
 ## Future decisions, not current implementation
 Café seller conversations enforce store hours. Organization visits and work
 actions remain future tasks; their approved opening hours are shared contracts.
-AI provider/limits, CEFR promotion and full speech service remain future decisions.
+Production AI provider quotas, CEFR promotion and full speech service remain future decisions.
 See `TASKS.md` before extending scope.

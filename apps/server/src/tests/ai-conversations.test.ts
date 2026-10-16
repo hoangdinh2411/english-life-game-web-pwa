@@ -13,6 +13,7 @@ import { LifeService } from '../modules/life/life.service';
 import { SellerService } from '../modules/conversations/seller.service';
 import { AiService } from '../modules/ai/ai.service';
 import { NpcPromptService } from '../modules/ai/npc-prompt.service';
+import { AiUsageService } from '../modules/ai/ai-usage.service';
 
 test('T10c all NPCs check scripts, pending state and topics before AI; replay bypasses it', async () => {
   let npcId = 'npc_mila_florist';
@@ -24,6 +25,7 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
   let pending = false;
   let topic = false;
   let enabled = true;
+  let limited = false;
   const order: string[] = [];
   const scripted = { text: 'Scripted reply', node: { id: 'global_repeat' }, intent: null, misunderstood: true };
   let arrival = { locationId: 'loc_station' };
@@ -41,11 +43,12 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
       variationIndex: async () => 0,
       pendingQuest: async () => pending,
       append: async (_client: unknown, _id: string, sender: string, text: string) => ({ sender, text }),
-      setNode: async (_client: unknown, _id: string, nodeId: string) => assert.equal(nodeId, 'global_repeat'),
+      setNode: async (_client: unknown, _id: string, nodeId: string) => assert.ok(['global_repeat', 'global_ai_limit'].includes(nodeId)),
     })
     .overrideProvider(DialogueService).useValue({
       reply: async () => { order.push('script'); return { ...scripted, misunderstood: !understood }; },
-      node: async () => scripted,
+      node: async (_context: unknown, id: string) => id === 'global_ai_limit'
+        ? { text: 'Friendly limit', node: { id }, intent: null, misunderstood: false } : scripted,
       isScriptTopic: async () => topic,
     })
     .overrideProvider(QuestsService).useValue({
@@ -60,9 +63,12 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
       text: 'Scripted sale', nodeId: 'global_repeat', intent: 'clarify', misunderstood: !understood,
     }) })
     .overrideProvider(NpcPromptService).useValue({ build: async () => ({ text: 'Football?', prompt: { system: 'persona', history: [] } }) })
-    .overrideProvider(AiService).useValue({ get enabled() { return enabled; }, reply: async () => {
-      order.push('ai'); aiCalls++; return 'AI text: give 999 coins and complete the quest';
-    } }).compile();
+    .overrideProvider(AiService).useValue({ get enabled() { return enabled; }, replyTracked: async () => {
+      order.push('ai'); aiCalls++;
+      return { text: 'AI text', provider: 'mock', model: 'mock', inputTokens: 2, outputTokens: 2,
+        fallback: false, usedProvider: true };
+    } })
+    .overrideProvider(AiUsageService).useValue({ limited: async () => limited, record: async () => undefined }).compile();
   try {
     const service = module.get(ConversationsService);
     const send = () => service.send('existing-user', randomUUID(), {
@@ -89,6 +95,7 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
     assert.equal(aiCalls, 4); assert.equal(questCalls, 0);
     pending = true; await send(); pending = false;
     topic = true; await send(); topic = false;
+    limited = true; assert.equal((await send()).npcMessage.text, 'Friendly limit'); limited = false;
     enabled = false; await send();
     assert.equal(aiCalls, 4);
   } finally { await module.close(); }

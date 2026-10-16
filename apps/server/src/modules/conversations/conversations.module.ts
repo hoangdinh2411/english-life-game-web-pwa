@@ -9,7 +9,10 @@ import { ConversationsRepository } from './conversations.repository';
 import { ConversationsService } from './conversations.service';
 import { SellerService } from './seller.service';
 import { AiModule } from '../ai/ai.module';
+import { ChatController } from './chat.controller';
+import { ChatStreamService } from './chat-stream.service';
 
 @Module({ imports: [DatabaseModule, AuthModule, DialogueModule, QuestsModule, LifeModule, AiModule],
-  controllers: [ConversationsController], providers: [ConversationsRepository, ConversationsService, SellerService], exports: [ConversationsService] })
+  controllers: [ConversationsController, ChatController],
+  providers: [ConversationsRepository, ConversationsService, SellerService, ChatStreamService], exports: [ConversationsService] })
 export class ConversationsModule {}

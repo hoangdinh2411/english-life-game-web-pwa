@@ -156,3 +156,40 @@ test('T10d trims safe input and rejects unsafe provider output', async () => {
     assert.equal(received, 'Do you like football?');
   } finally { await module.close(); }
 });
+
+test('T10e caller cancellation aborts the provider instead of returning a saved fallback', async () => {
+  let providerSignal: AbortSignal | undefined;
+  let started: (() => void) | undefined;
+  const ready = new Promise<void>(resolve => { started = resolve; });
+  const { module, service } = await fixture({ reply: (_request, signal) => {
+    providerSignal = signal;
+    started?.();
+    return new Promise<string>((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }));
+  } });
+  const controller = new AbortController();
+  try {
+    const cancellable = service.reply as unknown as
+      (typeof service.reply & ((dialogueContext: { npcId: string; roleId: string; personality: string }, text: string,
+        prompt: undefined, signal: AbortSignal) => Promise<string>));
+    const pending = cancellable.call(service, context, 'Do you like football?', undefined, controller.signal);
+    await ready;
+    controller.abort(new Error('client disconnected'));
+    await assert.rejects(pending, /client disconnected/);
+    assert.equal(providerSignal?.aborted, true);
+  } finally { await module.close(); }
+});
+
+test('T10e tracked replies expose estimated usage without provider internals', async () => {
+  const { module, service } = await fixture({ reply: async () => 'Football is fun.' }, { AI_PROVIDER: 'mock' });
+  try {
+    const tracked = (service as unknown as { replyTracked: (dialogueContext: typeof context, text: string) => Promise<{
+      text: string; provider: string; model: string; inputTokens: number; outputTokens: number; fallback: boolean;
+      usedProvider: boolean;
+    }> }).replyTracked;
+    const result = await tracked.call(service, context, 'Do you like football?');
+    assert.deepEqual(result, {
+      text: 'Football is fun.', provider: 'mock', model: 'mock', inputTokens: 5, outputTokens: 4,
+      fallback: false, usedProvider: true,
+    });
+  } finally { await module.close(); }
+});

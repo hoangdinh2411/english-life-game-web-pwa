@@ -9,6 +9,12 @@
       }
     },
     {
+      "id": "global_ai_limit",
+      "text": {
+        "default": "Let's practise with the prepared conversations for now. We can chat freely again later."
+      }
+    },
+    {
       "id": "global_store_closed",
       "text": {
         "default": "This shop is closed. Stores are open from {hours}. Please come back then."

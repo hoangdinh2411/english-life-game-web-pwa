@@ -31,6 +31,13 @@ export const sendMessageSchema = z.object({
   clientMessageId: z.string().uuid(), text: z.string().trim().min(1).max(2000),
   coach: z.boolean().default(false),
 }).strict();
+export const chatStreamRequestSchema = z.object({
+  npcId: conversationNpcSchema,
+  conversationId: z.string().uuid(),
+  clientMessageId: z.string().uuid(),
+  text: z.string().trim().min(1).max(300),
+  coach: z.boolean().default(false),
+}).strict();
 export const conversationIdSchema = z.string().uuid();
 export const conversationMessageSchema = z.object({
   id: z.string().uuid(), sender: z.enum(['player', 'npc']), text: z.string(),
@@ -41,6 +48,7 @@ export const turnMetadataSchema = z.object({
   correction: z.object({ original: z.string(), improved: z.string(), reason: z.string(), question: z.string() }).strict().nullable(),
   seller: sellerStateSchema.optional(),
   coffeeQuest: coffeeQuestStateSchema.optional(),
+  ai: z.literal(true).optional(),
 }).strict();
 export const conversationTurnSchema = turnMetadataSchema.extend({
   playerMessage: conversationMessageSchema, npcMessage: conversationMessageSchema,
@@ -52,6 +60,7 @@ export const conversationSchema = z.object({
   coffeeQuest: coffeeQuestStateSchema.optional(),
 }).strict();
 export type SendMessageRequest = z.infer<typeof sendMessageSchema>;
+export type ChatStreamRequest = z.infer<typeof chatStreamRequestSchema>;
 export type ConversationMessage = z.infer<typeof conversationMessageSchema>;
 export type TurnMetadata = z.infer<typeof turnMetadataSchema>;
 export type ConversationTurn = z.infer<typeof conversationTurnSchema>;

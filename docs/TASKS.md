@@ -67,6 +67,10 @@ test@gmail.com / 12341234.
       non-English text and emoji spam; validates short plain-English output with
       no gameplay claims, personal-data requests or medical advice. All required
       safety cases passed with the existing account in a rollback-only test.
+- [x] **T10e — Chat endpoint, streaming and limits:** authenticated word-by-word
+      SSE, atomic complete-reply persistence, AI usage/daily limits, one active
+      stream per user, idempotent retry charging and disconnect rollback. Mock
+      and rollback-only existing-account integration tests passed.
 - [x] **T10a — AI provider interface and mock:** server-only text provider,
       mock/default configuration and authored fallback on errors, 429 or
       timeout. AI/dialogue tests (13), server build/typecheck and changed-file
@@ -176,16 +180,6 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
-- [ ] **T10e — Chat endpoint, streaming and limits (after T10d).**
-      `POST /chat/stream` (SSE events `token`, `done`, `error`), authenticated,
-      with NPC id, conversation id and a client message id (a retry is saved and
-      charged once). Save player and NPC messages (NPC messages marked as AI)
-      and token usage; use `ai_usage_daily`. One stream per user at a time;
-      clean up if the client disconnects; save only complete replies. Free-chat
-      cap, rate limit, and the energy rule once decided; at a limit, return a
-      friendly scripted line. Done when: text streams word by word, limits work
-      with the mock, a retry is charged once, and a disconnect leaves no half
-      message.
 - [ ] **T10f — Client AI chat UI (after T10e).** In the existing chat panel:
       words appear as they arrive, a thinking state, closing the dialogue
       cancels the stream, limit and error messages, a small "AI reply" label,

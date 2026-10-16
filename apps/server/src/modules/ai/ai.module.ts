@@ -7,6 +7,7 @@ import { MockProvider } from './mock.provider';
 import { GeminiProvider } from './gemini.provider';
 import { LifeModule } from '../life/life.module';
 import { NpcPromptService } from './npc-prompt.service';
+import { AiUsageService } from './ai-usage.service';
 
 @Module({
   imports: [ConfigModule, DialogueModule, LifeModule],
@@ -23,7 +24,8 @@ import { NpcPromptService } from './npc-prompt.service';
     },
     AiService,
     NpcPromptService,
+    AiUsageService,
   ],
-  exports: [AiService, NpcPromptService],
+  exports: [AiService, NpcPromptService, AiUsageService],
 })
 export class AiModule {}

@@ -15,8 +15,9 @@ import { GeminiProvider } from '../modules/ai/gemini.provider';
 import { MockProvider } from '../modules/ai/mock.provider';
 import { conversationNpcSchema } from '@life-abroad/shared';
 import { DialogueService } from '../modules/dialogue/dialogue.service';
+import { ChatStreamService, type ChatEvent } from '../modules/conversations/chat-stream.service';
 
-test('T10c/T10d existing account: script-first AI routing and safety fallback (rollback only)', {
+test('T10c-T10e existing account: routing, safety, streaming and persistence (rollback only)', {
   skip: !process.env.T10_TEST_PASSWORD,
 }, async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
@@ -42,8 +43,20 @@ test('T10c/T10d existing account: script-first AI routing and safety fallback (r
   } };
   const database = {
     query: <Row extends QueryResultRow>(sql: string, values: unknown[] = []) => client.query<Row>(sql, values),
-    transaction: <T>(work: (connection: PoolClient) => Promise<T>): Promise<T> => work(client),
+    transaction: async <T>(work: (connection: PoolClient) => Promise<T>): Promise<T> => {
+      const savepoint = `service_${++transactionId}`;
+      await client.query(`SAVEPOINT ${savepoint}`);
+      try {
+        const value = await work(client);
+        await client.query(`RELEASE SAVEPOINT ${savepoint}`);
+        return value;
+      } catch (error: unknown) {
+        await client.query(`ROLLBACK TO SAVEPOINT ${savepoint}`);
+        throw error;
+      }
+    },
   };
+  let transactionId = 0;
   const module = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(ConfigService).useValue(new ConfigService({ AI_ENABLED: 'true' }))
     .overrideProvider(DatabaseService).useValue(database)
@@ -120,11 +133,51 @@ test('T10c/T10d existing account: script-first AI routing and safety fallback (r
       assert.equal(calls, previous + 1);
       assert.equal(unsafeOutput.npcMessage.text, fallback);
       forcedReply = undefined;
+      const streams = module.get(ChatStreamService);
+      const streamedConversation = await conversations.create(userId, 'npc_mila_florist');
+      const streamRequest = { npcId: 'npc_mila_florist' as const, conversationId: streamedConversation.id,
+        clientMessageId: randomUUID(), text: 'Which season makes you happiest, and why?', coach: false };
+      const energyBefore = Number((await client.query('SELECT energy FROM player_stats WHERE user_id=$1', [userId])).rows[0]!.energy);
+      const dailyBefore = (await client.query<{ tokens_used: number; free_chats_used: number }>(`SELECT tokens_used,free_chats_used
+        FROM ai_usage_daily WHERE user_id=$1 AND usage_date=current_date`, [userId])).rows[0] ?? { tokens_used: 0, free_chats_used: 0 };
+      const events: ChatEvent[] = [];
+      await streams.stream(userId, streamRequest, event => events.push(event), new AbortController().signal);
+      const tokens = events.filter((event): event is Extract<ChatEvent, { event: 'token' }> => event.event === 'token');
+      const done = events.find((event): event is Extract<ChatEvent, { event: 'done' }> => event.event === 'done');
+      assert.ok(tokens.length > 1); assert.ok(done);
+      assert.equal(tokens.map(event => event.data.text).join(''), done.data.turn.npcMessage.text);
+      const savedAi = await client.query<{ sender: string; metadata: { ai?: boolean } }>(`SELECT sender,metadata FROM messages
+        WHERE conversation_id=$1 AND client_message_id=$2 ORDER BY sequence`, [streamRequest.conversationId, streamRequest.clientMessageId]);
+      assert.equal(savedAi.rowCount, 2); assert.equal(savedAi.rows[1]?.metadata.ai, true);
+      assert.equal((await client.query('SELECT count(*)::int AS count FROM ai_usage WHERE conversation_id=$1 AND client_message_id=$2',
+        [streamRequest.conversationId, streamRequest.clientMessageId])).rows[0]!.count, 1);
+      const dailyAfter = (await client.query<{ tokens_used: number; free_chats_used: number }>(`SELECT tokens_used,free_chats_used
+        FROM ai_usage_daily WHERE user_id=$1 AND usage_date=current_date`, [userId])).rows[0]!;
+      assert.equal(dailyAfter.free_chats_used, dailyBefore.free_chats_used + 1);
+      assert.ok(dailyAfter.tokens_used > dailyBefore.tokens_used);
+      assert.equal(Number((await client.query('SELECT energy FROM player_stats WHERE user_id=$1', [userId])).rows[0]!.energy), energyBefore - 1);
+      const replayEvents: ChatEvent[] = [];
+      await streams.stream(userId, streamRequest, event => replayEvents.push(event), new AbortController().signal);
+      assert.equal(calls, previous + 2);
+      assert.equal(Number((await client.query('SELECT energy FROM player_stats WHERE user_id=$1', [userId])).rows[0]!.energy), energyBefore - 1);
+      assert.equal((await client.query('SELECT count(*)::int AS count FROM ai_usage WHERE conversation_id=$1 AND client_message_id=$2',
+        [streamRequest.conversationId, streamRequest.clientMessageId])).rows[0]!.count, 1);
+      const cancelledId = randomUUID();
+      const cancellation = new AbortController();
+      await assert.rejects(streams.stream(userId, { ...streamRequest, clientMessageId: cancelledId,
+        text: 'Volcanoes fascinate me.' }, event => {
+        if (event.event === 'token') cancellation.abort(new Error('test disconnect'));
+      }, cancellation.signal), /test disconnect/);
+      assert.equal((await client.query('SELECT count(*)::int AS count FROM messages WHERE conversation_id=$1 AND client_message_id=$2',
+        [streamRequest.conversationId, cancelledId])).rows[0]!.count, 0);
+      assert.equal((await client.query('SELECT count(*)::int AS count FROM ai_usage WHERE conversation_id=$1 AND client_message_id=$2',
+        [streamRequest.conversationId, cancelledId])).rows[0]!.count, 0);
+      assert.equal(Number((await client.query('SELECT energy FROM player_stats WHERE user_id=$1', [userId])).rows[0]!.energy), energyBefore - 1);
       module.get(ConfigService).set('AI_ENABLED', 'false');
       const disabled = await conversations.create(userId, 'npc_mila_florist');
       await conversations.send(userId, disabled.id, { text: 'Do you like football?', clientMessageId: randomUUID(), coach: false });
-      assert.equal(calls, previous + 1, 'disabled AI never reaches the provider');
-      console.log(`Verified ${conversationNpcSchema.options.length} NPCs × ${scriptedExamples.length} scripted examples; seller/receptionist/resident AI; pending states; T10d input/output fallback.`);
+      assert.equal(calls, previous + 3, 'disabled AI never reaches the provider');
+      console.log(`Verified ${conversationNpcSchema.options.length} NPCs × ${scriptedExamples.length} scripted examples; T10d safety; T10e stream/replay/cancel persistence.`);
     }
   } finally {
     await client.query('ROLLBACK');
