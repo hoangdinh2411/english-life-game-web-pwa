@@ -102,26 +102,27 @@ for one-time rewards **inside the same PostgreSQL transaction**. A unique
 reward/claim key protects retries/concurrency. Auth stays Supabase-first;
   external AI is isolated behind the server-only `AiProvider` interface.
 
-**AI foundation (T10a–T10e):** `modules/ai` exports `AiService.reply(context, text, prompt?)`
+**AI foundation (T10a–T10g):** `modules/ai` exports `AiService.reply(context, text, prompt?)`
 and accepts a text-only provider through dependency injection. `AI_PROVIDER`
 defaults to `mock`; `gemini` selects the REST adapter using server-only
 `AI_API_KEY` and `AI_MODEL` (both required); unsupported values fail startup.
-Prompts live in `modules/ai/prompts.ts`. Replies time out after five
+Prompts live in `modules/ai/prompts.ts`. Replies time out after twenty
 seconds and abort the provider request; errors (including 429), timeouts and
 empty output return the authored `global_repeat` line. `AI_ENABLED` defaults off;
 set it to `true` only for intentional development tests. All supported NPCs check
 server scripts first. Pending orders/active NPC quests stay scripted. Unmatched
-messages containing authored topic words or catalog names (including one-character
-typos in longer words) get scripted clarification; vocabulary comes from content.
-Only other small talk reaches the provider. AI text never becomes a gameplay intent.
+messages reach the provider for every NPC, extending the available conversation
+topics after scripted dialogue has had priority. AI text never becomes a gameplay intent.
 `NpcPromptService.build` reads NPC name, role, personality, speaking level, place,
 opening status and the player's English level from the database, plus the last six
 complete conversation turns. Account identifiers, known player names and emails
 are removed from both the current input and history. The provider gets no profile
 record. Free Gemini keys remain for fictional development data only. Authenticated
-free chat streams word by word through `POST /chat/stream`; complete replies and
-usage are saved atomically, retries replay without another charge, and disconnects
-roll back partial replies. One stream per user is allowed. Optional positive
+free chat uses Gemini's native stream through `POST /chat/stream`. The server
+buffers one sentence, validates it, then forwards the safe sentence immediately;
+complete accepted replies and usage are saved atomically, retries replay without
+another charge, and disconnects roll back partial replies. One stream per user is
+allowed. Optional positive
 `AI_DAILY_CHAT_LIMIT` and `AI_DAILY_TOKEN_LIMIT` settings enforce daily limits
 through `ai_usage_daily`; unset values impose no unapproved cap. The client uses
 the SSE endpoint for saved NPC dialogue, aborts it when the panel closes, labels
@@ -132,9 +133,10 @@ development-only AI disclosure.
 The AI safety boundary trims input and rejects empty, over-300-character,
 non-English, emoji-spam, prompt-injection, economy-manipulation, personal-data
 and medical requests before a provider call. Generated replies must be plain
-English text of at most 40 words, without Markdown, gameplay/economy claims,
-personal-data requests or medical advice. Rejected input/output uses the authored
-`global_repeat` line.
+English text of at most 40 words, without Markdown, profanity, gameplay/economy
+claims, personal-data requests or medical advice. Rejected input/output uses the
+authored `global_repeat` line; a later rejected streamed sentence is discarded
+while already accepted complete sentences remain the saved reply.
 Migration `016` provides server-only usage storage used by streamed AI chat.
 
 `packages/shared` contains only contracts, Zod schemas and pure rules actually
@@ -422,6 +424,11 @@ to the phone, not the computer.
 - `pnpm dev:game`, `pnpm dev:web`, `pnpm dev:server`: targeted dev servers.
 - `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm content:validate`,
   `pnpm build`: project validation/build.
+- `pnpm ai:evaluate -- --provider=mock` prints the 20-message AI evaluation set,
+  all T10d unsafe-input cases, every reply and its safety flags. Select
+  `--provider=gemini` only for an intentional live-key evaluation; it uses the
+  configured server-only `AI_API_KEY` and `AI_MODEL`, calls no game API and
+  changes no account or database state.
 - `pnpm test:integration`: real local Supabase/Postgres tests; requires setup.
   The rollback-only T10c–T10e test reuses `test@gmail.com`: from `apps/server`, set
   `T10_TEST_PASSWORD`, build, then run

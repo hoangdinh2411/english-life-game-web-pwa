@@ -28,6 +28,21 @@ test('T10b Gemini uses configured model, header authentication, centralized prom
   assert.equal(await provider.reply(input, controller.signal), 'Spring is lovely!');
 });
 
+test('Gemini forwards native SSE text chunks and requires a completed response', async () => {
+  const encoder = new TextEncoder();
+  const provider = new GeminiProvider(settings, async (url) => {
+    assert.equal(url, 'https://generativelanguage.googleapis.com/v1beta/models/test-model:streamGenerateContent?alt=sse');
+    return new Response(new ReadableStream<Uint8Array>({ start(controller) {
+      controller.enqueue(encoder.encode('data: {"candidates":[{"content":{"parts":[{"text":"I like "}]}}]}\n\n'));
+      controller.enqueue(encoder.encode('data: {"candidates":[{"finishReason":"STOP","content":{"parts":[{"text":"adventure movies."}]}}]}\n\n'));
+      controller.close();
+    } }));
+  });
+  const chunks: string[] = [];
+  for await (const chunk of provider.stream!(input, new AbortController().signal)) chunks.push(chunk);
+  assert.deepEqual(chunks, ['I like ', 'adventure movies.']);
+});
+
 test('T10b malformed, blocked, empty, incomplete and HTTP failures reject for scripted fallback', async () => {
   const replies = [
     new Response('private provider error', { status: 429 }),

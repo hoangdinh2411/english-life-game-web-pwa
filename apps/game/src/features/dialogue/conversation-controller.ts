@@ -100,7 +100,7 @@ export function createConversationController(api: ConversationApi) {
       }).finally(() => {
         streamCancellation = null;
         if (!disposed) update({ streaming: false, streamedReply: '',
-          announcement: state.conversation?.messages.at(-1)?.ai ? 'AI reply complete.' : '' });
+          announcement: state.conversation?.messages.at(-1)?.ai ? 'Reply complete.' : '' });
       });
     },
     enter: () => {

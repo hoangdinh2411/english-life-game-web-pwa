@@ -31,6 +31,7 @@
     "supabase:env": "pnpm --filter server supabase:env",
     "content:validate": "pnpm --filter @life-abroad/shared build && node scripts/onboarding-content.mjs",
     "test:integration": "pnpm --filter server test:integration",
+    "ai:evaluate": "pnpm --filter server ai:evaluate",
     "content:build": "node scripts/placeholder.mjs content:build later-content-export"
   },
   "devDependencies": {

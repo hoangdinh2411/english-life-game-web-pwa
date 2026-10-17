@@ -63,6 +63,23 @@ try {
     release();
     assert.equal(await sending, false);
   });
+
+  test('completed generated replies use a provider-neutral announcement', async () => {
+    const arrival = { questId: 'q_station_arrival', status: 'done', currentStepId: null,
+      ticket: { issued: true, used: true }, canEnterTownStreet: true, locationId: 'loc_town_street', rewardsGranted: true };
+    const conversation = { id: globalThis.crypto.randomUUID(), npcId: 'npc_raj_pharmacist', messages: [], arrival };
+    const controller = createConversationController({ load: async () => arrival, start: async () => conversation,
+      send: async () => { throw new Error('Non-streaming API must not be used'); },
+      stream: async (_id, _npcId, body, onToken) => {
+        onToken('Movies are fun.');
+        return { playerMessage: { id: globalThis.crypto.randomUUID(), sender: 'player', text: body.text, createdAt: new Date().toISOString() },
+          npcMessage: { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'Movies are fun.', createdAt: new Date().toISOString(), ai: true },
+          intent: null, misunderstood: false, correction: null, arrival, ai: true };
+      } });
+    await controller.start();
+    assert.equal(await controller.send('Yes, movies sometimes'), true);
+    assert.equal(controller.getSnapshot().announcement, 'Reply complete.');
+  });
 } finally {
   await server.close();
 }

@@ -13,14 +13,15 @@ const request: ChatStreamRequest = {
 };
 const turn = { npcMessage: { text: 'Hello there friend' } } as ConversationTurn;
 
-test('T10e streams one word at a time and emits done only after the turn is saved', async () => {
+test('T10e forwards checked chunks without fake word delays and emits done only after save', async () => {
   let saved = false;
   const module = await Test.createTestingModule({ providers: [ChatStreamService, {
     provide: ConversationsService, useValue: { sendStreaming: async (
       _userId: string, _id: string, _npcId: string, _request: unknown,
       beforeSave: (text: string) => Promise<void>,
     ) => {
-      await beforeSave('Hello there friend');
+      await beforeSave('Hello there ');
+      await beforeSave('friend');
       saved = true;
       return turn;
     } },
@@ -28,8 +29,8 @@ test('T10e streams one word at a time and emits done only after the turn is save
   try {
     const events: ChatEvent[] = [];
     await module.get(ChatStreamService).stream('user-one', request, event => events.push(event), new AbortController().signal);
-    assert.deepEqual(events.map(event => event.event), ['token', 'token', 'token', 'done']);
-    assert.deepEqual(events.slice(0, 3).map(event => event.data), [{ text: 'Hello ' }, { text: 'there ' }, { text: 'friend' }]);
+    assert.deepEqual(events.map(event => event.event), ['token', 'token', 'done']);
+    assert.deepEqual(events.slice(0, 2).map(event => event.data), [{ text: 'Hello there ' }, { text: 'friend' }]);
     assert.equal(saved, true);
   } finally { await module.close(); }
 });

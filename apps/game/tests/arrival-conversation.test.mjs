@@ -24,14 +24,22 @@ try {
     assert.match(render({ completed: true }), /<textarea[^>]*disabled/);
     assert.match(render({ state: { ...done, conversation: { ...done.conversation, seller: { closed: true } } } }), /<textarea[^>]*disabled/);
   });
-  test('T10f renders thinking, confirmed AI labeling, completion announcement, and friendly limit errors', () => {
+  test('T10f renders natural thinking and completion states without exposing AI', () => {
     const thinking = renderToStaticMarkup(createElement(SavedConversation, { state: { ...state, pending: true, streaming: true, streamedReply: '', retryMessage: null }, online: true, sound: false, send: async () => true, retry: () => {} }));
     assert.match(thinking, /Thinking…/);
     assert.doesNotMatch(thinking, /AI reply/);
     const aiMessage = { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'A short answer.', createdAt: new Date().toISOString(), ai: true };
-    const complete = renderToStaticMarkup(createElement(SavedConversation, { state: { ...state, conversation: { ...state.conversation, messages: [aiMessage] }, retryMessage: null, announcement: 'AI reply complete.', error: 'Free chat is available again tomorrow.' }, online: true, sound: false, send: async () => true, retry: () => {} }));
-    assert.match(complete, /AI reply/);
-    assert.match(complete, /AI reply complete/);
+    const complete = renderToStaticMarkup(createElement(SavedConversation, { state: { ...state, conversation: { ...state.conversation, messages: [aiMessage] }, retryMessage: null, announcement: 'Reply complete.', error: 'Free chat is available again tomorrow.' }, online: true, sound: false, send: async () => true, retry: () => {} }));
+    assert.doesNotMatch(complete, />AI reply</i);
+    assert.match(complete, /Reply complete/);
     assert.match(complete, /Free chat is available again tomorrow/);
+    assert.doesNotMatch(complete, /AI test mode/);
+  });
+  test('conversation hints start behind an accessible disclosure button', () => {
+    const html = renderToStaticMarkup(createElement(SavedConversation, { state: { ...state, retryMessage: null }, online: true, sound: false,
+      send: async () => true, retry: () => {}, hint: 'Try asking about the weather, hobbies, food or life in Maplewood.' }));
+    assert.match(html, /aria-label="Show conversation hint"/);
+    assert.match(html, /aria-expanded="false"/);
+    assert.doesNotMatch(html, /Try asking about the weather/);
   });
 } finally { await server.close(); }

@@ -27,5 +27,8 @@ test('T10c prompt uses DB persona, levels and hours; only six turns; current inp
     assert.doesNotMatch(JSON.stringify(result), /Private Learner|Private Avatar|private@example\.com|12345678-1234|turn-12/);
     assert.match(result.prompt.system, /Repeat the correct English form naturally/);
     assert.match(result.prompt.system, /Never state prices or promise items/);
+    assert.match(result.prompt.system, /Answer the player's latest message directly/);
+    assert.match(result.prompt.system, /Do not greet the player unless the latest message is a greeting/);
+    assert.match(result.prompt.system, /Do not replace an answer with a generic invitation to talk/);
   } finally { await module.close(); }
 });

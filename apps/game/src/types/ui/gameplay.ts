@@ -42,7 +42,6 @@ export interface DialogueMessageProps {
   revealing?: boolean;
   player?: boolean;
   thinking?: boolean;
-  ai?: boolean;
   onReplay?: () => void;
   replayDisabled?: boolean;
 }

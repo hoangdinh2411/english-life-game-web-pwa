@@ -103,6 +103,22 @@ test('T10a timeout aborts a stalled provider and ignores its late reply', async 
   } finally { t.mock.timers.reset(); await module.close(); }
 });
 
+test('T10a accepts a valid provider reply with realistic Gemini latency', async t => {
+  let started: (() => void) | undefined;
+  const ready = new Promise<void>(resolve => { started = resolve; });
+  const { module, service } = await fixture({ reply: async () => {
+    started?.();
+    return new Promise<string>(resolve => setTimeout(() => resolve('I enjoy adventure movies. What about you?'), 11_000));
+  } });
+  try {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const pending = service.reply(context, 'Do you have a favorite movie?');
+    await ready;
+    t.mock.timers.tick(11_000);
+    assert.equal(await pending, 'I enjoy adventure movies. What about you?');
+  } finally { t.mock.timers.reset(); await module.close(); }
+});
+
 test('T10a provider receives only text/NPC identity and an abort signal', async () => {
   const { module, service } = await fixture({ reply: async (request, signal) => {
     assert.deepEqual(request, { npcId: context.npcId, text: 'Hello' });
@@ -154,6 +170,26 @@ test('T10d trims safe input and rejects unsafe provider output', async () => {
     for (let index = 0; index < 7; index++) assert.equal(await service.reply(context, '  Do you like football?  '), fallback);
     assert.equal(await service.reply(context, '  Do you like football?  '), 'Football is fun. Which team do you like?');
     assert.equal(received, 'Do you like football?');
+  } finally { await module.close(); }
+});
+
+test('native streaming emits only complete safe sentences and drops profanity', async () => {
+  const provider: AiProvider = {
+    reply: async () => { throw new Error('non-streaming path called'); },
+    stream: async function* () {
+      yield 'I enjoy adventure';
+      yield ' movies. ';
+      yield 'This damn ending is awful.';
+    },
+  };
+  const { module, service } = await fixture(provider);
+  const chunks: string[] = [];
+  try {
+    const result = await service.replyTrackedStream(context, 'Do you have a favorite movie?', undefined,
+      chunk => { chunks.push(chunk); });
+    assert.deepEqual(chunks, ['I enjoy adventure movies. ']);
+    assert.equal(result.text, 'I enjoy adventure movies.');
+    assert.equal(result.fallback, false);
   } finally { await module.close(); }
 });
 

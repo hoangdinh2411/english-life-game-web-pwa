@@ -15,7 +15,7 @@ import { AiService } from '../modules/ai/ai.service';
 import { NpcPromptService } from '../modules/ai/npc-prompt.service';
 import { AiUsageService } from '../modules/ai/ai-usage.service';
 
-test('T10c all NPCs check scripts, pending state and topics before AI; replay bypasses it', async () => {
+test('T10c all NPCs use AI after scripts while pending gameplay and replay bypass it', async () => {
   let npcId = 'npc_mila_florist';
   let understood = false;
   let replay = false;
@@ -23,9 +23,9 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
   let energyCharges = 0;
   let questCalls = 0;
   let pending = false;
-  let topic = false;
   let enabled = true;
   let limited = false;
+  let aiFallback = false;
   const order: string[] = [];
   const scripted = { text: 'Scripted reply', node: { id: 'global_repeat' }, intent: null, misunderstood: true };
   let arrival = { locationId: 'loc_station' };
@@ -49,7 +49,7 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
       reply: async () => { order.push('script'); return { ...scripted, misunderstood: !understood }; },
       node: async (_context: unknown, id: string) => id === 'global_ai_limit'
         ? { text: 'Friendly limit', node: { id }, intent: null, misunderstood: false } : scripted,
-      isScriptTopic: async () => topic,
+      isScriptTopic: async () => { throw new Error('obsolete topic gate called'); },
     })
     .overrideProvider(QuestsService).useValue({
       getArrival: async () => arrival,
@@ -65,8 +65,8 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
     .overrideProvider(NpcPromptService).useValue({ build: async () => ({ text: 'Football?', prompt: { system: 'persona', history: [] } }) })
     .overrideProvider(AiService).useValue({ get enabled() { return enabled; }, replyTracked: async () => {
       order.push('ai'); aiCalls++;
-      return { text: 'AI text', provider: 'mock', model: 'mock', inputTokens: 2, outputTokens: 2,
-        fallback: false, usedProvider: true };
+      return { text: aiFallback ? 'Scripted reply' : 'AI text', provider: 'mock', model: 'mock', inputTokens: 2, outputTokens: 2,
+        fallback: aiFallback, usedProvider: true };
     } })
     .overrideProvider(AiUsageService).useValue({ limited: async () => limited, record: async () => undefined }).compile();
   try {
@@ -76,14 +76,20 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
     });
     const first = await send();
     assert.match(first.npcMessage.text, /AI text/);
+    assert.equal(first.ai, true);
     assert.equal(first.intent, null);
     assert.deepEqual(first.arrival, arrival);
     assert.equal(energyCharges, 1);
     assert.deepEqual(order, ['script', 'ai']);
+    aiFallback = true;
+    const fallback = await send();
+    assert.equal(fallback.npcMessage.text, 'Scripted reply');
+    assert.equal(fallback.ai, undefined);
+    aiFallback = false;
     replay = true;
     arrival = { locationId: 'loc_town_street' };
     assert.deepEqual((await send()).arrival, arrival);
-    assert.equal(aiCalls, 1); assert.equal(energyCharges, 1);
+    assert.equal(aiCalls, 2); assert.equal(energyCharges, 2);
     arrival = { locationId: 'loc_station' };
     replay = false; understood = true;
     assert.equal((await send()).npcMessage.text, 'Scripted reply');
@@ -92,11 +98,10 @@ test('T10c all NPCs check scripts, pending state and topics before AI; replay by
       npcId = id;
       assert.match((await send()).npcMessage.text, /AI text/);
     }
-    assert.equal(aiCalls, 4); assert.equal(questCalls, 0);
+    assert.equal(aiCalls, 5); assert.equal(questCalls, 0);
     pending = true; await send(); pending = false;
-    topic = true; await send(); topic = false;
     limited = true; assert.equal((await send()).npcMessage.text, 'Friendly limit'); limited = false;
     enabled = false; await send();
-    assert.equal(aiCalls, 4);
+    assert.equal(aiCalls, 5);
   } finally { await module.close(); }
 });

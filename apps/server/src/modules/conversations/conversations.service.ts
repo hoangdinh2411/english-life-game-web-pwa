@@ -141,21 +141,21 @@ export class ConversationsService {
       // AI changes wording only; intents, node state and rewards stay scripted.
       if (this.ai.enabled && metadata.misunderstood && !conversation.pending_order && !metadata.seller?.pendingOrder
         && !metadata.seller?.closed && !await this.conversations.pendingQuest(client, userId, conversation.npc_id)) {
-        const itemNames = (await this.life.catalog()).map(item => item.name);
-        if (!await this.dialogue.isScriptTopic(request.text, itemNames)) {
-          if (await this.aiUsage.limited(client, userId)) {
-            const limit = await this.dialogue.node(context, 'global_ai_limit');
-            responseText = limit.text; nodeId = limit.node.id;
-            metadata = { ...metadata, intent: null, misunderstood: false };
-          } else {
-            const prompt = await this.prompts.build(client, userId, conversation.npc_id, id, request.text);
-            aiResult = await this.ai.replyTracked(context, prompt.text, prompt.prompt, stream?.signal);
-            responseText = aiResult.text;
-            metadata = { ...metadata, intent: null, ...(aiResult.usedProvider ? { ai: true as const } : {}) };
-          }
+        if (await this.aiUsage.limited(client, userId)) {
+          const limit = await this.dialogue.node(context, 'global_ai_limit');
+          responseText = limit.text; nodeId = limit.node.id;
+          metadata = { ...metadata, intent: null, misunderstood: false };
+        } else {
+          const prompt = await this.prompts.build(client, userId, conversation.npc_id, id, request.text);
+          aiResult = stream
+            ? await this.ai.replyTrackedStream(context, prompt.text, prompt.prompt, stream.beforeSave, stream.signal)
+            : await this.ai.replyTracked(context, prompt.text, prompt.prompt);
+          responseText = aiResult.text;
+          metadata = { ...metadata, intent: null,
+            ...(aiResult.usedProvider && !aiResult.fallback ? { ai: true as const } : {}) };
         }
       }
-      if (stream) {
+      if (stream && (!aiResult || aiResult.fallback)) {
         if (stream.signal.aborted) throw stream.signal.reason ?? new Error('Chat stream cancelled.');
         await stream.beforeSave(responseText);
         if (stream.signal.aborted) throw stream.signal.reason ?? new Error('Chat stream cancelled.');

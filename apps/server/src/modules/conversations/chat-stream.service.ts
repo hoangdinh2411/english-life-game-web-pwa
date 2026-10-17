@@ -6,8 +6,6 @@ export type ChatEvent =
   | { event: 'token'; data: { text: string } }
   | { event: 'done'; data: { turn: ConversationTurn } };
 
-const nextTurn = (): Promise<void> => new Promise(resolve => setImmediate(resolve));
-
 @Injectable()
 export class ChatStreamService {
   private readonly activeUsers = new Set<string>();
@@ -22,11 +20,8 @@ export class ChatStreamService {
       const turn = await this.conversations.sendStreaming(userId, request.conversationId, request.npcId, {
         clientMessageId: request.clientMessageId, text: request.text, coach: request.coach,
       }, async text => {
-        for (const token of text.match(/\S+\s*/g) ?? []) {
-          if (signal.aborted) throw signal.reason ?? new Error('Chat stream cancelled.');
-          emit({ event: 'token', data: { text: token } });
-          await nextTurn();
-        }
+        if (signal.aborted) throw signal.reason ?? new Error('Chat stream cancelled.');
+        emit({ event: 'token', data: { text } });
       }, signal);
       if (signal.aborted) throw signal.reason ?? new Error('Chat stream cancelled.');
       emit({ event: 'done', data: { turn } });

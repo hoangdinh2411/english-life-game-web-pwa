@@ -76,6 +76,10 @@ test@gmail.com / 12341234.
       completion announcements and a development disclosure. Conversation IDs
       resume authenticated history after reload. Browser checks passed at 320,
       375 and 1024 px with the existing account and fictional limit fixture.
+- [x] **T10g — Evaluation set:** `pnpm ai:evaluate -- --provider=mock|gemini`
+      runs 20 conversation messages plus all eight T10d unsafe-input cases,
+      prints every message/reply and flags blocked input, unsafe output or
+      provider failure. The mock evaluation and focused tests passed.
 - [x] **T10a — AI provider interface and mock:** server-only text provider,
       mock/default configuration and authored fallback on errors, 429 or
       timeout. AI/dialogue tests (13), server build/typecheck and changed-file
@@ -162,10 +166,9 @@ test@gmail.com / 12341234.
   learners). The production AI provider is decided later, so everything goes
   through one provider interface.
 - **AI routing (2026-10-15):** every NPC may use AI, but the server checks the
-  scripts first. AI is called only when no script topic matches, and never for
-  orders, prices, tickets, quests or a pending step. Unclear script-topic
-  messages get a scripted clarification. AI never changes money, items or quest
-  state.
+  scripts first. When no script understands the message, AI continues the
+  conversation for every NPC. Pending orders and quest steps remain scripted;
+  AI never changes money, items or quest state.
 - Item lists and prices live in content (`content/seed/shops.json`), never in
   code. Codex must not invent prices: the owner supplies or approves them.
 - Energy is 0–100; each player message to an NPC costs 1 point, with retries
@@ -185,10 +188,6 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
-- [ ] **T10g — Evaluation set (after T10d).** 20 test messages plus the safety
-      messages from T10d, and one command that runs them against a chosen
-      provider and flags replies that fail the T10d output checks. Done when:
-      the command prints all replies and the flags.
 - [ ] **Q1 — Mr. Brown quest.** Add content only, no new framework code. Done
       when: the quest can be completed by typing, the reward is given once, and
       a refresh keeps it.

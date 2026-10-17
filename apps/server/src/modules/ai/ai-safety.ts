@@ -9,6 +9,7 @@ const privateDataRequest = /\b(?:what(?:'s| is)|where(?:'s| is)|tell|show|give|s
 const gameClaim = /(?:[$£€¥]\s*\d|\b\d+\s*(?:dollars?|pounds?|euros?|coins?)\b)|\b(?:price|costs?|items?|rewards?|quests?|tickets?|coins?|xp)\b/i;
 const medicalAdvice = /\b(?:should|must|need to|take|use|try|avoid|recommend|prescribe|consult|see|dose|dosage|treat)\b.{0,50}\b(?:medicine|medication|aspirin|ibuprofen|painkillers?|doctor|symptoms?|pain|illness|dose|tablets?|pills?)\b|\b(?:take|use)\s+\d+\s+(?:mg|tablets?|pills?)\b/i;
 const markdown = /```|`[^`]+`|\[[^\]]+\]\([^)]+\)|<\/?[a-z][^>]*>|(?:^|\n)\s{0,3}(?:#{1,6}\s|[-*+]\s|\d+[.)]\s|>\s)|\*\*|__|~~/i;
+const profanity = /\b(?:asshole|bastard|bitch|bullshit|cunt|damn|fuck(?:er|ing|ed)?|motherfucker|shit(?:ty)?)\b/i;
 
 const foreignWords = new Set([
   'bonjour', 'merci', 'hola', 'gracias', 'como', 'estas', 'gusta', 'futbol',
@@ -43,5 +44,6 @@ export function safeAiInput(input: string): string | null {
 export function isSafeAiOutput(output: string): boolean {
   const trimmed = output.trim();
   if (!trimmed || words(trimmed).length > MAX_OUTPUT_WORDS || hasEmojiSpam(trimmed) || !isLikelyEnglish(trimmed)) return false;
-  return !markdown.test(trimmed) && !gameClaim.test(trimmed) && !privateDataRequest.test(trimmed) && !medicalAdvice.test(trimmed);
+  return !markdown.test(trimmed) && !gameClaim.test(trimmed) && !privateDataRequest.test(trimmed)
+    && !medicalAdvice.test(trimmed) && !profanity.test(trimmed);
 }

@@ -50,6 +50,6 @@ export function TownspersonConversation({ npc, sound, onClose, onRefresh }: {
     <SavedConversation state={state} sound={sound} online={online}
       send={controller.send} retry={() => void controller.start()}
       displayNpc={{ name: npc.name, portrait: portraits, portraitPosition }}
-      details={<p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">Try asking about the weather, hobbies, food or life in Maplewood.</p>} />
+      hint="Try asking about the weather, hobbies, food or life in Maplewood." />
   </DialogueFrame>;
 }

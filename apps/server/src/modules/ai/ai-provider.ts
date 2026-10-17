@@ -14,4 +14,5 @@ export interface AiPrompt {
 // Providers produce dialogue only; they cannot return gameplay commands or grants.
 export interface AiProvider {
   reply(request: AiReplyRequest, signal: AbortSignal): Promise<string>;
+  stream?(request: AiReplyRequest, signal: AbortSignal): AsyncIterable<string>;
 }
