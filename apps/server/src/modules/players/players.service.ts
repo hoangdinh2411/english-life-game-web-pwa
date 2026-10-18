@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import type { CreateCharacterRequest, PlayerResponse, PlayerState } from '@life-abroad/shared';
+import type { CreateCharacterRequest, PlayerLocation, PlayerResponse, PlayerState } from '@life-abroad/shared';
 import { OnboardingService } from '../onboarding/onboarding.service';
 import { PlayersRepository } from './players.repository';
 
@@ -8,6 +8,10 @@ export class PlayersService {
   constructor(private readonly players: PlayersRepository, private readonly onboarding: OnboardingService) {}
 
   getPlayer(userId: string): Promise<PlayerResponse> { return this.players.getPlayer(userId); }
+
+  saveLocation(userId: string, location: PlayerLocation): Promise<PlayerLocation> {
+    return this.players.saveLocation(userId, location);
+  }
 
   async createCharacter(userId: string, request: CreateCharacterRequest): Promise<PlayerState> {
     const options = await this.onboarding.getOptions();

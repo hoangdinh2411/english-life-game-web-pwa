@@ -35,6 +35,14 @@ test@gmail.com / 12341234.
 
 ## DONE
 
+- [x] **Player last location:** save the authenticated player's parent map,
+      exact place and position locally while moving, debounce server
+      checkpoints, and restore pending local or saved server state after reload.
+      Invalid map/place pairs are rejected and location saves cannot alter
+      quest access. Shared/server/game tests, typecheck, changed-file lint,
+      build and an
+      existing-account coordinate → move → reload browser flow passed on
+      2026-10-18.
 - [x] **T29 — Minimap:** show/hide map under the menu button (owner revision:
       one responsive size, up to 90% width on mobile and 640 px on desktop;
       hidden below 1024 px by default; `M` key; tap outside or Escape hides).

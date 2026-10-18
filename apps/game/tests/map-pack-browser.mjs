@@ -10,7 +10,7 @@ Phaser.Game = class extends OriginalGame { constructor(config) { super(config); 
 const result = document.querySelector('#result');
 let ready = false, location = '', failure = '';
 const instance = createStationGame(document.querySelector('#world'), {
-  initialLocation: 'street', onEnterStreet: async () => true,
+  initialLocation: { mapId: 'loc_town_street', placeId: 'loc_town_street', x: 1152, y: 315 }, onEnterStreet: async () => true,
   appearance: { hair: 'blond', shirt: 'red', trousers: 'charcoal' },
   onReady: () => { ready = true; }, onLocationChange: (value) => { location = value; },
   onProgress: (value) => { result.textContent = `Downloading ${Math.round(value * 100)}%`; },

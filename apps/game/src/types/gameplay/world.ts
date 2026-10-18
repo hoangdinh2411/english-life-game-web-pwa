@@ -1,4 +1,4 @@
-import type { Appearance } from '@life-abroad/shared';
+import type { Appearance, PlayerLocation } from '@life-abroad/shared';
 import type { MinimapSnapshot } from '../../features/minimap/model';
 export interface Point {
   x: number;
@@ -30,13 +30,14 @@ export interface StationCallbacks {
   appearance?: Appearance | undefined;
   practice?: boolean;
   onProgress: (value: number) => void;
-  initialLocation?: 'station' | 'street';
+  initialLocation?: PlayerLocation;
   onEnterStreet?: () => Promise<boolean>;
   onNearby: (id: string | null) => void;
   onTalkPrompt?: (prompt: NpcTalkPrompt | null) => void;
   onTalk: (id: string) => void;
   onReady: () => void;
   onLocationChange: (location: string) => void;
+  onPlaceChange?: (location: PlayerLocation) => void;
   onError: (message: string) => void;
   getGameTime?: () => Date | null;
   onStoreClosed?: (location: StoreLocation) => void;
@@ -53,7 +54,7 @@ export interface StationGame {
 export interface GameCanvasProps {
   minimapVisible?: boolean;
   appearance?: Appearance | undefined;
-  initialLocation?: 'station' | 'street';
+  initialLocation?: PlayerLocation;
   onEnterStreet?: () => Promise<boolean>;
   paused: boolean;
   worldPaused?: boolean;
@@ -63,6 +64,7 @@ export interface GameCanvasProps {
   onTalk: (id: string) => void;
   onReadyChange: (ready: boolean) => void;
   onLocationChange: (location: string) => void;
+  onPlaceChange?: (location: PlayerLocation) => void;
   getGameTime?: () => Date | null;
   onStoreClosed?: (location: StoreLocation) => void;
 }

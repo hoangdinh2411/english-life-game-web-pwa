@@ -178,7 +178,9 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   `006` conversation node, immutable message replay metadata and ordering;
   `007` asset metadata and the public `game-assets` bucket; `008` wallet ledger;
   `009` shop catalog; `010` saved life, wardrobe and action receipts;
-  `011` server-owned pending seller orders.
+  `011` server-owned pending seller orders; `020` saved player map and exact
+  place; `021` saved position within that place. (Migrations `012`–`019` cover
+  dialogue storage and AI/NPC assets.)
   Inspect schema and current database before applying new changes.
 
 ## API (implemented vs planned)
@@ -213,6 +215,12 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
   `stats` contains existing `xp`/`coins` even before a character exists.
 - `POST /characters` with `{ name, cityId, avatarId }`; creates one character
   atomically, adds the configured starting grant, duplicate returns 409.
+- `POST /players/location` with `{ mapId, placeId, x, y }`; saves the
+  authenticated character's outdoor parent map, exact playable place and
+  bounded position. Only authored map/place pairs are accepted; this does not
+  change quest progress or access. Movement checkpoints are written locally
+  first and debounced for five seconds before this endpoint is called; place
+  changes and backgrounding flush immediately.
 - `GET /quests/arrival` → `{ questId, status, currentStepId, ticket: { issued,
   used }, canEnterTownStreet, locationId, rewardsGranted }` (protected; requires
   a character). Reads persisted account state; no client-provided user ID.

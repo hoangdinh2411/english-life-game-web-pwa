@@ -1,4 +1,5 @@
 import { schemaFromParser } from './auth';
+import type { PlayerLocation } from './player-location';
 
 export interface StarterCity {
   id: string;
@@ -29,6 +30,7 @@ export interface Character {
   name: string;
   cityId: string;
   avatarId: string;
+  lastLocation: PlayerLocation;
 }
 
 export interface PlayerState {

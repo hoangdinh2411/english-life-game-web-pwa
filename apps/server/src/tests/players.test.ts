@@ -6,6 +6,7 @@ import { AppModule } from '../app.module';
 import { DatabaseService } from '../infrastructure/database/database.service';
 import { SupabaseTokenVerifier } from '../infrastructure/auth/supabase-token-verifier';
 import { UnauthorizedException } from '@nestjs/common';
+import { PlayersService } from '../modules/players/players.service';
 
 // A missing player route or hiding signup-created balances breaks account resume.
 test('R4 /me returns signup stats before character creation', async () => {
@@ -60,6 +61,37 @@ test('R4 character validation rejects forged state and unknown choices', async (
       assert.equal(response.status, 400);
       assert.equal(((await response.json()) as { error: { code: string } }).error.code, 'bad_request');
     }
+  } finally { await app.close(); }
+});
+
+// Missing authorization or pair validation would let a client save an impossible last location.
+test('player location route validates and saves the authenticated player location', async () => {
+  const writes: Array<{ userId: string; location: unknown }> = [];
+  const module = await Test.createTestingModule({ imports: [AppModule] })
+    .overrideProvider(SupabaseTokenVerifier).useValue({ verify: async () => '11111111-1111-4111-8111-111111111111' })
+    .overrideProvider(DatabaseService).useValue({ query: async () => ({ rows: [] }) })
+    .overrideProvider(PlayersService).useValue({ saveLocation: async (userId: string, location: unknown) => {
+      writes.push({ userId, location });
+      return location;
+    } }).compile();
+  const app = module.createNestApplication();
+  app.setGlobalPrefix('api/v1');
+  try {
+    await app.listen(0, '127.0.0.1');
+    const response = await fetch(await app.getUrl() + '/api/v1/players/location', {
+      method: 'POST', headers: { Authorization: 'Bearer fixture', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mapId: 'loc_station', placeId: 'loc_cafe', x: 700, y: 800 }),
+    });
+    assert.equal(response.status, 201);
+    assert.deepEqual(await response.json(), { mapId: 'loc_station', placeId: 'loc_cafe', x: 700, y: 800 });
+    assert.deepEqual(writes, [{ userId: '11111111-1111-4111-8111-111111111111', location: { mapId: 'loc_station', placeId: 'loc_cafe', x: 700, y: 800 } }]);
+
+    const invalid = await fetch(await app.getUrl() + '/api/v1/players/location', {
+      method: 'POST', headers: { Authorization: 'Bearer fixture', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mapId: 'loc_station', placeId: 'loc_corner_cafe', x: 700, y: 800 }),
+    });
+    assert.equal(invalid.status, 400);
+    assert.equal(writes.length, 1);
   } finally { await app.close(); }
 });
 

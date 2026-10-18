@@ -77,7 +77,8 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
     const created = await responses.find(response => response.status === 201)!.json();
     assert.deepEqual(created, {
       user: { id: userId, email, displayName: 'R4 learner' },
-      character: { id: userId, userId, ...request }, stats: { xp: 23, coins: 507 }, inventory: [], questProgress: [],
+      character: { id: userId, userId, ...request, lastLocation: { mapId: 'loc_station', placeId: 'loc_station', x: 768, y: 370 } },
+      stats: { xp: 23, coins: 507 }, inventory: [], questProgress: [],
     });
     assert.equal((await call('/characters', request)).status, 409);
     assert.equal((await database.query('SELECT * FROM characters WHERE user_id = $1', [userId])).rowCount, 1);

@@ -105,6 +105,7 @@ export default function StationScreen({
           ? {
               initialLocation: arrival.initialLocation,
               onEnterStreet: arrival.onEnterStreet,
+              onPlaceChange: arrival.onPlaceChange,
             }
           : {})}
         exitUnlocked={arrival?.exitUnlocked ?? exitUnlocked}

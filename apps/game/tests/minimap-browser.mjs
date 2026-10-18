@@ -26,7 +26,7 @@ document.body.append(controls);
 createRoot(root).render(React.createElement(PwaProvider, null,
   React.createElement(StationScreen, { playerName: 'Fictional minimap preview', xp: 0, coins: 99999, onSignOut() {},
     life: { time: new Date('2026-10-15T10:00:00Z'), state: null, refresh: async () => {} },
-    arrival: { initialLocation: 'station', exitUnlocked: true, pending: false, error: '', online: true, goalsLabel: 'Preview', questPanel: null, statusPanel: null, blockedExitMessage: '', onRetry() {}, onOpenReceptionist() {}, onEnterStreet: async () => true, renderReceptionist: () => 'Fictional conversation preview' },
+    arrival: { initialLocation: { mapId: 'loc_station', placeId: 'loc_station', x: 768, y: 370 }, exitUnlocked: true, pending: false, error: '', online: true, goalsLabel: 'Preview', questPanel: null, statusPanel: null, blockedExitMessage: '', onRetry() {}, onOpenReceptionist() {}, onEnterStreet: async () => true, onPlaceChange() {}, renderReceptionist: () => 'Fictional conversation preview' },
   })));
 // Keep verification controls outside the game viewport.
 document.body.className = 'h-dvh flex flex-col overflow-hidden';

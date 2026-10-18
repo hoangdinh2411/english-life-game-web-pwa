@@ -12,10 +12,11 @@ import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/sho
 import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
 import type { MinimapSnapshot } from '../features/minimap/model';
+import { mapLocationFromPlayerLocation, playerLocationFromMapLocation } from '../features/location/player-location';
 const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Maplewood · Train Station', cafe: 'Maplewood · Café', corner_cafe: 'Maplewood · Corner Cup Café', clothes: 'Maplewood · Clothes Shop', street: 'Maplewood · Town Street' };
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
-  let activeLocation: MapLocation = callbacks.initialLocation ?? 'station';
+  let activeLocation: MapLocation = callbacks.initialLocation ? mapLocationFromPlayerLocation(callbacks.initialLocation) : 'station';
   let destroyed = false;
   let appearance = callbacks.practice ? undefined : callbacks.appearance;
   let refreshAppearance: (() => void) | undefined;
@@ -31,7 +32,15 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let conversationNpcId: string | null = null;
   let exitUnlocked = false;
   let blockedPortal: string | null = null;
-  let position: Point = activeLocation === 'street' ? streetSpawnPoint('station') : { x: 768, y: 370 };
+  let position: Point = callbacks.initialLocation
+    ? { x: callbacks.initialLocation.x, y: callbacks.initialLocation.y }
+    : activeLocation === 'street' ? streetSpawnPoint('station') : { x: 768, y: 370 };
+  let lastLocationSaveAt = 0;
+  const saveLocation = () => {
+    if (callbacks.practice) return;
+    lastLocationSaveAt = Date.now();
+    callbacks.onPlaceChange?.(playerLocationFromMapLocation(activeLocation, position));
+  };
   let destinationMapTarget: Point | null = null;
   let destination: Point | null = null;
   let route: Point[] = [];
@@ -259,6 +268,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.scale.on('resize', resizeLabels);
       this.events.once('shutdown', () => this.scale.off('resize', resizeLabels));
       callbacks.onLocationChange(LOCATION_NAMES[activeLocation]);
+      saveLocation();
       this.worldReady = true;
       callbacks.onReady();
     }
@@ -416,7 +426,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.load.atlas(textureKey, image.url, atlas.url);
       this.load.start();
     }
-    private previousLocation: MapLocation = 'station';
+    private previousLocation: MapLocation = callbacks.initialLocation?.mapId === 'loc_town_street' ? 'street' : 'station';
     private playerTexture = 'player';
     private walkPrefix = 'walk';
     private sourcePlayerTexture = 'player';
@@ -454,6 +464,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         ? moveOnStreet(position, movement)
         : moveInShop(activeLocation, position, movement, npcs);
       const moved = Math.hypot(position.x - previous.x, position.y - previous.y) > 0.01;
+      if (moved && Date.now() - lastLocationSaveAt >= 500) saveLocation();
       this.player.setPosition(position.x, position.y).setDepth(position.y);
       if (moved) this.player.play(`${this.walkPrefix}-${Math.abs(dx) > Math.abs(dy) ? dx < 0 ? 1 : 2 : dy < 0 ? 3 : 0}`, true);
       else this.player.anims.stop();
@@ -491,6 +502,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const next = movePlayer(position, movement);
         const moved = Math.hypot(next.x - position.x, next.y - position.y) > 0.01;
         position = next;
+        if (moved && Date.now() - lastLocationSaveAt >= 500) saveLocation();
         this.player.setPosition(position.x, position.y).setDepth(position.y);
         if (moved) this.player.play(`${this.walkPrefix}-${Math.abs(dx) > Math.abs(dy) ? dx < 0 ? 1 : 2 : dy < 0 ? 3 : 0}`, true);
         else { destination = null; selectedNpc = null; this.player.anims.stop(); }

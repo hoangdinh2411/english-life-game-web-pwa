@@ -1,4 +1,4 @@
-import type { StationSpeaker } from '@life-abroad/shared';
+import type { PlayerLocation, StationSpeaker } from '@life-abroad/shared';
 import type { ReactNode } from 'react';
 import type { ArrivalGoal } from '../gameplay/goals';
 import type { LifeControls } from '../../features/life/useLife';
@@ -66,7 +66,7 @@ export interface QuestBoardProps {
 export interface StationScreenProps {
   life?: LifeControls;
   arrival?: {
-    initialLocation: 'station' | 'street';
+    initialLocation: PlayerLocation;
     exitUnlocked: boolean;
     pending: boolean;
     error: string;
@@ -78,6 +78,7 @@ export interface StationScreenProps {
     onRetry: () => void;
     onOpenReceptionist: () => void;
     onEnterStreet: () => Promise<boolean>;
+    onPlaceChange: (location: PlayerLocation) => void;
     renderReceptionist: (sound: boolean) => ReactNode;
   };
   playerName: string;

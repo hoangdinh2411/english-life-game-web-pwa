@@ -1,4 +1,4 @@
-import type { CreateCharacterRequest, OnboardingOptions, PlayerResponse, PlayerState } from '@life-abroad/shared';
+import type { CreateCharacterRequest, OnboardingOptions, PlayerLocation, PlayerResponse, PlayerState } from '@life-abroad/shared';
 import { parseOnboardingOptions, arrivalStateSchema, conversationSchema, conversationTurnSchema, ARRIVAL_NPC_ID, type Conversation, type SendMessageRequest } from '@life-abroad/shared';
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
@@ -27,6 +27,8 @@ export const loadOptions = async (token: string): Promise<OnboardingOptions> =>
   parseOnboardingOptions(await request<unknown>('onboarding/options', undefined, token));
 export const loadPlayer = (token: string): Promise<PlayerResponse> => request('me', undefined, token);
 export const createCharacter = (token: string, body: CreateCharacterRequest) => request<PlayerState>('characters', body, token);
+export const savePlayerLocation = (token: string, location: PlayerLocation): Promise<PlayerLocation> =>
+  request('players/location', location, token);
 
 export const loadArrival = async (token: string) => arrivalStateSchema.parse(await request('quests/arrival', undefined, token));
 export const enterTownStreet = async (token: string) => arrivalStateSchema.parse(await request('quests/arrival/enter-town-street', {}, token));

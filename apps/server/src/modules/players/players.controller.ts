@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { createCharacterSchema, type CreateCharacterRequest, type PlayerResponse, type PlayerState } from '@life-abroad/shared';
+import { createCharacterSchema, playerLocationSchema, type CreateCharacterRequest, type PlayerLocation, type PlayerResponse, type PlayerState } from '@life-abroad/shared';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { PlayersService } from './players.service';
@@ -17,5 +17,11 @@ export class PlayersController {
   createCharacter(@CurrentUser() userId: string,
     @Body(new SchemaValidationPipe(createCharacterSchema)) request: CreateCharacterRequest): Promise<PlayerState> {
     return this.players.createCharacter(userId, request);
+  }
+
+  @Post('players/location')
+  saveLocation(@CurrentUser() userId: string,
+    @Body(new SchemaValidationPipe(playerLocationSchema)) location: PlayerLocation): Promise<PlayerLocation> {
+    return this.players.saveLocation(userId, location);
   }
 }

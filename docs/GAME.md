@@ -22,8 +22,17 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   server arrival steps, saved ticket entitlement and one-time rewards are
   implemented; the scripted conversation API and authenticated station/street
   connection are implemented. Typed receptionist replies use the server;
-  entering Town Street waits for the saved ticket use and restores the saved
-  location on reload.
+  entering Town Street waits for the saved ticket use. Reload restores the
+  player's last exact place (station, street, café or clothes shop), its parent
+  map and the player's position inside it.
+- Player movement updates the latest private location checkpoint in browser
+  `localStorage`; it does not call the API for every movement sample. The client
+  debounces server sync for five seconds, syncs place changes immediately and
+  flushes when the tab moves to the background. Pending location data is scoped
+  by account and cleared on sign-out. This is recovery for the current online
+  game, not general offline gameplay. If broader offline state is approved
+  later, replace the single local checkpoint with a versioned IndexedDB record
+  (and an outbox only for operations that genuinely need ordered replay).
 - Maplewood Town Street is a larger, camera-following plaza map with connected
   paths and added library, pharmacy, florist, post office, bakery and house
   buildings around its original plaza. It includes Corner Cup Café, a separately

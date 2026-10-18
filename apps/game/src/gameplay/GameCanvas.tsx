@@ -16,7 +16,8 @@ export default function GameCanvas({
   onTalk,
   onReadyChange,
   onLocationChange,
-  initialLocation = "station",
+  onPlaceChange,
+  initialLocation = { mapId: "loc_station", placeId: "loc_station", x: 768, y: 370 },
   onEnterStreet,
   appearance,
   getGameTime,
@@ -31,6 +32,7 @@ export default function GameCanvas({
   const callbacks = useRef({
     onTalk,
     onLocationChange,
+    onPlaceChange,
     onExitBlocked,
     onReadyChange,
     onEnterStreet,
@@ -40,6 +42,7 @@ export default function GameCanvas({
   callbacks.current = {
     onTalk,
     onLocationChange,
+    onPlaceChange,
     onExitBlocked,
     onReadyChange,
     onEnterStreet,
@@ -66,7 +69,7 @@ export default function GameCanvas({
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [locationLabel, setLocationLabel] = useState(
-    initialLocation === "street"
+    initialLocation.placeId === "loc_town_street"
       ? "Maplewood Town Street"
       : "Maplewood train station",
   );
@@ -144,6 +147,9 @@ export default function GameCanvas({
             callbacks.current.onReadyChange(false);
             callbacks.current.onLocationChange(location);
           }
+        },
+        onPlaceChange: (savedLocation) => {
+          if (!cancelled) callbacks.current.onPlaceChange?.(savedLocation);
         },
         onError: (message) => {
           if (!cancelled) {
