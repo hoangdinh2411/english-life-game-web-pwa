@@ -1,36 +1,21 @@
 /* global FormData, Blob, AbortSignal */
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
-import { execFileSync } from 'node:child_process';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const localAssetRoot = fileURLToPath(new URL('../local-assets/maps/', import.meta.url));
 const streetNpcDataUrl = new URL('../content/seed/street-npcs.json', import.meta.url);
-const require = createRequire(import.meta.url);
+const npcDataUrl = new URL('../content/seed/npcs.json', import.meta.url);
 
-function cropSpriteRow(image, atlas, frameName, outputName, nextRowStart) {
-  const base = atlas.frames[frameName]?.frame;
-  if (!base) throw new Error(`NPC atlas is missing the ${frameName} frame`);
-  const width = image.readUInt32BE(16);
-  const imageHeight = image.readUInt32BE(20);
-  const height = (nextRowStart ?? imageHeight) - base.y;
-  if (height <= 0 || base.y + height > imageHeight) throw new Error(`NPC atlas row is invalid for ${frameName}`);
-  const ffmpeg = process.env.FFMPEG_PATH ?? join(dirname(require.resolve('@ffmpeg-installer/win32-x64/package.json')), 'ffmpeg.exe');
-  const png = execFileSync(ffmpeg, [
-    '-hide_banner', '-loglevel', 'error', '-f', 'image2pipe', '-vcodec', 'png', '-i', 'pipe:0',
-    '-vf', `crop=${width}:${height}:0:${base.y}`, '-frames:v', '1', '-f', 'image2pipe', '-vcodec', 'png', 'pipe:1',
-  ], { input: image, maxBuffer: 20 * 1024 * 1024, windowsHide: true });
-  if (png.readUInt32BE(16) !== width || png.readUInt32BE(20) !== height) throw new Error(`NPC art crop failed for ${frameName}`);
-  const frames = Object.fromEntries(Object.entries(atlas.frames)
-    .filter(([name]) => name === frameName || name.startsWith(`${frameName}-`))
-    .map(([name, entry]) => [name, { ...entry, frame: { ...entry.frame, y: entry.frame.y - base.y } }]));
-  if (Object.keys(frames).length < 17) throw new Error(`NPC atlas is missing walking frames for ${frameName}`);
-  const data = {
-    frames,
-    ...(atlas.meta ? { meta: { ...atlas.meta, image: outputName, size: { w: width, h: height } } } : {}),
-  };
-  return { png, atlas: Buffer.from(JSON.stringify(data)) };
+function npcWalkAtlas(outputName) {
+  const frame = (column, row) => ({ frame: { x: column * 96, y: row * 171, w: 96, h: 171 }, rotated: false, trimmed: false,
+    spriteSourceSize: { x: 0, y: 0, w: 96, h: 171 }, sourceSize: { w: 96, h: 171 } });
+  const frames = { walk: frame(0, 0) };
+  // Each source row is one direction; its four columns are the walk cycle.
+  for (let direction = 0; direction < 4; direction++) {
+    for (let step = 0; step < 4; step++) frames[`walk-${direction}-${step}`] = frame(step, direction);
+  }
+  return Buffer.from(JSON.stringify({ frames, meta: { image: outputName, size: { w: 384, h: 684 }, scale: '1' } }));
 }
 
 async function npcAsset(reference) {
@@ -39,7 +24,7 @@ async function npcAsset(reference) {
     if (!response.ok) throw new Error(`NPC image could not be read (${response.status})`);
     return Buffer.from(await response.arrayBuffer());
   }
-  if (!/^npcs\/[a-zA-Z0-9_-]+\.(?:png|json)$/.test(reference)) throw new Error('Street NPC artwork must use an NPC asset path or HTTPS URL');
+  if (!/^npcs\/[a-z0-9_]+\/(?:walk|portraits)\.png$/.test(reference)) throw new Error('NPC artwork must use a per-NPC asset path or HTTPS URL');
   return readFile(new URL(`../apps/game/assets/${reference}`, import.meta.url));
 }
 
@@ -60,31 +45,16 @@ async function mapAssets(mapId) {
   ];
   if (mapId === 'loc_town_street') {
     const catalog = JSON.parse(await readFile(streetNpcDataUrl, 'utf8'));
-    const atlas = JSON.parse((await npcAsset(catalog.atlasUrl)).toString('utf8'));
-    const sourceImageCache = new Map();
-    const frameRows = [...new Set(catalog.npcs.map(npc => atlas.frames[npc.frame]?.frame.y).filter(Number.isInteger))].sort((a, b) => a - b);
-    const textures = new Map();
     const textureByNpc = new Map();
-    for (const npc of catalog.npcs) {
-      const group = `${npc.imageUrl}\0${npc.frame}`;
-      if (!textures.has(group)) {
-        const key = `street-npcs-${textures.size + 1}`;
-        let image = sourceImageCache.get(npc.imageUrl);
-        if (!image) {
-          image = await npcAsset(npc.imageUrl);
-          sourceImageCache.set(npc.imageUrl, image);
-        }
-        const rowY = atlas.frames[npc.frame]?.frame.y;
-        const nextRow = frameRows.find(y => y > rowY);
-        const filename = `${key}.png`;
-        const cropped = cropSpriteRow(image, atlas, npc.frame, filename, nextRow);
-        textures.set(group, key);
-        assets.push(
-          { name: filename, type: 'image', mime: 'image/png', data: cropped.png },
-          { name: `${key}-atlas.json`, type: 'json', mime: 'application/json', data: cropped.atlas },
-        );
-      }
-      textureByNpc.set(npc.id, textures.get(group));
+    for (const [index, npc] of catalog.npcs.entries()) {
+      const key = `street-npcs-${index + 1}`;
+      const filename = `${key}.png`;
+      assets.push(
+        { name: filename, type: 'image', mime: 'image/png', data: await npcAsset(npc.walkImageUrl) },
+        { name: `${key}-atlas.json`, type: 'json', mime: 'application/json', data: npcWalkAtlas(filename) },
+        { name: `portrait-${npc.id}.png`, type: 'image', mime: 'image/png', npcId: npc.id, data: await npcAsset(npc.portrait.imageUrl) },
+      );
+      textureByNpc.set(npc.id, key);
     }
     const routes = new Map(catalog.routes.map(route => [route.id, route]));
     const actors = catalog.npcs.map(npc => {
@@ -96,25 +66,36 @@ async function mapAssets(mapId) {
     assets.push({ name: 'actors.json', type: 'json', mime: 'application/json', data: JSON.stringify({ actors }) });
   } else {
     const actors = mapId === 'loc_corner_cafe' ? [
-      { npcId: 'npc_corner_cup_seller', frame: 'cafe_seller', x: 800, y: 390 },
-      { npcId: 'npc_corner_cup_assistant', frame: 'cafe_waiter', x: 1000, y: 460 },
-      { npcId: 'npc_corner_cup_customer_1', frame: 'cafe_customer', x: 430, y: 600 },
-      { npcId: 'npc_corner_cup_customer_2', frame: 'clothes_customer', x: 1080, y: 600 },
-      { npcId: 'npc_corner_cup_customer_3', frame: 'cafe_customer', x: 430, y: 750 },
+      { npcId: 'npc_corner_cup_seller', x: 800, y: 390 },
+      { npcId: 'npc_corner_cup_assistant', x: 1000, y: 460 },
+      { npcId: 'npc_corner_cup_customer_1', x: 430, y: 600 },
+      { npcId: 'npc_corner_cup_customer_2', x: 1080, y: 600 },
+      { npcId: 'npc_corner_cup_customer_3', x: 430, y: 750 },
     ] : mapId === 'loc_cafe' ? [
-      { frame: 'cafe_seller', x: 800, y: 390 },
-      { frame: 'cafe_waiter', x: 1000, y: 460 },
-      { frame: 'cafe_customer', x: 430, y: 600 },
+      { npcId: 'npc_mia', x: 800, y: 390 },
+      { npcId: 'npc_cafe_waiter', x: 1000, y: 460 },
+      { npcId: 'npc_cafe_customer', x: 430, y: 600 },
     ] : [
-      { frame: 'clothes_seller', x: 1005, y: 405 },
-      { frame: 'clothes_assistant', x: 550, y: 500 },
-      { frame: 'clothes_customer', x: 970, y: 690 },
+      { npcId: 'npc_clothes_seller', x: 1005, y: 405 },
+      { npcId: 'npc_clothes_assistant', x: 550, y: 500 },
+      { npcId: 'npc_clothes_customer', x: 970, y: 690 },
     ];
-    assets.push(
-      { name: 'shop-npcs.png', type: 'image', mime: 'image/png', data: await source('npcs/shop-walk.png') },
-      { name: 'shop-npcs-atlas.json', type: 'json', mime: 'application/json', data: await source('npcs/shop-walk.json') },
-      { name: 'actors.json', type: 'json', mime: 'application/json', data: JSON.stringify({ actors: actors.map(actor => ({ ...actor, texture: 'shop-npcs', scale: 0.6 })) }) },
-    );
+    const catalog = JSON.parse(await readFile(npcDataUrl, 'utf8'));
+    const byId = new Map(catalog.map(npc => [npc.id, npc]));
+    const actorData = [];
+    for (const actor of actors) {
+      const npc = byId.get(actor.npcId);
+      if (!npc?.walkImageUrl) throw new Error(`${actor.npcId} is missing its walking asset`);
+      const key = `npc-${actor.npcId}`;
+      const filename = `${key}.png`;
+      assets.push(
+        { name: filename, type: 'image', mime: 'image/png', data: await source(npc.walkImageUrl) },
+        { name: `${key}-atlas.json`, type: 'json', mime: 'application/json', data: npcWalkAtlas(filename) },
+        { name: `portrait-${npc.id}.png`, type: 'image', mime: 'image/png', npcId: npc.id, data: await source(npc.portrait.imageUrl) },
+      );
+      actorData.push({ ...actor, frame: 'walk', texture: key, scale: 0.6 });
+    }
+    assets.push({ name: 'actors.json', type: 'json', mime: 'application/json', data: JSON.stringify({ actors: actorData }) });
   }
   return assets;
 }
@@ -139,6 +120,7 @@ export async function generateAndUpload({ mapId = 'loc_town_street', version = 1
     const form = new FormData();
     form.set('file', new Blob([file], { type: asset.mime }), asset.name);
     form.set('mapId', mapId); form.set('type', asset.type); form.set('version', String(version));
+    if (asset.npcId) form.set('npcId', asset.npcId);
     const response = await fetcher(`${baseUrl}/content/assets/upload`, { method: 'POST', headers: { Authorization: `Bearer ${serviceKey}` }, body: form, signal: AbortSignal.timeout(60000) });
     if (!response.ok) throw new Error(`Upload failed (${response.status}); generated file retained at ${path}`);
     const result = await response.json();

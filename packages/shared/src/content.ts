@@ -5,6 +5,16 @@ const identifier = z.string().regex(/^[a-z][a-z0-9_]*$/);
 const text = z.string().refine((value) => value.trim().length > 0, 'Text must not be blank');
 const level = z.enum(['A1', 'A2', 'B1', 'B2', 'C1']);
 
+export const npcPortraitSchema = z.object({
+  imageUrl: z.string().regex(/^npcs\/[a-z0-9_]+\/portraits\.png$/),
+  index: z.number().int().nonnegative(),
+  columns: z.number().int().positive(),
+  rows: z.number().int().positive(),
+}).strict().refine(
+  portrait => portrait.index < portrait.columns * portrait.rows,
+  'NPC portrait index must fit inside its grid',
+);
+
 export const townSeedSchema = z.object({
   id: identifier,
   isStarterCity: z.literal(true),
@@ -26,6 +36,8 @@ export const npcSchema = z.object({
   speakingLevel: level,
   locationId: identifier,
   bio: text,
+  walkImageUrl: z.string().regex(/^npcs\/[a-z0-9_]+\/walk\.png$/).optional(),
+  portrait: npcPortraitSchema.optional(),
 }).strict();
 
 export const questStepSchema = z.object({
@@ -74,12 +86,11 @@ export const questCatalogSchema = z.array(questSchema).min(1).refine(uniqueIds, 
 
 const mapPointSchema = z.object({ x: z.number().min(0).max(1536), y: z.number().min(0).max(1024) }).strict();
 const streetRouteSchema = z.object({ id: identifier, points: z.array(mapPointSchema).min(10).max(15) }).strict();
-const streetNpcFrameSchema = z.enum(['cafe_seller', 'cafe_waiter', 'cafe_customer', 'clothes_seller', 'clothes_assistant', 'clothes_customer']);
 const streetNpcSchema = npcSchema.extend({
   job: text,
-  imageUrl: z.string().min(1).max(500).refine(value => /^npcs\/[a-zA-Z0-9_-]+\.png$/.test(value) || /^https:\/\//.test(value), 'Use a local NPC asset path or an HTTPS image URL'),
-  frame: streetNpcFrameSchema,
-  portraitFrame: streetNpcFrameSchema,
+  walkImageUrl: z.string().regex(/^npcs\/[a-z0-9_]+\/walk\.png$/),
+  frame: z.literal('walk'),
+  portrait: npcPortraitSchema,
   voice: z.enum(['female', 'male']),
   routeId: identifier,
   startWaypoint: z.number().int().nonnegative(),
@@ -87,8 +98,7 @@ const streetNpcSchema = npcSchema.extend({
   topics: z.array(identifier).min(3).refine(values => new Set(values).size === values.length, 'NPC topics must be unique'),
 }).strict();
 export const streetNpcContentSchema = z.object({
-  version: z.literal(1),
-  atlasUrl: z.string().min(1).max(500).refine(value => /^npcs\/[a-zA-Z0-9_-]+\.json$/.test(value) || /^https:\/\//.test(value), 'Use a local NPC atlas path or an HTTPS atlas URL'),
+  version: z.literal(2),
   routes: z.array(streetRouteSchema).min(1).refine(uniqueIds, 'Street route IDs must be unique'),
   npcs: z.array(streetNpcSchema).min(10).max(20).refine(uniqueIds, 'Street NPC IDs must be unique'),
 }).strict().superRefine((catalog, context) => {

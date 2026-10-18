@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { useState } from 'react';
 import { SavedConversation } from '../src/features/dialogue/SavedConversation';
 import type { ConversationSnapshot } from '../src/features/dialogue/conversation-controller';
-import portraits from '../assets/npcs/shop-npcs.png';
+import portrait from '../assets/npcs/npc_lina_librarian/portraits.png';
 import '../src/styles.css';
 
 const arrival = { questId: 'q_station_arrival', status: 'active' as const, currentStepId: null,
@@ -22,7 +22,7 @@ function Fixture() {
   </nav><section className="mx-auto max-w-[720px] rounded-[18px] border-2 border-[#aa8b57] bg-dialogue p-3">
     <h1 className="text-[18px] font-extrabold">Fictional conversation preview</h1>
     <SavedConversation state={state} sound={false} online={view !== 'offline'} send={async () => false} retry={() => {}}
-      displayNpc={{ name: 'Lina', portrait: portraits, portraitPosition: '0% 0%' }} />
+      displayNpc={{ name: 'Lina', portrait, portraitPosition: () => '0% 0%', portraitGrid: { columns: 3, rows: 1 } }} />
   </section></main>;
 }
 const root = document.getElementById('root');

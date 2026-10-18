@@ -40,6 +40,7 @@ test('uploader sends existing PNG artwork through the asset API', async () => {
     assert.equal(url, 'http://fixture/api/v1/content/assets/upload');
     assert.equal(options.headers.Authorization, 'Bearer fixture-key');
     assert.equal(options.body.get('mapId'), 'loc_town_street');
+    if (file.name.startsWith('portrait-')) assert.match(options.body.get('npcId'), /^npc_/);
     if (file.name.endsWith('.png')) assert.deepEqual([...new Uint8Array(await file.arrayBuffer()).slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
     else if (file.name === 'animations.json') assert.equal(JSON.parse(await file.text()).animations.length, 4);
     else if (file.name === 'actors.json') assert.equal(JSON.parse(await file.text()).actors.length, 15);
@@ -47,10 +48,10 @@ test('uploader sends existing PNG artwork through the asset API', async () => {
     calls.push(file.name);
     return { ok: true, json: async () => ({ url: `http://fixture/${file.name}`, bytes: file.size }) };
   } });
-  assert.equal(calls.length, 16);
+  assert.equal(calls.length, 49);
   assert.ok(calls.includes('street-npcs-1.png'));
   assert.ok(calls.includes('street-npcs-6-atlas.json'));
-  assert.equal(result.length, 16);
+  assert.equal(result.length, 49);
   const added = (await readdir(tmpdir())).filter((name) => !before.has(name) && name.startsWith('life-abroad-assets-'));
   assert.deepEqual(added, []);
 });

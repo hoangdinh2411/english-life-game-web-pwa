@@ -8,11 +8,11 @@ import { SavedConversation } from '../dialogue/SavedConversation';
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
 import { GameButton } from '../../gameplay/GameButton';
 import { SHOP_NPCS, type ShopNpcId } from './shop-npcs';
-import shopPortraits from '../../../assets/npcs/shop-npcs.png';
 import { CoffeeQuestToast, shouldShowCoffeeQuestToast } from './CoffeeQuest';
 import { ShopMenuPanel } from './ShopMenuPanel';
 import { sellerPanelVisibility } from './seller-panel-visibility';
 import { streamChat } from '../dialogue/chat-stream';
+import { NPC_PORTRAIT_GRID, npcPortrait, npcPortraitPosition } from '../npcs/npc-portraits';
 
 export function ShopConversation({ npcId, sound, onClose, onRefresh }: {
   npcId: ShopNpcId; sound: boolean; onClose: () => void; onRefresh: () => Promise<void>;
@@ -69,7 +69,12 @@ export function ShopConversation({ npcId, sound, onClose, onRefresh }: {
       <div className="dialogue-header flex items-center justify-between gap-2"><h2>{npc.name}</h2><GameButton label="Close" onClick={onClose} /></div>
       <SavedConversation state={state} sound={sound} online={online} send={send}
         details={details}
-        retry={() => void controller.start()} displayNpc={{ name: npc.name, portrait: shopPortraits, portraitPosition: `${SHOP_NPCS.indexOf(npc) % 3 * 50}% ${Math.floor(SHOP_NPCS.indexOf(npc) / 3) * 100}%` }} />
+        retry={() => void controller.start()} displayNpc={{
+          name: npc.name,
+          portrait: npcPortrait(npc.id),
+          portraitPosition: npcPortraitPosition,
+          portraitGrid: NPC_PORTRAIT_GRID,
+        }} />
     </DialogueFrame>
     {questToast ? <CoffeeQuestToast quest={questToast} onDismiss={dismissQuestToast} /> : null}
   </>;

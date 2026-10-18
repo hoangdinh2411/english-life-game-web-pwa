@@ -5,7 +5,15 @@ import { createServer } from 'vite';
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
 
 try {
-  const { createConversationController } = await server.ssrLoadModule('/src/features/dialogue/conversation-controller.ts');
+  const { createConversationController, revealStreamChunk } = await server.ssrLoadModule('/src/features/dialogue/conversation-controller.ts');
+
+  test('safe sentence chunks are revealed as paced characters for a visible typing animation', async () => {
+    const pieces = [];
+    let waits = 0;
+    await revealStreamChunk('Hi!', piece => pieces.push(piece), undefined, async () => { waits += 1; });
+    assert.deepEqual(pieces, ['H', 'i', '!']);
+    assert.equal(waits, 2);
+  });
 
   test('a successful send trusts the turn response without refetching the conversation', async () => {
     const initialArrival = {
@@ -37,7 +45,7 @@ try {
     assert.deepEqual(snapshot.conversation?.messages, [openingMessage, playerMessage, npcMessage]);
   });
 
-  test('T10f exposes streamed words, marks the AI reply, and cancels it on dispose', async () => {
+  test('T10f reveals streamed text progressively and cancels it on dispose', async () => {
     const arrival = { questId: 'q_station_arrival', status: 'active', currentStepId: null,
       ticket: { issued: false, used: false }, canEnterTownStreet: false, locationId: 'loc_station', rewardsGranted: false };
     const conversation = { id: globalThis.crypto.randomUUID(), npcId: 'npc_receptionist', messages: [], arrival };
@@ -56,7 +64,7 @@ try {
     await controller.start();
     const sending = controller.send('Hi');
     await new Promise(resolve => globalThis.setTimeout(resolve, 0));
-    assert.equal(controller.getSnapshot().streamedReply, 'Hello there.');
+    assert.equal(controller.getSnapshot().streamedReply, 'H');
     assert.equal(controller.getSnapshot().streaming, true);
     controller.dispose();
     assert.equal(capturedSignal.aborted, true);

@@ -179,9 +179,6 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           this.marker.setPosition(destinationMapTarget.x, destinationMapTarget.y).setVisible(true);
         });
       }
-      if (currentPack) for (const asset of currentPack.assets.filter((item) => item.npcId && ['image', 'spritesheet'].includes(item.type))) {
-        this.add.sprite(500 + currentPack.assets.indexOf(asset) * 80, 400, packKey(currentPack, asset), 0).setDepth(400);
-      }
       if (activeLocation === 'station') for (const npc of npcs) {
         const shadow = this.add.ellipse(npc.x, npc.y - 3, 48, 16, 0x443728, 0.22);
         const sprite = this.add.sprite(npc.x, npc.y, npc.texture, '0-0').setOrigin(0.5, 1).setScale(2).setDepth(npc.y);

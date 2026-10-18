@@ -52,9 +52,9 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
         return <DialogueMessage key={message.id} name={message.speaker === 'player' ? playerName : npcName} portrait={message.speaker === 'player' ? playerPortrait : npcPortraits[npcId]}
           text={reveal?.messageId === message.id ? reveal.visibleText : displayText} fullText={displayText}
           revealing={reveal?.messageId === message.id && reveal.revealing}
-          player={message.speaker === 'player'} onReplay={() => voice.listen(displayText)} replayDisabled={!sound || !voice.supported || speech.listening || conversation.pending} />;
+          player={message.speaker === 'player'} onReplay={() => voice.listen(displayText)} replayVisible={sound && voice.supported} replayDisabled={!sound || !voice.supported || speech.listening || conversation.pending} />;
       })}
-      {thinking ? <DialogueMessage name={thinking === 'player' ? playerName : npcName} portrait={thinking === 'player' ? playerPortrait : npcPortraits[npcId]} player={thinking === 'player'} thinking text="Thinking…" /> : null}
+      {thinking ? <DialogueMessage name={thinking === 'player' ? playerName : npcName} portrait={thinking === 'player' ? playerPortrait : npcPortraits[npcId]} player={thinking === 'player'} thinking text="Thinking…" replayVisible={false} /> : null}
       {speech.interim ? <p>{speech.interim}</p> : null}
     </div>
     <p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{conversation.exchange.hint}</p>

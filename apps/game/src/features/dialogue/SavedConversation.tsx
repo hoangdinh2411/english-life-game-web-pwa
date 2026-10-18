@@ -30,7 +30,12 @@ export function SavedConversation({
   online: boolean;
   send: (text: string, coach: boolean) => Promise<boolean>;
   retry: () => void;
-  displayNpc?: { name: string; portrait: string; portraitPosition: string };
+  displayNpc?: {
+    name: string;
+    portrait: string;
+    portraitPosition: (text: string, thinking?: boolean) => string;
+    portraitGrid?: { columns: number; rows: number };
+  };
   completed?: boolean;
   details?: ReactNode;
   hint?: string;
@@ -136,24 +141,40 @@ export function SavedConversation({
             }
             portraitPosition={
               message.sender === "npc"
-                ? displayNpc?.portraitPosition
+                ? displayNpc?.portraitPosition(message.text)
                 : undefined
             }
+            portraitGrid={
+              message.sender === "npc" ? displayNpc?.portraitGrid : undefined
+            }
             onReplay={() => voice.listen(message.text)}
+            replayVisible={sound && voice.supported}
             replayDisabled={
               !sound || !voice.supported || state.pending || speech.listening
             }
           />
         ))}
+        {state.streaming && state.retryMessage ? (
+          <DialogueMessage
+            name="You"
+            text={state.retryMessage.text}
+            player
+            portrait={playerPortrait}
+          />
+        ) : null}
         {state.streaming ? (
           <DialogueMessage
             name={displayNpc?.name ?? "Ruth"}
             text={state.streamedReply}
+            fullText={state.streamedReply}
+            revealing={Boolean(state.streamedReply)}
             thinking={!state.streamedReply}
             portrait={
               displayNpc?.portrait ?? npcPortraits.npc_station_information
             }
-            portraitPosition={displayNpc?.portraitPosition}
+            portraitPosition={displayNpc?.portraitPosition(state.streamedReply, !state.streamedReply)}
+            portraitGrid={displayNpc?.portraitGrid}
+            replayVisible={false}
           />
         ) : null}
       </div>

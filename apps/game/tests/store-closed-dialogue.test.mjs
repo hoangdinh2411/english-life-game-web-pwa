@@ -10,9 +10,9 @@ try {
 
   test('closed-store conversation shows the store owner, avatar and hours', () => {
     const cases = [
-      ['cafe', 'Mia', '0% 0%'],
+      ['cafe', 'Mia', '100% 0%'],
       ['corner_cafe', 'Elena', '100% 0%'],
-      ['clothes', 'Ravi', '0% 100%'],
+      ['clothes', 'Ravi', '100% 0%'],
     ];
 
     for (const [location, owner, portraitPosition] of cases) {
@@ -23,6 +23,7 @@ try {
       }));
       assert.match(html, new RegExp(`aria-label="${owner} avatar"`));
       assert.ok(html.includes(`background-position:${portraitPosition}`));
+      assert.ok(html.includes('background-size:300% 100%'));
       assert.match(html, new RegExp(`<strong>${owner}</strong>`));
       assert.match(html, /Sorry, the store is closed\. Opening hours are: 08:00–14:00\./);
       assert.doesNotMatch(html, /UTC/);

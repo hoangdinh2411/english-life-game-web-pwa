@@ -15,7 +15,9 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_cafe",
-    "bio": "Friendly barista who loves jazz and talks about the weather."
+    "bio": "Friendly barista who loves jazz and talks about the weather.",
+    "walkImageUrl": "npcs/npc_mia/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_mia/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
   {
     "id": "npc_brown",
@@ -42,7 +44,9 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_cafe",
-    "bio": "A friendly person at the station shop."
+    "bio": "A friendly person at the station shop.",
+    "walkImageUrl": "npcs/npc_cafe_waiter/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_cafe_waiter/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
   {
     "id": "npc_cafe_customer",
@@ -51,7 +55,9 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_cafe",
-    "bio": "A friendly person at the station shop."
+    "bio": "A friendly person at the station shop.",
+    "walkImageUrl": "npcs/npc_cafe_customer/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_cafe_customer/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
   {
     "id": "npc_corner_cup_seller",
@@ -60,7 +66,9 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_corner_cafe",
-    "bio": "A welcoming barista at Corner Cup Café who helps visitors choose drinks and food."
+    "bio": "A welcoming barista at Corner Cup Café who helps visitors choose drinks and food.",
+    "walkImageUrl": "npcs/npc_corner_cup_seller/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_corner_cup_seller/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
   {
     "id": "npc_corner_cup_assistant",
@@ -69,7 +77,9 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_corner_cafe",
-    "bio": "A friendly café assistant who enjoys chatting with customers."
+    "bio": "A friendly café assistant who enjoys chatting with customers.",
+    "walkImageUrl": "npcs/npc_corner_cup_assistant/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_corner_cup_assistant/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
   {
     "id": "npc_corner_cup_customer_1",
@@ -78,7 +88,9 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_corner_cafe",
-    "bio": "A cheerful customer enjoying a drink at Corner Cup Café."
+    "bio": "A cheerful customer enjoying a drink at Corner Cup Café.",
+    "walkImageUrl": "npcs/npc_corner_cup_customer_1/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_corner_cup_customer_1/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
   {
     "id": "npc_corner_cup_customer_2",
@@ -87,7 +99,9 @@
     "personality": "serious",
     "speakingLevel": "A1",
     "locationId": "loc_corner_cafe",
-    "bio": "A thoughtful customer taking a break at Corner Cup Café."
+    "bio": "A thoughtful customer taking a break at Corner Cup Café.",
+    "walkImageUrl": "npcs/npc_corner_cup_customer_2/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_corner_cup_customer_2/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
   {
     "id": "npc_corner_cup_customer_3",
@@ -96,7 +110,9 @@
     "personality": "shy",
     "speakingLevel": "A1",
     "locationId": "loc_corner_cafe",
-    "bio": "A quiet customer enjoying a snack at Corner Cup Café."
+    "bio": "A quiet customer enjoying a snack at Corner Cup Café.",
+    "walkImageUrl": "npcs/npc_corner_cup_customer_3/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_corner_cup_customer_3/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
   {
     "id": "npc_clothes_seller",
@@ -105,7 +121,9 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_clothes",
-    "bio": "A friendly person at the station shop."
+    "bio": "A friendly person at the station shop.",
+    "walkImageUrl": "npcs/npc_clothes_seller/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_clothes_seller/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
   {
     "id": "npc_clothes_assistant",
@@ -114,7 +132,9 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_clothes",
-    "bio": "A friendly person at the station shop."
+    "bio": "A friendly person at the station shop.",
+    "walkImageUrl": "npcs/npc_clothes_assistant/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_clothes_assistant/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
   {
     "id": "npc_clothes_customer",
@@ -123,6 +143,8 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_clothes",
-    "bio": "A friendly person at the station shop."
+    "bio": "A friendly person at the station shop.",
+    "walkImageUrl": "npcs/npc_clothes_customer/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_clothes_customer/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   }
 ]

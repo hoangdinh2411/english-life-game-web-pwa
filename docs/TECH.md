@@ -235,8 +235,9 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
   conversation. Historical message replay remains available after closing.
   Store hours and per-message energy costs apply. T18 café progress is owned by
   the quests module; its completion/reward and drink payment share this transaction.
-  Clothes purchase conversations remain T20. Shop maps use the uploaded
-  `shop-walk` atlas; dialogue portraits use the static `shop-npcs` sheet.
+  Clothes purchase conversations remain T20. Every NPC owns a separate 16-frame
+  walk sheet and a three-expression portrait strip under `assets/npcs/<npc-id>/`;
+  generated map packs upload those assets independently.
 - `GET /quests/coffee` (protected) returns `coffeeQuestStateSchema`: saved
   status/current objective, arrival eligibility and authored rewards. Cashier
   and waiter conversation responses also include `coffeeQuest`; no client

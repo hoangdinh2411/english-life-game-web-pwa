@@ -16,10 +16,13 @@ export async function seedContent(client: PoolClient, content: SeedContent): Pro
     ON CONFLICT (id) DO UPDATE SET city_id=excluded.city_id,name=excluded.name,type=excluded.type`, [location.id,town.id,location.name,location.type]);
   // Role IDs are authored on NPCs; no separate role-label catalog exists yet.
   for (const role of roles) await client.query('INSERT INTO roles (id,name) VALUES ($1,$1) ON CONFLICT (id) DO NOTHING', [role]);
-  for (const npc of npcs) await client.query(`INSERT INTO npcs (id,name,role_id,personality,speaking_level,location_id,bio) VALUES ($1,$2,$3,$4,$5,$6,$7)
+  for (const npc of npcs) await client.query(`INSERT INTO npcs (id,name,role_id,personality,speaking_level,location_id,bio,portrait_image_url,portrait_index,portrait_columns,portrait_rows) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
     ON CONFLICT (id) DO UPDATE SET name=excluded.name,role_id=excluded.role_id,personality=excluded.personality,
-    speaking_level=excluded.speaking_level,location_id=excluded.location_id,bio=excluded.bio`,
-  [npc.id,npc.name,npc.role,npc.personality,npc.speakingLevel,npc.locationId,npc.bio]);
+    speaking_level=excluded.speaking_level,location_id=excluded.location_id,bio=excluded.bio,
+    portrait_image_url=excluded.portrait_image_url,portrait_index=excluded.portrait_index,
+    portrait_columns=excluded.portrait_columns,portrait_rows=excluded.portrait_rows`,
+  [npc.id,npc.name,npc.role,npc.personality,npc.speakingLevel,npc.locationId,npc.bio,
+    npc.portrait?.imageUrl ?? null,npc.portrait?.index ?? null,npc.portrait?.columns ?? null,npc.portrait?.rows ?? null]);
   for (const quest of quests) {
     await client.query(`INSERT INTO quests (id,title,required_level,npc_id,rewards) VALUES ($1,$2,$3,$4,$5)
       ON CONFLICT (id) DO UPDATE SET title=excluded.title,required_level=excluded.required_level,npc_id=excluded.npc_id,rewards=excluded.rewards`,

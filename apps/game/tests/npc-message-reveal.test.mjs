@@ -35,4 +35,21 @@ test('animated text exposes the full sentence once to assistive technology', () 
   assert.match(html, /class="sr-only">Hello there/);
   assert.match(html, /aria-hidden="true">Hello/);
   assert.match(html, /animate-pulse/);
+  assert.match(html, />Typing…</);
+  const complete = renderToStaticMarkup(createElement(DialogueMessage, {
+    name: 'Mia', portrait: '/mia.png', text: 'Hello there', revealing: false,
+  }));
+  assert.doesNotMatch(complete, />Typing…</);
+});
+
+test('speaker control keeps a fixed layout slot when speech is hidden', () => {
+  const visible = renderToStaticMarkup(createElement(DialogueMessage, {
+    name: 'Raj', portrait: '/raj.png', text: 'Hello.', onReplay: () => {}, replayVisible: true,
+  }));
+  const hidden = renderToStaticMarkup(createElement(DialogueMessage, {
+    name: 'Raj', portrait: '/raj.png', text: 'Hello.', onReplay: () => {}, replayVisible: false,
+  }));
+  assert.match(visible, /speaker-control-slot/);
+  assert.match(hidden, /speaker-control-slot[^"].*invisible|invisible[^"].*speaker-control-slot/);
+  assert.doesNotMatch(hidden, /<button/);
 });

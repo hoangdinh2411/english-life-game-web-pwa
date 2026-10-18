@@ -12,10 +12,11 @@ test('saveMapAssets packages existing artwork without replacing it with SVG plac
     assert.equal(typeof generator.saveMapAssets, 'function');
     const directory = await generator.saveMapAssets('loc_cafe', rootDirectory);
     assert.equal(directory, join(rootDirectory, 'loc_cafe'));
-    assert.deepEqual((await readdir(directory)).sort(), ['actors.json', 'animations.json', 'background.png', 'player.png', 'shop-npcs-atlas.json', 'shop-npcs.png']);
+    assert.equal((await readdir(directory)).length, 13);
     assert.deepEqual(await readFile(join(directory, 'background.png')), await readFile(new URL('../apps/game/assets/locations/location_cafe_interior.png', import.meta.url)));
     assert.deepEqual(await readFile(join(directory, 'player.png')), await readFile(new URL('../apps/game/assets/runtime/player.png', import.meta.url)));
-    assert.deepEqual(await readFile(join(directory, 'shop-npcs.png')), await readFile(new URL('../apps/game/assets/npcs/shop-walk.png', import.meta.url)));
+    assert.deepEqual(await readFile(join(directory, 'npc-npc_mia.png')), await readFile(new URL('../apps/game/assets/npcs/npc_mia/walk.png', import.meta.url)));
+    assert.deepEqual(await readFile(join(directory, 'portrait-npc_mia.png')), await readFile(new URL('../apps/game/assets/npcs/npc_mia/portraits.png', import.meta.url)));
     assert.equal(JSON.parse(await readFile(join(directory, 'actors.json'), 'utf8')).actors.length, 3);
     assert.equal(JSON.parse(await readFile(join(directory, 'animations.json'), 'utf8')).animations.length, 4);
   } finally {
@@ -42,30 +43,27 @@ test('Town Street map packages all data-authored residents at their route start 
     const directory = await generator.saveMapAssets('loc_town_street', rootDirectory);
     const catalog = JSON.parse(await readFile(new URL('../content/seed/street-npcs.json', import.meta.url), 'utf8'));
     const actors = JSON.parse(await readFile(join(directory, 'actors.json'), 'utf8')).actors;
-    const frames = [...new Set(catalog.npcs.map(npc => npc.frame))];
-    const textureByFrame = new Map(frames.map((frame, index) => [frame, `street-npcs-${index + 1}`]));
     assert.equal(actors.length, 15);
     assert.equal(new Set(actors.map(actor => actor.npcId)).size, 15);
-    assert.ok(catalog.npcs.every(npc => npc.job && npc.imageUrl && npc.topics.length >= 3));
-    for (const npc of catalog.npcs) {
+    assert.ok(catalog.npcs.every(npc => npc.job && npc.walkImageUrl && npc.topics.length >= 3));
+    for (const [index, npc] of catalog.npcs.entries()) {
       const route = catalog.routes.find(route => route.id === npc.routeId);
       assert.ok(route.points.length >= 10 && route.points.length <= 15);
       assert.deepEqual(actors.find(actor => actor.npcId === npc.id), {
-        npcId: npc.id, frame: npc.frame, ...route.points[npc.startWaypoint], texture: textureByFrame.get(npc.frame), scale: 0.6,
+        npcId: npc.id, frame: 'walk', ...route.points[npc.startWaypoint], texture: `street-npcs-${index + 1}`, scale: 0.6,
       });
-    }
-    const source = await readFile(new URL('../apps/game/assets/npcs/shop-walk.png', import.meta.url));
-    assert.equal(frames.length, 6);
-    for (const [index, frame] of frames.entries()) {
+      const source = await readFile(new URL(`../apps/game/assets/${npc.walkImageUrl}`, import.meta.url));
       const image = await readFile(join(directory, `street-npcs-${index + 1}.png`));
       const atlas = JSON.parse(await readFile(join(directory, `street-npcs-${index + 1}-atlas.json`), 'utf8'));
-      assert.equal(image.toString('ascii', 1, 4), 'PNG');
-      assert.equal(image.readUInt32BE(16), 1536);
-      assert.ok(image.readUInt32BE(20) < 1024, `${frame} should download as a cropped atlas row`);
-      assert.ok(image.byteLength < source.byteLength, `${frame} should be smaller than the full resident atlas`);
-      assert.ok(Object.keys(atlas.frames).length >= 17);
-      assert.ok(Object.keys(atlas.frames).every(name => name === frame || name.startsWith(`${frame}-`)));
-      assert.ok(Object.values(atlas.frames).every(({ frame: item }) => item.y < image.readUInt32BE(20)), `${frame} atlas coordinates fit the cropped image`);
+      const portrait = await readFile(join(directory, `portrait-${npc.id}.png`));
+      assert.deepEqual(image, source);
+      assert.deepEqual([image.readUInt32BE(16), image.readUInt32BE(20)], [384, 684]);
+      assert.equal(Object.keys(atlas.frames).length, 17);
+      assert.deepEqual(portrait, await readFile(new URL(`../apps/game/assets/${npc.portrait.imageUrl}`, import.meta.url)));
+      assert.ok(Object.keys(atlas.frames).every(name => name === 'walk' || name.startsWith('walk-')));
+      assert.deepEqual(atlas.frames['walk-0-3'].frame, { x: 288, y: 0, w: 96, h: 171 });
+      assert.deepEqual(atlas.frames['walk-2-1'].frame, { x: 96, y: 342, w: 96, h: 171 });
+      assert.ok(Object.values(atlas.frames).every(({ frame: item }) => item.y < image.readUInt32BE(20)), `${npc.id} atlas coordinates fit the image`);
     }
   } finally {
     await rm(rootDirectory, { recursive: true, force: true });

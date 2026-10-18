@@ -35,6 +35,7 @@ export interface PlayerInfoCardProps {
 }
 export interface DialogueMessageProps {
   portraitPosition?: string | undefined;
+  portraitGrid?: { columns: number; rows: number } | undefined;
   name: string;
   portrait: string;
   text: string;
@@ -43,6 +44,7 @@ export interface DialogueMessageProps {
   player?: boolean;
   thinking?: boolean;
   onReplay?: () => void;
+  replayVisible?: boolean;
   replayDisabled?: boolean;
 }
 export interface ConversationPanelProps {

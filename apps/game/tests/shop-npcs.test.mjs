@@ -20,13 +20,12 @@ test('every shop and station NPC has a distinct personal name', () => {
   for (const name of names) assert.match(name, /^[A-Z][a-z]+$/);
 });
 
-test('shop NPC voices and names match the gender shown by their sprite frames', () => {
-  const femaleFrames = new Set(['cafe_seller', 'cafe_customer', 'clothes_customer']);
+test('shop NPC voices match their authored identities', () => {
   const femaleNames = new Set(['Mia', 'Elena', 'Olivia', 'Ava', 'Leah', 'Grace', 'Nora']);
   for (const npc of SHOP_NPCS) {
-    const isFemale = femaleFrames.has(npc.frame);
+    const isFemale = femaleNames.has(npc.name);
     assert.equal(npcVoice[npc.id], isFemale ? 'female' : 'male', `${npc.id} voice`);
-    assert.equal(femaleNames.has(npc.name), isFemale, `${npc.id} name ${npc.name}`);
+    assert.equal(npc.frame, 'walk');
   }
 });
 

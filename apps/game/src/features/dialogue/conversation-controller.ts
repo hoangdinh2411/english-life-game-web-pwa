@@ -20,6 +20,19 @@ export interface ConversationSnapshot {
   announcement: string;
 }
 
+const typingPause = (milliseconds: number): Promise<void> =>
+  new Promise(resolve => globalThis.setTimeout(resolve, milliseconds));
+
+export async function revealStreamChunk(text: string, emit: (piece: string) => void,
+  signal?: AbortSignal, pause: (milliseconds: number) => Promise<void> = typingPause): Promise<void> {
+  const pieces = Array.from(text);
+  for (const [index, piece] of pieces.entries()) {
+    if (signal?.aborted) throw signal.reason ?? new Error('Chat stream cancelled.');
+    emit(piece);
+    if (index < pieces.length - 1) await pause(28);
+  }
+}
+
 // Private state lives only in memory. All mutations come from authenticated API responses.
 export function createConversationController(api: ConversationApi) {
   let state: ConversationSnapshot = { arrival: null, conversation: null, pending: false, error: '', correction: null, retryMessage: null,
@@ -79,8 +92,12 @@ export function createConversationController(api: ConversationApi) {
           if (api.stream) {
             streamCancellation = new AbortController();
             update({ streaming: true, streamedReply: '', announcement: '' });
+            let revealQueue = Promise.resolve();
             turn = await api.stream(conversation.id, conversation.npcId, body,
-              token => update({ streamedReply: state.streamedReply + token }), streamCancellation.signal);
+              chunk => { revealQueue = revealQueue.then(() => revealStreamChunk(chunk,
+                piece => update({ streamedReply: state.streamedReply + piece }), streamCancellation?.signal)); },
+              streamCancellation.signal);
+            await revealQueue;
           } else turn = await api.send(conversation.id, body);
         }
         catch (failure) {

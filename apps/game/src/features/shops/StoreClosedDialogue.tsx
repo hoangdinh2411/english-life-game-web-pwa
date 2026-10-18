@@ -3,13 +3,13 @@ import { DialogueMessage } from '../../gameplay/DialogueMessage';
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
 import { GameButton } from '../../gameplay/GameButton';
 import type { StoreLocation } from '../../types/gameplay/world';
-import shopPortraits from '../../../assets/npcs/shop-npcs.png';
 import { SHOP_NPCS, type ShopNpcId } from './shop-npcs';
+import { NPC_PORTRAIT_GRID, npcPortrait, npcPortraitPosition } from '../npcs/npc-portraits';
 
-const storeOwners: Record<StoreLocation, { id: ShopNpcId; portraitPosition: string }> = {
-  cafe: { id: 'npc_mia', portraitPosition: '0% 0%' },
-  corner_cafe: { id: 'npc_corner_cup_seller', portraitPosition: '100% 0%' },
-  clothes: { id: 'npc_clothes_seller', portraitPosition: '0% 100%' },
+const storeOwners: Record<StoreLocation, ShopNpcId> = {
+  cafe: 'npc_mia',
+  corner_cafe: 'npc_corner_cup_seller',
+  clothes: 'npc_clothes_seller',
 };
 
 export function StoreClosedDialogue({
@@ -22,7 +22,7 @@ export function StoreClosedDialogue({
   onReturn: () => void;
 }) {
   const storeOwner = storeOwners[location];
-  const owner = SHOP_NPCS.find((npc) => npc.id === storeOwner.id)!;
+  const owner = SHOP_NPCS.find((npc) => npc.id === storeOwner)!;
   const message = gameTimeAvailable
     ? `Sorry, the store is closed. Opening hours are: ${venueHoursLabel('store')}.`
     : "Sorry, I can’t confirm whether the store is open right now. Please try again in a moment.";
@@ -31,8 +31,9 @@ export function StoreClosedDialogue({
     <DialogueFrame>
       <DialogueMessage
         name={owner.name}
-        portrait={shopPortraits}
-        portraitPosition={storeOwner.portraitPosition}
+        portrait={npcPortrait(owner.id)}
+        portraitPosition={npcPortraitPosition(message)}
+        portraitGrid={NPC_PORTRAIT_GRID}
         text={message}
       />
       <GameButton label="Return to town" onClick={onReturn} />

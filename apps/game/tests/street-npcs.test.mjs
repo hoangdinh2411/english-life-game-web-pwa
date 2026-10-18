@@ -49,23 +49,22 @@ test('Town Street residents have distinct profiles and 10–15 walkable route st
   }
 });
 
-test('Town Street names, voices, walking sprites, and portraits agree on gender', () => {
+test('Town Street names, voices, walking sprites, and portrait data stay consistent', () => {
   const expectedVoiceByName = new Map([
     ['Mila', 'female'], ['Amir', 'male'], ['Ethan', 'male'], ['Lina', 'female'],
     ['Ben', 'male'], ['Maya', 'female'], ['Raj', 'male'], ['Nora', 'female'],
     ['Leo', 'male'], ['Dylan', 'male'], ['Amara', 'female'], ['Owen', 'male'],
     ['Sara', 'female'], ['Jamal', 'male'], ['Tara', 'female'],
   ]);
-  const genderByFrame = new Map([
-    ['cafe_seller', 'female'], ['cafe_waiter', 'male'], ['cafe_customer', 'female'],
-    ['clothes_seller', 'male'], ['clothes_assistant', 'male'], ['clothes_customer', 'female'],
-  ]);
-
   for (const npc of STREET_NPCS) {
     assert.equal(npc.voice, expectedVoiceByName.get(npc.name), `${npc.name} has a mismatched name/voice`);
-    assert.equal(genderByFrame.get(npc.frame), npc.voice, `${npc.name} has a mismatched walking sprite`);
-    assert.equal(genderByFrame.get(npc.portraitFrame), npc.voice, `${npc.name} has a mismatched portrait`);
+    assert.equal(npc.frame, 'walk');
+    assert.equal(npc.walkImageUrl, `npcs/${npc.id}/walk.png`);
+    assert.equal(npc.portrait.imageUrl, `npcs/${npc.id}/portraits.png`);
+    assert.equal(npc.portrait.columns, 3);
+    assert.equal(npc.portrait.rows, 1);
   }
+  assert.ok(STREET_NPCS.every(npc => npc.portrait.index === 0));
 });
 
 test('Street patrols travel long routes smoothly and remain on their authored roads', () => {
@@ -191,4 +190,22 @@ test('Equal-distance residents stop only one NPC', () => {
   updateNpcActors([first, second], { x: 100, y: 100 }, 50, false, null);
   assert.equal(first.elapsed, 0);
   assert.equal(second.elapsed, 50);
+});
+
+test('NPC patrol animation selects the matching frame row for all four directions', () => {
+  const cases = [
+    { destination: { x: 100, y: 140 }, animation: 'test-walk-0' },
+    { destination: { x: 60, y: 100 }, animation: 'test-walk-1' },
+    { destination: { x: 140, y: 100 }, animation: 'test-walk-2' },
+    { destination: { x: 100, y: 60 }, animation: 'test-walk-3' },
+  ];
+  for (const { destination, animation } of cases) {
+    let played = '';
+    const actor = makeActor('npc_amir_courier', 100);
+    actor.walkPrefix = 'test-walk';
+    actor.patrol = { points: [{ x: 100, y: 100 }, destination], startWaypoint: 0 };
+    actor.sprite.play = key => { played = key; };
+    updateNpcActors([actor], { x: -1000, y: -1000 }, 50, false, null);
+    assert.equal(played, animation);
+  }
 });

@@ -11,6 +11,7 @@ import { seedContent } from '../infrastructure/content/seed.repository';
 import { DialogueCacheService } from '../infrastructure/content/dialogue-cache.service';
 import { DialogueService } from '../modules/dialogue/dialogue.service';
 import { resolve } from 'node:path';
+import { readdirSync } from 'node:fs';
 import { ShopsService } from '../modules/shops/shops.service';
 import type { ShopItem } from '@life-abroad/shared';
 
@@ -43,7 +44,8 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
       });
       assert.equal(migration.status, 0, migration.stderr);
     }
-    assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, 10);
+    const migrationCount = readdirSync(resolve('migrations')).filter(file => file.endsWith('.sql')).length;
+    assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, migrationCount);
     const content = await loadSeedContent(resolve('../../content'));
     const seedDatabase = new DatabaseService(new ConfigService({ DATABASE_URL: cleanUrl.toString() }));
     let seedClosed = false;
@@ -55,6 +57,16 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
         assert.equal(seed.status, 0, seed.stderr);
       }
       assert.equal((await clean.query('SELECT * FROM npcs')).rowCount, content.npcs.length);
+      assert.deepEqual(
+        (await clean.query(`SELECT portrait_image_url, portrait_index, portrait_columns, portrait_rows
+          FROM npcs WHERE id=$1`, ['npc_nora_bookseller'])).rows[0],
+        {
+          portrait_image_url: 'npcs/npc_nora_bookseller/portraits.png',
+          portrait_index: 0,
+          portrait_columns: 3,
+          portrait_rows: 1,
+        },
+      );
       assert.equal((await clean.query('SELECT * FROM quests')).rowCount, content.quests.length);
       assert.equal((await clean.query('SELECT * FROM quest_steps')).rowCount, content.quests.reduce((count, quest) => count + quest.steps.length, 0));
       assert.deepEqual((await clean.query('SELECT rewards FROM quests WHERE id=$1', ['q_order_coffee'])).rows[0].rewards, { xp: 20, coins: 5 });
