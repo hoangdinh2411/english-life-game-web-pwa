@@ -40,44 +40,59 @@ Finished tasks are removed to keep this board short. Git history and
 
 ## NOW
 
-- [ ] **NPC speech audio prototype (Azure TTS + client DSP).** Inspect the
-      existing dialogue, NPC content, asset, storage and AI fallback paths
-      first. Keep the test small: use a few shared fixed-script lines across
-      maps/NPCs, a few NPC-specific lines, and AI fallback replies for one NPC.
-      Resolve NPC-specific scripts before shared scripts; use AI only when
-      neither matches. Add a small editable voice-profile content file keyed by
-      stable NPC ID, with gender (`male`/`female` for this prototype) and an
-      optional Azure voice override; use gender to select the default voice.
-      Keep this mapping out of map-specific dialogue so changing an NPC's gender
-      or voice does not require editing every map. Generate fixed-script audio
-      once per unique text and generation voice configuration, then reuse it
-      across maps and NPCs. Store audio files in private object storage through
-      the existing asset pipeline; keep only references and metadata in the
-      database. Deduplicate by a cache key based on text, language, voice,
-      emotion/style, audio format and Azure/TTS version/settings—not map, NPC ID
-      or player playback settings. Invalidate fixed-script audio when its text
-      or generation configuration changes. For AI fallback text, generate audio
-      on demand and cache only exact repeats for a short configurable period; do
-      not persist personal or sensitive text/audio. Expire and remove stale AI
-      cache entries. Serve private files to authenticated players with
-      short-lived signed URLs.
-
-      Keep one canonical Azure audio file per cache key. Apply player speech
-      speed and pitch after download on the client using one shared Web Audio
-      `AudioContext` and an `AudioWorklet` DSP processor (evaluate
-      `@soundtouchjs/audio-worklet` for the prototype). Do not create or store
-      speed/pitch variants and do not add those controls to the Azure cache key.
-      Add simple bounded speed and pitch controls in Game Settings; NPC dialogue
-      determines the generated emotion/style, while player controls only affect
-      playback. Done when: shared lines reuse one audio asset across maps/NPCs,
-      NPC-specific lines play correctly, the editable voice profile changes the
-      selected NPC voice, AI fallback replies are spoken and exact repeats can
-      hit the bounded cache, no repeat cache hit calls Azure, client DSP changes
-      speed and pitch independently without creating new stored variants,
-      expired AI audio is removed, and the original generated audio reflects
-      the NPC emotion/style. Verify audio quality, responsiveness and CPU use on
-      supported mobile browsers; provide a graceful fallback if AudioWorklet is
-      unavailable or fails.
+- [ ] **NPC speech audio prototype (Azure TTS + client DSP).** Complete the
+      following slices in order. Keep the test scope to a few shared lines,
+      NPC-specific lines, and AI fallback replies for one NPC. Do not mark the
+      parent complete until every slice passes.
+  - [ ] **S1 — NPC gender content and approval.** Require `gender` (`male` or
+        `female`) on every NPC in validated content and `npcs.gender` through a
+        forward migration. List the proposed value for every existing NPC for
+        owner approval. The player's ID-card gender is unrelated. Done when
+        content validation passes, removing one gender makes it fail, and the
+        owner approves the proposals.
+  - [ ] **S2 — Voice pools and deterministic resolution.** Add one editable
+        voice-pool content file with Azure voices per gender and optional
+        `voiceOverride` values keyed by stable NPC ID. Resolve an override
+        first; otherwise use a stable hash of NPC ID within its gender pool.
+        Done when male/female selection, stability, same-gender variation,
+        gender changes, and override precedence have focused tests.
+  - [ ] **S3 — Azure generation and emotion styles.** Add a server-only Azure
+        TTS adapter. Map the three NPC emotions to a supported Azure style and
+        use the default style when the selected voice lacks that style. Done
+        when SSML escaping, supported styles, default fallback, provider errors,
+        and generated audio metadata are tested without exposing the key.
+  - [ ] **S4 — Private fixed-script audio cache.** Generate one canonical file
+        per cache key based on text, language, voice, style, format and TTS
+        version/settings—never map, NPC ID, speed or pitch. Store private audio
+        through the asset/storage boundary, keep only references and metadata
+        in PostgreSQL, and return short-lived signed URLs to authenticated
+        players. Done when shared lines reuse a file per voice, NPC-specific
+        lines work, changed generation input invalidates the key, and retries or
+        concurrent requests do not duplicate Azure calls/files.
+  - [ ] **S5 — AI reply audio cache.** Generate persisted AI reply text on
+        demand, cache exact repeats for a configurable 30–3600 seconds, and
+        never persist the source text or personal/sensitive text. Remove expired
+        rows and objects. Done when exact repeats skip Azure, changed text does
+        not, expiry removes the private object, and authored script routing still
+        wins before AI fallback.
+  - [ ] **S6 — Authenticated client playback integration.** Attach speech to
+        authenticated conversation responses without allowing arbitrary client
+        text synthesis. Cover shared, NPC-specific, opening, history and AI
+        replies; keep text readable when speech generation or signed URLs fail.
+        Done when the existing test account can hear each covered reply and no
+        private audio enters the service-worker cache.
+  - [ ] **S7 — Client DSP and settings.** Use one shared Web Audio
+        `AudioContext` and `@soundtouchjs/audio-worklet` to change bounded speed
+        and pitch independently after download. Add Game Settings controls;
+        never create stored variants or include playback settings in cache keys.
+        Fall back gracefully when AudioWorklet setup or playback fails. Done
+        when focused tests cover persistence/bounds and browser playback proves
+        independent controls plus fallback.
+  - [ ] **S8 — End-to-end mobile verification.** With the existing test account,
+        verify audio quality, response time and CPU behavior on supported mobile
+        browsers, plus fixed/AI reuse, emotion/style, signed-URL expiry and stale
+        AI cleanup. Record only concise results here by marking verified slices;
+        then collapse the completed parent into DONE.
 
 - [ ] **Shop polish follow-up (browser checks only).** Code, 173 unit tests,
       typecheck, lint, build, content and PWA checks already pass. Remaining:

@@ -32,6 +32,18 @@ test('content command rejects a broken NPC with file and field diagnostics', asy
   });
 });
 
+test('content command rejects an NPC without gender', async () => {
+  await fixture(async (root) => {
+    const path = resolve(root, 'content/seed/npcs.json');
+    const npcs = JSON.parse(await readFile(path, 'utf8'));
+    delete npcs[0].gender;
+    await writeFile(path, JSON.stringify(npcs));
+    const result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
+    assert.notEqual(result.status, 0, 'An NPC without gender must fail validation');
+    assert.match(result.stderr, /npcs\.json.*0\.gender/s);
+  });
+});
+
 test('committed content passes', () => {
   const result = spawnSync(process.execPath, [validator], { cwd: repository, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);

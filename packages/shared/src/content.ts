@@ -33,6 +33,7 @@ function uniqueIds<T extends { id: string }>(values: T[]): boolean {
 export const npcSchema = z.object({
   id: identifier,
   name: text,
+  gender,
   role: identifier,
   personality: identifier,
   speakingLevel: level,

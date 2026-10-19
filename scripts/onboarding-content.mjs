@@ -24,7 +24,7 @@ validate('content/seed/street-npcs.json', streetNpcContentSchema, streetNpcConte
 validate('content/seed/npcs.json', npcCatalogSchema, npcCatalog);
 validate('content/seed/npcs.json + street-npcs.json', npcCatalogSchema, [
   ...npcCatalog,
-  ...streetNpcContent.npcs.map(({ id, name, role, personality, speakingLevel, locationId, bio }) => ({ id, name, role, personality, speakingLevel, locationId, bio })),
+  ...streetNpcContent.npcs.map(({ id, name, gender, role, personality, speakingLevel, locationId, bio }) => ({ id, name, gender, role, personality, speakingLevel, locationId, bio })),
 ]);
 validate('content/seed/quests.json', questCatalogSchema, await readJson('content/seed/quests.json'));
 validate('content/seed/shops.json', shopCatalogSchema, await readJson('content/seed/shops.json'));
