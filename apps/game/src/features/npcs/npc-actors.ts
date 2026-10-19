@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import type { Point, StationNpc } from '../../types/gameplay/world';
+import type { Direction, Point, StationNpc } from '../../types/gameplay/world';
 import { advanceNpc, NPC_STOP_DISTANCE, type NpcPatrol } from './npc-motion';
 
 export interface NpcActor {
@@ -11,6 +11,7 @@ export interface NpcActor {
   elapsed: number;
   labelOffset: number;
   idleFrame: string;
+  idleFrames?: Partial<Record<Direction, string>>;
   walkPrefix?: string;
   artTextureKey?: string;
   artFrame?: string;
@@ -41,6 +42,9 @@ export function updateNpcActors(actors: NpcActor[], player: Point, delta: number
     actor.shadow?.setPosition(pose.x, pose.y - 3);
     actor.label.setPosition(pose.x, pose.y - actor.labelOffset);
     if (actor.walkPrefix && pose.moving) actor.sprite.play(`${actor.walkPrefix}-${{ down: 0, left: 1, right: 2, up: 3 }[pose.direction]}`, true);
-    else { actor.sprite.anims.stop(); actor.sprite.setFrame(actor.idleFrame); }
+    else {
+      actor.sprite.anims.stop();
+      actor.sprite.setFrame(actor.idleFrames?.[pose.direction] ?? actor.idleFrame);
+    }
   }
 }

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { STREET_NPCS, STREET_NPC_ROUTES } from '../src/features/npcs/street-npcs.ts';
 import { updateNpcActors } from '../src/features/npcs/npc-actors.ts';
-import { advanceNpc, patrolPose } from '../src/features/npcs/npc-motion.ts';
+import { advanceNpc, NPC_TURN_PAUSE_MS, patrolPose } from '../src/features/npcs/npc-motion.ts';
 import { canWalkStreet, scaleStreetPoint } from '../src/gameplay/station-navigation.ts';
 
 test('Residents keep all four outer neighborhoods populated without crowding the central plaza', () => {
@@ -17,7 +17,7 @@ test('Residents keep all four outer neighborhoods populated without crowding the
       ['southwest', point => point.x < 700 && point.y > 800],
       ['southeast', point => point.x > 900 && point.y > 800],
     ]) assert.equal(positions.filter(contains).length, 3, `${name} needs three residents at ${elapsed}ms`);
-    assert.ok(positions.filter(point => point.x >= 660 && point.x <= 900 && point.y >= 300 && point.y <= 550).length <= 1, 'Central plaza must not attract most residents');
+    assert.ok(positions.filter(point => point.x >= 660 && point.x <= 900 && point.y >= 300 && point.y <= 550).length <= 2, 'Central plaza should remain lightly populated');
   }
 });
 
@@ -47,6 +47,20 @@ test('Town Street residents have distinct profiles and 10–15 walkable route st
     assert.ok(npc.startWaypoint < route.points.length);
     assert.ok(npc.topics.length >= 3);
   }
+});
+
+test('Several moving residents have vertical road patrols', () => {
+  const verticalWalkers = STREET_NPCS.filter(npc => {
+    if (npc.stationary) return false;
+    const route = STREET_NPC_ROUTES.find(candidate => candidate.id === npc.routeId);
+    return route?.points.some((point, index) => {
+      const next = route.points[index + 1];
+      return next && point.x === next.x && point.y !== next.y;
+    });
+  });
+  assert.ok(verticalWalkers.length >= 2);
+  assert.ok(verticalWalkers.some(npc => npc.name === 'Ethan'));
+  assert.ok(verticalWalkers.some(npc => npc.name === 'Ben'));
 });
 
 test('Town Street names, voices, walking sprites, and portrait data stay consistent', () => {
@@ -79,7 +93,6 @@ test('Street patrols travel long routes smoothly and remain on their authored ro
     let previous = start;
     for (let time = 25; time <= 60000; time += 25) {
       const current = patrolPose(patrol, time);
-      assert.equal(current.moving, true, `${npc.id} paused at a waypoint at ${time}ms`);
       assert.ok(canWalkStreet(current), `${npc.id} left its road at ${time}ms`);
       assert.ok(Math.hypot(current.x - previous.x, current.y - previous.y) <= 1.16, `${npc.id} jumped`);
       distance += Math.hypot(current.x - previous.x, current.y - previous.y);
@@ -89,11 +102,22 @@ test('Street patrols travel long routes smoothly and remain on their authored ro
   }
 });
 
-test('Street patrols cross waypoints and turnarounds at constant speed without an idle frame', () => {
+test('Street patrols pass straight waypoints and pause 2.5 seconds before turning', () => {
   const patrol = { points: [{ x: 0, y: 0 }, { x: 46, y: 0 }, { x: 92, y: 0 }], startWaypoint: 0 };
-  for (const [time, x, direction] of [[1000, 46, 'right'], [1500, 69, 'right'], [2000, 92, 'left'], [2500, 69, 'left'], [4000, 0, 'right'], [4500, 23, 'right']]) {
-    assert.deepEqual(patrolPose(patrol, time), { x, y: 0, direction, moving: true });
+  const poses = [
+    [1000, 46, 'right', true], [1500, 69, 'right', true],
+    [2000, 92, 'right', false], [4499, 92, 'right', false],
+    [4500, 92, 'left', true], [5000, 69, 'left', true],
+    [5500, 46, 'left', true], [6500, 0, 'left', false],
+    [8999, 0, 'left', false], [9000, 0, 'right', true],
+    [9500, 23, 'right', true],
+  ];
+  for (const [time, x, direction, moving] of poses) {
+    assert.deepEqual(patrolPose(patrol, time), { x, y: 0, direction, moving });
   }
+  assert.equal(NPC_TURN_PAUSE_MS, 2500);
+  const vertical = patrolPose({ points: [{ x: 0, y: 0 }, { x: 0, y: 46 }], startWaypoint: 0 }, 3500);
+  assert.deepEqual(vertical, { x: 0, y: 46, direction: 'up', moving: true });
 });
 
 

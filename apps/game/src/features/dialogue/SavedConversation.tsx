@@ -19,16 +19,19 @@ export function SavedConversation({
   sound,
   online,
   send,
+  loadOlder,
   retry,
   displayNpc,
   completed = false,
   details,
   hint,
+  onClose,
 }: {
   state: ConversationSnapshot;
   sound: boolean;
   online: boolean;
   send: (text: string, coach: boolean) => Promise<boolean>;
+  loadOlder?: () => Promise<boolean>;
   retry: () => void;
   displayNpc?: {
     name: string;
@@ -39,6 +42,7 @@ export function SavedConversation({
   completed?: boolean;
   details?: ReactNode;
   hint?: string;
+  onClose?: () => void;
 }) {
   const [text, setText] = useState(state.retryMessage?.text ?? "");
   const { coach, set } = usePreferences();
@@ -48,8 +52,10 @@ export function SavedConversation({
     setFeedbackOpen(true);
   }, [coach]);
   const [finalizing, setFinalizing] = useState(false);
+  const [dismissEndPrompt, setDismissEndPrompt] = useState(false);
   const sending = useRef(false);
   const history = useRef<HTMLDivElement>(null);
+  const previousScrollHeight = useRef<number | null>(null);
   const speech = useSpeech(setText);
   const blocked =
     state.pending ||
@@ -81,9 +87,19 @@ export function SavedConversation({
     voice.playback,
     shouldUseTypingFallback(sound, voice.ready, voice.error),
   );
+  const narrationPending = Boolean(sound && voice.ready && !voice.error && lastNpc &&
+    (voice.playback.revision !== lastNpc.id || voice.playback.progress < 1));
+  const showEndPrompt = state.farewellStage === "confirm" && latestMessage?.sender === "npc" &&
+    !state.pending && !state.streaming && !reveal?.revealing && !voice.speaking && !narrationPending && !dismissEndPrompt;
   useEffect(() => {
-    if (history.current)
-      history.current.scrollTop = history.current.scrollHeight;
+    const element = history.current;
+    if (!element) return;
+    if (previousScrollHeight.current !== null) {
+      element.scrollTop = element.scrollHeight - previousScrollHeight.current;
+      previousScrollHeight.current = null;
+      return;
+    }
+    element.scrollTop = element.scrollHeight;
   }, [state.conversation?.messages]);
   const submit = async (original = false) => {
     if (sending.current || blocked) return;
@@ -101,21 +117,39 @@ export function SavedConversation({
         : coach;
       if (reply !== null && (await send(reply, preference))) {
         setText("");
+        setDismissEndPrompt(false);
       }
     } finally {
       sending.current = false;
       setFinalizing(false);
     }
   };
+  if (showEndPrompt) {
+    return <div className="flex flex-wrap items-center gap-2" role="group" aria-label="End the conversation">
+      <span>End the conversation?</span>
+      <GameButton label="Yes" onClick={() => onClose?.()} />
+      <GameButton label="No" onClick={() => setDismissEndPrompt(true)} />
+    </div>;
+  }
   return (
     <>
       <div
         ref={history}
-        className="conversation-history h-[min(220px,_28dvh)] min-h-16 overflow-auto pr-1 [@media(max-height:480px)]:h-[120px]"
+        className="conversation-history h-[min(220px,_28dvh)] min-h-16 max-h-[min(220px,_28dvh)] flex-1 overflow-y-auto overscroll-contain pr-1 [@media(max-height:480px)]:h-[120px] [@media(max-height:480px)]:max-h-[120px]"
         role="log"
         aria-label="Conversation history"
         aria-live="polite"
+        onScroll={(event) => {
+          const element = event.currentTarget;
+          const cursor = state.conversation?.historyCursor;
+          if (element.scrollTop > 8 || !cursor?.hasMore || !loadOlder || state.historyLoading) return;
+          previousScrollHeight.current = element.scrollHeight;
+          void loadOlder().then((loaded) => {
+            if (!loaded) previousScrollHeight.current = null;
+          });
+        }}
       >
+        {state.historyLoading ? <p role="status" className="text-center text-sm text-muted">Loading earlier messages…</p> : null}
         {state.conversation?.messages.map((message) => (
           <DialogueMessage
             key={message.id}
@@ -292,6 +326,10 @@ export function SavedConversation({
             voice.stop();
             speech.start();
           }
+        }}
+        onCancelRecording={() => {
+          speech.stop();
+          setText("");
         }}
       />
       {speech.supported ? (

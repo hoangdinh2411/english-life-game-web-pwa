@@ -1,6 +1,7 @@
 import { LifeService } from '../life/life.service';
 import { ConflictException, Injectable } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, SHOP_NPC_IDS, TOWN_STREET_NPC_IDS, checkGrammar, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID, TurnMetadata, venueHoursLabel } from '@life-abroad/shared';
+import { createHash } from 'node:crypto';
+import { ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, SHOP_NPC_IDS, TOWN_STREET_NPC_IDS, checkGrammar, Conversation, ConversationMessage, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID, TurnMetadata, venueHoursLabel, detectIntent, farewellClosing, isDirectQuestion } from '@life-abroad/shared';
 import { DialogueService } from '../dialogue/dialogue.service';
 import { QuestsService } from '../quests/quests.service';
 import { ConversationsRepository, sellerState } from './conversations.repository';
@@ -12,8 +13,21 @@ import { AiService } from '../ai/ai.service';
 import { NpcPromptService } from '../ai/npc-prompt.service';
 import { AiUsageService } from '../ai/ai-usage.service';
 import type { AiReplyResult } from '../ai/ai.service';
+import type { ConversationHistoryPage } from '@life-abroad/shared';
 
 const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
+
+function openingMessageId(conversationId: string): string {
+  const bytes = createHash('sha256').update(`opening-message:${conversationId}`).digest().subarray(0, 16);
+  bytes[6] = (bytes[6]! & 0x0f) | 0x50;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+function transientOpening(conversationId: string, text: string): ConversationMessage {
+  return { id: openingMessageId(conversationId), sender: 'npc', text, createdAt: new Date().toISOString() };
+}
 
 @Injectable()
 export class ConversationsService {
@@ -31,28 +45,34 @@ export class ConversationsService {
     return this.conversations.transaction(async client => {
       const arrival = await this.quests.getArrival(userId, client);
       if (isCafeSeller(npcId) || npcId === 'npc_clothes_seller') {
-        const context = { ...await this.conversations.context(client, npcId), variationIndex: await this.conversations.variationIndex(client, userId, npcId, true) };
-        const id = await this.conversations.create(client, userId, npcId);
-        const greeting = await this.conversations.append(client, id, 'npc', await this.seller.opening(context));
+        const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
+        const baseContext = await this.conversations.context(client, npcId);
+        const id = await this.conversations.create(client, userId, npcId, openingVariation);
+        const context = { ...baseContext, variationIndex: openingVariation };
+        const greeting = transientOpening(id, await this.seller.opening(context));
         const seller = { shop: npcId === 'npc_clothes_seller' ? 'clothes' as const : 'cafe' as const,
           pendingOrder: null, closed: false };
         return { id, npcId: conversationNpcSchema.parse(npcId), messages: [greeting], arrival, seller,
           ...(npcId === SELLER_NPC_ID ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
       }
       if (npcId !== ARRIVAL_NPC_ID) {
-        const context = { ...await this.conversations.context(client, npcId), variationIndex: await this.conversations.variationIndex(client, userId, npcId, true) };
+        const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
+        const baseContext = await this.conversations.context(client, npcId);
         const openingNode = (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId) ? 'townsperson_start' : 'shop_start';
+        const id = await this.conversations.create(client, userId, npcId, openingVariation);
+        const context = { ...baseContext, variationIndex: openingVariation };
         const opening = await this.dialogue.node(context, openingNode);
-        const id = await this.conversations.create(client, userId, npcId);
-        const greeting = await this.conversations.append(client, id, 'npc', opening.text);
+        const greeting = transientOpening(id, opening.text);
         return { id, npcId: conversationNpcSchema.parse(npcId), messages: [greeting], arrival,
           ...(npcId === 'npc_cafe_waiter' ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
       }
       if (arrival.locationId !== STATION_LOCATION_ID) throw new ConflictException('Visit the station receptionist first');
-      const context = await this.conversations.context(client);
+      const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
+      const baseContext = await this.conversations.context(client);
+      const id = await this.conversations.create(client, userId, npcId, openingVariation);
+      const context = { ...baseContext, variationIndex: openingVariation };
       const opening = await this.dialogue.node(context, 'receptionist_start');
-      const id = await this.conversations.create(client, userId);
-      const greeting = await this.conversations.append(client, id, 'npc', opening.text);
+      const greeting = transientOpening(id, opening.text);
       return { id, npcId: ARRIVAL_NPC_ID, messages: [greeting], arrival };
     });
   }
@@ -65,6 +85,12 @@ export class ConversationsService {
         arrival, messages: await this.conversations.messages(client, id),
         ...(isCafeSeller(row.npc_id) || row.npc_id === 'npc_clothes_seller' ? { seller: sellerState(row) } : {}),
         ...([SELLER_NPC_ID,'npc_cafe_waiter'].includes(row.npc_id) ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
+    });
+  }
+
+  historyPage(userId: string, npcId: string, before?: string): Promise<ConversationHistoryPage> {
+    return this.conversations.transaction(async client => {
+      return this.conversations.olderMessages(client, userId, conversationNpcSchema.parse(npcId), before);
     });
   }
 
@@ -100,6 +126,24 @@ export class ConversationsService {
       const context = { ...await this.conversations.context(client, conversation.npc_id),
         variationIndex: await this.conversations.variationIndex(client, userId, conversation.npc_id),
         ...(conversation.current_node_id ? { currentNodeId: conversation.current_node_id } : {}) };
+      const history = await this.conversations.messages(client, id);
+      let priorGoodbyes = 0;
+      let lastGoodbyeIndex = -1;
+      let priorNpcIndex = -1;
+      let priorNpcMessage: typeof history[number] | undefined;
+      for (const [index, message] of history.entries()) {
+        if (message.sender === 'player' && detectIntent(message.text)?.id === 'goodbye') {
+          priorGoodbyes += 1;
+          lastGoodbyeIndex = index;
+        }
+        if (message.sender === 'npc') {
+          priorNpcIndex = index;
+          priorNpcMessage = message;
+        }
+      }
+      const currentIsGoodbye = detectIntent(request.text)?.id === 'goodbye';
+      const answeringFarewellQuestion = priorGoodbyes > 0 && priorNpcIndex > lastGoodbyeIndex
+        && priorNpcMessage !== undefined && isDirectQuestion(priorNpcMessage.text);
       const correction = request.coach ? checkGrammar(request.text) ?? null : null;
       let metadata: TurnMetadata;
       let responseText: string;
@@ -139,7 +183,8 @@ export class ConversationsService {
       }
       // All NPC roles reach this gate only after their authoritative scripts.
       // AI changes wording only; intents, node state and rewards stay scripted.
-      if (this.ai.enabled && metadata.misunderstood && !conversation.pending_order && !metadata.seller?.pendingOrder
+      if (this.ai.enabled && metadata.misunderstood && !currentIsGoodbye && !answeringFarewellQuestion
+        && !conversation.pending_order && !metadata.seller?.pendingOrder
         && !metadata.seller?.closed && !await this.conversations.pendingQuest(client, userId, conversation.npc_id)) {
         if (await this.aiUsage.limited(client, userId)) {
           const limit = await this.dialogue.node(context, 'global_ai_limit');
@@ -155,10 +200,24 @@ export class ConversationsService {
             ...(aiResult.usedProvider && !aiResult.fallback ? { ai: true as const } : {}) };
         }
       }
+      if (!metadata.seller && currentIsGoodbye && priorGoodbyes === 0) {
+        responseText = 'Before you go, will you come back tomorrow?';
+        metadata = { ...metadata, farewellStage: 'question' };
+      } else if (!metadata.seller && answeringFarewellQuestion) {
+        responseText = farewellClosing(request.text);
+        metadata = { ...metadata, farewellStage: 'confirm' };
+      }
       if (stream && (!aiResult || aiResult.fallback)) {
         if (stream.signal.aborted) throw stream.signal.reason ?? new Error('Chat stream cancelled.');
         await stream.beforeSave(responseText);
         if (stream.signal.aborted) throw stream.signal.reason ?? new Error('Chat stream cancelled.');
+      }
+      if (history.length === 0 && conversation.current_node_id) {
+        const openingContext = { ...context, variationIndex: conversation.opening_variation_index };
+        const openingText = isCafeSeller(conversation.npc_id) || conversation.npc_id === 'npc_clothes_seller'
+          ? await this.seller.opening(openingContext)
+          : (await this.dialogue.node(openingContext, conversation.current_node_id)).text;
+        await this.conversations.append(client, id, 'npc', openingText, null, null, openingMessageId(id));
       }
       const playerMessage = await this.conversations.append(client, id, 'player', request.text,
         request.clientMessageId, { coach: request.coach });

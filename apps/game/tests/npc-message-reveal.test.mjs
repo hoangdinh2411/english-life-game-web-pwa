@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { textAtProgress, selectAutomaticReveal, shouldUseTypingFallback } from '../src/features/dialogue/use-npc-message-reveal.ts';
+import { preserveCompletedReveal, textAtProgress, selectAutomaticReveal, shouldUseTypingFallback } from '../src/features/dialogue/use-npc-message-reveal.ts';
 import { DialogueMessage } from '../src/gameplay/DialogueMessage.tsx';
 
 test('restored history stays complete and only a newly observed NPC message is selected', () => {
@@ -28,13 +28,24 @@ test('missing narration uses typing instead of leaving a new NPC message blank',
   assert.equal(shouldUseTypingFallback(true, true, 'Playback failed'), true);
 });
 
-test('animated text exposes the full sentence once to assistive technology', () => {
+test('toggling speech does not restart a completed NPC message reveal', () => {
+  const completed = preserveCompletedReveal('message-1', 1, null);
+  assert.deepEqual(completed, { progress: 1, completedMessageId: 'message-1' });
+  assert.deepEqual(preserveCompletedReveal('message-1', 0, completed.completedMessageId), completed);
+  assert.deepEqual(preserveCompletedReveal('message-2', 0, completed.completedMessageId), {
+    progress: 0,
+    completedMessageId: 'message-1',
+  });
+});
+
+test('animated text reserves the completed layout without rendering a cursor', () => {
   const html = renderToStaticMarkup(createElement(DialogueMessage, {
     name: 'Mia', portrait: '/mia.png', text: 'Hello', fullText: 'Hello there', revealing: true,
   }));
   assert.match(html, /class="sr-only">Hello there/);
-  assert.match(html, /aria-hidden="true">Hello/);
-  assert.match(html, /animate-pulse/);
+  assert.match(html, /aria-hidden="true" class="col-start-1 row-start-1">Hello/);
+  assert.match(html, /reveal-layout-reserve/);
+  assert.doesNotMatch(html, /animate-pulse/);
   assert.match(html, />Typing…</);
   const complete = renderToStaticMarkup(createElement(DialogueMessage, {
     name: 'Mia', portrait: '/mia.png', text: 'Hello there', revealing: false,

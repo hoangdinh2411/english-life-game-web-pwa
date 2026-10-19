@@ -22,6 +22,7 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
   const [mobileFeedback, setMobileFeedback] = useState(true);
   useEffect(() => { setMobileFeedback(true); }, [coachEnabled]);
   const [finalizing, setFinalizing] = useState(false);
+  const [dismissEndPrompt, setDismissEndPrompt] = useState(false);
   const sending = useRef(false);
   const conversation = useStationConversation(npcId);
   useEffect(() => {
@@ -33,6 +34,8 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
   const latestMessage = conversation.messages.at(-1);
   const reveal = useNpcMessageReveal(latestMessage ? { id: latestMessage.id, text: latestMessage.text, npc: latestMessage.speaker === 'npc' } : null,
     voice.playback, shouldUseTypingFallback(sound, voice.ready, voice.error));
+  const narrationPending = Boolean(sound && voice.ready && !voice.error && latestMessage?.speaker === 'npc' &&
+    (voice.playback.revision !== latestMessage.id || voice.playback.progress < 1));
   const npcName = STATION_NPCS.find((npc) => npc.id === npcId)?.name ?? 'Receptionist';
   const thinking = thinkingSpeaker(speech.listening, conversation.pending);
   const send = async () => {
@@ -41,12 +44,22 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
     try {
       let reply: string | null = text;
       if (speech.listening) { setFinalizing(true); reply = await speech.finish(); }
-      if (reply !== null && conversation.send(reply)) { setText(''); setCoach(false); }
+      if (reply !== null && conversation.send(reply)) {
+        setText(''); setCoach(false); setDismissEndPrompt(false);
+      }
     } finally { sending.current = false; setFinalizing(false); }
   };
+  const showEndPrompt = conversation.farewellStage === 'confirm' && latestMessage?.speaker === 'npc'
+    && !conversation.pending && !reveal?.revealing && !voice.speaking && !narrationPending && !dismissEndPrompt;
+  if (showEndPrompt) return <DialogueFrame>
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="End the conversation">
+      <span>End the conversation?</span><GameButton label="Yes" onClick={onClose} />
+      <GameButton label="No" onClick={() => setDismissEndPrompt(true)} />
+    </div>
+  </DialogueFrame>;
   return <DialogueFrame soundControl>
-    <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0"><h2>{npcName}</h2><GameButton label="Close" onClick={() => { speech.stop(); voice.stop(); onClose(); }} /></div>
-    <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 overflow-auto pr-1 [@media(max-height:480px)]:h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
+    <div className="dialogue-header"><h2>{npcName}</h2></div>
+    <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 max-h-[min(220px,_28dvh)] flex-1 overflow-y-auto overscroll-contain pr-1 [@media(max-height:480px)]:h-[120px] [@media(max-height:480px)]:max-h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
       {conversation.messages.map((message) => {
         const displayText = message.speaker === 'player' ? formatPlayerMessage(message.text) : message.text;
         return <DialogueMessage key={message.id} name={message.speaker === 'player' ? playerName : npcName} portrait={message.speaker === 'player' ? playerPortrait : npcPortraits[npcId]}
@@ -58,7 +71,7 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
       {speech.interim ? <p>{speech.interim}</p> : null}
     </div>
     <p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{conversation.exchange.hint}</p>
-    <MessageComposer text={text} onChange={setText} onSend={() => void send()} voiceSupported={speech.supported} listening={speech.listening} pending={conversation.pending || finalizing} onRecord={() => { if (speech.listening) void speech.finish(); else { voice.stop(); speech.start(); } }} />
+    <MessageComposer text={text} onChange={setText} onSend={() => void send()} voiceSupported={speech.supported} listening={speech.listening} pending={conversation.pending || finalizing} onRecord={() => { if (speech.listening) void speech.finish(); else { voice.stop(); speech.start(); } }} onCancelRecording={() => { speech.stop(); setText(''); }} />
     {speech.supported ? <p className="hint text-muted text-[13px] leading-[1.4]">{finalizing ? 'Finishing recording…' : speech.listening ? 'Recording… Tap Send to finish, or Stop to review.' : 'Voice may use an online speech service. Review before sending.'}</p> : null}
     {speech.error ? <p role="alert" className="error text-[#a43f34] text-[15px] leading-[1.4]">{speech.error}</p> : null}
     {voice.error ? <p role="status" className="hint text-muted text-[13px] leading-[1.4]">{voice.error}</p> : null}

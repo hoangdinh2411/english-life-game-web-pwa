@@ -52,7 +52,8 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     const path = `/conversations/${conversation.id}`;
     const send = (text: string, coach = false, clientMessageId = randomUUID()) => call(path + '/messages', { text, coach, clientMessageId });
     assert.equal((await send('Could I have a bus ticket, please?')).status, 409);
-    assert.equal(conversationSchema.parse(await (await call(path)).json()).messages.length, 1);
+    assert.equal(conversationSchema.parse(await (await call(path)).json()).messages.length, 0,
+      'an unanswered opening stays out of saved conversation history');
     const misunderstood = conversationTurnSchema.parse(await (await send('purple flying sandwich')).json());
     assert.equal(misunderstood.misunderstood, true);
     assert.equal(misunderstood.intent, null);

@@ -34,6 +34,7 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
     .overrideProvider(ConversationsRepository).useValue({
       transaction: async (work: (client: unknown) => Promise<unknown>) => work(undefined),
       load: async () => ({ npc_id: npcId }),
+      messages: async () => [],
       replay: async () => replay ? {
         arrival: replayedArrival, intent: null, misunderstood: false, correction: null,
         playerMessage: { sender: 'player', text: 'Tell me about autumn' },

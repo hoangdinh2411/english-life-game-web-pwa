@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, TOWN_STREET_NPC_IDS, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, type PendingOrder, type SellerState } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, TOWN_STREET_NPC_IDS, ConversationHistoryPage, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, type PendingOrder, type SellerState } from '@life-abroad/shared';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { DialogueContext } from '../dialogue/dialogue.service';
@@ -7,7 +7,7 @@ import { conversationNpcSchema } from '@life-abroad/shared';
 import { SHOP_NPC_IDS, type LearningHistoryTurn } from '@life-abroad/shared';
 
 interface MessageRow { id: string; sender: 'player' | 'npc'; text: string; created_at: Date; metadata: unknown }
-export interface ConversationRow { id: string; npc_id: string; current_node_id: string | null; pending_order: unknown; ended_at: Date | null }
+export interface ConversationRow { id: string; npc_id: string; current_node_id: string | null; opening_variation_index: number; pending_order: unknown; ended_at: Date | null }
 
 export function sellerState(row: ConversationRow): SellerState {
   return { shop: row.npc_id === 'npc_clothes_seller' ? 'clothes' : 'cafe', pendingOrder: row.pending_order ? pendingOrderSchema.parse(row.pending_order) : null,
@@ -63,19 +63,19 @@ export class ConversationsRepository {
     return { npcId, roleId: npc.role_id, personality: npc.personality };
   }
 
-  async create(client: PoolClient, userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<string> {
+  async create(client: PoolClient, userId: string, npcId: string = ARRIVAL_NPC_ID, openingVariation = 0): Promise<string> {
     const result = await client.query<{ id: string }>(`INSERT INTO public.conversations
-      (user_id,npc_id,quest_id,current_node_id) VALUES ($1,$2,$3,$4) RETURNING id`,
+      (user_id,npc_id,quest_id,current_node_id,opening_variation_index) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
     [userId, npcId, npcId === ARRIVAL_NPC_ID ? ARRIVAL_QUEST_ID : null,
       npcId === ARRIVAL_NPC_ID ? 'receptionist_start' : (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId) ? 'seller_start'
         : npcId === 'npc_clothes_seller' ? 'clothes_seller_start'
-          : (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId) ? 'townsperson_start' : 'shop_start']);
+          : (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId) ? 'townsperson_start' : 'shop_start', openingVariation]);
     return result.rows[0]!.id;
   }
 
   async load(client: PoolClient, userId: string, id: string): Promise<ConversationRow> {
     const result = await client.query<ConversationRow>(
-      'SELECT id,npc_id,current_node_id,pending_order,ended_at FROM public.conversations WHERE id=$1 AND user_id=$2 FOR UPDATE', [id, userId]);
+      'SELECT id,npc_id,current_node_id,opening_variation_index,pending_order,ended_at FROM public.conversations WHERE id=$1 AND user_id=$2 FOR UPDATE', [id, userId]);
     const row = result.rows[0];
     if (!row) throw new NotFoundException('Conversation not found');
     if (!conversationNpcSchema.safeParse(row.npc_id).success) throw new ConflictException('Unsupported conversation NPC');
@@ -85,6 +85,19 @@ export class ConversationsRepository {
   async messages(client: PoolClient, id: string): Promise<ConversationMessage[]> {
     const result = await client.query<MessageRow>('SELECT id,sender,text,created_at,metadata FROM public.messages WHERE conversation_id=$1 ORDER BY sequence', [id]);
     return result.rows.map(message);
+  }
+
+  async olderMessages(client: PoolClient, userId: string, npcId: string, before: string | undefined): Promise<ConversationHistoryPage> {
+    const result = await client.query<MessageRow>(`SELECT id,sender,text,created_at,metadata FROM public.messages
+      WHERE conversation_id IN (SELECT id FROM public.conversations WHERE user_id=$1 AND npc_id=$2)
+        AND ($3::uuid IS NULL OR (created_at,conversation_id,sequence) < (
+          SELECT m.created_at,m.conversation_id,m.sequence FROM public.messages m
+          JOIN public.conversations c ON c.id=m.conversation_id
+          WHERE m.id=$3 AND c.user_id=$1 AND c.npc_id=$2))
+      ORDER BY created_at DESC,conversation_id DESC,sequence DESC LIMIT 11`, [userId, npcId, before ?? null]);
+    const hasMore = result.rows.length > 10;
+    const page = result.rows.slice(0, 10).reverse().map(message);
+    return { messages: page, hasMore, beforeMessageId: hasMore ? page[0]?.id ?? null : null };
   }
 
   async replay(client: PoolClient, id: string, request: SendMessageRequest): Promise<ConversationTurn | undefined> {
@@ -101,10 +114,11 @@ export class ConversationsRepository {
   }
 
   async append(client: PoolClient, id: string, sender: 'player' | 'npc', text: string,
-    requestId: string | null = null, metadata: TurnMetadata | { coach: boolean } | null = null): Promise<ConversationMessage> {
+    requestId: string | null = null, metadata: TurnMetadata | { coach: boolean } | null = null,
+    messageId?: string): Promise<ConversationMessage> {
     const result = await client.query<MessageRow>(`INSERT INTO public.messages
-      (conversation_id,sender,text,client_message_id,metadata) VALUES ($1,$2,$3,$4,$5)
-      RETURNING id,sender,text,created_at,metadata`, [id, sender, text, requestId, metadata]);
+      (id,conversation_id,sender,text,client_message_id,metadata) VALUES (COALESCE($1::uuid,gen_random_uuid()),$2,$3,$4,$5,$6)
+      RETURNING id,sender,text,created_at,metadata`, [messageId ?? null, id, sender, text, requestId, metadata]);
     return message(result.rows[0]!);
   }
 

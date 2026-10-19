@@ -21,6 +21,7 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
   const life = useLife(run, online);
   const [controller] = useState(() => createConversationController({
     load: () => run(api.loadArrival), start: () => run(api.startArrivalConversation),
+    loadOlder: (npcId, before) => run(token => api.loadOlderConversationMessages(token, npcId, before)),
     send: async (id, body) => {
       const result = await run((token) => api.sendArrivalMessage(token, id, body));
       await life.refresh();
@@ -98,6 +99,7 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
   return <StationScreen life={life} playerName={session.player?.character?.name ?? ''} xp={stats?.xp ?? 0} coins={life.state?.coins ?? stats?.coins ?? 0}
     onSignOut={() => { clearPendingPlayerLocation(session.player!.user.id, localStorage); onSignOut(); }}
     arrival={{ initialLocation, exitUnlocked: state.arrival.canEnterTownStreet, pending: state.pending,
+      farewellConfirm: state.farewellStage === 'confirm',
       error: state.error, onRetry: () => void controller.load(), online,
       goalsLabel: state.arrival.status === 'done' ? 'Arrival complete' : `${view.completed}/${view.total} arrival steps`,
       questPanel: <ArrivalQuest arrival={state.arrival} />,
@@ -116,7 +118,7 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
       onPlaceChange: (location) => {
         locationSync.current?.update(location);
       },
-      renderReceptionist: (sound) => <SavedConversation state={state} sound={sound} online={online} send={controller.send} retry={() => void controller.start()}
+      renderReceptionist: (sound, onClose) => <SavedConversation state={state} sound={sound} online={online} send={controller.send} loadOlder={controller.loadOlder} retry={() => void controller.start()} onClose={onClose}
         completed={state.arrival?.status === 'done'} details={<>{state.arrival?.ticket.issued ? <TicketReceipt arrival={state.arrival} /> : null}<p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{view.next}</p></>} />,
     }} />;
 }

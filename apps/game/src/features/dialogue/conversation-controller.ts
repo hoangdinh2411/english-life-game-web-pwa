@@ -1,9 +1,10 @@
-import type { ArrivalState, Conversation, ConversationTurn, SendMessageRequest } from '@life-abroad/shared';
+import type { ArrivalState, Conversation, ConversationHistoryPage, ConversationTurn, SendMessageRequest } from '@life-abroad/shared';
 
 export interface ConversationApi {
   load: () => Promise<ArrivalState>;
   start: () => Promise<Conversation>;
   send: (id: string, body: SendMessageRequest) => Promise<ConversationTurn>;
+  loadOlder?: (npcId: Conversation['npcId'], before: string) => Promise<ConversationHistoryPage>;
   stream?: (id: string, npcId: Conversation['npcId'], body: SendMessageRequest,
     onToken: (text: string) => void, signal: AbortSignal) => Promise<ConversationTurn>;
   enter?: () => Promise<ArrivalState>;
@@ -18,6 +19,8 @@ export interface ConversationSnapshot {
   streaming: boolean;
   streamedReply: string;
   announcement: string;
+  farewellStage?: ConversationTurn['farewellStage'];
+  historyLoading: boolean;
 }
 
 const typingPause = (milliseconds: number): Promise<void> =>
@@ -36,7 +39,7 @@ export async function revealStreamChunk(text: string, emit: (piece: string) => v
 // Private state lives only in memory. All mutations come from authenticated API responses.
 export function createConversationController(api: ConversationApi) {
   let state: ConversationSnapshot = { arrival: null, conversation: null, pending: false, error: '', correction: null, retryMessage: null,
-    streaming: false, streamedReply: '', announcement: '' };
+    streaming: false, streamedReply: '', announcement: '', farewellStage: undefined, historyLoading: false };
   let epoch = 0;
   let disposed = false;
   let retry: SendMessageRequest | null = null;
@@ -71,10 +74,33 @@ export function createConversationController(api: ConversationApi) {
       disposed = false;
       return run(async () => ({ arrival: await api.load() }));
     },
-    start: () => state.conversation ? Promise.resolve(true) : run(async () => {
-      const conversation = await api.start();
-      return { conversation, arrival: conversation.arrival };
+    start: () => run(async () => {
+      const started = await api.start();
+      return { conversation: started, arrival: started.arrival, farewellStage: undefined };
     }),
+    loadOlder: async () => {
+      const conversation = state.conversation;
+      const cursor = conversation?.historyCursor;
+      if (!api.loadOlder || !conversation || !cursor?.hasMore || !cursor.beforeMessageId || state.historyLoading || disposed) return false;
+      update({ historyLoading: true, error: '' });
+      try {
+        const page = await api.loadOlder(cursor.npcId, cursor.beforeMessageId);
+        if (disposed || state.conversation?.id !== conversation.id) return false;
+        const current = state.conversation;
+        if (!current) return false;
+        const ids = new Set(current.messages.map(message => message.id));
+        update({ conversation: { ...current,
+          messages: [...page.messages.filter(message => !ids.has(message.id)), ...current.messages],
+          historyCursor: { npcId: cursor.npcId, beforeMessageId: page.beforeMessageId, hasMore: page.hasMore },
+        } });
+        return true;
+      } catch (failure) {
+        update({ error: failure instanceof Error ? failure.message : 'Could not load earlier messages.' });
+        return false;
+      } finally {
+        if (!disposed) update({ historyLoading: false });
+      }
+    },
     send: (input: string, coach = false) => {
       const text = input.trim();
       const conversation = state.conversation;
@@ -113,7 +139,8 @@ export function createConversationController(api: ConversationApi) {
         const seller = turn.seller;
         const coffeeQuest = turn.coffeeQuest;
         return { conversation: { ...conversation, messages, arrival, ...(seller ? { seller } : {}),
-          ...(coffeeQuest ? { coffeeQuest } : {}) }, arrival, correction: turn.correction ?? null, retryMessage: null };
+          ...(coffeeQuest ? { coffeeQuest } : {}) }, arrival, correction: turn.correction ?? null, retryMessage: null,
+          farewellStage: turn.farewellStage };
       }).finally(() => {
         streamCancellation = null;
         if (!disposed) update({ streaming: false, streamedReply: '',

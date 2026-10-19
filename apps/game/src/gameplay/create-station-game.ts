@@ -5,7 +5,7 @@ import type { MapAsset, MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../features/assets/phaser-pack';
-import { authorizeStreetExit, canWalk, canWalkStreet, CORNER_CUP_LABEL_POSITION, CORNER_CUP_PORTAL, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, scaleStreetPoint, stationStoreReturnPoint, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS } from './station-navigation';
+import { authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
 import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
@@ -32,9 +32,11 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let conversationNpcId: string | null = null;
   let exitUnlocked = false;
   let blockedPortal: string | null = null;
-  let position: Point = callbacks.initialLocation
+  const savedPosition: Point = callbacks.initialLocation
     ? { x: callbacks.initialLocation.x, y: callbacks.initialLocation.y }
     : activeLocation === 'street' ? streetSpawnPoint('station') : { x: 768, y: 370 };
+  // Older positions may now sit inside a building or directly inside a portal's entry ring.
+  let position: Point = activeLocation === 'street' ? recoverStreetPosition(savedPosition) : savedPosition;
   let lastLocationSaveAt = 0;
   const saveLocation = () => {
     if (callbacks.practice) return;
@@ -140,7 +142,12 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const streetDefinition = activeLocation === 'street' && actor.npcId ? findStreetNpc(actor.npcId) : undefined;
         const definition = streetDefinition ?? SHOP_NPCS.find(npc => npc.id === actor.npcId) ?? SHOP_NPCS.find(npc => npc.frame === actor.frame);
         if (!definition) continue;
-        const actorPosition = activeLocation === 'street' ? scaleStreetPoint(actor) : { x: actor.x, y: actor.y };
+        const authoredRoute = streetDefinition && STREET_NPC_ROUTES.find(route => route.id === streetDefinition.routeId);
+        // Route data is authoritative so stale map-pack actor coordinates cannot place NPCs on buildings.
+        const authoredStart = authoredRoute && streetDefinition
+          ? authoredRoute.points[streetDefinition.startWaypoint] ?? actor
+          : actor;
+        const actorPosition = activeLocation === 'street' ? scaleStreetPoint(authoredStart) : { x: actor.x, y: actor.y };
         const lazyStreetArt = activeLocation === 'street';
         const textureReady = this.textures.exists(actor.texture);
         const displayTexture = lazyStreetArt && !textureReady ? '__DEFAULT' : actor.texture;
@@ -161,9 +168,12 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
             packAnimations.push(key);
           }
         }
-        const authoredRoute = streetDefinition && STREET_NPC_ROUTES.find(route => route.id === streetDefinition.routeId);
+        const idleFrames = textureReady && streetDefinition ? {
+          down: `${actor.frame}-0-0`, left: `${actor.frame}-1-0`,
+          right: `${actor.frame}-2-0`, up: `${actor.frame}-3-0`,
+        } : undefined;
         this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, label, elapsed: 0,
-          idleFrame: textureReady ? actor.frame : '__BASE', ...(textureReady ? { walkPrefix: npcWalk } : {}),
+          idleFrame: textureReady ? actor.frame : '__BASE', ...(idleFrames ? { idleFrames } : {}), ...(textureReady ? { walkPrefix: npcWalk } : {}),
           ...(lazyStreetArt ? { artTextureKey: actor.texture, artFrame: actor.frame } : {}), labelOffset: 105,
           ...(authoredRoute && streetDefinition && !streetDefinition.stationary ? { patrol: { points: authoredRoute.points.map(scaleStreetPoint), startWaypoint: streetDefinition.startWaypoint } } : {}),
           clip: (anchor, offset) => moveInShop(activeLocation, anchor, offset) });
@@ -206,12 +216,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         this.labels.push(label);
         this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, shadow, label, elapsed: 0, idleFrame: '0-0', walkPrefix: `${npc.texture}-walk`, labelOffset: 108, clip: movePlayer });
       }
-      for (const portal of this.portalsForLocation()) this.addPortalRing(portal, portal.id !== 'corner_cafe');
-      if (activeLocation === 'street') {
-        this.add.text(CORNER_CUP_LABEL_POSITION.x, CORNER_CUP_LABEL_POSITION.y - 18, 'CORNER CUP', {
-          fontFamily: 'sans-serif', fontSize: '26px', fontStyle: 'bold', color: '#fff7e8',
-          backgroundColor: '#315749', padding: { x: 14, y: 7 },
-        }).setOrigin(0.5).setDepth(1500);
+      for (const portal of this.portalsForLocation()) {
+        this.addPortalRing(portal, activeLocation !== 'street' && portal.id !== 'corner_cafe');
       }
       if (activeLocation === 'corner_cafe') this.add.text(768, 147, 'CORNER CUP', {
         fontFamily: 'sans-serif', fontSize: '32px', fontStyle: 'bold', color: '#fff7e8',
@@ -299,10 +305,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     }
     private portalsForLocation(): StationPortal[] {
       if (activeLocation === 'station') return STATION_PORTALS;
-      if (activeLocation === 'street') return [
-        CORNER_CUP_PORTAL,
-        { id: 'station', label: 'Train Station', ...scaleStreetPoint({ x: 768, y: 130 }) },
-      ];
+      if (activeLocation === 'street') return STREET_PORTALS;
       const destination: MapLocation = this.previousLocation === 'street' ? 'street' : 'station';
       return [{ id: destination, label: destination === 'street' ? 'Town Street' : 'Train Station', x: 768, y: 930 }];
     }
@@ -413,6 +416,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
             actor.sprite.anims.stop();
             actor.sprite.setTexture(textureKey, frame);
             actor.idleFrame = frame;
+            actor.idleFrames = { down: `${frame}-0-0`, left: `${frame}-1-0`, right: `${frame}-2-0`, up: `${frame}-3-0` };
             actor.walkPrefix = walkPrefix;
           }
         } else {

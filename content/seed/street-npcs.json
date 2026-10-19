@@ -4,10 +4,10 @@
     {
       "id": "west_cross_street",
       "points": [
-        { "x": 100, "y": 415 }, { "x": 150, "y": 415 }, { "x": 200, "y": 415 },
-        { "x": 250, "y": 415 }, { "x": 300, "y": 415 }, { "x": 350, "y": 415 },
-        { "x": 400, "y": 415 }, { "x": 450, "y": 415 }, { "x": 500, "y": 415 },
-        { "x": 550, "y": 415 }, { "x": 600, "y": 415 }, { "x": 650, "y": 415 }
+        { "x": 385, "y": 380 }, { "x": 405, "y": 380 }, { "x": 425, "y": 380 },
+        { "x": 445, "y": 380 }, { "x": 465, "y": 380 }, { "x": 485, "y": 380 },
+        { "x": 505, "y": 380 }, { "x": 525, "y": 380 }, { "x": 545, "y": 380 },
+        { "x": 565, "y": 380 }, { "x": 585, "y": 380 }, { "x": 605, "y": 380 }
       ]
     },
     {
@@ -15,18 +15,18 @@
       "points": [
         { "x": 700, "y": 380 }, { "x": 740, "y": 380 }, { "x": 780, "y": 380 },
         { "x": 820, "y": 380 }, { "x": 840, "y": 380 }, { "x": 840, "y": 410 },
-        { "x": 840, "y": 445 }, { "x": 840, "y": 480 }, { "x": 800, "y": 480 },
-        { "x": 760, "y": 480 }, { "x": 720, "y": 480 }, { "x": 700, "y": 480 },
+        { "x": 840, "y": 445 }, { "x": 840, "y": 510 }, { "x": 800, "y": 510 },
+        { "x": 760, "y": 510 }, { "x": 720, "y": 510 }, { "x": 700, "y": 510 },
         { "x": 700, "y": 445 }, { "x": 700, "y": 410 }
       ]
     },
     {
       "id": "east_cross_street",
       "points": [
-        { "x": 920, "y": 415 }, { "x": 952, "y": 415 }, { "x": 984, "y": 415 },
-        { "x": 1016, "y": 415 }, { "x": 1048, "y": 415 }, { "x": 1080, "y": 415 },
-        { "x": 1112, "y": 415 }, { "x": 1144, "y": 415 }, { "x": 1176, "y": 415 },
-        { "x": 1208, "y": 415 }, { "x": 1240, "y": 415 }, { "x": 1272, "y": 415 }
+        { "x": 930, "y": 380 }, { "x": 950, "y": 380 }, { "x": 970, "y": 380 },
+        { "x": 990, "y": 380 }, { "x": 1010, "y": 380 }, { "x": 1030, "y": 380 },
+        { "x": 1050, "y": 380 }, { "x": 1070, "y": 380 }, { "x": 1090, "y": 380 },
+        { "x": 1110, "y": 380 }, { "x": 1130, "y": 380 }, { "x": 1150, "y": 380 }
       ]
     },
     {
@@ -48,21 +48,30 @@
       ]
     },
     {
+      "id": "south_center_walk",
+      "points": [
+        { "x": 800, "y": 510 }, { "x": 800, "y": 520 }, { "x": 800, "y": 560 },
+        { "x": 800, "y": 600 }, { "x": 800, "y": 620 }, { "x": 800, "y": 650 },
+        { "x": 800, "y": 690 }, { "x": 800, "y": 730 }, { "x": 800, "y": 770 },
+        { "x": 800, "y": 810 }, { "x": 800, "y": 850 }, { "x": 800, "y": 890 }
+      ]
+    },
+    {
       "id": "river_walk",
       "points": [
-        { "x": 100, "y": 905 }, { "x": 150, "y": 905 }, { "x": 200, "y": 905 },
-        { "x": 250, "y": 905 }, { "x": 300, "y": 905 }, { "x": 350, "y": 905 },
-        { "x": 400, "y": 905 }, { "x": 450, "y": 905 }, { "x": 500, "y": 905 },
-        { "x": 550, "y": 905 }, { "x": 600, "y": 905 }, { "x": 650, "y": 905 }
+        { "x": 100, "y": 880 }, { "x": 120, "y": 880 }, { "x": 140, "y": 880 },
+        { "x": 160, "y": 880 }, { "x": 180, "y": 880 }, { "x": 200, "y": 880 },
+        { "x": 220, "y": 880 }, { "x": 240, "y": 880 }, { "x": 260, "y": 880 },
+        { "x": 280, "y": 880 }, { "x": 300, "y": 880 }, { "x": 320, "y": 880 }
       ]
     },
     {
       "id": "river_east_walk",
       "points": [
-        { "x": 920, "y": 905 }, { "x": 966, "y": 905 }, { "x": 1012, "y": 905 },
-        { "x": 1058, "y": 905 }, { "x": 1104, "y": 905 }, { "x": 1150, "y": 905 },
-        { "x": 1196, "y": 905 }, { "x": 1242, "y": 905 }, { "x": 1288, "y": 905 },
-        { "x": 1334, "y": 905 }, { "x": 1380, "y": 905 }, { "x": 1426, "y": 905 }
+        { "x": 920, "y": 880 }, { "x": 940, "y": 880 }, { "x": 960, "y": 880 },
+        { "x": 980, "y": 880 }, { "x": 1000, "y": 880 }, { "x": 1020, "y": 880 },
+        { "x": 1040, "y": 880 }, { "x": 1060, "y": 880 }, { "x": 1080, "y": 880 },
+        { "x": 1100, "y": 880 }, { "x": 1120, "y": 880 }, { "x": 1140, "y": 880 }
       ]
     }
   ],
@@ -79,17 +88,17 @@
     },
     {
       "id": "npc_ethan_baker", "name": "Ethan", "role": "townsperson", "personality": "serious", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A baker who starts work early and makes bread for the neighborhood.", "job": "Baker", "walkImageUrl": "npcs/npc_ethan_baker/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_ethan_baker/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "west_cross_street", "startWaypoint": 11,
+      "bio": "A baker who starts work early and makes bread for the neighborhood.", "job": "Baker", "walkImageUrl": "npcs/npc_ethan_baker/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_ethan_baker/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "fountain_walk", "startWaypoint": 5,
       "topics": ["weather", "food", "hobbies", "work", "maplewood"]
     },
     {
       "id": "npc_lina_librarian", "name": "Lina", "role": "townsperson", "personality": "shy", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A thoughtful librarian who helps neighbors find books and quiet places to read.", "job": "Librarian", "walkImageUrl": "npcs/npc_lina_librarian/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_lina_librarian/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "fountain_walk", "stationary": true, "startWaypoint": 0,
+      "bio": "A thoughtful librarian who helps neighbors find books and quiet places to read.", "job": "Librarian", "walkImageUrl": "npcs/npc_lina_librarian/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_lina_librarian/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "west_cross_street", "stationary": true, "startWaypoint": 4,
       "topics": ["books", "weather", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_ben_gardener", "name": "Ben", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A town gardener who looks after the plaza planters and fountain flowers.", "job": "Gardener", "walkImageUrl": "npcs/npc_ben_gardener/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_ben_gardener/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "river_walk", "startWaypoint": 0,
+      "bio": "A town gardener who looks after the plaza planters and fountain flowers.", "job": "Gardener", "walkImageUrl": "npcs/npc_ben_gardener/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_ben_gardener/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "south_center_walk", "startWaypoint": 0,
       "topics": ["flowers", "weather", "hobbies", "food", "maplewood"]
     },
     {
@@ -124,7 +133,7 @@
     },
     {
       "id": "npc_owen_post_worker", "name": "Owen", "role": "townsperson", "personality": "shy", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A post office worker who sorts letters for the people of Maplewood.", "job": "Post office worker", "walkImageUrl": "npcs/npc_owen_post_worker/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_owen_post_worker/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "market_east_street", "startWaypoint": 5,
+      "bio": "A post office worker who sorts letters for the people of Maplewood.", "job": "Post office worker", "walkImageUrl": "npcs/npc_owen_post_worker/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_owen_post_worker/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "river_east_walk", "startWaypoint": 6,
       "topics": ["weather", "work", "hobbies", "food", "maplewood"]
     },
     {
@@ -139,7 +148,7 @@
     },
     {
       "id": "npc_tara_musician", "name": "Tara", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A street musician who plays gentle songs beside the river walk.", "job": "Musician", "walkImageUrl": "npcs/npc_tara_musician/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_tara_musician/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "river_east_walk", "stationary": true, "startWaypoint": 11,
+      "bio": "A street musician who plays gentle songs beside the river walk.", "job": "Musician", "walkImageUrl": "npcs/npc_tara_musician/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_tara_musician/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "river_walk", "stationary": true, "startWaypoint": 8,
       "topics": ["music", "weather", "hobbies", "food", "maplewood"]
     }
   ]

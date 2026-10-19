@@ -6,7 +6,7 @@
     },
     {
       "id": "goodbye",
-      "pattern": "\\b(?:bye|goodbye|see you)\\b"
+      "pattern": "^(?:(?:okay|alright|well|thanks|thank you)[, ]+)?(?:bye(?: bye)?|good ?bye|farewell|see (?:you|ya)(?: later| soon| tomorrow)?|(?:talk to|catch) you later|take care|have a (?:nice|good|great) (?:day|evening|weekend)|until next time|i (?:have|need|got) to (?:go|leave|run)(?: now)?|(?:i )?gotta (?:go|leave|run)(?: now)?|i need to head out|i must (?:go|leave|be going)|i should (?:go|get going|be going)|i(?:'m| am) (?:off|leaving|heading out)|i(?:'d| had) better (?:go|get going|leave)|i (?:better|need to) head out|let's talk later|we(?:'ll| will| can)? talk later|(?:it was )?nice talking to you|thanks for chatting|i have an appointment|that's all for now)[.!?, ]*$"
     },
     {
       "id": "confirm",

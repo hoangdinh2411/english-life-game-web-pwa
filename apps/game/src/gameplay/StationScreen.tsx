@@ -262,15 +262,11 @@ export default function StationScreen({
           onRefresh={() => life?.refresh() ?? Promise.resolve()}
         />
       ) : npcId === "npc_station_information" && arrival ? (
-        <DialogueFrame soundControl>
-          <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0">
+        <DialogueFrame soundControl={!arrival.farewellConfirm} confirmationOnly={arrival.farewellConfirm}>
+          {!arrival.farewellConfirm ? <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0">
             <h2>Ruth</h2>
-            <GameButton
-              label="Close"
-              onClick={() => setNpcId(null)}
-            />
-          </div>
-          {arrival.renderReceptionist(sound)}
+          </div> : null}
+          {arrival.renderReceptionist(sound, () => setNpcId(null))}
         </DialogueFrame>
       ) : npcId ? (
         <ConversationPanel

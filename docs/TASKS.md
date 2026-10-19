@@ -35,120 +35,8 @@ test@gmail.com / 12341234.
 
 ## DONE
 
-- [x] **Player last location:** save the authenticated player's parent map,
-      exact place and position locally while moving, debounce server
-      checkpoints, and restore pending local or saved server state after reload.
-      Invalid map/place pairs are rejected and location saves cannot alter
-      quest access. Shared/server/game tests, typecheck, changed-file lint,
-      build and an
-      existing-account coordinate → move → reload browser flow passed on
-      2026-10-18.
-- [x] **T29 — Minimap:** show/hide map under the menu button (owner revision:
-      one responsive size, up to 90% width on mobile and 640 px on desktop;
-      hidden below 1024 px by default; `M` key; tap outside or Escape hides).
-      Player, NPC and exit markers, scaled labels, map name above the artwork,
-      accessible canvas description, visible-only 10 Hz updates, no second
-      camera. Verified 2026-10-15 on station, café, clothes shop and Town Street
-      at 320/375/1024 px and in `/practice`; ten map switches kept correct
-      markers and listener counts; Town Street frame median/p95 7.1/15.1 ms; 143
-      game tests, typecheck, lint, build and PWA checks passed; no new precache
-      files.
-- [x] **T28 — Tidy mobile HUD:** compact profile card, one menu button with a
-      Settings section (Sound, Coach), sound reachable during dialogue, smaller
-      Goals with a status badge, free top-right column. Verified with the
-      existing account on three maps and four widths: saved switches, narration
-      mute, Coach visibility, Escape/focus, long name and wallet, 200% text.
-      Game tests, typecheck, changed-file lint, build and PWA checks passed.
-- [x] **T10b — Gemini provider:** centralized prompts and configuration-selected
-      mock/Gemini adapter for unknown Town Street resident small talk. All 19
-      focused tests, server build and changed-file lint passed. Existing-account
-      rollback integration passed with mock and live `gemini-3.5-flash-lite`;
-      saved replay and unchanged money/items/quests verified.
-- [x] **T10c — Script-first AI routing:** every NPC checks pending state,
-      authored scripts and content-derived topic words before AI; prompts use
-      database persona, place/open status, learner level and six redacted turns.
-      Verified with 27 NPCs × 7 scripted examples and the existing account;
-      seller/receptionist/resident AI, replay, disabled AI and pending states
-      passed in a rollback-only integration test.
-- [x] **T10d — AI safety layer:** trims and bounds input before provider calls;
-      rejects injection, economy manipulation, medical/personal-data requests,
-      non-English text and emoji spam; validates short plain-English output with
-      no gameplay claims, personal-data requests or medical advice. All required
-      safety cases passed with the existing account in a rollback-only test.
-- [x] **T10e — Chat endpoint, streaming and limits:** authenticated word-by-word
-      SSE, atomic complete-reply persistence, AI usage/daily limits, one active
-      stream per user, idempotent retry charging and disconnect rollback. Mock
-      and rollback-only existing-account integration tests passed.
-- [x] **T10f — Client AI chat UI:** existing saved dialogue streams words with
-      thinking/cancel/error/offline states, confirmed AI labels, browser speech,
-      completion announcements and a development disclosure. Conversation IDs
-      resume authenticated history after reload. Browser checks passed at 320,
-      375 and 1024 px with the existing account and fictional limit fixture.
-- [x] **T10g — Evaluation set:** `pnpm ai:evaluate -- --provider=mock|gemini`
-      runs 20 conversation messages plus all eight T10d unsafe-input cases,
-      prints every message/reply and flags blocked input, unsafe output or
-      provider failure. The mock evaluation and focused tests passed.
-- [x] **T10a — AI provider interface and mock:** server-only text provider,
-      mock/default configuration and authored fallback on errors, 429 or
-      timeout. AI/dialogue tests (13), server build/typecheck and changed-file
-      lint passed.
-- [x] **Foundation:** monorepo, Vite/PWA client (D16), Supabase auth, NestJS
-      token check, `/me`, character creation, migrations 001–004, authored seed,
-      Zod content validation, API rate limiting (T6).
-- [x] **Local `/practice` station:** three NPCs, browser speech, recorded voice,
-      Coach, portals, public-only PWA precache. No rewards.
-- [x] **Arrival quest (T4, T5, T7, T8, T9):** receptionist → bus ticket → Town
-      Street → one-time XP/coins reward, saved on the server.
-- [x] **T14 — Asset pipeline:** versioned Storage packs, dynamic map/NPC
-      loading, station-only offline practice (measurements in `TECH.md`).
-- [x] **T15 — Wallet and starting $500:** atomic starter grant, server-only
-      spending, wallet ledger, replay/concurrency tests.
-- [x] **T16 — Shop catalog:** 5 drinks, 5 snacks, 4 $30 shirts; seeded and read
-      from the database.
-- [x] **Life gameplay extension:** energy, sleep (+8 hours, below 50% only),
-      saved 2× game clock, café purchases, shirt ownership/equipping, opening
-      hours for stores, energy HUD. Tests and 320/375/1024px checks passed.
-- [x] **T17 — Order and pay conversation (café seller):** saved orders, quantity
-      1–3, price/change/cancel/unknown item, atomic payment, replay,
-      insufficient funds, Coach correction. Six NPC atlas frames in shop maps.
-      Clothes purchase is T20.
-- [x] **T18 — Station café and Your First Coffee:** Mia cashier and waiter,
-      directions to the receptionist, greet → order → pay → one-time 20 XP/$5
-      reward. Browser flow, reload and 320/375/1024px verified.
-- [x] **Local Supabase migration (2026-10-12):** game data and Auth users moved
-      to `english-life-game` (54321/54322); 30 files and 15 asset downloads
-      verified. Source volumes and recovery copies kept.
-- [x] **T19 — Small-talk pools (scripted):** waiter topics for wellbeing,
-      weather, tired/fine/sick, the station and hometown, with three personality
-      replies each. Topic and fallback unit tests plus a seven-turn
-      rollback-only integration test using the existing account passed.
-- [x] **T20 — Clothes shop and wardrobe:** seller order/confirmation, atomic
-      payment, owned shirt quantity and “My items” list; reload and outfit
-      preservation verified with the existing account.
-- [x] **T24 — Corner Cup:** Town Street entrance to the new café, seller/menu,
-      assistant and three named customer NPCs with conversation access.
-- [x] **T25 — Café product artwork:** Generated individual images for all ten
-      café products, wired them into the catalog and confirmed them in the menu.
-- [x] **T26 — Named NPCs and shop entry:** Named shop and station actors;
-      removed hours/style controls from the Life menu; moved wardrobe to its own
-      panel and gated closed-store entry with an hours dialogue. Tests and the
-      existing-account menu/wardrobe browser check passed.
-- [x] **T27 — Town Street residents:** 15 named residents across five road
-      patrol routes, with editable profile/art links and authenticated scripted
-      small talk. Content, movement, pack, type, build, and browser checks
-      passed.
-- [x] **T21 — Game clock speed and display:** clock speed is one config value;
-      saved clocks do not jump when it changes; one shared opening-hours check;
-      the HUD shows game time and weekday; closed places say their hours.
-- [x] **T22 — Order history (all shops except clothes):** one shared purchase
-      table written in the payment transaction; price at purchase time kept;
-      players read only their own orders; replay and failed payment create none.
-- [x] **T23 — Menu cards and order list in the seller chat:** cards with image
-      and price for all 10 café items, recent orders in the same panel,
-      placeholder when an image is missing. Browser checks passed.
-- [x] **T12 — Minimal review screen:** past corrections and useful shop phrases.
-      Verified: saved-account coffee integration, ownership/replay, reload
-      persistence and 320/375/1024px browser checks.
+Finished tasks are removed to keep this board short. Git history and
+`docs/TECH.md` keep the details.
 
 ## NOW
 
@@ -175,8 +63,8 @@ test@gmail.com / 12341234.
   through one provider interface.
 - **AI routing (2026-10-15):** every NPC may use AI, but the server checks the
   scripts first. When no script understands the message, AI continues the
-  conversation for every NPC. Pending orders and quest steps remain scripted;
-  AI never changes money, items or quest state.
+  conversation for every NPC. Pending orders and quest steps remain scripted; AI
+  never changes money, items or quest state.
 - Item lists and prices live in content (`content/seed/shops.json`), never in
   code. Codex must not invent prices: the owner supplies or approves them.
 - Energy is 0–100; each player message to an NPC costs 1 point, with retries
@@ -196,11 +84,138 @@ test@gmail.com / 12341234.
 
 ## NEXT
 
-- [ ] **Q1 — Mr. Brown quest.** Add content only, no new framework code. Done
-      when: the quest can be completed by typing, the reward is given once, and
-      a refresh keeps it.
-- [ ] **Q2 — Sam quest.** Content only. Same "Done when" as Q1.
-- [ ] **Q3 — Heater quest.** Content only. Same "Done when" as Q1.
+- [ ] **T36 — ID card quest (guided, step by step).** The only guided quest: the
+      Goals list shows every step: (1) go to the tax office, (2) ask a staff
+      member to register an ID card, (3) answer the questions and give a photo,
+      (4) check and confirm, (5) receive the ID card. Use the existing
+      ordered-step quest system; do not build a new quest framework. One task,
+      done in order a to i. Tick each step when it passes its own check. New
+      art, portraits and voice clips use the existing asset pipeline (T14).
+      Reward: the owner decides (default none). Codex must not invent anything
+      the owner has not given: stop and ask.
+- [ ] **a. Tax office and staff.** Inspect what exists. The tax office is a map
+      with an entrance from Town Street and **two named staff NPCs**; either one
+      can run the whole flow. Three emotion portraits each. Opening hours from
+      the shared check (organizations 08:00–16:00); a closed office says its
+      hours. Check: the player can walk in and chat with both staff.
+- [ ] **b. Services Q&A.** When asked what they can help with, staff list their
+      services: **register an ID card** (works now), **re-issue an ID card** and
+      **renew an ID card** (information only for now: a scripted, owner-approved
+      answer; the real flows come later). They also say the card is valid for 10
+      years. The service list is content, so more services can be added later
+      without code. Check: each question gets the right scripted answer; AI
+      never answers service questions.
+- [ ] **c. Application conversation.** The staff member asks five questions, one
+      at a time: **name**, **date of birth**, **address**, **gender**, and
+      **where you come from**. Then the photo (step d). Then the staff member
+      reads everything back, photo included: "Is this correct?". **Nothing is
+      saved to the card until the player says yes.** Until then the answers wait
+      in a server-owned pending state, so leaving and returning resumes at the
+      saved step, and "no" lets the player fix any answer. Address rule: if the
+      player says anything meaning "I don't have one yet", "later", "I'll update
+      it later", "not now" or "skip", the address is `null` (the phrases are
+      content the owner approves); any other text of 1 to 120 characters is
+      stored as the address. A bad answer gets a friendly retry (date of birth:
+      a real date, not in the future, year 1900 or later; gender: male or
+      female, as specified; name and origin: plain text of 1 to 60 characters).
+      Coach corrections still apply. Check: answers kept in order; resume after
+      reload; each address phrase gives `null`, and "12 Maple Street" is stored.
+- [ ] **d. Photo (upload or camera)**: kept in the browser until the player
+      confirms. After the five questions the staff member asks for a photo. The
+      chat panel offers Upload photo, Take photo and Use my character picture
+      (skips the photo). Use a file input (accept="image/\*", with capture for
+      the camera) so it works in the phone PWA and falls back to the file picker
+      on desktop. The client shows a preview from local memory
+      (URL.createObjectURL) with "Use this" and "Choose another", and scales the
+      picture down in the browser (longest side about 1200 px), which also keeps
+      the upload small. Nothing is sent to the server and nothing is stored
+      anywhere until the player confirms. The photo is held in memory only:
+      never in localStorage, IndexedDB, Cache Storage or the service worker. It
+      is cleared when the player cancels, leaves the office, signs out, or the
+      card is issued. A reload loses it, and the staff member simply asks for
+      the photo again. When the player says yes (typed, or the "Yes, issue my
+      card" button, which sends the same message), the server recognizes the
+      confirmation and tells the client to submit. The client then sends one
+      request: POST /me/id-card (authenticated, rate limited, multipart:
+      conversation id, idempotency key, optional photo). In that request the
+      server checks that the conversation is at the confirmed step with all
+      answers, validates and processes the photo before any write (accepts JPEG,
+      PNG or WebP by content, not by file name, up to 5 MB and a maximum pixel
+      count; rejects SVG, GIF and other types; auto-rotates, strips all metadata
+      (EXIF and GPS), crops to a 3:4 portrait, resizes to about 300×400 and
+      re-encodes; use a small, well-known library, suggested sharp, and report
+      the choice), stores the photo in a private Storage bucket (never the
+      public game-assets bucket) at one fixed path per player
+      (<userId>/id-photo), creates the card and completes the quest step. If the
+      database step fails, the stored photo is removed in the same request, and
+      a retry overwrites the same path, so no orphan files pile up and no
+      cleanup job is needed. After a network failure the player retries with the
+      same idempotency key (no duplicate card). The photo is shown only to its
+      owner through a short-lived signed URL created by the server, is never
+      cached by the service worker, never sent to the AI, and never visible to
+      other players or in NPC chats. Check: nothing reaches the server or
+      storage before the confirmation (a test watches the network); "no" and
+      leaving the office send nothing; wrong file types, a renamed file, an
+      oversized file and a huge-pixel image are rejected before anything is
+      stored; a photo with GPS data comes out without any metadata; a failed
+      database step leaves no stored photo; a retry with the same key creates
+      one card and one photo; another player cannot read the photo; the signed
+      URL expires; a reload asks for the photo again; a camera-permission denial
+      falls back to the file picker with a clear message.
+- [ ] **e. ID number.** Shown as **`YYYYMMDD-XXXX`**: the date of birth, a
+      hyphen, and 4 random digits. Stored as 12 digits without the hyphen (text,
+      leading zeros count); the hyphen is added only for display by one shared
+      function. The 4 random digits are unique: a unique index on the whole
+      number, secure random source, generated inside the issuing transaction,
+      retry on a collision (up to 20 times), then a friendly "please try again
+      later". The **last digit is odd for male and even for female** (default
+      position, owner confirms). One card per player: a replayed confirm returns
+      the same card and creates nothing. Check: format, parity, hyphen display,
+      uniqueness under forced collisions, two simultaneous applications with the
+      same birth date and gender get different numbers. - [ ] **f. Storage, API
+      and validity.** Table `player_id_card` (one row per user: `number` unique,
+      `fullName`, `birthDate`, `address` nullable, `gender`, `origin`,
+      `photoPath` nullable, `issuedAt`, `expiresAt`, `updatedAt`). The card is
+      valid for **10 game years** from issue, measured with the saved game clock
+      (inspect it: if the clock has no calendar year, use total elapsed game
+      time, 3,650 game days). After that its status is `expired` and it must be
+      redone. `GET /me/id-card` returns the card with its `status` and a signed
+      photo URL. Server functions for later quests: `hasValidIdCard(userId)`
+      (false when expired), `hasAddress(userId)`, and
+      `setIdCardAddress(userId, address | null)` for the future "rent a flat"
+      quest. An expired card makes the staff say it has expired and must be
+      redone (the redo flow comes later). Tests use an injectable clock. Check:
+      ownership; plain-text storage; `<script>` stays text; the card is valid
+      one game-day before the 10-year limit and expired at it; `hasValidIdCard`
+      follows.
+- [ ] **g. ID card icon and info panel.** A small ID card icon sits on the
+      compact profile card, shown only once the player has a card. Tapping it
+      opens a panel with the photo (or the character picture), the number as
+      `YYYYMMDD-XXXX`, name, date of birth, gender, origin, the address or "Not
+      set", the issue date, "Valid until", and a status (Valid or Expired).
+      Read-only. The icon is a 44px target; if it cannot fit on the card at 320
+      px without making the card wider than half the screen, put it in the first
+      row of the profile section opened from the card. Plain-text rendering, a
+      text alternative for the photo, keyboard and screen-reader use. Check:
+      hidden before the card, shown after; the panel persists after reload and
+      shows Expired when the clock is moved forward; no overlap at 320, 375 and
+      1024 px.
+- [ ] **h. Quest wiring.** The quest completes when the card is issued; the
+      reward (if any) is given once; progress survives reload and sign-in; the
+      NPC of the current step gets the yellow `!` tag and the minimap marks it.
+      Out-of-order attempts get a friendly scripted hint and change nothing.
+      Check: replay, two simultaneous requests, reload.
+- [ ] **i. Privacy and final checks.** Name, date of birth, address, origin, the
+      ID number and the photo are never sent to the AI prompt and never logged
+      in production; account deletion removes the card and the photo. The flow,
+      the photo step and the card panel say: "Use your character's details, not
+      your real personal data." The privacy note (P3) must also mention the
+      photo before the playtest. Browser check with the existing account at 320,
+      375 and 1024 px: map, both staff, the full flow with an upload and with
+      the camera, confirmation, the card icon and panel, Goals, no overlap, no
+      horizontal scroll. Done when a to i are ticked, content validation fails
+      for a missing step or an unknown NPC, and the AI evaluation shows no ID
+      card data in any prompt.
 
 ## BLOCKED — start only after the Open decisions below are answered
 
@@ -209,10 +224,51 @@ test@gmail.com / 12341234.
 - [ ] **P2 — Hosting, CORS and rate limits.** HTTPS for the app and the server.
       Done when: the app works on a public address.
 - [ ] **P3 — Privacy note.** Short note: speech audio may go to the browser
-      vendor. Done when: the note is shown in the app.
+      vendor; the optional ID card photo is private and removed with the
+      account. Done when: the note is shown in the app.
 
 ## LATER — only when explicitly requested and policies are decided
 
+- [ ] **T37 — Library and CV (start only after T36).** One task, done in order a
+      to g. Tick each step when it passes its own check. Art, portraits and
+      voice clips use the existing asset pipeline (T14). - [ ] **a. Library
+      map.** New map "Library" with an entrance on Town Street. It appears in
+      the map pack and the minimap. Check: the player can walk in and leave. - [
+      ] **b. Librarian.** A named NPC with scripted small talk, three emotion
+      portraits, and opening hours from the existing shared check (default:
+      organization hours, 08:00–16:00). A closed library says its hours. Check:
+      the player can chat with her; closed hours show the dialogue. - [ ] **c.
+      CV conversation.** When the player asks how to make a CV (or a resume),
+      she offers help and asks five questions, one at a time: your name, the job
+      you want, what you can do well, your work experience, the languages you
+      speak (owner approves the wording). The pending state lives on the server,
+      so leaving and returning resumes at the saved question. "I don't know"
+      gets a short example answer, never a skip. At the end: "Shall I save it?".
+      If a CV exists she offers to update it. Coach corrections still apply.
+      Check: the five answers are kept in order, and the flow resumes after a
+      reload. - [ ] **d. CV storage and API.** Table `player_cv` (one row per
+      user: `name`, `desiredJob`, `skills`, `experience`, `languages`,
+      `updatedAt`). `GET/PUT /me/cv`. Plain text, trimmed, at most 300
+      characters per field, no control characters, every field required. A
+      player reads and edits only their own CV. Check: a replayed confirm
+      creates one CV; empty or over-long fields are rejected; `<script>` is
+      stored as plain text; another player cannot read it. - [ ] **e. Server
+      check for later quests.** Expose a server function
+      `hasCompleteCv(userId)`, true only when a complete CV exists. No quest
+      changes in this task; the future job quest will use it. Check: complete CV
+      → true; incomplete → false. - [ ] **f. CV in the profile.** In the profile
+      section, a CV icon appears only once a CV exists. It opens a panel with
+      the five labelled fields and an Edit button; the edit form has counters,
+      Save, Cancel, and a warning for unsaved changes, plus the note "Use your
+      character's details, not your real phone number or address." Plain-text
+      rendering only. Editing costs no energy. Check: hidden before the CV,
+      shown after; edits persist after reload; keyboard and screen reader
+      work. - [ ] **g. Privacy and final checks.** CV text is never sent to the
+      AI prompt and never logged in production; account deletion removes it.
+      Browser check with the existing account at 320, 375 and 1024 px: map,
+      librarian, the full flow, icon and edit panel, no overlap, no horizontal
+      scroll. Done when a to g are ticked and the AI evaluation shows no CV text
+      in any prompt.
 - Production asset publishing: upload versioned map, NPC and Koko audio assets
   from the local archive to production Supabase Storage, update pack references,
   and decide the station offline/PWA cache behavior before removing bundled
@@ -231,6 +287,13 @@ test@gmail.com / 12341234.
 
 ## Open product decisions — ask only if they block the current task
 
+- ID card (T36): which digit carries the gender parity (default: the last
+  digit); gender options beyond male and female (none for now, as specified);
+  the quest reward (default none); the two staff names; the text for the
+  re-issue and renew answers; whether the photo is required or optional (default
+  optional, with the character picture as the fallback); whether the number
+  stays the same when the card is redone (default same); and that the 10 years
+  are measured on the game clock.
 - Is AI free chat in the MVP, or after the first playtest?
 - Does an AI chat message cost 1 energy, like a normal NPC message?
 - AI chat audience and provider: adults 18+ only (paid tier), or a provider that

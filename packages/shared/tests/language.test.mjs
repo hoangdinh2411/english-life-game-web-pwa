@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { checkGrammar, detectIntent, stationReply } from '../dist/index.js';
+import { checkGrammar, detectIntent, endsWithFarewell, stationReply } from '../dist/index.js';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const station = require('../src/dialogue/content/intents.station.json');
@@ -13,6 +13,23 @@ test('common intents are reusable and confirmation requires context', () => {
   assert.deepEqual(detectIntent('Where is the cafe?', false, station.intents).slots, { place: 'cafe' });
   const custom = [{ id: 'order_drink', pattern: '\\bcoffee\\b' }];
   assert.equal(detectIntent('Coffee, please', false, custom).id, 'order_drink');
+});
+
+test('farewell intent recognizes natural endings without matching questions about farewells', () => {
+  for (const input of [
+    'Bye', 'Good bye!', 'Goodbye', 'Bye bye', 'See you later', 'See you soon',
+    'Talk to you later', 'Catch you later', 'Take care', 'Have a nice day',
+    'Have a good day', 'Until next time', 'Farewell', 'I have to go',
+    'I need to go now', 'I should get going', 'Let’s talk later',
+    'We talk later', "We'll talk later", 'We can talk later',
+    'Nice talking to you', 'It was nice talking to you', 'Thanks for chatting',
+  ]) assert.equal(detectIntent(input)?.id, 'goodbye', input);
+
+  for (const input of ['How do I say goodbye?', 'Will you see your friend later?', 'I need to go to the bank']) {
+    assert.notEqual(detectIntent(input)?.id, 'goodbye', input);
+  }
+  assert.equal(endsWithFarewell('Okay, no thanks. Goodbye:'), true);
+  assert.equal(endsWithFarewell('Goodbye. Will you come back tomorrow?'), false);
 });
 
 test('grammar transforms player wording across domains and composes rules', () => {

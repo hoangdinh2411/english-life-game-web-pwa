@@ -29,7 +29,8 @@ try {
     assert.match(thinking, /Thinking…/);
     assert.doesNotMatch(thinking, /AI reply/);
     const typing = renderToStaticMarkup(createElement(SavedConversation, { state: { ...state, pending: true, streaming: true, streamedReply: 'A safe sentence.', retryMessage: { text: 'What movie?', coach: false, clientMessageId: 'stream-message' } }, online: true, sound: false, send: async () => true, retry: () => {} }));
-    assert.match(typing, /animate-pulse/);
+    assert.match(typing, /reveal-layout-reserve/);
+    assert.doesNotMatch(typing, /animate-pulse/);
     assert.ok(typing.indexOf('What movie?') < typing.indexOf('A safe sentence.'));
     const aiMessage = { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'A short answer.', createdAt: new Date().toISOString(), ai: true };
     const complete = renderToStaticMarkup(createElement(SavedConversation, { state: { ...state, conversation: { ...state.conversation, messages: [aiMessage] }, retryMessage: null, announcement: 'Reply complete.', error: 'Free chat is available again tomorrow.' }, online: true, sound: false, send: async () => true, retry: () => {} }));

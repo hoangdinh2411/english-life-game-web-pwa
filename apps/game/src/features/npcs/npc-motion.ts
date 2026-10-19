@@ -1,6 +1,7 @@
 import type { Direction, Point } from '../../types/gameplay/world';
 
 export const NPC_STOP_DISTANCE = 60;
+export const NPC_TURN_PAUSE_MS = 2500;
 
 type Motion = { path: readonly Point[]; speed: number };
 export interface NpcPatrol { points: readonly Point[]; startWaypoint: number }
@@ -43,24 +44,30 @@ export function patrolPose(patrol: NpcPatrol, elapsed: number, speed = 46): NpcP
     const destination = cycle[(index + 1) % cycle.length] ?? origin;
     const dx = destination.x - origin.x;
     const dy = destination.y - origin.y;
-    return { origin, destination, dx, dy, duration: Math.hypot(dx, dy) / speed * 1000 };
+    const direction: Direction = Math.abs(dx) > Math.abs(dy)
+      ? dx < 0 ? 'left' : 'right'
+      : dy < 0 ? 'up' : 'down';
+    return { origin, destination, dx, dy, direction, duration: Math.hypot(dx, dy) / speed * 1000 };
   }).filter(segment => segment.duration > 0);
-  const duration = segments.reduce((sum, segment) => sum + segment.duration, 0);
+  const turnPauses = segments.map((segment, index) =>
+    segment.direction === segments[(index + 1) % segments.length]?.direction ? 0 : NPC_TURN_PAUSE_MS,
+  );
+  const duration = segments.reduce((sum, segment, index) => sum + segment.duration + (turnPauses[index] ?? 0), 0);
   let clock = Math.max(0, elapsed) % duration;
-  for (const segment of segments) {
-    const direction: Direction = Math.abs(segment.dx) > Math.abs(segment.dy)
-      ? segment.dx < 0 ? 'left' : 'right'
-      : segment.dy < 0 ? 'up' : 'down';
+  for (const [index, segment] of segments.entries()) {
     if (clock < segment.duration) {
       const amount = clock / segment.duration;
       return {
         x: segment.origin.x + segment.dx * amount,
         y: segment.origin.y + segment.dy * amount,
-        direction,
+        direction: segment.direction,
         moving: true,
       };
     }
     clock -= segment.duration;
+    const turnPause = turnPauses[index] ?? 0;
+    if (clock < turnPause) return { ...segment.destination, direction: segment.direction, moving: false };
+    clock -= turnPause;
   }
   return { ...cycle[0]!, direction: 'down', moving: false };
 }

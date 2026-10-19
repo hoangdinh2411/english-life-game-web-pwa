@@ -69,6 +69,7 @@ export interface StationScreenProps {
     initialLocation: PlayerLocation;
     exitUnlocked: boolean;
     pending: boolean;
+    farewellConfirm: boolean;
     error: string;
     online: boolean;
     goalsLabel: string;
@@ -79,7 +80,7 @@ export interface StationScreenProps {
     onOpenReceptionist: () => void;
     onEnterStreet: () => Promise<boolean>;
     onPlaceChange: (location: PlayerLocation) => void;
-    renderReceptionist: (sound: boolean) => ReactNode;
+    renderReceptionist: (sound: boolean, onClose: () => void) => ReactNode;
   };
   playerName: string;
   xp: number;
@@ -92,6 +93,7 @@ export interface MessageComposerProps {
   onChange: (text: string) => void;
   onSend: () => void;
   onRecord: () => void;
+  onCancelRecording: () => void;
   voiceSupported: boolean;
   listening: boolean;
   pending: boolean;

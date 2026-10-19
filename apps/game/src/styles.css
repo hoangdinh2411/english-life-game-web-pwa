@@ -14,7 +14,48 @@
   --color-border: #8b806c;
   --color-dialogue: #fff8e9;
 }
-
+body {
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar,
+.app-shell::-webkit-scrollbar,
+.station-screen::-webkit-scrollbar,
+.dialogue-frame::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+html,
+body,
+#root,
+.app-shell,
+.station-screen,
+.dialogue-frame {
+  overflow: hidden;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.conversation-history {
+  scrollbar-width: thin !important;
+  scrollbar-color: #8b806c #f0e6d1 !important;
+}
+.conversation-history::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+}
+.conversation-history::-webkit-scrollbar-track {
+  background: #f0e6d1;
+  border-radius: 8px;
+}
+.conversation-history::-webkit-scrollbar-thumb {
+  background: #8b806c;
+  border: 2px solid #f0e6d1;
+  border-radius: 8px;
+}
 /* Preserve browser form defaults; importing Preflight would change existing controls. */
 @layer base {
   :root {
@@ -103,5 +144,15 @@
   }
   to {
     opacity: 0;
+  }
+}
+
+@keyframes audio-waveform {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
   }
 }

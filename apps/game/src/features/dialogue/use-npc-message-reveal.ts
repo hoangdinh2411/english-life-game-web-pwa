@@ -26,6 +26,14 @@ export function shouldUseTypingFallback(sound: boolean, narrationReady: boolean,
   return !sound || !narrationReady || narrationError.length > 0;
 }
 
+export function preserveCompletedReveal(messageId: string | number, progress: number,
+  completedMessageId: string | number | null): { progress: number; completedMessageId: string | number | null } {
+  if (completedMessageId === messageId) return { progress: 1, completedMessageId };
+  return progress >= 1
+    ? { progress: 1, completedMessageId: messageId }
+    : { progress, completedMessageId };
+}
+
 function reducedMotionPreferred(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 }
@@ -34,6 +42,7 @@ export function useNpcMessageReveal(latest: RevealMessage | null,
   playback: { revision: string | number | null; progress: number }, fallback: boolean) {
   const initialMessage = useRef<string | number | null | undefined>(undefined);
   const active = useRef<RevealMessage | null>(null);
+  const completedMessageId = useRef<string | number | null>(null);
   const [fallbackProgress, setFallbackProgress] = useState<{ messageId: string | number | null; progress: number }>({ messageId: null, progress: 0 });
   const reducedMotion = reducedMotionPreferred();
 
@@ -57,7 +66,10 @@ export function useNpcMessageReveal(latest: RevealMessage | null,
   }, [latest?.id, fallback, reducedMotion]);
 
   if (!active.current || active.current.id !== latest?.id) return null;
-  const progress = reducedMotion ? 1 : fallback ? fallbackProgress.messageId === active.current.id ? fallbackProgress.progress : 0
+  const sourceProgress = reducedMotion ? 1 : fallback ? fallbackProgress.messageId === active.current.id ? fallbackProgress.progress : 0
     : playback.revision === active.current.id ? playback.progress : 0;
+  const preserved = preserveCompletedReveal(active.current.id, sourceProgress, completedMessageId.current);
+  completedMessageId.current = preserved.completedMessageId;
+  const progress = preserved.progress;
   return { messageId: active.current.id, visibleText: textAtProgress(active.current.text, progress), revealing: progress < 1 };
 }

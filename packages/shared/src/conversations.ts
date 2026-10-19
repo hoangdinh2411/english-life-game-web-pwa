@@ -45,6 +45,7 @@ export const conversationMessageSchema = z.object({
 }).strict();
 export const turnMetadataSchema = z.object({
   intent: z.string().nullable(), misunderstood: z.boolean(), arrival: arrivalStateSchema,
+  farewellStage: z.enum(['question', 'confirm']).optional(),
   correction: z.object({ original: z.string(), improved: z.string(), reason: z.string(), question: z.string() }).strict().nullable(),
   seller: sellerStateSchema.optional(),
   coffeeQuest: coffeeQuestStateSchema.optional(),
@@ -56,15 +57,21 @@ export const conversationTurnSchema = turnMetadataSchema.extend({
 export const conversationSchema = z.object({
   id: z.string().uuid(), npcId: conversationNpcSchema,
   messages: z.array(conversationMessageSchema), arrival: arrivalStateSchema,
+  historyCursor: z.object({ npcId: conversationNpcSchema, beforeMessageId: z.string().uuid().nullable(), hasMore: z.boolean() }).strict().optional(),
   seller: sellerStateSchema.optional(),
   coffeeQuest: coffeeQuestStateSchema.optional(),
 }).strict();
+export const conversationHistoryPageSchema = z.object({
+  messages: z.array(conversationMessageSchema), hasMore: z.boolean(), beforeMessageId: z.string().uuid().nullable(),
+}).strict();
+export const conversationHistoryQuerySchema = z.object({ before: z.string().uuid().optional() }).strict();
 export type SendMessageRequest = z.infer<typeof sendMessageSchema>;
 export type ChatStreamRequest = z.infer<typeof chatStreamRequestSchema>;
 export type ConversationMessage = z.infer<typeof conversationMessageSchema>;
 export type TurnMetadata = z.infer<typeof turnMetadataSchema>;
 export type ConversationTurn = z.infer<typeof conversationTurnSchema>;
 export type Conversation = z.infer<typeof conversationSchema>;
+export type ConversationHistoryPage = z.infer<typeof conversationHistoryPageSchema>;
 
 // Server-side history seam for learning; raw metadata is validated by its consumer.
 export interface LearningHistoryTurn {

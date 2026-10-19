@@ -127,7 +127,14 @@ reconnection. Local `/practice` stays available without saved rewards.
   It keeps useful phrases rather than collecting every word.
 - AI free chat and the vocabulary journal are future features.
   AI chat must not grant quests/rewards. Any AI caps/costs are still undecided.
-- Typing must always work. Browser speech is optional, never required.
+- Typing must always work. Browser speech is optional, never required. While
+  recording, a waveform replaces the text field; Stop keeps the transcript,
+  while the × action cancels recording and clears it.
+- NPC conversations use a short farewell sequence. The first clear player
+  farewell prompts the NPC to ask whether the player will return tomorrow. After
+  the player's answer, the NPC says goodbye; when that line finishes, the player
+  can end the conversation or keep talking. The goodbye intent recognizes common
+  forms such as “bye,” “see you,” “I have to go,” and “I’m leaving.”
 
 ## Source of truth
 

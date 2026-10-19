@@ -277,7 +277,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
       const opened = conversationSchema.parse(await response.json());
       greetings.push(opened.messages[0]!.text);
       const saved = conversationSchema.parse(await (await call(`/conversations/${opened.id}`)).json());
-      assert.equal(saved.messages[0]!.text, opened.messages[0]!.text);
+      assert.equal(saved.messages.length, 0, 'an unanswered seller opening is not persisted');
     }
     assert.equal(new Set(greetings).size, 5);
     const waiterResponse = await call('/conversations', { npcId: 'npc_cafe_waiter' });

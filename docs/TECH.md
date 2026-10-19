@@ -179,8 +179,9 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   `007` asset metadata and the public `game-assets` bucket; `008` wallet ledger;
   `009` shop catalog; `010` saved life, wardrobe and action receipts;
   `011` server-owned pending seller orders; `020` saved player map and exact
-  place; `021` saved position within that place. (Migrations `012`–`019` cover
-  dialogue storage and AI/NPC assets.)
+  place; `021` saved position within that place; `022` saved opening variation
+  indices so unanswered NPC openings stay out of message history. (Migrations
+  `012`–`019` cover dialogue storage and AI/NPC assets.)
   Inspect schema and current database before applying new changes.
 
 ## API (implemented vs planned)
@@ -229,8 +230,10 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
   Ticket use, character location, completion, reward claim and XP/coins update
   commit atomically. Repeated exits return the saved result without another grant.
 - `POST /conversations` with `{ npcId: "npc_receptionist" }`: creates a scripted
-  station conversation with an authored opening message; requires a character
-  at the station. Returns `{ id, npcId, messages, arrival }`.
+  station conversation and returns an authored opening message for display;
+  requires a character at the station. The opening is only saved with the first
+  player reply, so abandoned openings do not appear in message history. Returns
+  `{ id, npcId, messages, arrival }`.
 - T17: `{ npcId: "npc_mia" }` creates a café seller conversation using the same
   routes. Responses additionally include `seller: { shop, pendingOrder, closed }`.
   One catalog item, quantity 1–3, is quoted from database prices and saved in the

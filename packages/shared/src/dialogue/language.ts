@@ -7,6 +7,23 @@ export interface IntentDefinition { id: string; pattern: string; slot?: string; 
 export interface GrammarFeedback { original: string; improved: string; reason: string; question: string }
 export function normalizeDialogue(input: string): string { return input.trim().replace(/[’]/g, "'").replace(/\s+/g, ' '); }
 
+export function endsWithFarewell(input: string): boolean {
+  const finalSentence = normalizeDialogue(input).split(/[.!?]\s+/).at(-1)?.replace(/:+$/, '').trim() ?? '';
+  const goodbye = common.intents.find((rule) => rule.id === 'goodbye');
+  return goodbye ? new RegExp(goodbye.pattern, 'i').test(finalSentence) : false;
+}
+
+export function farewellClosing(input: string): string {
+  const reply = normalizeDialogue(input).toLowerCase();
+  if (/^(?:yes|yeah|yep|sure|definitely|of course|i(?:'ll| will) be back|i think so)\b/.test(reply)) {
+    return 'That would be lovely. I hope to see you tomorrow. Goodbye!';
+  }
+  if (/^(?:no|nope|probably not|i(?: won't| will not) come back)\b/.test(reply)) {
+    return 'I understand. It was nice talking with you. Goodbye!';
+  }
+  return 'I hope to see you again. It was nice talking with you. Goodbye!';
+}
+
 export function detectIntent(input: string, confirmation = false, domainIntents: readonly IntentDefinition[] = []): IntentMatch | undefined {
   const normalized = normalizeDialogue(input);
   const { greeting: hasGreeting, body } = splitGreeting(normalized);

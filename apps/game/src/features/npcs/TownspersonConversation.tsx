@@ -1,9 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { usePwa } from '../../pwa/PwaProvider';
 import { useSession } from '../../session/session-provider';
-import { loadArrival, openConversation, sendArrivalMessage } from '../../api/client';
+import { loadArrival, loadOlderConversationMessages, openConversation, sendArrivalMessage } from '../../api/client';
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
-import { GameButton } from '../../gameplay/GameButton';
 import { SavedConversation } from '../dialogue/SavedConversation';
 import { createConversationController } from '../dialogue/conversation-controller';
 import type { StreetNpcContent } from '@life-abroad/shared';
@@ -22,6 +21,7 @@ export function TownspersonConversation({ npc, sound, onClose, onRefresh }: {
   const [controller] = useState(() => createConversationController({
     load: () => run(loadArrival),
     start: () => run(token => openConversation(token, conversationNpcSchema.parse(npc.id))),
+    loadOlder: (npcId, before) => run(token => loadOlderConversationMessages(token, npcId, before)),
     send: async (id, body) => {
       const turn = await run(token => sendArrivalMessage(token, id, body));
       await onRefresh();
@@ -38,13 +38,13 @@ export function TownspersonConversation({ npc, sound, onClose, onRefresh }: {
     void controller.load().then(loaded => { if (loaded) void controller.start(); });
     return controller.dispose;
   }, [controller]);
-  return <DialogueFrame soundControl>
-    <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0">
+  const confirmationOnly = state.farewellStage === 'confirm';
+  return <DialogueFrame soundControl={!confirmationOnly} confirmationOnly={confirmationOnly}>
+    {!confirmationOnly ? <div className="dialogue-header">
       <div className="min-w-0"><h2>{npc.name}</h2><p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{npc.job}</p></div>
-      <GameButton label="Close" disabled={state.pending} onClick={onClose} />
-    </div>
+    </div> : null}
     <SavedConversation state={state} sound={sound} online={online}
-      send={controller.send} retry={() => void controller.start()}
+      send={controller.send} loadOlder={controller.loadOlder} retry={() => void controller.start()} onClose={onClose}
       displayNpc={{
         name: npc.name,
         portrait: npcPortrait(npc.id),

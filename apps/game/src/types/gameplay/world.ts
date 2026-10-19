@@ -1,5 +1,5 @@
-import type { Appearance, PlayerLocation } from '@life-abroad/shared';
-import type { MinimapSnapshot } from '../../features/minimap/model';
+import type { Appearance, PlayerLocation } from "@life-abroad/shared";
+import type { MinimapSnapshot } from "../../features/minimap/model";
 export interface Point {
   x: number;
   y: number;
@@ -19,9 +19,17 @@ export interface StationPortal extends Point {
   id: string;
   label: string;
 }
-export type Direction = 'left' | 'right' | 'up' | 'down';
-export type MapLocation = 'station' | 'cafe' | 'corner_cafe' | 'clothes' | 'street';
-export type StoreLocation = Extract<MapLocation, 'cafe' | 'corner_cafe' | 'clothes'>;
+export type Direction = "left" | "right" | "up" | "down";
+export type MapLocation =
+  | "station"
+  | "cafe"
+  | "corner_cafe"
+  | "clothes"
+  | "street";
+export type StoreLocation = Extract<
+  MapLocation,
+  "cafe" | "corner_cafe" | "clothes"
+>;
 export interface NpcTalkPrompt extends Point {
   npcId: string;
   name: string;
@@ -47,7 +55,11 @@ export interface StationGame {
   readMinimap: () => MinimapSnapshot | null;
   setAppearance: (appearance: Appearance | undefined) => void;
   destroy: () => void;
-  pause: (paused: boolean, worldPaused?: boolean, conversationNpcId?: string | null) => void;
+  pause: (
+    paused: boolean,
+    worldPaused?: boolean,
+    conversationNpcId?: string | null,
+  ) => void;
   unlockExit: (unlocked: boolean) => void;
   talk: () => void;
 }
