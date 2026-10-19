@@ -4,6 +4,7 @@ import { dialogueMetadataSchema } from './dialogue/metadata';
 const identifier = z.string().regex(/^[a-z][a-z0-9_]*$/);
 const text = z.string().refine((value) => value.trim().length > 0, 'Text must not be blank');
 const level = z.enum(['A1', 'A2', 'B1', 'B2', 'C1']);
+const gender = z.enum(['female', 'male']);
 
 export const npcPortraitSchema = z.object({
   imageUrl: z.string().regex(/^npcs\/[a-z0-9_]+\/portraits\.png$/),
@@ -19,6 +20,7 @@ export const townSeedSchema = z.object({
   id: identifier,
   isStarterCity: z.literal(true),
   name: text,
+  gender,
   description: text,
   locations: z.array(z.object({ id: identifier, name: text, type: identifier }).strict())
     .min(1).refine(uniqueIds, 'Location IDs must be unique'),

@@ -58,9 +58,10 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
       }
       assert.equal((await clean.query('SELECT * FROM npcs')).rowCount, content.npcs.length);
       assert.deepEqual(
-        (await clean.query(`SELECT portrait_image_url, portrait_index, portrait_columns, portrait_rows
+        (await clean.query(`SELECT gender, portrait_image_url, portrait_index, portrait_columns, portrait_rows
           FROM npcs WHERE id=$1`, ['npc_nora_bookseller'])).rows[0],
         {
+          gender: 'female',
           portrait_image_url: 'npcs/npc_nora_bookseller/portraits.png',
           portrait_index: 0,
           portrait_columns: 3,

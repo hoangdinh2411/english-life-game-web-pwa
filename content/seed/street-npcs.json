@@ -78,77 +78,77 @@
   "npcs": [
     {
       "id": "npc_mila_florist", "name": "Mila", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A friendly florist who arranges seasonal flowers for Maplewood's shops.", "job": "Florist", "walkImageUrl": "npcs/npc_mila_florist/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_mila_florist/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "west_cross_street", "stationary": true, "startWaypoint": 0,
+      "bio": "A friendly florist who arranges seasonal flowers for Maplewood's shops.", "gender": "female", "job": "Florist", "walkImageUrl": "npcs/npc_mila_florist/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_mila_florist/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "west_cross_street", "stationary": true, "startWaypoint": 0,
       "topics": ["weather", "flowers", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_amir_courier", "name": "Amir", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A bicycle courier who brings letters and parcels across town.", "job": "Courier", "walkImageUrl": "npcs/npc_amir_courier/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_amir_courier/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "west_cross_street", "startWaypoint": 5,
+      "bio": "A bicycle courier who brings letters and parcels across town.", "gender": "male", "job": "Courier", "walkImageUrl": "npcs/npc_amir_courier/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_amir_courier/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "west_cross_street", "startWaypoint": 5,
       "topics": ["weather", "travel", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_ethan_baker", "name": "Ethan", "role": "townsperson", "personality": "serious", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A baker who starts work early and makes bread for the neighborhood.", "job": "Baker", "walkImageUrl": "npcs/npc_ethan_baker/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_ethan_baker/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "fountain_walk", "startWaypoint": 5,
+      "bio": "A baker who starts work early and makes bread for the neighborhood.", "gender": "male", "job": "Baker", "walkImageUrl": "npcs/npc_ethan_baker/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_ethan_baker/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "fountain_walk", "startWaypoint": 5,
       "topics": ["weather", "food", "hobbies", "work", "maplewood"]
     },
     {
       "id": "npc_lina_librarian", "name": "Lina", "role": "townsperson", "personality": "shy", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A thoughtful librarian who helps neighbors find books and quiet places to read.", "job": "Librarian", "walkImageUrl": "npcs/npc_lina_librarian/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_lina_librarian/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "west_cross_street", "stationary": true, "startWaypoint": 4,
+      "bio": "A thoughtful librarian who helps neighbors find books and quiet places to read.", "gender": "female", "job": "Librarian", "walkImageUrl": "npcs/npc_lina_librarian/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_lina_librarian/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "west_cross_street", "stationary": true, "startWaypoint": 4,
       "topics": ["books", "weather", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_ben_gardener", "name": "Ben", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A town gardener who looks after the plaza planters and fountain flowers.", "job": "Gardener", "walkImageUrl": "npcs/npc_ben_gardener/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_ben_gardener/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "south_center_walk", "startWaypoint": 0,
+      "bio": "A town gardener who looks after the plaza planters and fountain flowers.", "gender": "male", "job": "Gardener", "walkImageUrl": "npcs/npc_ben_gardener/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_ben_gardener/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "south_center_walk", "startWaypoint": 0,
       "topics": ["flowers", "weather", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_maya_teacher", "name": "Maya", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A friendly teacher who enjoys meeting people after the school day.", "job": "Teacher", "walkImageUrl": "npcs/npc_maya_teacher/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_maya_teacher/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "river_walk", "startWaypoint": 5,
+      "bio": "A friendly teacher who enjoys meeting people after the school day.", "gender": "female", "job": "Teacher", "walkImageUrl": "npcs/npc_maya_teacher/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_maya_teacher/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "river_walk", "startWaypoint": 5,
       "topics": ["school", "weather", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_raj_pharmacist", "name": "Raj", "role": "townsperson", "personality": "serious", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A patient pharmacist who works at the Maplewood pharmacy.", "job": "Pharmacist", "walkImageUrl": "npcs/npc_raj_pharmacist/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_raj_pharmacist/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "east_cross_street", "startWaypoint": 0,
+      "bio": "A patient pharmacist who works at the Maplewood pharmacy.", "gender": "male", "job": "Pharmacist", "walkImageUrl": "npcs/npc_raj_pharmacist/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_raj_pharmacist/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "east_cross_street", "startWaypoint": 0,
       "topics": ["weather", "health", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_nora_bookseller", "name": "Nora", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A bookseller who likes recommending stories to people passing by.", "job": "Bookseller", "walkImageUrl": "npcs/npc_nora_bookseller/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_nora_bookseller/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "east_cross_street", "startWaypoint": 5,
+      "bio": "A bookseller who likes recommending stories to people passing by.", "gender": "female", "job": "Bookseller", "walkImageUrl": "npcs/npc_nora_bookseller/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_nora_bookseller/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "east_cross_street", "startWaypoint": 5,
       "topics": ["books", "weather", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_leo_driver", "name": "Leo", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A taxi driver who knows the roads and favorite places around town.", "job": "Taxi driver", "walkImageUrl": "npcs/npc_leo_driver/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_leo_driver/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "east_cross_street", "startWaypoint": 11,
+      "bio": "A taxi driver who knows the roads and favorite places around town.", "gender": "male", "job": "Taxi driver", "walkImageUrl": "npcs/npc_leo_driver/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_leo_driver/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "east_cross_street", "startWaypoint": 11,
       "topics": ["travel", "weather", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_dani_mechanic", "name": "Dylan", "role": "townsperson", "personality": "serious", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A mechanic who repairs bicycles and keeps the neighborhood moving.", "job": "Mechanic", "walkImageUrl": "npcs/npc_dani_mechanic/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_dani_mechanic/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "river_walk", "startWaypoint": 11,
+      "bio": "A mechanic who repairs bicycles and keeps the neighborhood moving.", "gender": "male", "job": "Mechanic", "walkImageUrl": "npcs/npc_dani_mechanic/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_dani_mechanic/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "river_walk", "startWaypoint": 11,
       "topics": ["travel", "weather", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_amara_market_vendor", "name": "Amara", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A market vendor who sells fruit and vegetables from nearby farms.", "job": "Market vendor", "walkImageUrl": "npcs/npc_amara_market_vendor/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_amara_market_vendor/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "market_cross_street", "stationary": true, "startWaypoint": 5,
+      "bio": "A market vendor who sells fruit and vegetables from nearby farms.", "gender": "female", "job": "Market vendor", "walkImageUrl": "npcs/npc_amara_market_vendor/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_amara_market_vendor/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "market_cross_street", "stationary": true, "startWaypoint": 5,
       "topics": ["food", "weather", "hobbies", "work", "maplewood"]
     },
     {
       "id": "npc_owen_post_worker", "name": "Owen", "role": "townsperson", "personality": "shy", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A post office worker who sorts letters for the people of Maplewood.", "job": "Post office worker", "walkImageUrl": "npcs/npc_owen_post_worker/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_owen_post_worker/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "river_east_walk", "startWaypoint": 6,
+      "bio": "A post office worker who sorts letters for the people of Maplewood.", "gender": "male", "job": "Post office worker", "walkImageUrl": "npcs/npc_owen_post_worker/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_owen_post_worker/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "river_east_walk", "startWaypoint": 6,
       "topics": ["weather", "work", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_sara_artist", "name": "Sara", "role": "townsperson", "personality": "shy", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A painter who sketches the old rooftops and the busy town square.", "job": "Artist", "walkImageUrl": "npcs/npc_sara_artist/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_sara_artist/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "river_east_walk", "startWaypoint": 0,
+      "bio": "A painter who sketches the old rooftops and the busy town square.", "gender": "female", "job": "Artist", "walkImageUrl": "npcs/npc_sara_artist/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_sara_artist/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "river_east_walk", "startWaypoint": 0,
       "topics": ["art", "weather", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_jamal_dog_walker", "name": "Jamal", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A dog walker who takes a long stroll along the river path each afternoon.", "job": "Dog walker", "walkImageUrl": "npcs/npc_jamal_dog_walker/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_jamal_dog_walker/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "river_east_walk", "startWaypoint": 5,
+      "bio": "A dog walker who takes a long stroll along the river path each afternoon.", "gender": "male", "job": "Dog walker", "walkImageUrl": "npcs/npc_jamal_dog_walker/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_jamal_dog_walker/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "male", "routeId": "river_east_walk", "startWaypoint": 5,
       "topics": ["pets", "weather", "hobbies", "food", "maplewood"]
     },
     {
       "id": "npc_tara_musician", "name": "Tara", "role": "townsperson", "personality": "cheerful", "speakingLevel": "A1", "locationId": "loc_town_street",
-      "bio": "A street musician who plays gentle songs beside the river walk.", "job": "Musician", "walkImageUrl": "npcs/npc_tara_musician/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_tara_musician/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "river_walk", "stationary": true, "startWaypoint": 8,
+      "bio": "A street musician who plays gentle songs beside the river walk.", "gender": "female", "job": "Musician", "walkImageUrl": "npcs/npc_tara_musician/walk.png", "frame": "walk", "portrait": { "imageUrl": "npcs/npc_tara_musician/portraits.png", "index": 0, "columns": 3, "rows": 1 }, "voice": "female", "routeId": "river_walk", "stationary": true, "startWaypoint": 8,
       "topics": ["music", "weather", "hobbies", "food", "maplewood"]
     }
   ]

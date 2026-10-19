@@ -40,6 +40,45 @@ Finished tasks are removed to keep this board short. Git history and
 
 ## NOW
 
+- [ ] **NPC speech audio prototype (Azure TTS + client DSP).** Inspect the
+      existing dialogue, NPC content, asset, storage and AI fallback paths
+      first. Keep the test small: use a few shared fixed-script lines across
+      maps/NPCs, a few NPC-specific lines, and AI fallback replies for one NPC.
+      Resolve NPC-specific scripts before shared scripts; use AI only when
+      neither matches. Add a small editable voice-profile content file keyed by
+      stable NPC ID, with gender (`male`/`female` for this prototype) and an
+      optional Azure voice override; use gender to select the default voice.
+      Keep this mapping out of map-specific dialogue so changing an NPC's gender
+      or voice does not require editing every map. Generate fixed-script audio
+      once per unique text and generation voice configuration, then reuse it
+      across maps and NPCs. Store audio files in private object storage through
+      the existing asset pipeline; keep only references and metadata in the
+      database. Deduplicate by a cache key based on text, language, voice,
+      emotion/style, audio format and Azure/TTS version/settings—not map, NPC ID
+      or player playback settings. Invalidate fixed-script audio when its text
+      or generation configuration changes. For AI fallback text, generate audio
+      on demand and cache only exact repeats for a short configurable period; do
+      not persist personal or sensitive text/audio. Expire and remove stale AI
+      cache entries. Serve private files to authenticated players with
+      short-lived signed URLs.
+
+      Keep one canonical Azure audio file per cache key. Apply player speech
+      speed and pitch after download on the client using one shared Web Audio
+      `AudioContext` and an `AudioWorklet` DSP processor (evaluate
+      `@soundtouchjs/audio-worklet` for the prototype). Do not create or store
+      speed/pitch variants and do not add those controls to the Azure cache key.
+      Add simple bounded speed and pitch controls in Game Settings; NPC dialogue
+      determines the generated emotion/style, while player controls only affect
+      playback. Done when: shared lines reuse one audio asset across maps/NPCs,
+      NPC-specific lines play correctly, the editable voice profile changes the
+      selected NPC voice, AI fallback replies are spoken and exact repeats can
+      hit the bounded cache, no repeat cache hit calls Azure, client DSP changes
+      speed and pitch independently without creating new stored variants,
+      expired AI audio is removed, and the original generated audio reflects
+      the NPC emotion/style. Verify audio quality, responsiveness and CPU use on
+      supported mobile browsers; provide a graceful fallback if AudioWorklet is
+      unavailable or fails.
+
 - [ ] **Shop polish follow-up (browser checks only).** Code, 173 unit tests,
       typecheck, lint, build, content and PWA checks already pass. Remaining:
       refresh the old cached PWA, then check both shop maps, conversations, NPC
@@ -92,130 +131,130 @@ Finished tasks are removed to keep this board short. Git history and
       done in order a to i. Tick each step when it passes its own check. New
       art, portraits and voice clips use the existing asset pipeline (T14).
       Reward: the owner decides (default none). Codex must not invent anything
-      the owner has not given: stop and ask.
-- [ ] **a. Tax office and staff.** Inspect what exists. The tax office is a map
-      with an entrance from Town Street and **two named staff NPCs**; either one
-      can run the whole flow. Three emotion portraits each. Opening hours from
-      the shared check (organizations 08:00–16:00); a closed office says its
-      hours. Check: the player can walk in and chat with both staff.
-- [ ] **b. Services Q&A.** When asked what they can help with, staff list their
-      services: **register an ID card** (works now), **re-issue an ID card** and
-      **renew an ID card** (information only for now: a scripted, owner-approved
-      answer; the real flows come later). They also say the card is valid for 10
-      years. The service list is content, so more services can be added later
-      without code. Check: each question gets the right scripted answer; AI
-      never answers service questions.
-- [ ] **c. Application conversation.** The staff member asks five questions, one
-      at a time: **name**, **date of birth**, **address**, **gender**, and
-      **where you come from**. Then the photo (step d). Then the staff member
-      reads everything back, photo included: "Is this correct?". **Nothing is
-      saved to the card until the player says yes.** Until then the answers wait
-      in a server-owned pending state, so leaving and returning resumes at the
-      saved step, and "no" lets the player fix any answer. Address rule: if the
-      player says anything meaning "I don't have one yet", "later", "I'll update
-      it later", "not now" or "skip", the address is `null` (the phrases are
-      content the owner approves); any other text of 1 to 120 characters is
-      stored as the address. A bad answer gets a friendly retry (date of birth:
-      a real date, not in the future, year 1900 or later; gender: male or
-      female, as specified; name and origin: plain text of 1 to 60 characters).
-      Coach corrections still apply. Check: answers kept in order; resume after
-      reload; each address phrase gives `null`, and "12 Maple Street" is stored.
-- [ ] **d. Photo (upload or camera)**: kept in the browser until the player
-      confirms. After the five questions the staff member asks for a photo. The
-      chat panel offers Upload photo, Take photo and Use my character picture
-      (skips the photo). Use a file input (accept="image/\*", with capture for
-      the camera) so it works in the phone PWA and falls back to the file picker
-      on desktop. The client shows a preview from local memory
-      (URL.createObjectURL) with "Use this" and "Choose another", and scales the
-      picture down in the browser (longest side about 1200 px), which also keeps
-      the upload small. Nothing is sent to the server and nothing is stored
-      anywhere until the player confirms. The photo is held in memory only:
-      never in localStorage, IndexedDB, Cache Storage or the service worker. It
-      is cleared when the player cancels, leaves the office, signs out, or the
-      card is issued. A reload loses it, and the staff member simply asks for
-      the photo again. When the player says yes (typed, or the "Yes, issue my
-      card" button, which sends the same message), the server recognizes the
-      confirmation and tells the client to submit. The client then sends one
-      request: POST /me/id-card (authenticated, rate limited, multipart:
-      conversation id, idempotency key, optional photo). In that request the
-      server checks that the conversation is at the confirmed step with all
-      answers, validates and processes the photo before any write (accepts JPEG,
-      PNG or WebP by content, not by file name, up to 5 MB and a maximum pixel
-      count; rejects SVG, GIF and other types; auto-rotates, strips all metadata
-      (EXIF and GPS), crops to a 3:4 portrait, resizes to about 300×400 and
-      re-encodes; use a small, well-known library, suggested sharp, and report
-      the choice), stores the photo in a private Storage bucket (never the
-      public game-assets bucket) at one fixed path per player
-      (<userId>/id-photo), creates the card and completes the quest step. If the
-      database step fails, the stored photo is removed in the same request, and
-      a retry overwrites the same path, so no orphan files pile up and no
-      cleanup job is needed. After a network failure the player retries with the
-      same idempotency key (no duplicate card). The photo is shown only to its
-      owner through a short-lived signed URL created by the server, is never
-      cached by the service worker, never sent to the AI, and never visible to
-      other players or in NPC chats. Check: nothing reaches the server or
-      storage before the confirmation (a test watches the network); "no" and
-      leaving the office send nothing; wrong file types, a renamed file, an
-      oversized file and a huge-pixel image are rejected before anything is
-      stored; a photo with GPS data comes out without any metadata; a failed
-      database step leaves no stored photo; a retry with the same key creates
-      one card and one photo; another player cannot read the photo; the signed
-      URL expires; a reload asks for the photo again; a camera-permission denial
-      falls back to the file picker with a clear message.
-- [ ] **e. ID number.** Shown as **`YYYYMMDD-XXXX`**: the date of birth, a
-      hyphen, and 4 random digits. Stored as 12 digits without the hyphen (text,
-      leading zeros count); the hyphen is added only for display by one shared
-      function. The 4 random digits are unique: a unique index on the whole
-      number, secure random source, generated inside the issuing transaction,
-      retry on a collision (up to 20 times), then a friendly "please try again
-      later". The **last digit is odd for male and even for female** (default
-      position, owner confirms). One card per player: a replayed confirm returns
-      the same card and creates nothing. Check: format, parity, hyphen display,
-      uniqueness under forced collisions, two simultaneous applications with the
-      same birth date and gender get different numbers. - [ ] **f. Storage, API
-      and validity.** Table `player_id_card` (one row per user: `number` unique,
-      `fullName`, `birthDate`, `address` nullable, `gender`, `origin`,
-      `photoPath` nullable, `issuedAt`, `expiresAt`, `updatedAt`). The card is
-      valid for **10 game years** from issue, measured with the saved game clock
-      (inspect it: if the clock has no calendar year, use total elapsed game
-      time, 3,650 game days). After that its status is `expired` and it must be
-      redone. `GET /me/id-card` returns the card with its `status` and a signed
-      photo URL. Server functions for later quests: `hasValidIdCard(userId)`
-      (false when expired), `hasAddress(userId)`, and
+      the owner has not given: stop and ask. - [ ] **a. Tax office and staff.**
+      Inspect what exists. The tax office is a map with an entrance from Town
+      Street and **two named staff NPCs**; either one can run the whole flow.
+      Three emotion portraits each. Opening hours from the shared check
+      (organizations 08:00–16:00); a closed office says its hours. Check: the
+      player can walk in and chat with both staff. - [ ] **b. Services Q&A.**
+      When asked what they can help with, staff list their services: **register
+      an ID card** (works now), **re-issue an ID card** and **renew an ID card**
+      (information only for now: a scripted, owner-approved answer; the real
+      flows come later). They also say the card is valid for 10 years. The
+      service list is content, so more services can be added later without code.
+      Check: each question gets the right scripted answer; AI never answers
+      service questions. - [ ] **c. Application conversation.** The staff member
+      asks five questions, one at a time: **name**, **date of birth**,
+      **address**, **gender**, and **where you come from**. Then the photo (step
+      d). Then the staff member reads everything back, photo included: "Is this
+      correct?". **Nothing is saved to the card until the player says yes.**
+      Until then the five text answers wait in a server-owned pending state (the
+      photo is not part of it, see d), so leaving and returning resumes at the
+      saved step, and "no" lets the player fix any answer. The pending answers
+      are removed when the card is issued or the application is cancelled.
+      Address rule: if the player says anything meaning "I don't have one yet",
+      "later", "I'll update it later", "not now" or "skip", the address is
+      `null` (the phrases are content the owner approves); any other text of 1
+      to 120 characters is stored as the address. A bad answer gets a friendly
+      retry (date of birth: a real date, not in the future, year 1900 or later;
+      gender: male or female, as specified; name and origin: plain text of 1 to
+      60 characters). Coach corrections still apply. Check: answers kept in
+      order; resume after reload; each address phrase gives `null`, and "12
+      Maple Street" is stored. - [ ] **d. Photo (upload or camera): kept in the
+      browser until the player confirms.** After the five questions the staff
+      member asks for a photo. The chat panel offers **Upload photo**, **Take
+      photo** and **Use my character picture** (skips the photo). Use a file
+      input (`accept="image/*"`, with `capture` for the camera) so it works in
+      the phone PWA and falls back to the file picker on desktop. The client
+      shows a preview from local memory (`URL.createObjectURL`) with "Use this"
+      and "Choose another", and scales the picture down in the browser (longest
+      side about 1200 px), which also keeps the upload small. **Nothing is sent
+      to the server and nothing is stored anywhere until the player confirms.**
+      The photo is held in memory only: never in localStorage, IndexedDB, Cache
+      Storage or the service worker. It is cleared when the player cancels,
+      leaves the office, signs out, or the card is issued. A reload loses it,
+      and the staff member simply asks for the photo again. When the player says
+      yes (typed, or the "Yes, issue my card" button, which sends the same
+      message), the server recognizes the confirmation and tells the client to
+      submit. The client then sends **one request**: `POST /me/id-card`
+      (authenticated, rate limited, multipart: conversation id, idempotency key,
+      optional photo). In that request the server checks that the conversation
+      is at the confirmed step with all answers, validates and processes the
+      photo **before any write** (accepts JPEG, PNG or WebP by content, not by
+      file name, up to 5 MB and a maximum pixel count; rejects SVG, GIF and
+      other types; auto-rotates, strips all metadata (EXIF and GPS), crops to a
+      3:4 portrait, resizes to about 300×400 and re-encodes; use a small,
+      well-known library, suggested `sharp`, and report the choice), stores the
+      photo in a **private** Storage bucket (never the public `game-assets`
+      bucket) at one fixed path per player (`<userId>/id-photo`), creates the
+      card and completes the quest step. If the database step fails, the stored
+      photo is removed in the same request, and a retry overwrites the same
+      path, so no orphan files pile up and no cleanup job is needed. After a
+      network failure the player retries with the same idempotency key (no
+      duplicate card). The photo is shown only to its owner through a
+      short-lived signed URL created by the server, is never cached by the
+      service worker, never sent to the AI, and never visible to other players
+      or in NPC chats. Check: nothing reaches the server or storage before the
+      confirmation (a test watches the network); "no" and leaving the office
+      send nothing; wrong file types, a renamed file, an oversized file and a
+      huge-pixel image are rejected before anything is stored; a photo with GPS
+      data comes out without any metadata; a failed database step leaves no
+      stored photo; a retry with the same key creates one card and one photo;
+      another player cannot read the photo; the signed URL expires; a reload
+      asks for the photo again; a camera-permission denial falls back to the
+      file picker with a clear message. - [ ] **e. ID number.** Shown as
+      **`YYYYMMDD-XXXX`**: the date of birth, a hyphen, and 4 random digits.
+      Stored as 12 digits without the hyphen (text, leading zeros count); the
+      hyphen is added only for display by one shared function. The 4 random
+      digits are unique: a unique index on the whole number, secure random
+      source, generated inside the issuing transaction, retry on a collision (up
+      to 20 times), then a friendly "please try again later". The **last digit
+      is odd for male and even for female** (default position, owner confirms).
+      One card per player: a replayed confirm returns the same card and creates
+      nothing. Check: format, parity, hyphen display, uniqueness under forced
+      collisions, two simultaneous applications with the same birth date and
+      gender get different numbers. - [ ] **f. Storage, API and validity.**
+      Table `player_id_card` (one row per user: `number` unique, `fullName`,
+      `birthDate`, `address` nullable, `gender`, `origin`, `photoPath` nullable,
+      `issuedAt`, `expiresAt`, `updatedAt`). The card is valid for **10 game
+      years** from issue, measured with the saved game clock (inspect it: if the
+      clock has no calendar year, use total elapsed game time, 3,650 game days).
+      After that its status is `expired` and it must be redone.
+      `GET /me/id-card` returns the card with its `status` and a signed photo
+      URL. Server functions for later quests: `hasValidIdCard(userId)` (false
+      when expired), `hasAddress(userId)`, and
       `setIdCardAddress(userId, address | null)` for the future "rent a flat"
       quest. An expired card makes the staff say it has expired and must be
       redone (the redo flow comes later). Tests use an injectable clock. Check:
       ownership; plain-text storage; `<script>` stays text; the card is valid
       one game-day before the 10-year limit and expired at it; `hasValidIdCard`
-      follows.
-- [ ] **g. ID card icon and info panel.** A small ID card icon sits on the
-      compact profile card, shown only once the player has a card. Tapping it
-      opens a panel with the photo (or the character picture), the number as
-      `YYYYMMDD-XXXX`, name, date of birth, gender, origin, the address or "Not
-      set", the issue date, "Valid until", and a status (Valid or Expired).
-      Read-only. The icon is a 44px target; if it cannot fit on the card at 320
-      px without making the card wider than half the screen, put it in the first
-      row of the profile section opened from the card. Plain-text rendering, a
-      text alternative for the photo, keyboard and screen-reader use. Check:
-      hidden before the card, shown after; the panel persists after reload and
-      shows Expired when the clock is moved forward; no overlap at 320, 375 and
-      1024 px.
-- [ ] **h. Quest wiring.** The quest completes when the card is issued; the
-      reward (if any) is given once; progress survives reload and sign-in; the
-      NPC of the current step gets the yellow `!` tag and the minimap marks it.
-      Out-of-order attempts get a friendly scripted hint and change nothing.
-      Check: replay, two simultaneous requests, reload.
-- [ ] **i. Privacy and final checks.** Name, date of birth, address, origin, the
-      ID number and the photo are never sent to the AI prompt and never logged
-      in production; account deletion removes the card and the photo. The flow,
-      the photo step and the card panel say: "Use your character's details, not
-      your real personal data." The privacy note (P3) must also mention the
-      photo before the playtest. Browser check with the existing account at 320,
-      375 and 1024 px: map, both staff, the full flow with an upload and with
-      the camera, confirmation, the card icon and panel, Goals, no overlap, no
-      horizontal scroll. Done when a to i are ticked, content validation fails
-      for a missing step or an unknown NPC, and the AI evaluation shows no ID
-      card data in any prompt.
+      follows. - [ ] **g. ID card icon and info panel.** A small ID card icon
+      sits on the compact profile card, shown only once the player has a card.
+      Tapping it opens a panel with the photo (or the character picture), the
+      number as `YYYYMMDD-XXXX`, name, date of birth, gender, origin, the
+      address or "Not set", the issue date, "Valid until", and a status (Valid
+      or Expired). Read-only. The icon is a 44px target; if it cannot fit on the
+      card at 320 px without making the card wider than half the screen, put it
+      in the first row of the profile section opened from the card. Plain-text
+      rendering, a text alternative for the photo, keyboard and screen-reader
+      use. Check: hidden before the card, shown after; the panel persists after
+      reload and shows Expired when the clock is moved forward; no overlap at
+      320, 375 and 1024 px. - [ ] **h. Quest wiring.** The quest completes when
+      the card is issued; the reward (if any) is given once; progress survives
+      reload and sign-in; the NPC of the current step gets the yellow `!` tag
+      and the minimap marks it. Out-of-order attempts get a friendly scripted
+      hint and change nothing. Check: replay, two simultaneous requests,
+      reload. - [ ] **i. Privacy and final checks.** Name, date of birth,
+      address, origin, the ID number and the photo are never sent to the AI
+      prompt and never logged in production; account deletion removes the card
+      and the photo. The flow, the photo step and the card panel say: "Use your
+      character's details, not your real personal data." The privacy note (P3)
+      must also mention the photo before the playtest. Browser check with the
+      existing account at 320, 375 and 1024 px: map, both staff, the full flow
+      with an upload and with the camera, confirmation, the card icon and panel,
+      Goals, no overlap, no horizontal scroll. Done when a to i are ticked,
+      content validation fails for a missing step or an unknown NPC, and the AI
+      evaluation shows no ID card data in any prompt.
 
 ## BLOCKED — start only after the Open decisions below are answered
 
