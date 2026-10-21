@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Conversation, ConversationHistoryPage, ConversationMessage, ConversationTurn } from '@life-abroad/shared';
+import type { Conversation, ConversationHistoryPage, ConversationMessage, ConversationTurn, MoodId } from '@life-abroad/shared';
 import { AiSpeechService } from './ai-speech.service';
 import { FixedSpeechService } from './fixed-speech.service';
 import { SpeechProfileService } from './speech-profile.service';
@@ -20,10 +20,11 @@ export class ConversationSpeechService {
   constructor(private readonly fixed: FixedSpeechService, private readonly ai: AiSpeechService,
     private readonly profiles: SpeechProfileService) {}
 
-  async message(userId: string, npcId: Conversation['npcId'], message: ConversationMessage): Promise<ConversationMessage> {
+  async message(userId: string, npcId: Conversation['npcId'], message: ConversationMessage,
+    mood: MoodId = 'neutral'): Promise<ConversationMessage> {
     if (message.sender !== 'npc') return message;
     try {
-      const identity = await this.profiles.identity(npcId);
+      const identity = await this.profiles.identity(npcId, mood);
       const generated = await withinSpeechReplyBudget(message.ai
         ? this.ai.get(userId, message.id, identity)
         : this.fixed.get({ ...identity, text: message.text }));
@@ -39,6 +40,6 @@ export class ConversationSpeechService {
     return { ...page, messages: await Promise.all(page.messages.map(message => this.message(userId, npcId, message))) };
   }
   async turn(userId: string, npcId: Conversation['npcId'], turn: ConversationTurn): Promise<ConversationTurn> {
-    return { ...turn, npcMessage: await this.message(userId, npcId, turn.npcMessage) };
+    return { ...turn, npcMessage: await this.message(userId, npcId, turn.npcMessage, turn.effectiveMood) };
   }
 }

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { createRecordedNarrator } from '../src/speech/recorded-narration.ts';
 import { createNarrator } from '../src/speech/narration.ts';
 
+const normalPlayback = () => ({ speechRate: 1, speechPitch: 1 });
+
 test('browser fallback chooses a matching English voice when available', () => {
   const voices = [
     { name: 'Microsoft David Desktop', lang: 'en-US' },
@@ -10,7 +12,7 @@ test('browser fallback chooses a matching English voice when available', () => {
   ];
   const spoken = [];
   const narrator = createNarrator({ getVoices: () => voices, speak: (utterance) => spoken.push(utterance), cancel() {} },
-    (text) => ({ text }), { onSpeaking() {}, onError() {} });
+    (text) => ({ text }), { onSpeaking() {}, onError() {} }, normalPlayback);
 
   narrator.speak('Welcome', 'female');
   assert.equal(spoken[0].voice.name, 'Microsoft Zira Desktop');
@@ -23,7 +25,7 @@ test('female browser fallback avoids a known male voice when an unlabelled Engli
   ];
   const spoken = [];
   const narrator = createNarrator({ getVoices: () => voices, speak: (utterance) => spoken.push(utterance), cancel() {} },
-    (text) => ({ text }), { onSpeaking() {}, onError() {} });
+    (text) => ({ text }), { onSpeaking() {}, onError() {} }, normalPlayback);
 
   narrator.speak('I’m not sure about that yet. Could you ask me something else?', 'female');
   assert.equal(spoken[0].voice.name, 'English Voice');

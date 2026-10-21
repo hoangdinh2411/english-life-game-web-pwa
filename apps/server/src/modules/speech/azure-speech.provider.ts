@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
+import type { MoodId } from '@life-abroad/shared';
 
-export type NpcEmotion = 'neutral' | 'happy' | 'sad';
+export type NpcEmotion = MoodId;
 export type AzureSpeechStyle = 'default' | 'cheerful' | 'sad';
 export const AZURE_SPEECH_LANGUAGE = 'en-US' as const;
 export const AZURE_SPEECH_VERSION = 'rest-v1' as const;

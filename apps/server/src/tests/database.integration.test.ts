@@ -18,7 +18,7 @@ import type { ShopItem } from '@life-abroad/shared';
 test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS and shutdown', async () => {
   const url = new URL(process.env.TEST_SUPABASE_DATABASE_URL ?? process.env.DATABASE_URL ?? '');
   assert.ok(['127.0.0.1', 'localhost'].includes(url.hostname));
-  assert.equal(url.port, '55422');
+  assert.equal(url.port, '54322');
   assert.equal(url.pathname, '/postgres');
   const admin = new Pool({ connectionString: url.toString() });
   const name = 'r2_test_' + randomUUID().replaceAll('-', '');

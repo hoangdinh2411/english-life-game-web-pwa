@@ -77,6 +77,12 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   Missing facts receive a natural non-answer instead of invented detail. Shop
   NPCs keep small talk brief and redirect to service without changing orders,
   prices or quest behavior.
+- NPC replies default to CEFR A2 when learner data is unavailable. Otherwise,
+  the server combines the stored learner level with observable input complexity
+  and may adjust by at most one CEFR band for that turn. Mood and relationship
+  stage change tone and length only; they never change facts, prices or state.
+  Speech uses only styles supported by the selected provider voice and falls
+  back to neutral delivery.
 - Shop and station NPCs have individual names. Venue hours use game time:
   organizations 08:00–16:00, stores 08:00–14:00 and workplaces 07:00–17:00.
   The current playable map gates its store interiors; closed entrances show the
@@ -125,7 +131,7 @@ Arrive at the **train station** → approach the **receptionist** → ask how to
 reach town and request a **bus ticket** → type a reply → recognize its
 **intent** → advance ordered arrival-quest steps → offer a gentle correction →
 **server** records the bus ticket → use the ticket to leave the station for
-**Maplewood Town Street** → complete the arrival quest → **server** awards
+**Town Street** → complete the arrival quest → **server** awards
 XP/coins **once** → ticket, quest state and rewards survive reload/sign-in.
 
 The ticket can be a server-verified **arrival-quest entitlement**; do not build
@@ -143,8 +149,8 @@ reconnection. Local `/practice` stays available without saved rewards.
   Do not punish learners with red marks or block progress for minor grammar.
 - NPCs respond in natural corrected English. Detailed coaching is optional via
   the Coach UI; don't assert an unvalidated grammar score or CEFR certification.
-- CEFR A1–C1 can guide dialogue complexity. Automatic level changes and XP
-  thresholds have **not** been approved.
+- CEFR A1–C1 guides per-turn dialogue complexity. This does not persist an
+  automatic level promotion; promotion rules and XP thresholds remain unapproved.
 - Scripted quest dialogue is deterministic and usable without AI. Lookup
   priority: NPC-specific → role → global. Intent keywords/next-node links come
   from validated dialogue JSON; personality changes wording, not rewards.

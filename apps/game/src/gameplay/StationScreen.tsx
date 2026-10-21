@@ -327,7 +327,7 @@ export default function StationScreen({
       {menu ? (
         <DialogueFrame onClose={closeMenu}>
           <h2 className="text-[18px] font-extrabold">Paused</h2>
-          <div className="lg:hidden"><Settings /></div>
+          <Settings />
           {!practice ? <GameButton label="English review" onClick={() => { setMenu(false); setReviewOpen(true); }} /> : null}
           <GameButton
             label="Movement tutorial"

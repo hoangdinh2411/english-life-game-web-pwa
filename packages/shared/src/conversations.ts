@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ARRIVAL_NPC_ID, arrivalStateSchema, coffeeQuestStateSchema } from './quests';
+import { moodIdSchema } from './content';
 
 export const SELLER_NPC_ID = 'npc_mia';
 export const CAFE_SELLER_NPC_IDS = ['npc_mia', 'npc_corner_cup_seller'] as const;
@@ -58,6 +59,7 @@ export const turnMetadataSchema = z.object({
   coffeeQuest: coffeeQuestStateSchema.optional(),
   ai: z.literal(true).optional(),
   relationship: npcRelationshipSchema.optional(),
+  effectiveMood: moodIdSchema.optional(),
 }).strict();
 export const conversationTurnSchema = turnMetadataSchema.extend({
   playerMessage: conversationMessageSchema, npcMessage: conversationMessageSchema,

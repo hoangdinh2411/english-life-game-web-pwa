@@ -113,12 +113,17 @@ set it to `true` only for intentional development tests. All supported NPCs chec
 server scripts first. Pending orders/active NPC quests stay scripted. Unmatched
 messages reach the provider for every NPC, extending the available conversation
 topics after scripted dialogue has had priority. AI text never becomes a gameplay intent.
-`NpcPromptService.build` reads NPC name, role, personality, speaking level, place,
-opening status, the strict authored NPC profile and the player's English level
-from the database, plus the last six
-complete conversation turns. Account identifiers, known player names and emails
-are removed from both the current input and history. The provider gets no player
-profile record and must not invent NPC facts missing from the authored profile.
+`NpcPromptService.build` validates the strict authored NPC profile, then sends
+only an explicit personal-fact allowlist, place/city/country, opening status,
+effective mood, relationship stage and a bounded response level. The level
+defaults to A2 without learner data; otherwise stored level and observable input
+complexity may move it by at most one CEFR band for the current turn. The prompt
+also includes at most the last six complete conversation turns. Account
+identifiers, known player names and emails are removed from current input and
+history. Schedule rules, mood rules and the player profile never reach the
+provider. Store prompts answer service requests first and redirect unrelated
+chat. Mood and relationship may change tone or length but never facts or game
+state; missing NPC facts must not be invented.
 Free Gemini keys remain for fictional development data only. Authenticated
 free chat uses Gemini's native stream through `POST /chat/stream`. The server
 buffers one sentence, validates it, then forwards the safe sentence immediately;
@@ -190,6 +195,10 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   internal country-to-starter-city mapping and each character's country.
   Migration `028` adds the required versioned `npcs.profile` JSONB document;
   strict field validation happens before seeding and prompt construction.
+  Migration `029` adds the editable mood catalog and persisted base mood;
+  migration `030` adds private per-player relationships and idempotent social
+  events. These are unique forward migrations; applied migrations remain
+  immutable.
   Canonical speech keys include only
   generation inputs, and callers receive 60-second signed URLs. AI audio uses
   `AI_SPEECH_CACHE_TTL_SECONDS` (30–3600, default 300) and rejects sensitive text.
@@ -503,5 +512,6 @@ Physical Android/iOS install, standalone reopen and airplane-mode testing are
 ## Future decisions, not current implementation
 Café seller conversations enforce store hours. Organization visits and work
 actions remain future tasks; their approved opening hours are shared contracts.
-Production AI provider quotas, CEFR promotion and full speech service remain future decisions.
+Production AI provider quotas, persistent CEFR promotion and additional speech
+providers remain future decisions.
 See `TASKS.md` before extending scope.

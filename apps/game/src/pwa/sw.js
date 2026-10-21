@@ -9,7 +9,7 @@ const cacheName = `${prefix}${hash.toString(16)}`;
 const publicUrls = [...new Set(manifest.map((entry) => new URL(entry.url, self.registration.scope).href))];
 const publicPaths = new Set(publicUrls);
 const shell = new URL('index.html', self.registration.scope).href;
-const routes = new Set(['/', '/sign-in', '/home', '/practice', '/new-game', '/new-game/city', '/new-game/avatar', '/new-game/name', '/new-game/review']);
+const routes = new Set(['/', '/sign-in', '/home', '/practice', '/new-game', '/new-game/country', '/new-game/avatar', '/new-game/name', '/new-game/review']);
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {

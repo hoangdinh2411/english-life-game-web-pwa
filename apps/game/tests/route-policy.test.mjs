@@ -9,7 +9,7 @@ test('direct protected links require a session; public practice does not', () =>
 });
 test('resumed characters go home and new accounts keep valid onboarding routes', () => {
   const signedIn = { token: 'current-token', hasCharacter: false, online: true };
-  for (const path of ['/new-game', '/new-game/city', '/new-game/avatar', '/new-game/name', '/new-game/review']) assert.equal(resolveRoute(path, signedIn), path);
+  for (const path of ['/new-game', '/new-game/country', '/new-game/avatar', '/new-game/name', '/new-game/review']) assert.equal(resolveRoute(path, signedIn), path);
   for (const path of ['/', '/home', '/sign-in', '/unknown']) assert.equal(resolveRoute(path, signedIn), '/new-game');
   assert.equal(resolveRoute('/new-game/review', { ...signedIn, hasCharacter: true }), '/home');
   assert.equal(resolveRoute('/practice', { ...signedIn, hasCharacter: true }), '/practice');

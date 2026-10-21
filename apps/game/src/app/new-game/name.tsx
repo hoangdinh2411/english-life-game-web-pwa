@@ -7,7 +7,7 @@ export default function NameScreen() {
   const session = useSession();
   const [name, setName] = useState(session.draft.name ?? '');
   const [attempted, setAttempted] = useState(false);
-  useEffect(() => { if (!session.draft.avatarId || !session.draft.countryId) router.replace('/new-game/city'); }, [session.draft.avatarId, session.draft.countryId]);
+  useEffect(() => { if (!session.draft.avatarId || !session.draft.countryId) router.replace('/new-game/country'); }, [session.draft.avatarId, session.draft.countryId]);
   const message = attempted ? validateCharacterName(name) : null;
   const avatar = session.options?.avatars.find((item) => item.id === session.draft.avatarId);
   return <Screen><Heading title="What is your name?" subtitle="Choose the name people in town will use for you." />

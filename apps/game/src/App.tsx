@@ -7,7 +7,7 @@ import { PwaStatus } from './pwa/PwaStatus';
 import { ActionButton, Heading, Screen } from './components/onboarding-ui';
 import SignIn from './app/sign-in';
 import NewGame from './app/new-game';
-import City from './app/new-game/city';
+import Country from './app/new-game/country';
 import Avatar from './app/new-game/avatar';
 import Name from './app/new-game/name';
 import Review from './app/new-game/review';
@@ -31,7 +31,7 @@ function SessionRoutes() {
   else if (session.token && session.playerError) content = <Screen><Heading title="Your game could not load" subtitle={session.playerError} /><ActionButton label="Try again" onClick={() => void session.refreshPlayer().catch(() => undefined)} /><ActionButton label="Try local station practice" secondary onClick={() => router.push('/practice')} /><ActionButton label="Sign out" secondary onClick={() => void session.signOut()} /></Screen>;
   else if (route !== path) content = <Redirect href={route} />;
   else {
-    const screens: Record<string, React.ReactNode> = { '/sign-in': <SignIn />, '/new-game': <NewGame />, '/new-game/city': <City />, '/new-game/avatar': <Avatar />, '/new-game/name': <Name />, '/new-game/review': <Review />, '/home': <Home /> };
+    const screens: Record<string, React.ReactNode> = { '/sign-in': <SignIn />, '/new-game': <NewGame />, '/new-game/country': <Country />, '/new-game/avatar': <Avatar />, '/new-game/name': <Name />, '/new-game/review': <Review />, '/home': <Home /> };
     content = screens[route];
   }
   return <div className="app-shell h-dvh flex flex-col overflow-hidden"><PwaStatus playing={playing} />

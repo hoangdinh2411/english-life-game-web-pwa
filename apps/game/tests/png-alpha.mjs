@@ -1,4 +1,5 @@
 import { inflateSync } from 'node:zlib';
+import { Buffer } from 'node:buffer';
 
 export function decodeRgbaPng(buffer) {
   const width = buffer.readUInt32BE(16);

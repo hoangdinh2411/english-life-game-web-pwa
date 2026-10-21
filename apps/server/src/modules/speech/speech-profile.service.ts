@@ -1,5 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { voicePoolsSchema, type Conversation } from '@life-abroad/shared';
+import { voicePoolsSchema, type Conversation, type MoodId } from '@life-abroad/shared';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { DatabaseService } from '../../infrastructure/database/database.service';
@@ -13,7 +13,7 @@ export class SpeechProfileService {
 
   constructor(private readonly database: DatabaseService) {}
 
-  async identity(npcId: Conversation['npcId']): Promise<AiSpeechIdentity> {
+  async identity(npcId: Conversation['npcId'], mood: MoodId = 'neutral'): Promise<AiSpeechIdentity> {
     const [npc, pools] = await Promise.all([
       this.database.query<{ gender: 'female' | 'male' }>('SELECT gender FROM npcs WHERE id=$1', [npcId]),
       this.voicePools(),
@@ -22,7 +22,7 @@ export class SpeechProfileService {
     if (!gender) throw new ServiceUnavailableException('NPC speech profile is unavailable.');
     const voice = resolveNpcVoice(npcId, gender, pools);
     const supported = pools.styleSupport[voice] ?? [];
-    return { language: AZURE_SPEECH_LANGUAGE, voice, style: resolveAzureStyle('neutral', supported),
+    return { language: AZURE_SPEECH_LANGUAGE, voice, style: resolveAzureStyle(mood, supported),
       format: AZURE_SPEECH_FORMAT, ttsVersion: AZURE_SPEECH_VERSION, settings: {} };
   }
 

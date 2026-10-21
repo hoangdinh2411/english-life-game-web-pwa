@@ -9,7 +9,7 @@ export function createNarrator(
   synthesis: Synthesis | null,
   createUtterance: (text: string) => Utterance,
   callbacks: NarrationCallbacks,
-  playbackSettings: () => { speechRate: number; speechPitch: number } = () => ({ speechRate: 0.9, speechPitch: 1 }),
+  playbackSettings: () => { speechRate: number; speechPitch: number },
 ): Narrator {
   let current: Utterance | null = null;
   const stop = () => {

@@ -18,13 +18,12 @@ test('street catalogue resolves male/female recordings from the map without bund
   assert.throws(() => streetAudioCatalog(pack, { version: 1, clips: [{ ...manifest.clips[0], gender: 'unknown' }] }));
 });
 
-test('Kokoro source covers opening variations, personality replies and common fallback in both street voices', async () => {
+test('Kokoro source covers fixed opening variations and common fallback in both street voices', async () => {
   const clips = await streetVoiceLines();
   for (const gender of ['female', 'male']) {
-    assert.ok(clips.some(clip => clip.gender === gender && clip.text === 'Good day! Do you like exploring new places?'));
+    assert.ok(clips.some(clip => clip.gender === gender && clip.text === 'Good day! What would you like to talk about?'));
     assert.ok(clips.some(clip => clip.gender === gender && clip.text === 'Sorry, can you say that again?'));
   }
-  assert.ok(clips.some(clip => clip.gender === 'female' && clip.text === 'I like quiet walks and a good book. What do you enjoy?'));
   assert.ok(clips.every(clip => clip.gender === 'female' ? clip.voice === 'af_heart' : clip.voice === 'am_michael'));
   assert.equal(new Set(clips.map(clip => clip.key)).size, clips.length);
   assert.ok(clips.every(clip => !/\{\w+\}/.test(clip.text)));

@@ -158,7 +158,7 @@ Finished tasks are removed to keep this board short. Git history and
       mood, presence and relationships. Store workers stay professional and
       customer-focused; social state never changes prices, stock, opening hours
       or transaction validity. These tasks do not change sleep or energy.
-  - [ ] **NPC-02 — Country-first onboarding: Sweden.** Add a validated country
+  - [x] **NPC-02 — Country-first onboarding: Sweden.** Add a validated country
         catalog and forward-only database structure. Seed Sweden with ID
         `country_sweden`, ISO `SE`, flag 🇸🇪 and IANA time zone
         `Europe/Stockholm`. Players choose a country, not a city. Keep the city
@@ -206,7 +206,7 @@ Finished tasks are removed to keep this board short. Git history and
         conversation turn and reuse the existing message idempotency key.
         Done when caps, expiry, apology, concurrency and replay tests pass and
         store behaviour remains commercially identical.
-  - [ ] **NPC-07 — Database-backed natural everyday dialogue.** Cover name,
+  - [x] **NPC-07 — Database-backed natural everyday dialogue.** Cover name,
         age, origin, family, job, workplace, hobbies, food, preferences,
         books, music, art, pets, travel, school, local places, routines,
         current activity, plans, wellbeing, weather, thanks, apologies,
@@ -217,7 +217,7 @@ Finished tasks are removed to keep this board short. Git history and
         service. Preserve every quest/order intent, price and state transition.
         Done when exhaustive table-driven cases and all seller/quest regression
         tests pass without fabricated facts or hard-coded location names.
-  - [ ] **NPC-08 — Adaptive response level and mood-aware delivery.** Default to
+  - [x] **NPC-08 — Adaptive response level and mood-aware delivery.** Default to
         CEFR A2 when learner data is unavailable. Combine stored learner level
         and observable input complexity, moving at most one CEFR band per turn.
         Mood and relationship affect tone/length, never facts. AI prompts may
@@ -226,7 +226,7 @@ Finished tasks are removed to keep this board short. Git history and
         service-first rule. Speech styles use only provider-supported mappings
         with a neutral fallback. Done when level bounds, prompt privacy,
         missing-fact and voice-style tests pass.
-  - [ ] **NPC-09 — Integration, documentation and release verification.** Merge
+  - [x] **NPC-09 — Integration, documentation and release verification.** Merge
         the completed slices carefully with the speech/audio work; resolve
         forward-migration numbering without editing applied migrations. Update
         `docs/GAME.md` and `docs/TECH.md` once with the durable country, profile,

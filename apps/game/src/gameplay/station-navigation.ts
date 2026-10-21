@@ -17,10 +17,11 @@ export function scaleStreetPoint(point: Point): Point {
 // sits on the road immediately outside its front door.
 export const CORNER_CUP_PORTAL: StationPortal = {
   id: "corner_cafe",
-  label: "",
+  label: "Corner Cup Café",
   ...scaleStreetPoint({ x: 505, y: 600 }),
 };
 export const STREET_PORTALS: StationPortal[] = [
+  CORNER_CUP_PORTAL,
   {
     id: "station",
     label: "Train Station",

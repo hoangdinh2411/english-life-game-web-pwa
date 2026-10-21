@@ -18,6 +18,7 @@ import { ConversationSpeechService } from '../speech/conversation-speech.service
 import { NpcPresenceService } from '../npcs/npc-presence.service';
 import { NpcRelationshipService } from '../npcs/npc-relationship.service';
 import { classifySocialSignal } from '../npcs/social-signal';
+import { NpcMoodService } from '../npcs/npc-mood.service';
 
 const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
 
@@ -40,7 +41,8 @@ export class ConversationsService {
     private readonly seller: SellerService, private readonly coffee: CoffeeQuestService,
     private readonly ai: AiService, private readonly prompts: NpcPromptService,
     private readonly aiUsage: AiUsageService, private readonly speech: ConversationSpeechService,
-    private readonly presence: NpcPresenceService, private readonly relationships: NpcRelationshipService) {}
+    private readonly presence: NpcPresenceService, private readonly relationships: NpcRelationshipService,
+    private readonly moods: NpcMoodService) {}
 
   learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
     return this.conversations.learningHistory(userId);
@@ -217,8 +219,12 @@ export class ConversationsService {
         metadata = { ...metadata, farewellStage: 'confirm' };
       }
       const socialSignal = classifySocialSignal(request.text, metadata.intent);
-      if (socialSignal) metadata = { ...metadata, relationship: await this.relationships.apply(
-        client, userId, conversation.npc_id, socialSignal, request.clientMessageId) };
+      const relationship = socialSignal
+        ? await this.relationships.apply(client, userId, conversation.npc_id, socialSignal, request.clientMessageId)
+        : await this.relationships.context(client, userId, conversation.npc_id);
+      const mood = await this.moods.resolve(client, userId, conversation.npc_id);
+      metadata = { ...metadata, ...(socialSignal ? { relationship } : {}),
+        effectiveMood: relationship.reactionMood ?? mood.id };
       if (stream && (!aiResult || aiResult.fallback)) {
         if (stream.signal.aborted) throw stream.signal.reason ?? new Error('Chat stream cancelled.');
         await stream.beforeSave(responseText);

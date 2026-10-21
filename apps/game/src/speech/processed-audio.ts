@@ -8,6 +8,14 @@ interface SoundTouchOutput extends AudioNode {
   playbackRate: AudioParam;
 }
 
+export function applyWorkletPlaybackSettings(audio: HTMLAudioElement, processor: SoundTouchOutput,
+  settings: PlaybackSettings): void {
+  audio.preservesPitch = false;
+  audio.playbackRate = 1;
+  processor.playbackRate.value = settings.speechRate;
+  processor.pitch.value = settings.speechPitch;
+}
+
 let sharedContext: AudioContext | null = null;
 let registration: Promise<void> | null = null;
 
@@ -37,10 +45,7 @@ async function connectProcessor(audio: HTMLAudioElement, settings: PlaybackSetti
   if (audioContext.state === 'suspended') await audioContext.resume();
   const processor = new SoundTouchNode({ context: audioContext }) as SoundTouchOutput;
   const source = audioContext.createMediaElementSource(audio);
-  audio.preservesPitch = false;
-  audio.playbackRate = settings.speechRate;
-  processor.playbackRate.value = settings.speechRate;
-  processor.pitch.value = settings.speechPitch;
+  applyWorkletPlaybackSettings(audio, processor, settings);
   try {
     source.connect(processor).connect(audioContext.destination);
   } catch (error: unknown) {

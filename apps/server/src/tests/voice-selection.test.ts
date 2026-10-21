@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { VoicePools } from '@life-abroad/shared';
 import { resolveNpcVoice } from '../modules/speech/voice-selection';
+import { resolveAzureStyle } from '../modules/speech/azure-speech.provider';
 
 const pools: VoicePools = {
   version: 1,
@@ -30,4 +31,13 @@ test('stable IDs distribute NPCs within one gender pool', () => {
 
 test('an NPC override wins over its gender pool', () => {
   assert.equal(resolveNpcVoice('npc_override', 'male', pools), 'en-US-GuyNeural');
+});
+
+test('speech styles use supported provider mappings with a neutral fallback', () => {
+  assert.equal(resolveAzureStyle('happy', ['cheerful']), 'cheerful');
+  assert.equal(resolveAzureStyle('sad', ['sad']), 'sad');
+  assert.equal(resolveAzureStyle('happy', []), 'default');
+  for (const mood of ['hungry', 'stressed', 'tired', 'relaxed', 'sleepy', 'upset', 'angry'] as const) {
+    assert.equal(resolveAzureStyle(mood, ['cheerful', 'sad']), 'default');
+  }
 });

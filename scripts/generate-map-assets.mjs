@@ -1,4 +1,5 @@
 /* global FormData, Blob, AbortSignal */
+import { Buffer } from 'node:buffer';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';

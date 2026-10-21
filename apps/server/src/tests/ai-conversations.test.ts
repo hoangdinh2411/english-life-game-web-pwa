@@ -16,6 +16,7 @@ import { NpcPromptService } from '../modules/ai/npc-prompt.service';
 import { AiUsageService } from '../modules/ai/ai-usage.service';
 import { NpcPresenceService } from '../modules/npcs/npc-presence.service';
 import { NpcRelationshipService } from '../modules/npcs/npc-relationship.service';
+import { NpcMoodService } from '../modules/npcs/npc-mood.service';
 
 test('T10c all NPCs use AI after scripts while pending gameplay and replay bypass it', async () => {
   let npcId = 'npc_mila_florist';
@@ -75,9 +76,13 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
     } })
     .overrideProvider(AiUsageService).useValue({ limited: async () => limited, record: async () => undefined })
     .overrideProvider(NpcPresenceService).useValue({ assertCanStart: async () => { presenceChecks++; } })
-    .overrideProvider(NpcRelationshipService).useValue({ apply: async () => { relationshipCalls++; return {
+    .overrideProvider(NpcRelationshipService).useValue({
+      context: async () => ({ familiarity: 0, affinity: 0, stage: 'stranger', reactionMood: null, reactionExpiresAt: null }),
+      apply: async () => { relationshipCalls++; return {
       familiarity: 1, affinity: -100, stage: 'strained', reactionMood: null, reactionExpiresAt: null,
-    }; } }).compile();
+    }; } })
+    .overrideProvider(NpcMoodService).useValue({ resolve: async () => ({ id: 'neutral', label: 'Neutral', guidance: 'Be neutral.' }) })
+    .compile();
   try {
     const service = module.get(ConversationsService);
     const send = (text = 'Tell me about autumn') => service.send('existing-user', randomUUID(), {

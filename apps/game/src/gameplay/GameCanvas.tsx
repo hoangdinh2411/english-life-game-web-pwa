@@ -152,6 +152,9 @@ export default function GameCanvas({
             callbacks.current.onLocationChange(location);
           }
         },
+        onMapChange: (mapId) => {
+          if (!cancelled) callbacks.current.onMapChange?.(mapId);
+        },
         onPlaceChange: (savedLocation) => {
           if (!cancelled) callbacks.current.onPlaceChange?.(savedLocation);
         },
