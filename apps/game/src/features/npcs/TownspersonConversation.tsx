@@ -51,6 +51,6 @@ export function TownspersonConversation({ npc, sound, onClose, onRefresh }: {
         portraitPosition: npcPortraitPosition,
         portraitGrid: NPC_PORTRAIT_GRID,
       }}
-      hint="Try asking about the weather, hobbies, food or life in Maplewood." />
+      hint="Try asking about the weather, hobbies, food or life in Sweden." />
   </DialogueFrame>;
 }

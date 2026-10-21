@@ -6,13 +6,13 @@
     {
       "id": "townsperson_start",
       "text": {
-        "default": "Hello! I live in Maplewood. How are you today?"
+        "default": "Hello! I live in Sweden. How are you today?"
       },
       "variations": [
-        "Hello! I live in Maplewood. How are you today?",
+        "Hello! I live in Sweden. How are you today?",
         "Hi there! It is nice to meet someone new in town.",
         "Good day! Do you like exploring new places?",
-        "Hello! I am taking a walk around Maplewood. What brings you here?",
+        "Hello! I am taking a walk around town. What brings you here?",
         "Hi! What do you like to do in your free time?"
       ],
       "intents": [
@@ -40,17 +40,17 @@
     },
     {
       "id": "townsperson_work",
-      "text": { "default": "I work here in Maplewood. My job keeps me busy, but I like this neighborhood.", "cheerful": "I have a nice job here in town. It is lovely to see familiar faces!", "shy": "I work nearby. I like the quiet streets before the town gets busy.", "serious": "I work hard during the day. What kind of work do you enjoy?" }
+      "text": { "default": "I work here in town. My job keeps me busy, but I like this neighborhood.", "cheerful": "I have a nice job here in town. It is lovely to see familiar faces!", "shy": "I work nearby. I like the quiet streets before the town gets busy.", "serious": "I work hard during the day. What kind of work do you enjoy?" }
     },
     {
       "id": "townsperson_maplewood",
-      "text": { "default": "Maplewood is a friendly town. I like the plaza and the river walk.", "cheerful": "I love Maplewood! The plaza and river walk are lovely places to visit.", "shy": "The river walk is peaceful. It is my favorite place in town.", "serious": "The town is easy to explore. The plaza is a good place to start." }
+      "text": { "default": "This is a friendly town. I like the plaza and the river walk.", "cheerful": "I love this town! The plaza and river walk are lovely places to visit.", "shy": "The river walk is peaceful. It is my favorite place in town.", "serious": "The town is easy to explore. The plaza is a good place to start." }
     },
     { "id": "townsperson_books", "text": { "default": "A good book makes a quiet afternoon better. What do you like to read?", "cheerful": "I always have a story to recommend! What do you like to read?", "shy": "I enjoy stories about new places. Do you like reading?", "serious": "I read to learn something new. What kind of books do you prefer?" } },
     { "id": "townsperson_flowers", "text": { "default": "Flowers bring color to the streets. Do you have a favorite?", "cheerful": "I love seeing flowers around town! Which ones do you like?", "shy": "I like the little flowers beside the river. What flowers do you like?", "serious": "Plants need care and patience. Do you enjoy gardening?" } },
     { "id": "townsperson_music", "text": { "default": "Music makes a walk feel shorter. What kind of music do you enjoy?", "cheerful": "I love a cheerful song! What music do you like?", "shy": "Soft music helps me relax. Do you play an instrument?", "serious": "I enjoy music after work. What do you listen to?" } },
     { "id": "townsperson_pets", "text": { "default": "Animals make good walking companions. Do you have a pet?", "cheerful": "Dogs are so friendly! Do you have a pet?", "shy": "I like calm dogs. Do you like animals?", "serious": "Pets need time and care. Do you have one?" } },
-    { "id": "townsperson_art", "text": { "default": "The rooftops and gardens make nice subjects to draw. Do you like art?", "cheerful": "There is so much to paint in Maplewood! What do you like to draw?", "shy": "I like sketching quiet corners of town. Do you draw?", "serious": "A short sketch is a good way to notice details. Do you make art?" } },
+    { "id": "townsperson_art", "text": { "default": "The rooftops and gardens make nice subjects to draw. Do you like art?", "cheerful": "There is so much to paint in town! What do you like to draw?", "shy": "I like sketching quiet corners of town. Do you draw?", "serious": "A short sketch is a good way to notice details. Do you make art?" } },
     { "id": "townsperson_travel", "text": { "default": "There are many nice places to see nearby. Where would you like to travel?", "cheerful": "I love a new journey! Where would you like to go?", "shy": "I like short trips to quiet places. Do you enjoy travelling?", "serious": "A good route makes a trip easier. Do you like to travel?" } },
     { "id": "townsperson_school", "text": { "default": "Learning something new can be fun. What did you like to study?", "cheerful": "School is full of interesting things to learn! What subject do you like?", "shy": "I liked reading at school. What was your favorite subject?", "serious": "Practice helps us improve. What did you enjoy learning?" } }
   ]

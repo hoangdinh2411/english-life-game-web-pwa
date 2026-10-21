@@ -74,6 +74,7 @@ export function SavedConversation({
     npcVoice[state.conversation?.npcId ?? "npc_station_information"],
     state.conversation?.npcId,
     Boolean(lastNpc?.ai),
+    lastNpc?.speech?.url,
   );
   const latestMessage = state.conversation?.messages.at(-1);
   const reveal = useNpcMessageReveal(
@@ -181,7 +182,7 @@ export function SavedConversation({
             portraitGrid={
               message.sender === "npc" ? displayNpc?.portraitGrid : undefined
             }
-            onReplay={() => voice.listen(message.text)}
+            onReplay={() => voice.listen(message.text, message.speech?.url)}
             replayVisible={sound && voice.supported}
             replayDisabled={
               !sound || !voice.supported || state.pending || speech.listening

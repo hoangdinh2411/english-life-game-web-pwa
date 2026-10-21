@@ -19,7 +19,7 @@ function loadClient(fetch) {
 
 // Omitting the session token makes the real protected R3 endpoint return 401.
 test('onboarding options use the current session token and validate the API catalog', async () => {
-  const catalog = { cities: [{ id: 'city_fixture', name: 'Fixture City' }],
+  const catalog = { countries: [{ id: 'country_sweden', name: 'Sweden', isoCode: 'SE', flag: '🇸🇪', timeZone: 'Europe/Stockholm' }],
     avatars: [{ id: 'avatar_fixture', label: 'Fixture Look', outfitColor: '#527b78' }] };
   const client = loadClient(async (url, init) => {
     assert.equal(url, 'http://fixture/api/v1/onboarding/options');
@@ -31,7 +31,7 @@ test('onboarding options use the current session token and validate the API cata
 });
 
 test('onboarding options reject a malformed successful response', async () => {
-  const client = loadClient(async () => ({ ok: true, status: 200, json: async () => ({ cities: [], avatars: 'invalid' }) }));
+  const client = loadClient(async () => ({ ok: true, status: 200, json: async () => ({ countries: [], avatars: 'invalid' }) }));
   await assert.rejects(client.loadOptions('current-token'), /Invalid onboarding catalog/);
 });
 // The authenticated exit must use the protected endpoint and never cache private state.

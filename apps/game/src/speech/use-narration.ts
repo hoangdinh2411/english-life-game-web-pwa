@@ -4,10 +4,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createNarrator } from './narration';
 import { createRecordedNarrator } from './recorded-narration';
 import { TOWN_STREET_NPC_IDS } from '@life-abroad/shared';
+import { preferences } from '../features/hud/usePreferences';
+import { createProcessedAudio } from './processed-audio';
 function findClip(text: string, gender: VoiceGender, catalog: StationAudioCatalog): string | null {
   return catalog.find((clip) => clip.text === text && clip.gender === gender)?.asset ?? null;
 }
-export function useNarration(text: string, enabled: boolean, revision: string | number = text, gender: VoiceGender = 'male', npcId?: string, browserOnly = false) {
+export function useNarration(text: string, enabled: boolean, revision: string | number = text, gender: VoiceGender = 'male', npcId?: string, browserOnly = false,
+  privateAsset?: string) {
   const street = !browserOnly && (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId ?? '');
   const currentText = useRef(text); currentText.current = text;
   const [speaking, setSpeaking] = useState(false);
@@ -20,8 +23,8 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
   audioCatalogRef.current = audioCatalog;
   const lastRevision = useRef<string | number | null>(null);
   const browserVoice = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
-  const supported = typeof Audio !== 'undefined' && audioCatalog !== null;
-  const narrationReady = audioCatalog !== null && (Boolean(findClip(text, gender, audioCatalog)) || !street && voicesReady);
+  const supported = typeof Audio !== 'undefined' && (Boolean(privateAsset) || audioCatalog !== null);
+  const narrationReady = Boolean(privateAsset) || audioCatalog !== null && (Boolean(findClip(text, gender, audioCatalog)) || !street && voicesReady);
   const narrator = useMemo(() => {
     const callbacks = { onSpeaking: setSpeaking, onError: (message: string) => { setError(message); },
       onProgress: (progress: number) => {
@@ -30,7 +33,7 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
           progress: current.revision === active ? Math.max(current.progress, progress) : progress }));
       } };
     const fallback = createNarrator(browserVoice ? window.speechSynthesis : null,
-      (message) => new SpeechSynthesisUtterance(message), callbacks);
+      (message) => new SpeechSynthesisUtterance(message), callbacks, () => preferences.getSnapshot());
     // A missing/broken authored street clip must not silently switch the NPC
     // back to the browser voice. Player-written replay can still use TTS.
     const recordedFallback = street ? { ...fallback, speak: (message: string, voiceGender: VoiceGender = 'male') => {
@@ -41,7 +44,10 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
     return createRecordedNarrator((message, voiceGender) => {
       const catalog = audioCatalogRef.current;
       return catalog ? findClip(message, voiceGender, catalog) : null;
-    }, (url) => new Audio(url), recordedFallback, callbacks);
+    }, (url) => {
+      const { speechRate, speechPitch } = preferences.getSnapshot();
+      return createProcessedAudio(url, { speechRate, speechPitch });
+    }, recordedFallback, callbacks);
   }, [browserVoice, street]);
   useEffect(() => {
     let cancelled = false;
@@ -72,8 +78,8 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
     lastRevision.current = revision;
     automaticRevision.current = revision;
     setPlayback({ revision, progress: 0 });
-    setError(''); narrator.speak(text, gender);
-    const recorded = Boolean(findClip(text, gender, audioCatalogRef.current ?? []));
+    setError(''); narrator.speak(text, gender, privateAsset);
+    const recorded = Boolean(privateAsset || findClip(text, gender, audioCatalogRef.current ?? []));
     const estimatedDuration = Math.min(8000, Math.max(1200, Array.from(text).length / 14 * 1000));
     const startedAt = Date.now();
     const timer = !recorded && !street ? window.setInterval(() => {
@@ -83,12 +89,12 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
       setPlayback(current => current.revision === revision && progress > current.progress ? { revision, progress } : current);
     }, 80) : null;
     return () => { if (timer !== null) window.clearInterval(timer); narrator.stop(); };
-  }, [text, enabled, revision, narrator, narrationReady, gender]);
+  }, [text, enabled, revision, narrator, narrationReady, gender, privateAsset]);
   useEffect(() => () => { lastRevision.current = null; narrator.stop(); }, [narrator]);
   const stop = () => { automaticRevision.current = null; setPlayback(current => ({ ...current, progress: 1 })); narrator.stop(); };
-  return { supported, speaking, error, ready: narrationReady, playback, stop, listen: (message: string = text) => {
+  return { supported, speaking, error, ready: narrationReady, playback, stop, listen: (message: string = text, asset?: string) => {
     automaticRevision.current = null;
     setPlayback(current => ({ ...current, progress: 1 }));
-    setError(''); if (enabled && audioCatalog !== null) narrator.speak(message, gender);
+    setError(''); if (enabled && (asset || audioCatalog !== null)) narrator.speak(message, gender, asset);
   } };
 }

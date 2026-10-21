@@ -12,8 +12,9 @@ import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/sho
 import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
 import type { MinimapSnapshot } from '../features/minimap/model';
+import { npcIsVisible } from '../features/npcs/npc-presence';
 import { mapLocationFromPlayerLocation, playerLocationFromMapLocation } from '../features/location/player-location';
-const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Maplewood · Train Station', cafe: 'Maplewood · Café', corner_cafe: 'Maplewood · Corner Cup Café', clothes: 'Maplewood · Clothes Shop', street: 'Maplewood · Town Street' };
+const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Sweden · Train Station', cafe: 'Sweden · Café', corner_cafe: 'Sweden · Corner Cup Café', clothes: 'Sweden · Clothes Shop', street: 'Sweden · Town Street' };
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
   let activeLocation: MapLocation = callbacks.initialLocation ? mapLocationFromPlayerLocation(callbacks.initialLocation) : 'station';
@@ -24,12 +25,13 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let currentPack: MapPack | null = null;
   let packAnimations: string[] = [];
   let packRequest: AbortController | null = null;
-  const mapIds = { street: 'loc_town_street', cafe: 'loc_cafe', corner_cafe: 'loc_corner_cafe', clothes: 'loc_clothes' };
+  const mapIds = { station: 'loc_station', street: 'loc_town_street', cafe: 'loc_cafe', corner_cafe: 'loc_corner_cafe', clothes: 'loc_clothes' };
   let authorizing = false;
   const P = Phaser;
   let paused = false;
   let worldPaused = false;
   let conversationNpcId: string | null = null;
+  let presentNpcIds = callbacks.practice ? null : new Set<string>();
   let exitUnlocked = false;
   let blockedPortal: string | null = null;
   const savedPosition: Point = callbacks.initialLocation
@@ -49,6 +51,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let selectedNpc: string | null = null;
   let nearby: string | null = null;
   let npcs = STATION_NPCS.map((npc) => ({ ...npc }));
+  let refreshPresence: (() => void) | undefined;
+  const isPresent = (id: string): boolean => npcIsVisible(activeLocation, id, presentNpcIds);
   const talk = () => { const npc = nearestNpc(position, npcs); if (!paused && npc) callbacks.onTalk(npc.id); };
   class StationScene extends P.Scene {
     private player!: Phaser.GameObjects.Sprite;
@@ -74,11 +78,13 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     }
     create() {
       refreshAppearance = () => { if (this.worldReady) this.applyAppearance(); };
+      refreshPresence = () => { if (this.worldReady) this.applyPresence(); };
       const stationOwned = activeLocation === 'station';
       this.events.once('shutdown', () => {
         this.worldReady = false;
         readMinimap = () => null;
         refreshAppearance = undefined;
+        refreshPresence = undefined;
         this.npcArtQueue.clear();
         this.npcArtRetryAt.clear();
         this.npcArtLoading = false;
@@ -153,12 +159,12 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const displayTexture = lazyStreetArt && !textureReady ? '__DEFAULT' : actor.texture;
         const displayFrame = lazyStreetArt && !textureReady ? '__BASE' : actor.frame;
         const sprite = this.add.sprite(actorPosition.x, actorPosition.y, displayTexture, displayFrame)
-          .setOrigin(0.5, 1).setScale(actor.scale).setDepth(actorPosition.y).setVisible(!lazyStreetArt);
+          .setOrigin(0.5, 1).setScale(actor.scale).setDepth(actorPosition.y).setVisible(!lazyStreetArt && isPresent(definition.id));
         const npc = { id: definition.id, name: definition.name, texture: actor.texture, x: actorPosition.x, y: actorPosition.y };
         npcs.push(npc);
         const labelText = definition.name;
         const label = this.add.text(npc.x, npc.y - 112, labelText, { fontFamily: 'sans-serif', fontSize: '24px', color: '#263630', backgroundColor: '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
-        label.setVisible(!lazyStreetArt);
+        label.setVisible(!lazyStreetArt && isPresent(definition.id));
         this.labels.push(label);
         const npcWalk = `${actor.texture}:${actor.frame}-walk`;
         if (textureReady) {
@@ -266,7 +272,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         ...mapSize,
         image: minimapImage,
         player: { ...position },
-        npcs: this.npcActors.map(actor => ({ id: actor.npc.id, name: actor.npc.name, x: actor.npc.x, y: actor.npc.y, objective: actor.label.text.startsWith('!') })),
+        npcs: this.npcActors.filter(actor => isPresent(actor.npc.id)).map(actor => ({ id: actor.npc.id, name: actor.npc.name, x: actor.npc.x, y: actor.npc.y, objective: actor.label.text.startsWith('!') })),
         portals: this.portalsForLocation().map(portal => ({ ...portal })),
       } : null;
       this.cameras.main.setBounds(0, 0, mapSize.width, mapSize.height).startFollow(this.player, false, 0.12, 0.12);
@@ -274,8 +280,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.scale.on('resize', resizeLabels);
       this.events.once('shutdown', () => this.scale.off('resize', resizeLabels));
       callbacks.onLocationChange(LOCATION_NAMES[activeLocation]);
+      callbacks.onMapChange?.(mapIds[activeLocation]);
       saveLocation();
       this.worldReady = true;
+      this.applyPresence();
       callbacks.onReady();
     }
     private updateTalkPrompt() {
@@ -351,7 +359,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       for (const actor of this.npcActors) {
         if (!actor.artTextureKey || !actor.artFrame) continue;
         const inView = this.cameras.main.worldView.contains(actor.npc.x, actor.npc.y);
-        const visible = inView && actor.walkPrefix !== undefined;
+        const visible = isPresent(actor.npc.id) && inView && actor.walkPrefix !== undefined;
         actor.sprite.setVisible(visible);
         actor.label.setVisible(visible);
         if (!inView) continue;
@@ -361,6 +369,19 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         this.queueStreetNpcArt(actor.artTextureKey);
       }
       this.loadNextStreetNpcArt();
+    }
+    private applyPresence() {
+      if (activeLocation === 'station') return;
+      npcs = this.npcActors.filter(actor => isPresent(actor.npc.id)).map(actor => actor.npc);
+      for (const actor of this.npcActors) {
+        const visible = isPresent(actor.npc.id) && (activeLocation !== 'street' ||
+          this.cameras.main.worldView.contains(actor.npc.x, actor.npc.y) && actor.walkPrefix !== undefined);
+        actor.sprite.setVisible(visible);
+        actor.label.setVisible(visible);
+      }
+      if (selectedNpc && !isPresent(selectedNpc)) { selectedNpc = null; destinationMapTarget = null; route = []; }
+      if (nearby && !isPresent(nearby)) { nearby = null; callbacks.onNearby(null); callbacks.onTalkPrompt?.(null); }
+      if (activeLocation === 'street') this.ensureVisibleStreetNpcArt();
     }
     private queueStreetNpcArt(textureKey: string) {
       if (!currentPack || this.textures.exists(textureKey) || textureKey === this.npcArtInFlight || this.npcArtQueue.has(textureKey)) return;
@@ -547,6 +568,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   const game = new P.Game({ type: P.AUTO, parent, width: parent.clientWidth, height: parent.clientHeight, backgroundColor: '#e4cda9', scene: StationScene,
     scale: { mode: P.Scale.RESIZE, autoCenter: P.Scale.CENTER_BOTH }, render: { pixelArt: false }, loader: { timeout: 15000 } });
   return { destroy: () => { destroyed = true; packRequest?.abort(); game.destroy(true); }, pause: (value, pauseWorld = value, talkingNpc = null) => { paused = value; worldPaused = pauseWorld; conversationNpcId = talkingNpc; }, unlockExit: (value) => { exitUnlocked = value; }, talk,
+    setPresentNpcIds: (ids) => { presentNpcIds = new Set(ids); refreshPresence?.(); },
     readMinimap: () => destroyed ? null : readMinimap(),
     setAppearance: (value) => { if (callbacks.practice) return; appearance = value; refreshAppearance?.(); } };
 }

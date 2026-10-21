@@ -11,7 +11,7 @@ export function mergeOnboardingDraft(current: Partial<OnboardingDraft>, changes:
 }
 
 export function canReview(draft: Partial<OnboardingDraft>): draft is OnboardingDraft {
-  return typeof draft.cityId === 'string' && draft.cityId.length > 0
+  return typeof draft.countryId === 'string' && draft.countryId.length > 0
     && typeof draft.avatarId === 'string' && draft.avatarId.length > 0
     && typeof draft.name === 'string' && validateCharacterName(draft.name) === null;
 }

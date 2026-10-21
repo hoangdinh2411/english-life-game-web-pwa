@@ -14,6 +14,8 @@ import { NpcPromptService } from '../ai/npc-prompt.service';
 import { AiUsageService } from '../ai/ai-usage.service';
 import type { AiReplyResult } from '../ai/ai.service';
 import type { ConversationHistoryPage } from '@life-abroad/shared';
+import { ConversationSpeechService } from '../speech/conversation-speech.service';
+import { NpcPresenceService } from '../npcs/npc-presence.service';
 
 const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
 
@@ -35,14 +37,16 @@ export class ConversationsService {
     private readonly dialogue: DialogueService, private readonly quests: QuestsService, private readonly life: LifeService,
     private readonly seller: SellerService, private readonly coffee: CoffeeQuestService,
     private readonly ai: AiService, private readonly prompts: NpcPromptService,
-    private readonly aiUsage: AiUsageService) {}
+    private readonly aiUsage: AiUsageService, private readonly speech: ConversationSpeechService,
+    private readonly presence: NpcPresenceService) {}
 
   learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
     return this.conversations.learningHistory(userId);
   }
 
-  create(userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<Conversation> {
-    return this.conversations.transaction(async client => {
+  async create(userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<Conversation> {
+    const conversation = await this.conversations.transaction(async client => {
+      await this.presence.assertCanStart(client, userId, npcId);
       const arrival = await this.quests.getArrival(userId, client);
       if (isCafeSeller(npcId) || npcId === 'npc_clothes_seller') {
         const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
@@ -75,10 +79,11 @@ export class ConversationsService {
       const greeting = transientOpening(id, opening.text);
       return { id, npcId: ARRIVAL_NPC_ID, messages: [greeting], arrival };
     });
+    return this.speech.conversation(userId, { ...conversation, npcId: conversationNpcSchema.parse(conversation.npcId) });
   }
 
-  get(userId: string, id: string): Promise<Conversation> {
-    return this.conversations.transaction(async client => {
+  async get(userId: string, id: string): Promise<Conversation> {
+    const conversation = await this.conversations.transaction(async client => {
       const arrival = await this.quests.getArrival(userId, client);
       const row = await this.conversations.load(client, userId, id);
       return { id, npcId: conversationNpcSchema.parse(row.npc_id),
@@ -86,12 +91,14 @@ export class ConversationsService {
         ...(isCafeSeller(row.npc_id) || row.npc_id === 'npc_clothes_seller' ? { seller: sellerState(row) } : {}),
         ...([SELLER_NPC_ID,'npc_cafe_waiter'].includes(row.npc_id) ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
     });
+    return this.speech.conversation(userId, conversation);
   }
 
-  historyPage(userId: string, npcId: string, before?: string): Promise<ConversationHistoryPage> {
-    return this.conversations.transaction(async client => {
+  async historyPage(userId: string, npcId: string, before?: string): Promise<ConversationHistoryPage> {
+    const page = await this.conversations.transaction(async client => {
       return this.conversations.olderMessages(client, userId, conversationNpcSchema.parse(npcId), before);
     });
+    return this.speech.history(userId, conversationNpcSchema.parse(npcId), page);
   }
 
   send(userId: string, id: string, request: SendMessageRequest): Promise<ConversationTurn> {
@@ -103,9 +110,9 @@ export class ConversationsService {
     return this.sendInternal(userId, id, request, { npcId, beforeSave, signal });
   }
 
-  private sendInternal(userId: string, id: string, request: SendMessageRequest,
+  private async sendInternal(userId: string, id: string, request: SendMessageRequest,
     stream?: { npcId: string; beforeSave: (text: string) => Promise<void>; signal: AbortSignal }): Promise<ConversationTurn> {
-    return this.conversations.transaction(async client => {
+    const result = await this.conversations.transaction(async client => {
       // Always lock the character before the conversation, matching quest lock order.
       let arrival = await this.quests.getArrival(userId, client);
       const conversation = await this.conversations.load(client, userId, id);
@@ -113,11 +120,11 @@ export class ConversationsService {
       const replay = await this.conversations.replay(client, id, request);
       if (replay) {
         if (stream) await stream.beforeSave(replay.npcMessage.text);
-        return { ...replay, arrival,
+        return { npcId: conversationNpcSchema.parse(conversation.npc_id), turn: { ...replay, arrival,
         ...(isCafeSeller(conversation.npc_id) || conversation.npc_id === 'npc_clothes_seller'
           ? { seller: sellerState(conversation) } : {}),
         ...([SELLER_NPC_ID, 'npc_cafe_waiter'].includes(conversation.npc_id)
-          ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
+          ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) } };
       }
       const receptionist = conversation.npc_id === ARRIVAL_NPC_ID;
       if (conversation.ended_at) throw new ConflictException('This conversation has ended. Start a new conversation');
@@ -224,7 +231,9 @@ export class ConversationsService {
       const npcMessage = await this.conversations.append(client, id, 'npc', responseText, request.clientMessageId, metadata);
       await this.conversations.setNode(client, id, nodeId);
       if (aiResult) await this.aiUsage.record(client, userId, id, request.clientMessageId, aiResult);
-      return { ...metadata, playerMessage, npcMessage };
+      return { npcId: conversationNpcSchema.parse(conversation.npc_id),
+        turn: { ...metadata, playerMessage, npcMessage } };
     });
+    return this.speech.turn(userId, result.npcId, result.turn);
   }
 }

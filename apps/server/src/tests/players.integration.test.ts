@@ -52,11 +52,11 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
     assert.equal(before.user.id, userId);
     await database.query('UPDATE player_stats SET xp = 23, coins = 7 WHERE user_id = $1', [userId]);
     const optionsResponse = await call('/onboarding/options');
-    const options = await optionsResponse.json() as { cities: Array<{ id: string }>; avatars: Array<{ id: string }> };
-    assert.ok(options.cities[0]); assert.ok(options.avatars[0]);
-    const request = { name: '  R4 Learner  ', cityId: options.cities[0].id, avatarId: options.avatars[0].id };
+    const options = await optionsResponse.json() as { countries: Array<{ id: string }>; avatars: Array<{ id: string }> };
+    assert.ok(options.countries[0]); assert.ok(options.avatars[0]);
+    const request = { name: '  R4 Learner  ', countryId: options.countries[0].id, avatarId: options.avatars[0].id };
     for (const body of [null, {}, { ...request, xp: 999 }, { ...request, userId }, { ...request, name: ' ' },
-      { ...request, name: 'a'.repeat(2001) }, { ...request, cityId: 'city_unknown' }, { ...request, avatarId: 'avatar_unknown' }]) {
+      { ...request, name: 'a'.repeat(2001) }, { ...request, countryId: 'country_unknown' }, { ...request, avatarId: 'avatar_unknown' }]) {
       assert.equal((await call('/characters', body)).status, 400);
     }
     assert.equal((await database.query('SELECT * FROM characters WHERE user_id = $1', [userId])).rowCount, 0);
@@ -162,7 +162,7 @@ test('T15 new character starts with $500 and reload retains it', async () => {
     await database.query('INSERT INTO auth.users (id,email,raw_user_meta_data) VALUES ($1,$2,$3)',
       [userId, `t15-${userId}@example.com`, {}]);
     const options = await module.get(OnboardingService).getOptions();
-    const request = { name: 'Wallet Learner', cityId: options.cities[0]!.id, avatarId: options.avatars[0]!.id };
+    const request = { name: 'Wallet Learner', countryId: options.countries[0]!.id, avatarId: options.avatars[0]!.id };
     const players = module.get(PlayersService);
     assert.deepEqual((await players.createCharacter(userId, request)).stats, { xp: 0, coins: 500 });
     assert.deepEqual((await players.getPlayer(userId)).stats, { xp: 0, coins: 500 });

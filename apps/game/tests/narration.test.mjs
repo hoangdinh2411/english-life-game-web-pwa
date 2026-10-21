@@ -40,3 +40,16 @@ test('browser narration reports text progress from word boundaries and completio
   utterance.onend();
   assert.deepEqual(progress, [0, 6 / 11, 1]);
 });
+
+test('browser narration applies speed and pitch independently', () => {
+  let utterance;
+  const narrator = createNarrator(
+    { getVoices: () => [{ name: 'Microsoft David Desktop', lang: 'en-US' }], cancel() {}, speak: value => { utterance = value; } },
+    text => ({ text }),
+    { onSpeaking() {}, onError: () => assert.fail('unexpected error') },
+    () => ({ speechRate: 1.3, speechPitch: 0.8 }),
+  );
+  narrator.speak('Slower or lower', 'male');
+  assert.equal(utterance.rate, 1.3);
+  assert.equal(utterance.pitch, 0.8);
+});

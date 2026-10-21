@@ -1,7 +1,7 @@
 {
   "greetings": {
-    "receptionist": "Welcome to Maplewood! I’m the station receptionist. Say hello, and I can help you find your way.",
-    "backpack": "Hi! I just arrived too. Are you new to Maplewood?",
+    "receptionist": "Welcome to Sweden! I’m the station receptionist. Say hello, and I can help you find your way.",
+    "backpack": "Hi! I just arrived too. Are you new to Sweden?",
     "suitcase": "Hello! How was your journey?"
   },
   "nodes": {
@@ -32,13 +32,13 @@
       "text": "Of course! What would you like help with instead?"
     },
     "goodbye": {
-      "text": "You’re welcome! Enjoy your new life in Maplewood."
+      "text": "You’re welcome! Enjoy your new life in Sweden."
     },
     "passenger_directions": {
       "text": "The receptionist at the information kiosk can help you with that."
     },
     "passenger_chat": {
-      "text": "It’s nice to meet you! What would you like to do in Maplewood?"
+      "text": "It’s nice to meet you! What would you like to do in Sweden?"
     },
     "confirmation": {
       "text": "Oh, {question}?",

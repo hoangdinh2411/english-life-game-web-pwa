@@ -25,6 +25,7 @@ import { TownspersonConversation } from "../features/npcs/TownspersonConversatio
 import { ReviewDialogue } from "../features/learning/ReviewDialogue";
 import { usePreferences } from "../features/hud/usePreferences";
 import { Settings } from "../features/hud/Settings";
+import { useNpcPresence } from "../features/npcs/use-npc-presence";
 
 const TUTORIAL_KEY = "movementTutorialSeen";
 
@@ -56,11 +57,12 @@ export default function StationScreen({
   const [npcId, setNpcId] = useState<StationSpeaker | ShopNpcId | StreetNpcId | null>(null);
   const [tutorial, setTutorial] = useState(() => !hasSeenTutorial());
   const [stationReady, setStationReady] = useState(false);
-  const [location, setLocation] = useState("Maplewood · Train Station");
+  const [location, setLocation] = useState("Sweden · Train Station");
   const [menu, setMenu] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [closedStore, setClosedStore] = useState<StoreLocation | null>(null);
+  const [activeMapId, setActiveMapId] = useState<string>(arrival?.initialLocation.placeId ?? "loc_station");
   const [goals, setGoals] = useState(false);
   const { sound, set: setPreference } = usePreferences();
   const menuWasOpen = useRef(false);
@@ -76,7 +78,8 @@ export default function StationScreen({
   const [practiceDirectionsAsked, setPracticeDirectionsAsked] = useState(false);
   const [exitReminder, setExitReminder] = useState(false);
   const pwa = usePwa();
-  const cityName = location.split(" · ")[0] ?? "Maplewood";
+  const presence = useNpcPresence(activeMapId, !practice && Boolean(life?.state), pwa.online, life?.state?.clockRate ?? 1);
+  const countryName = location.split(" · ")[0] ?? "Sweden";
   const worldPaused =
     tutorial ||
     menu ||
@@ -112,6 +115,8 @@ export default function StationScreen({
         onExitBlocked={() => setExitReminder(true)}
         onReadyChange={setStationReady}
         onLocationChange={setLocation}
+        onMapChange={setActiveMapId}
+        presentNpcIds={presence.presentNpcIds}
         {...(!practice && life ? {
           getGameTime: () => life.time,
           onStoreClosed: (store) => setClosedStore(store),
@@ -144,7 +149,7 @@ export default function StationScreen({
       >
         <PlayerInfoCard
           playerName={playerName}
-          cityName={cityName}
+          cityName={countryName}
           coins={coins}
           onOpenProfile={() => setProfileOpen(true)}
           visible={!overlayOpen || profileOpen}
@@ -227,7 +232,7 @@ export default function StationScreen({
       ) : null}
       {profileOpen ? <PlayerProfileDialogue
         playerName={playerName}
-        cityName={cityName}
+        cityName={countryName}
         xp={xp}
         coins={coins}
         {...(life ? { life } : {})}
@@ -251,7 +256,7 @@ export default function StationScreen({
           npc={STREET_NPCS.find((npc) => npc.id === npcId)!}
           sound={sound}
           onClose={() => setNpcId(null)}
-          onRefresh={async () => { await life?.refresh(); }}
+          onRefresh={async () => { await life?.refresh(); await presence.refresh(); }}
         />
       ) : npcId && isShopNpc(npcId) ? (
         <ShopConversation
@@ -259,7 +264,7 @@ export default function StationScreen({
           npcId={npcId}
           sound={sound}
           onClose={() => setNpcId(null)}
-          onRefresh={() => life?.refresh() ?? Promise.resolve()}
+          onRefresh={async () => { await life?.refresh(); await presence.refresh(); }}
         />
       ) : npcId === "npc_station_information" && arrival ? (
         <DialogueFrame soundControl={!arrival.farewellConfirm} confirmationOnly={arrival.farewellConfirm}>

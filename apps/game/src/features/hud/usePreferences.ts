@@ -5,7 +5,7 @@ function deviceStorage(): Storage | undefined {
   try { return typeof window === 'undefined' ? undefined : window.localStorage; }
   catch { return undefined; }
 }
-const preferences = createPreferences(deviceStorage());
+export const preferences = createPreferences(deviceStorage());
 export function usePreferences() {
   const state = useSyncExternalStore(preferences.subscribe, preferences.getSnapshot, () => defaultPreferences);
   return { ...state, set: preferences.set };

@@ -14,6 +14,7 @@ import { SellerService } from '../modules/conversations/seller.service';
 import { AiService } from '../modules/ai/ai.service';
 import { NpcPromptService } from '../modules/ai/npc-prompt.service';
 import { AiUsageService } from '../modules/ai/ai-usage.service';
+import { NpcPresenceService } from '../modules/npcs/npc-presence.service';
 
 test('T10c all NPCs use AI after scripts while pending gameplay and replay bypass it', async () => {
   let npcId = 'npc_mila_florist';
@@ -26,6 +27,7 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
   let enabled = true;
   let limited = false;
   let aiFallback = false;
+  let presenceChecks = 0;
   const order: string[] = [];
   const scripted = { text: 'Scripted reply', node: { id: 'global_repeat' }, intent: null, misunderstood: true };
   let arrival = { locationId: 'loc_station' };
@@ -69,7 +71,8 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
       return { text: aiFallback ? 'Scripted reply' : 'AI text', provider: 'mock', model: 'mock', inputTokens: 2, outputTokens: 2,
         fallback: aiFallback, usedProvider: true };
     } })
-    .overrideProvider(AiUsageService).useValue({ limited: async () => limited, record: async () => undefined }).compile();
+    .overrideProvider(AiUsageService).useValue({ limited: async () => limited, record: async () => undefined })
+    .overrideProvider(NpcPresenceService).useValue({ assertCanStart: async () => { presenceChecks++; } }).compile();
   try {
     const service = module.get(ConversationsService);
     const send = () => service.send('existing-user', randomUUID(), {
@@ -104,5 +107,6 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
     limited = true; assert.equal((await send()).npcMessage.text, 'Friendly limit'); limited = false;
     enabled = false; await send();
     assert.equal(aiCalls, 5);
+    assert.equal(presenceChecks, 0, 'continuing an existing conversation must not re-check presence');
   } finally { await module.close(); }
 });

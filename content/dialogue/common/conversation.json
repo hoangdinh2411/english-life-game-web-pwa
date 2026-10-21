@@ -81,6 +81,19 @@
           "next": "global_origin"
         },
         {
+          "name": "ask_name",
+          "keywords": [
+            "what is your name",
+            "what's your name",
+            "what your name",
+            "what you name",
+            "tell me your name",
+            "your name",
+            "who are you"
+          ],
+          "next": "global_name"
+        },
+        {
           "name": "goodbye",
           "keywords": [
             "goodbye",
@@ -90,6 +103,12 @@
           "next": "global_goodbye"
         }
       ]
+    },
+    {
+      "id": "global_name",
+      "text": {
+        "default": "My name is {npcName}."
+      }
     },
     {
       "id": "global_station",

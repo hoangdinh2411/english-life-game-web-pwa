@@ -5,7 +5,12 @@ const voiceNames: Record<VoiceGender, RegExp> = {
   male: /\b(?:male|david|mark|guy|daniel|alex|tom|christopher|ryan|eric|andrew|roger|thomas|george|steffan|fred)\b/i,
 };
 
-export function createNarrator(synthesis: Synthesis | null, createUtterance: (text: string) => Utterance, callbacks: NarrationCallbacks): Narrator {
+export function createNarrator(
+  synthesis: Synthesis | null,
+  createUtterance: (text: string) => Utterance,
+  callbacks: NarrationCallbacks,
+  playbackSettings: () => { speechRate: number; speechPitch: number } = () => ({ speechRate: 0.9, speechPitch: 1 }),
+): Narrator {
   let current: Utterance | null = null;
   const stop = () => {
     if (current) { current.onstart = null; current.onend = null; current.onerror = null; current.onboundary = null; current = null; synthesis?.cancel(); }
@@ -17,7 +22,8 @@ export function createNarrator(synthesis: Synthesis | null, createUtterance: (te
       stop();
       if (!synthesis || !text.trim()) return;
       const utterance = createUtterance(text);
-      utterance.lang = 'en-US'; utterance.rate = 0.9; utterance.pitch = 1; utterance.volume = 1;
+      const settings = playbackSettings();
+      utterance.lang = 'en-US'; utterance.rate = settings.speechRate; utterance.pitch = settings.speechPitch; utterance.volume = 1;
       const englishVoices = synthesis.getVoices().filter((candidate) => candidate.lang.toLowerCase().startsWith('en'));
       const voice = englishVoices.find((candidate) => voiceNames[gender].test(candidate.name)) ??
         englishVoices.find((candidate) => !voiceNames[gender === 'female' ? 'male' : 'female'].test(candidate.name));
@@ -27,7 +33,7 @@ export function createNarrator(synthesis: Synthesis | null, createUtterance: (te
       }
       // Browser voice names are inconsistent. A slight pitch lift helps when
       // the browser exposes no identifiable female voice for a female speaker.
-      if (gender === 'female' && voice && !voiceNames.female.test(voice.name)) utterance.pitch = 1.18;
+      if (gender === 'female' && voice && !voiceNames.female.test(voice.name)) utterance.pitch *= 1.18;
       if (voice) utterance.voice = voice;
       current = utterance;
       callbacks.onProgress?.(0);

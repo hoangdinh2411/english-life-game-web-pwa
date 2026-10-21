@@ -10,9 +10,9 @@ export function createRecordedNarrator(findClip: (text: string, gender: VoiceGen
   };
   return {
     stop,
-    speak(text, gender = 'male') {
+    speak(text, gender = 'male', asset) {
       stop();
-      const url = findClip(text, gender);
+      const url = asset ?? findClip(text, gender);
       if (!url) { fallback.speak(text, gender); return; }
       const audio = createAudio(url);
       const request = version;

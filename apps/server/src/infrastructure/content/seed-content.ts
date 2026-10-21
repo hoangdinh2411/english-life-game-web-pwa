@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { dialogueSchema, npcCatalogSchema, questCatalogSchema, shopCatalogSchema, streetNpcContentSchema, townSeedSchema } from '@life-abroad/shared';
+import { dialogueSchema, moodCatalogSchema, npcCatalogSchema, parseCountryCatalog, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, townSeedSchema, voicePoolsSchema } from '@life-abroad/shared';
 
 async function json(path: string): Promise<unknown> {
   try { return JSON.parse(await readFile(path, 'utf8')) as unknown; }
@@ -8,16 +8,20 @@ async function json(path: string): Promise<unknown> {
 }
 
 export async function loadSeedContent(root: string) {
+  const countries = parseCountryCatalog(await json(join(root, 'seed/countries.json')));
+  const moods = moodCatalogSchema.parse(await json(join(root, 'seed/moods.json')));
   const town = townSeedSchema.parse(await json(join(root, 'seed/town.json')));
+  if (!countries.every(country => country.starterCityId === town.id)) throw new Error('Country references an unknown starter city');
   const catalogNpcs = npcCatalogSchema.parse(await json(join(root, 'seed/npcs.json')));
   const streetNpcs = streetNpcContentSchema.parse(await json(join(root, 'seed/street-npcs.json')));
   const npcs = npcCatalogSchema.parse([...catalogNpcs, ...streetNpcs.npcs.map(npc => ({
     id: npc.id, name: npc.name, gender: npc.gender, role: npc.role, personality: npc.personality,
-    speakingLevel: npc.speakingLevel, locationId: npc.locationId, bio: npc.bio,
+    speakingLevel: npc.speakingLevel, locationId: npc.locationId, bio: npc.bio, profile: npc.profile,
     portrait: npc.portrait,
   }))]);
   const quests = questCatalogSchema.parse(await json(join(root, 'seed/quests.json')));
   const shops = shopCatalogSchema.parse(await json(join(root, 'seed/shops.json')));
+  const voicePools = voicePoolsSchema.parse(await json(join(root, 'voice-pools.json')));
   const dialogues = [];
   for (const file of (await readdir(join(root, 'dialogue'), { recursive: true })).filter(file => file.endsWith('.json')).sort()) {
     dialogues.push(dialogueSchema.parse(await json(join(root, 'dialogue', file))));
@@ -30,7 +34,17 @@ export async function loadSeedContent(root: string) {
   const requireReference = (valid: boolean, message: string): void => {
     if (!valid) throw new Error(message);
   };
-  for (const npc of npcs) requireReference(locations.has(npc.locationId), `${npc.id}: unknown location ${npc.locationId}`);
+  for (const npc of npcs) {
+    requireReference(locations.has(npc.locationId), `${npc.id}: unknown location ${npc.locationId}`);
+    for (const slot of npc.profile.presenceSchedule?.weeklySlots ?? []) {
+      requireReference(locations.has(slot.locationId), `${npc.id}: unknown schedule location ${slot.locationId}`);
+      requireReference(slot.locationId === npc.locationId, `${npc.id}: schedule location must match the NPC location`);
+      if ((SHOP_NPC_IDS as readonly string[]).includes(npc.id)) {
+        requireReference(slot.start >= '08:00' && slot.end <= '14:00' && slot.start < slot.end,
+          `${npc.id}: store schedule must stay within venue hours`);
+      }
+    }
+  }
   for (const quest of quests) requireReference(npcIds.has(quest.npcId), `${quest.id}: unknown NPC ${quest.npcId}`);
   for (const dialogue of dialogues) {
     if (dialogue.scope === 'role') requireReference(roles.includes(dialogue.role), `Unknown dialogue role ${dialogue.role}`);
@@ -52,7 +66,8 @@ export async function loadSeedContent(root: string) {
       }), `${node.id}: unknown applicable quest step ${node.completesStep}`);
     }
   }
-  return { town, roles, npcs, streetNpcs, quests, shops, dialogues };
+  for (const npcId of Object.keys(voicePools.voiceOverrides)) requireReference(npcIds.has(npcId), `Unknown voice override NPC ${npcId}`);
+  return { countries, moods, town, roles, npcs, streetNpcs, quests, shops, dialogues, voicePools };
 }
 
 export type SeedContent = Awaited<ReturnType<typeof loadSeedContent>>;

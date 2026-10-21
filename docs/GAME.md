@@ -2,14 +2,16 @@
 
 ## The game
 
-Life Abroad teaches English through a small 2D role-playing game. Players move
-into the fictional town of **Maplewood**, speak with NPCs, and solve practical
+Life Abroad teaches English through a small 2D role-playing game. Players start
+their new life in **Sweden**, speak with NPCs, and solve practical
 problems. English is a tool to accomplish a task, not a multiple-choice test.
 
 ## Content and MVP
 
-- Authenticated character creation: select a starter city/avatar, enter a name,
-  then start; resume existing characters from the server.
+- Authenticated character creation: select a country/avatar, enter a name,
+  then start; resume existing characters from the server. Sweden is currently
+  the only country. The server assigns its internal starter city; players never
+  choose or see the city hierarchy.
 - Authored content in `content/seed/`: one town; **Mia** (café), **Mr. Brown**
   (housing), **Sam** (bank); **Your First Coffee** and four later quest
   definitions. The four later quests remain seeded data. The café quest is
@@ -33,7 +35,7 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   game, not general offline gameplay. If broader offline state is approved
   later, replace the single local checkpoint with a versioned IndexedDB record
   (and an outbox only for operations that genuinely need ordered replay).
-- Maplewood Town Street is a larger, camera-following plaza map with connected
+- Town Street is a larger, camera-following plaza map with connected
   paths and added library, pharmacy, florist, post office, bakery and house
   buildings around its original plaza. It includes Corner Cup Café, a separately
   named second café that reuses the seller/catalog flow and has an assistant
@@ -51,6 +53,20 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   sprite art downloads by nearby atlas row as the player approaches, so distant
   character artwork stays unloaded until needed. Portrait links can be changed
   without rewriting gameplay code.
+- Every NPC has a strict version-1 authored profile. Optional personal facts
+  include age, hometown, family, hobbies, favourite food, likes/dislikes,
+  conversation topics, temperament and daily routine. Dialogue receives only
+  stored facts and must not invent a missing fact.
+- NPC base moods come from an editable database catalog and are resolved lazily
+  from the saved game clock in the player's selected country time zone. Authored
+  rules may enable morning happiness, midday stress, sleepiness, timing shifts
+  or deterministic exceptional moods; age only shifts meal, energy and sleep
+  timing and never implies anger or friendliness.
+- Authored weekly NPC schedules use the selected country's local game time and
+  support split and overnight shifts. Street residents without schedules are
+  absent; shop actors remain constrained by venue hours. The client displays
+  and enables only the server presence allowlist, while conversations already
+  in progress may finish after a schedule boundary.
 - Shop and station NPCs have individual names. Venue hours use game time:
   organizations 08:00–16:00, stores 08:00–14:00 and workplaces 07:00–17:00.
   The current playable map gates its store interiors; closed entrances show the

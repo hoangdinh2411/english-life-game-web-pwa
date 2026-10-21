@@ -4,7 +4,7 @@ import { arrivalPresentation } from './arrival-presentation';
 export function TicketReceipt({ arrival }: { arrival: ArrivalState }) {
   const view = arrivalPresentation(arrival);
   return <div className="arrival-ticket flex flex-col gap-[3px] [padding:10px_12px] [border:1px_solid_#9baa7d] rounded-[12px] bg-[#e5eddf] text-[14px] leading-[1.4] [&_span]:text-[13px]" role="status"><strong>{view.ticket}</strong>
-    <span>{arrival.ticket.used ? 'Maplewood Town Street · Journey completed' : arrival.ticket.issued ? 'Maplewood Town Street · Ready for the station exit' : 'Ask the receptionist after saying hello.'}</span>
+    <span>{arrival.ticket.used ? 'Town Street · Journey completed' : arrival.ticket.issued ? 'Town Street · Ready for the station exit' : 'Ask the receptionist after saying hello.'}</span>
   </div>;
 }
 export function ArrivalQuest({ arrival }: { arrival: ArrivalState }) {

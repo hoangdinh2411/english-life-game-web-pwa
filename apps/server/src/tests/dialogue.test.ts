@@ -52,7 +52,7 @@ test('Town Street residents open casual conversations and understand common topi
   const { engine } = await fixture();
   const context = { npcId: 'npc_mila_florist', roleId: 'townsperson', personality: 'cheerful' };
   const opening = await engine.node(context, 'townsperson_start');
-  assert.match(opening.text, /Maplewood|meet someone new|exploring new places/i);
+  assert.match(opening.text, /Sweden|meet someone new|exploring new places/i);
   const topics = [
     ['How are you?', 'global_wellbeing'],
     ['How is the weather?', 'global_weather'],
@@ -134,6 +134,18 @@ test('T4 applies NPC then role then global intent precedence and personality wor
   const global = await engine.reply(stranger, 'hello');
   assert.equal(global.node.id, 'global_how_are_you');
   assert.equal((await engine.reply(stranger, 'bus ticket')).node.id, 'global_repeat');
+});
+
+test('NPCs answer name questions, including a common learner mistake', async () => {
+  const { engine } = await fixture();
+  const context = { ...receptionist, npcName: 'Ruth' };
+  for (const input of ['What is your name?', "What's your name?", 'What you name?', 'Who are you?']) {
+    const reply = await engine.reply(context, input);
+    assert.equal(reply.intent, 'ask_name', input);
+    assert.equal(reply.node.id, 'global_name', input);
+    assert.equal(reply.text, 'My name is Ruth.', input);
+    assert.equal(reply.misunderstood, false, input);
+  }
 });
 
 test('T4 misunderstandings, boundaries and refusals never return a successful intent', async () => {

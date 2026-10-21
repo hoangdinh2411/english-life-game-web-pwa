@@ -8,9 +8,10 @@ import { GeminiProvider } from './gemini.provider';
 import { LifeModule } from '../life/life.module';
 import { NpcPromptService } from './npc-prompt.service';
 import { AiUsageService } from './ai-usage.service';
+import { NpcsModule } from '../npcs/npcs.module';
 
 @Module({
-  imports: [ConfigModule, DialogueModule, LifeModule],
+  imports: [ConfigModule, DialogueModule, LifeModule, NpcsModule],
   providers: [
     {
       provide: AI_PROVIDER,

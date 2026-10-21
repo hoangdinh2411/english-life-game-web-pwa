@@ -44,9 +44,102 @@ test('content command rejects an NPC without gender', async () => {
   });
 });
 
+for (const [name, mutate, diagnostic] of [
+  ['missing profile version', (npc) => { delete npc.profile.profileVersion; }, /profile\.profileVersion/s],
+  ['unknown profile field', (npc) => { npc.profile.secret = 'not allowed'; }, /profile.*unrecognized key/is],
+  ['unsupported profile version', (npc) => { npc.profile.profileVersion = 2; }, /profile\.profileVersion/s],
+]) {
+  test(`content command rejects ${name}`, async () => {
+    await fixture(async (root) => {
+      const path = resolve(root, 'content/seed/npcs.json');
+      const npcs = JSON.parse(await readFile(path, 'utf8'));
+      mutate(npcs[0]);
+      await writeFile(path, JSON.stringify(npcs));
+      const result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, diagnostic);
+    });
+  });
+}
+
+test('every authored NPC has a distinct versioned profile', async () => {
+  const catalog = JSON.parse(await readFile(resolve(repository, 'content/seed/npcs.json'), 'utf8'));
+  const street = JSON.parse(await readFile(resolve(repository, 'content/seed/street-npcs.json'), 'utf8'));
+  const profiles = [...catalog, ...street.npcs].map(npc => JSON.stringify(npc.profile));
+  assert.equal(profiles.length, 29);
+  assert.equal(new Set(profiles).size, profiles.length);
+  assert.ok([...catalog, ...street.npcs].every(npc => npc.profile?.profileVersion === 1));
+});
+
+test('mood catalog contains the ten strict editable mood rows', async () => {
+  const moods = JSON.parse(await readFile(resolve(repository, 'content/seed/moods.json'), 'utf8'));
+  assert.deepEqual(moods.map(mood => mood.id), ['neutral', 'happy', 'hungry', 'stressed', 'tired', 'relaxed', 'sleepy', 'sad', 'upset', 'angry']);
+  assert.ok(moods.every(mood => mood.label.trim() && mood.guidance.trim()));
+});
+
+test('content command rejects malformed mood rules and mood rows', async () => {
+  await fixture(async root => {
+    const npcPath = resolve(root, 'content/seed/npcs.json');
+    const npcs = JSON.parse(await readFile(npcPath, 'utf8'));
+    npcs[0].profile.moodRules = { morningHappy: true, inventedRule: true };
+    await writeFile(npcPath, JSON.stringify(npcs));
+    let result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /moodRules.*unrecognized key/is);
+
+    npcs[0].profile.moodRules = { exceptional: [{ mood: 'friendly', start: '09:00', end: '10:00', chancePercent: 20 }] };
+    await writeFile(npcPath, JSON.stringify(npcs));
+    result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /moodRules.*exceptional/is);
+  });
+});
+
+test('every street NPC has an authored presence schedule with multiple-shift and overnight coverage', async () => {
+  const street = JSON.parse(await readFile(resolve(repository, 'content/seed/street-npcs.json'), 'utf8'));
+  assert.ok(street.npcs.every(npc => npc.profile.presenceSchedule?.weeklySlots.length));
+  assert.ok(street.npcs.some(npc => npc.profile.presenceSchedule.weeklySlots.length > 1));
+  assert.ok(street.npcs.some(npc => npc.profile.presenceSchedule.weeklySlots.some(slot => slot.start > slot.end)));
+});
+
+test('content command rejects overlapping and unknown-location presence schedules', async () => {
+  await fixture(async root => {
+    const path = resolve(root, 'content/seed/street-npcs.json');
+    const street = JSON.parse(await readFile(path, 'utf8'));
+    street.npcs[0].profile.presenceSchedule.weeklySlots = [
+      { days: ['mon'], start: '08:00', end: '12:00', locationId: 'loc_town_street' },
+      { days: ['mon'], start: '11:00', end: '13:00', locationId: 'loc_town_street' },
+    ];
+    await writeFile(path, JSON.stringify(street));
+    let result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /overlap/i);
+
+    street.npcs[0].profile.presenceSchedule.weeklySlots = [
+      { days: ['mon'], start: '08:00', end: '12:00', locationId: 'loc_missing' },
+    ];
+    await writeFile(path, JSON.stringify(street));
+    result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /unknown schedule location/i);
+  });
+});
+
 test('committed content passes', () => {
   const result = spawnSync(process.execPath, [validator], { cwd: repository, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
+});
+
+test('content command rejects an invalid country catalog', async () => {
+  await fixture(async (root) => {
+    const path = resolve(root, 'content/seed/countries.json');
+    const countries = JSON.parse(await readFile(path, 'utf8'));
+    countries[0].timeZone = 'Stockholm';
+    await writeFile(path, JSON.stringify(countries));
+    const result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /countries\.json.*time zone/is);
+  });
 });
 
 // Invalid catalog data must fail the actual content command, not just a schema helper.

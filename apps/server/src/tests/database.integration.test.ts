@@ -57,11 +57,14 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
         assert.equal(seed.status, 0, seed.stderr);
       }
       assert.equal((await clean.query('SELECT * FROM npcs')).rowCount, content.npcs.length);
+      assert.equal((await clean.query('SELECT * FROM mood_types')).rowCount, content.moods.length);
+      assert.equal((await clean.query("SELECT current_mood_id FROM npcs WHERE id='npc_mia'")).rows[0].current_mood_id, 'neutral');
       assert.deepEqual(
-        (await clean.query(`SELECT gender, portrait_image_url, portrait_index, portrait_columns, portrait_rows
+        (await clean.query(`SELECT gender, profile, portrait_image_url, portrait_index, portrait_columns, portrait_rows
           FROM npcs WHERE id=$1`, ['npc_nora_bookseller'])).rows[0],
         {
           gender: 'female',
+          profile: content.npcs.find(npc => npc.id === 'npc_nora_bookseller')!.profile,
           portrait_image_url: 'npcs/npc_nora_bookseller/portraits.png',
           portrait_index: 0,
           portrait_columns: 3,

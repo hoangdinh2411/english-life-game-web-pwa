@@ -56,11 +56,11 @@ export class ConversationsRepository {
   }
 
   async context(client: PoolClient, npcId: string = ARRIVAL_NPC_ID): Promise<DialogueContext> {
-    const result = await client.query<{ role_id: string; personality: string }>(
-      'SELECT role_id,personality FROM public.npcs WHERE id=$1', [npcId]);
+    const result = await client.query<{ name: string; role_id: string; personality: string }>(
+      'SELECT name,role_id,personality FROM public.npcs WHERE id=$1', [npcId]);
     const npc = result.rows[0];
     if (!npc) throw new ServiceUnavailableException('NPC content is unavailable');
-    return { npcId, roleId: npc.role_id, personality: npc.personality };
+    return { npcId, npcName: npc.name, roleId: npc.role_id, personality: npc.personality };
   }
 
   async create(client: PoolClient, userId: string, npcId: string = ARRIVAL_NPC_ID, openingVariation = 0): Promise<string> {

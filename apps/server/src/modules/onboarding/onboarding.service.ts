@@ -1,13 +1,14 @@
 import { Inject, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { parseOnboardingOptions, type OnboardingOptions } from '@life-abroad/shared';
+import { parseCountryCatalog, parseOnboardingOptions, type CountryCatalogEntry, type OnboardingOptions } from '@life-abroad/shared';
 
 export const ONBOARDING_SEED_DIRECTORY = 'ONBOARDING_SEED_DIRECTORY';
 
 @Injectable()
 export class OnboardingService {
   private catalog: Promise<OnboardingOptions> | undefined;
+  private countries: CountryCatalogEntry[] = [];
 
   constructor(@Inject(ONBOARDING_SEED_DIRECTORY) private readonly directory: string) {}
 
@@ -20,8 +21,14 @@ export class OnboardingService {
     return parseOnboardingOptions(await this.catalog);
   }
 
+  async getCountry(countryId: string): Promise<CountryCatalogEntry | undefined> {
+    await this.getOptions();
+    return this.countries.find(country => country.id === countryId);
+  }
+
   private async loadCatalog(): Promise<OnboardingOptions> {
-    const [townJson, avatarsJson] = await Promise.all([
+    const [countriesJson, townJson, avatarsJson] = await Promise.all([
+      readFile(join(this.directory, 'countries.json'), 'utf8'),
       readFile(join(this.directory, 'town.json'), 'utf8'),
       readFile(join(this.directory, 'avatars.json'), 'utf8'),
     ]);
@@ -31,8 +38,13 @@ export class OnboardingService {
       throw new Error('town.json must explicitly mark the starter city');
     }
     const city = town as Record<string, unknown>;
-    const options = parseOnboardingOptions({ cities: [{ id: city.id, name: city.name, description: city.description }], avatars });
-    if (options.cities.length === 0 || options.avatars.length === 0) throw new Error('Empty onboarding catalog');
+    const countries = parseCountryCatalog(JSON.parse(countriesJson));
+    if (!countries.every(country => country.starterCityId === city.id)) throw new Error('Country references an unknown starter city');
+    this.countries = countries;
+    const options = parseOnboardingOptions({ countries: countries.map(country => ({
+      id: country.id, name: country.name, isoCode: country.isoCode, flag: country.flag, timeZone: country.timeZone,
+    })), avatars });
+    if (options.countries.length === 0 || options.avatars.length === 0) throw new Error('Empty onboarding catalog');
     return options;
   }
 }

@@ -114,10 +114,12 @@ server scripts first. Pending orders/active NPC quests stay scripted. Unmatched
 messages reach the provider for every NPC, extending the available conversation
 topics after scripted dialogue has had priority. AI text never becomes a gameplay intent.
 `NpcPromptService.build` reads NPC name, role, personality, speaking level, place,
-opening status and the player's English level from the database, plus the last six
+opening status, the strict authored NPC profile and the player's English level
+from the database, plus the last six
 complete conversation turns. Account identifiers, known player names and emails
-are removed from both the current input and history. The provider gets no profile
-record. Free Gemini keys remain for fictional development data only. Authenticated
+are removed from both the current input and history. The provider gets no player
+profile record and must not invent NPC facts missing from the authored profile.
+Free Gemini keys remain for fictional development data only. Authenticated
 free chat uses Gemini's native stream through `POST /chat/stream`. The server
 buffers one sentence, validates it, then forwards the safe sentence immediately;
 complete accepted replies and usage are saved atomically, retries replay without
@@ -127,8 +129,9 @@ allowed. Optional positive
 through `ai_usage_daily`; unset values impose no unapproved cap. The client uses
 the SSE endpoint for saved NPC dialogue, aborts it when the panel closes, labels
 only server-confirmed AI replies and resumes the authenticated conversation after
-reload from an opaque per-NPC ID in session storage. AI replies use browser speech;
-authored replies keep recorded narration. `VITE_AI_TEST_MODE=true` shows the
+reload from an opaque per-NPC ID in session storage. Authenticated authored and AI
+replies can include short-lived private speech URLs; the client keeps the text
+visible and falls back when speech is unavailable. `VITE_AI_TEST_MODE=true` shows the
 development-only AI disclosure.
 The AI safety boundary trims input and rejects empty, over-300-character,
 non-English, emoji-spam, prompt-injection, economy-manipulation, personal-data
@@ -180,8 +183,16 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   `009` shop catalog; `010` saved life, wardrobe and action receipts;
   `011` server-owned pending seller orders; `020` saved player map and exact
   place; `021` saved position within that place; `022` saved opening variation
-  indices so unanswered NPC openings stay out of message history. (Migrations
-  `012`–`019` cover dialogue storage and AI/NPC assets.)
+  indices so unanswered NPC openings stay out of message history. Migrations
+  `012`–`019` cover dialogue storage and AI/NPC assets; `025` adds server-only
+  fixed-speech metadata and a private `speech-audio` bucket; `026` adds expiring
+  AI-speech references without source text; `027` adds the country catalog,
+  internal country-to-starter-city mapping and each character's country.
+  Migration `028` adds the required versioned `npcs.profile` JSONB document;
+  strict field validation happens before seeding and prompt construction.
+  Canonical speech keys include only
+  generation inputs, and callers receive 60-second signed URLs. AI audio uses
+  `AI_SPEECH_CACHE_TTL_SECONDS` (30–3600, default 300) and rejects sensitive text.
   Inspect schema and current database before applying new changes.
 
 ## API (implemented vs planned)
@@ -211,11 +222,15 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
   url, bytes, npcId }] }`. Latest version per map/NPC logical key, resolved from
   PostgreSQL; no browser PostgREST access. Unavailable packs return 404.
 - `GET /health` → `{ status: "ok" }` (public).
-- `GET /onboarding/options` → `{ cities, avatars }` (protected, authored content).
+- `GET /onboarding/options` → `{ countries, avatars }` (protected, authored
+  content). Countries expose `id`, `name`, ISO code, flag and IANA time zone;
+  their starter-city mapping remains server-only.
 - `GET /me` → `{ user, character, stats }`; `character: null` before creation,
   `stats` contains existing `xp`/`coins` even before a character exists.
-- `POST /characters` with `{ name, cityId, avatarId }`; creates one character
-  atomically, adds the configured starting grant, duplicate returns 409.
+- `POST /characters` with `{ name, countryId, avatarId }`; validates the country,
+  assigns its internal starter city on the server, persists both selections,
+  creates one character atomically, adds the configured starting grant, and
+  returns 409 for a duplicate.
 - `POST /players/location` with `{ mapId, placeId, x, y }`; saves the
   authenticated character's outdoor parent map, exact playable place and
   bounded position. Only authored map/place pairs are accepted; this does not
@@ -326,6 +341,17 @@ shop companion scripts; the first coffee quest remains attached to Mia.
   away from the app. The server persists game time, real-time anchor and rate;
   changing the configured rate rebases the clock without a jump. Browser
   wall-clock changes cannot mutate saved time.
+- `mood_types` stores editable mood labels and dialogue guidance. NPC base mood
+  references this catalog, defaults to `neutral`, and is recomputed on dialogue
+  context reads from server-owned game time converted through the selected
+  country's IANA zone. The resolver updates changed base moods lazily; no cron
+  job or client clock participates.
+- Protected `GET /npcs/presence?mapId=<location-id>` returns the server-derived
+  NPC allowlist plus `gameTime`, the selected country IANA `timeZone`, and the
+  next game-time boundary. Phaser refreshes on map entry, reconnect and that
+  boundary, hiding absent actors. `POST /conversations` rejects absent NPCs;
+  message requests for an existing conversation do not repeat the presence
+  check.
 - Protected `GET /life/catalog` returns the seeded shop catalog.
 - Protected `GET /life/orders` returns the latest ten café orders for the signed-in player. Each order stores item names, quantities and unit prices as purchased, its total and timestamp.
 - `POST /life/sleep` takes `{ key: UUID }`, adds eight game hours immediately and restores 100 energy.

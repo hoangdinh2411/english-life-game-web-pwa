@@ -70,3 +70,17 @@ test('recorded narration reports playback progress and completes at one', async 
   audio.onended();
   assert.deepEqual(progress, [0, 0.5, 1]);
 });
+
+test('a signed conversation URL overrides bundled lookup and plays directly', async () => {
+  const created = [], fallback = [];
+  const narrator = createRecordedNarrator(() => null, (url) => {
+    created.push(url);
+    return { currentTime: 0, duration: 1, pause() {}, play: async () => {} };
+  }, { speak: (text) => fallback.push(text), stop() {} }, { onSpeaking() {}, onError: () => assert.fail('unexpected error') });
+
+  narrator.speak('Private NPC reply', 'female', 'https://storage.test/signed/audio.mp3');
+  await Promise.resolve();
+
+  assert.deepEqual(created, ['https://storage.test/signed/audio.mp3']);
+  assert.deepEqual(fallback, []);
+});

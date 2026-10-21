@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpException, Post, Res, UseGuards } from '@nestjs/common';
 import { chatStreamRequestSchema, type ChatStreamRequest } from '@life-abroad/shared';
 import type { ServerResponse } from 'node:http';
 import { SchemaValidationPipe } from '../../common/pipes/schema-validation.pipe';
@@ -8,6 +8,16 @@ import { ChatStreamService, type ChatEvent } from './chat-stream.service';
 
 function writeEvent(response: ServerResponse, event: ChatEvent | { event: 'error'; data: { message: string } }): void {
   response.write(`event: ${event.event}\ndata: ${JSON.stringify(event.data)}\n\n`);
+}
+
+export function chatErrorMessage(error: unknown): string {
+  if (!(error instanceof HttpException) || error.getStatus() >= 500) return 'Chat is unavailable right now.';
+  const response: unknown = error.getResponse();
+  if (typeof response === 'string') return response;
+  if (typeof response === 'object' && response !== null && 'message' in response && typeof response.message === 'string') {
+    return response.message;
+  }
+  return error.message;
 }
 
 @Controller('chat')
@@ -29,8 +39,8 @@ export class ChatController {
     response.once('close', disconnected);
     try {
       await this.chat.stream(userId, body, event => writeEvent(response, event), cancellation.signal);
-    } catch {
-      if (!cancellation.signal.aborted) writeEvent(response, { event: 'error', data: { message: 'Chat is unavailable right now.' } });
+    } catch (error: unknown) {
+      if (!cancellation.signal.aborted) writeEvent(response, { event: 'error', data: { message: chatErrorMessage(error) } });
     } finally {
       response.removeListener('close', disconnected);
       if (!response.writableEnded) response.end();

@@ -74,9 +74,9 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   const startLife = useCallback(async () => {
     if (!token) throw new Error('Please sign in again.');
-    if (!draft.name || !draft.cityId || !draft.avatarId) throw new Error('Finish each step before starting your life.');
+    if (!draft.name || !draft.countryId || !draft.avatarId) throw new Error('Finish each step before starting your life.');
     try {
-      const request = { name: draft.name, cityId: draft.cityId, avatarId: draft.avatarId };
+      const request = { name: draft.name, countryId: draft.countryId, avatarId: draft.avatarId };
       const result = await manager.run((sessionToken) => api.createCharacter(sessionToken, request));
       setPlayer(result);
       return result;

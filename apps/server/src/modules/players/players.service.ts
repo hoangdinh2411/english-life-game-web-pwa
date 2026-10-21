@@ -15,9 +15,9 @@ export class PlayersService {
 
   async createCharacter(userId: string, request: CreateCharacterRequest): Promise<PlayerState> {
     const options = await this.onboarding.getOptions();
-    const city = options.cities.find(item => item.id === request.cityId);
+    const country = await this.onboarding.getCountry(request.countryId);
     const avatar = options.avatars.find(item => item.id === request.avatarId);
-    if (!city || !avatar) throw new BadRequestException('Unknown city or avatar');
-    return this.players.createCharacter(userId, request, city);
+    if (!country || !avatar) throw new BadRequestException('Unknown country or avatar');
+    return this.players.createCharacter(userId, request, country);
   }
 }

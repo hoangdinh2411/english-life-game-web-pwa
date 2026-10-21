@@ -13,7 +13,7 @@ export const STREET_MAP_SIZE = {
 export function scaleStreetPoint(point: Point): Point {
   return { x: point.x * STREET_MAP_SCALE, y: point.y * STREET_MAP_SCALE };
 }
-// Coordinates match the expanded Maplewood street illustration. The café ring
+// Coordinates match the expanded Town Street illustration. The café ring
 // sits on the road immediately outside its front door.
 export const CORNER_CUP_PORTAL: StationPortal = {
   id: "corner_cafe",

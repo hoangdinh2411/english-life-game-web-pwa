@@ -49,7 +49,10 @@ test('public shell/immutable media work offline; API, Auth, unknown routes and w
   await worker.lifecycle('activate');
   for (const path of ['/practice', '/home', '/new-game/review']) assert.equal(await (await worker.request(path, { mode: 'navigate' })).text(), 'public-shell');
   assert.equal(await (await worker.request('/assets/station-a1.png')).text(), 'public-art');
-  for (const path of ['/api/v1/me', '/auth/v1/token', '/assets/private.png', '/assets/station-a1.png?token=private', 'https://auth.fixture/auth/v1/token']) {
+  for (const path of ['/api/v1/me', '/auth/v1/token', '/assets/private.png', '/assets/station-a1.png?token=private',
+    '/storage/v1/object/sign/speech-audio/ai/private.mp3?token=private',
+    'https://storage.fixture/storage/v1/object/sign/speech-audio/fixed/private.mp3?token=private',
+    'https://auth.fixture/auth/v1/token']) {
     assert.equal(worker.request(path), undefined);
     assert.equal(worker.request(path, { mode: 'navigate' }), undefined);
   }

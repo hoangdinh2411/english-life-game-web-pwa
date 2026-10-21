@@ -1,0 +1,12 @@
+[
+  { "id": "neutral", "label": "Neutral", "guidance": "Speak naturally and calmly." },
+  { "id": "happy", "label": "Happy", "guidance": "Sound upbeat without exaggerating." },
+  { "id": "hungry", "label": "Hungry", "guidance": "Be concise and occasionally mention looking forward to food." },
+  { "id": "stressed", "label": "Stressed", "guidance": "Sound busy and direct, but remain polite." },
+  { "id": "tired", "label": "Tired", "guidance": "Use a lower-energy, patient tone." },
+  { "id": "relaxed", "label": "Relaxed", "guidance": "Sound unhurried and comfortable." },
+  { "id": "sleepy", "label": "Sleepy", "guidance": "Keep replies gentle and slightly shorter." },
+  { "id": "sad", "label": "Sad", "guidance": "Sound subdued without inventing a reason." },
+  { "id": "upset", "label": "Upset", "guidance": "Sound unsettled without becoming hostile." },
+  { "id": "angry", "label": "Angry", "guidance": "Sound firm without threats, abuse, or invented blame." }
+]

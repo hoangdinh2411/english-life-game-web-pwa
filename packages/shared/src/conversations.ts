@@ -39,9 +39,10 @@ export const chatStreamRequestSchema = z.object({
   coach: z.boolean().default(false),
 }).strict();
 export const conversationIdSchema = z.string().uuid();
+export const conversationSpeechSchema = z.object({ url: z.string().url() }).strict();
 export const conversationMessageSchema = z.object({
   id: z.string().uuid(), sender: z.enum(['player', 'npc']), text: z.string(),
-  createdAt: z.string().datetime(), ai: z.literal(true).optional(),
+  createdAt: z.string().datetime(), ai: z.literal(true).optional(), speech: conversationSpeechSchema.optional(),
 }).strict();
 export const turnMetadataSchema = z.object({
   intent: z.string().nullable(), misunderstood: z.boolean(), arrival: arrivalStateSchema,

@@ -6,7 +6,7 @@ import { canReview, StartLifeSubmission, validateCharacterName, mergeOnboardingD
 test('review requires all selections and a minimally nonblank name', () => {
   assert.equal(validateCharacterName('  '), 'Please enter a name.');
   assert.equal(validateCharacterName('Ánh'), null);
-  assert.equal(canReview({ cityId: 'city_maplewood', avatarId: 'avatar_traveler_01', name: 'Ánh' }), true);
+  assert.equal(canReview({ countryId: 'country_sweden', avatarId: 'avatar_traveler_01', name: 'Ánh' }), true);
   assert.equal(canReview({ avatarId: 'avatar_traveler_01', name: 'Ánh' }), false);
 });
 
@@ -26,7 +26,7 @@ test('Start Life ignores a second submission while the first request is pending'
 // Replacing one choice on Back must preserve the other two selections.
 test('editing a selection keeps the remaining review choices', () => {
   const name = 'Ánh';
-  const draft = mergeOnboardingDraft({ cityId: 'city_maplewood', avatarId: 'avatar_traveler_01', name }, { avatarId: 'avatar_traveler_02' });
-  assert.deepEqual(draft, { cityId: 'city_maplewood', avatarId: 'avatar_traveler_02', name });
+  const draft = mergeOnboardingDraft({ countryId: 'country_sweden', avatarId: 'avatar_traveler_01', name }, { avatarId: 'avatar_traveler_02' });
+  assert.deepEqual(draft, { countryId: 'country_sweden', avatarId: 'avatar_traveler_02', name });
   assert.equal(canReview(draft), true);
 });

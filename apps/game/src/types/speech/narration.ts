@@ -12,7 +12,7 @@ export interface Narrator {
   stop(): void;
 }
 export interface RecordedNarrator {
-  speak(text: string, gender?: VoiceGender): void;
+  speak(text: string, gender?: VoiceGender, asset?: string): void;
   stop(): void;
 }
 export interface StationAudioClip {

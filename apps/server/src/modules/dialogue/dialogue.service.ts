@@ -4,6 +4,7 @@ import { CachedDialogueNode, DialogueCacheService } from '../../infrastructure/c
 
 export interface DialogueContext {
   npcId: string;
+  npcName?: string;
   roleId: string;
   personality: string;
   currentNodeId?: string;
@@ -84,10 +85,11 @@ export class DialogueService {
   }
 
   private render(entry: CachedDialogueNode, context: DialogueContext, intent: string | null): DialogueReply {
+    const text = entry.node.variations?.[(context.variationIndex ?? 0) % entry.node.variations.length]
+      ?? entry.node.text[context.personality] ?? entry.node.text.default;
     return {
       node: entry.node,
-      text: entry.node.variations?.[(context.variationIndex ?? 0) % entry.node.variations.length]
-        ?? entry.node.text[context.personality] ?? entry.node.text.default,
+      text: context.npcName ? text.replaceAll('{npcName}', context.npcName) : text,
       intent,
       misunderstood: intent === null,
     };

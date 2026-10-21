@@ -16,12 +16,14 @@ export default function GameCanvas({
   onTalk,
   onReadyChange,
   onLocationChange,
+  onMapChange,
   onPlaceChange,
   initialLocation = { mapId: "loc_station", placeId: "loc_station", x: 768, y: 370 },
   onEnterStreet,
   appearance,
   getGameTime,
   onStoreClosed,
+  presentNpcIds,
 }: GameCanvasProps) {
   const parent = useRef<HTMLDivElement>(null);
   const game = useRef<StationGame | null>(null);
@@ -32,6 +34,7 @@ export default function GameCanvas({
   const callbacks = useRef({
     onTalk,
     onLocationChange,
+    onMapChange,
     onPlaceChange,
     onExitBlocked,
     onReadyChange,
@@ -42,6 +45,7 @@ export default function GameCanvas({
   callbacks.current = {
     onTalk,
     onLocationChange,
+    onMapChange,
     onPlaceChange,
     onExitBlocked,
     onReadyChange,
@@ -70,8 +74,8 @@ export default function GameCanvas({
   const [ready, setReady] = useState(false);
   const [locationLabel, setLocationLabel] = useState(
     initialLocation.placeId === "loc_town_street"
-      ? "Maplewood Town Street"
-      : "Maplewood train station",
+      ? "Town Street"
+      : "Train Station",
   );
   const [attempt, setAttempt] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -202,6 +206,9 @@ export default function GameCanvas({
   useEffect(() => {
     game.current?.unlockExit(exitUnlocked);
   }, [exitUnlocked]);
+  useEffect(() => {
+    if (presentNpcIds) game.current?.setPresentNpcIds(presentNpcIds);
+  }, [presentNpcIds]);
   return (
     <div className="game-canvas absolute inset-0">
       <Minimap

@@ -1,0 +1,10 @@
+[
+  {
+    "id": "country_sweden",
+    "name": "Sweden",
+    "isoCode": "SE",
+    "flag": "🇸🇪",
+    "timeZone": "Europe/Stockholm",
+    "starterCityId": "city_maplewood"
+  }
+]

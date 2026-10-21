@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "voices": {
+    "female": ["en-US-AvaNeural", "en-US-JennyNeural"],
+    "male": ["en-US-AndrewNeural", "en-US-GuyNeural"]
+  },
+  "voiceOverrides": {},
+  "styleSupport": {
+    "en-US-AvaNeural": ["sad"],
+    "en-US-JennyNeural": ["cheerful", "sad"],
+    "en-US-GuyNeural": ["cheerful", "sad"]
+  }
+}

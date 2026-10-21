@@ -1,0 +1,133 @@
+import { ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { GAME_TIME_RATE, gameTimeAt, npcPresenceResponseSchema, npcProfileSchema, SHOP_NPC_IDS, TOWN_STREET_NPC_IDS,
+  type NpcPresenceResponse, type NpcProfile } from '@life-abroad/shared';
+import type { PoolClient } from 'pg';
+import { DatabaseService } from '../../infrastructure/database/database.service';
+
+const DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+const SHOP_IDS = new Set<string>(SHOP_NPC_IDS);
+const STREET_IDS = new Set<string>(TOWN_STREET_NPC_IDS);
+
+interface PresenceRow {
+  id: string;
+  location_id: string;
+  profile: unknown;
+  clock_time: Date;
+  clock_anchor: Date;
+  clock_rate: number;
+  time_zone: string;
+}
+
+interface PresenceLocalTime {
+  day: typeof DAYS[number];
+  minutes: number;
+}
+
+function localTime(instant: Date, timeZone: string): PresenceLocalTime {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(instant);
+  const value = (type: Intl.DateTimeFormatPartTypes): string => parts.find(part => part.type === type)?.value ?? '';
+  const day = value('weekday').slice(0, 3).toLowerCase() as PresenceLocalTime['day'];
+  if (!DAYS.includes(day)) throw new ServiceUnavailableException('Country time zone is unavailable.');
+  return { day, minutes: Number(value('hour')) * 60 + Number(value('minute')) };
+}
+
+function minute(value: string): number {
+  return Number(value.slice(0, 2)) * 60 + Number(value.slice(3));
+}
+
+function slotMatches(slot: NonNullable<NpcProfile['presenceSchedule']>['weeklySlots'][number], local: PresenceLocalTime): boolean {
+  const start = minute(slot.start);
+  const end = minute(slot.end);
+  if (start < end) return slot.days.includes(local.day) && local.minutes >= start && local.minutes < end;
+  if (slot.days.includes(local.day) && local.minutes >= start) return true;
+  const previous = DAYS[(DAYS.indexOf(local.day) + 6) % 7]!;
+  return slot.days.includes(previous) && local.minutes < end;
+}
+
+function venueOpen(local: PresenceLocalTime): boolean {
+  return local.minutes >= 8 * 60 && local.minutes < 14 * 60;
+}
+
+export function npcIsPresent(row: Pick<PresenceRow, 'id' | 'location_id'> & { profile: NpcProfile }, mapId: string,
+  local: PresenceLocalTime): boolean {
+  if (row.location_id !== mapId) return false;
+  const schedule = row.profile.presenceSchedule;
+  if (schedule) {
+    const authored = schedule.weeklySlots.some(slot => slot.locationId === mapId && slotMatches(slot, local));
+    return authored && (!SHOP_IDS.has(row.id) || venueOpen(local));
+  }
+  if (STREET_IDS.has(row.id)) return false;
+  if (SHOP_IDS.has(row.id)) return venueOpen(local);
+  return true;
+}
+
+function presentIds(rows: Array<PresenceRow & { profile: NpcProfile }>, mapId: string, instant: Date, timeZone: string): string[] {
+  const local = localTime(instant, timeZone);
+  return rows.filter(row => npcIsPresent(row, mapId, local)).map(row => row.id).sort();
+}
+
+function sameIds(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((id, index) => id === right[index]);
+}
+
+export function nextPresenceChange(rows: Array<PresenceRow & { profile: NpcProfile }>, mapId: string,
+  gameTime: Date, timeZone: string): Date | null {
+  const relevant = rows.filter(row => row.location_id === mapId &&
+    (row.profile.presenceSchedule !== undefined || SHOP_IDS.has(row.id) || STREET_IDS.has(row.id)));
+  if (!relevant.length) return null;
+  const current = presentIds(relevant, mapId, gameTime, timeZone);
+  const cursor = new Date(gameTime);
+  cursor.setUTCSeconds(0, 0);
+  for (let offset = 1; offset <= 8 * 24 * 60; offset++) {
+    const candidate = new Date(cursor.getTime() + offset * 60_000);
+    if (!sameIds(current, presentIds(relevant, mapId, candidate, timeZone))) return candidate;
+  }
+  return null;
+}
+
+@Injectable()
+export class NpcPresenceService {
+  constructor(private readonly database: DatabaseService) {}
+
+  forMap(userId: string, mapId: string): Promise<NpcPresenceResponse> {
+    return this.database.transaction(client => this.resolve(client, userId, mapId));
+  }
+
+  async assertCanStart(client: PoolClient, userId: string, npcId: string): Promise<void> {
+    const result = await this.context(client, userId, npcId);
+    const row = result.rows[0];
+    if (!row) throw new ConflictException('NPC is not here right now');
+    const gameTime = gameTimeAt({ gameTime: row.clock_time, realTime: row.clock_anchor, rate: row.clock_rate }, new Date());
+    const parsed = { ...row, profile: npcProfileSchema.parse(row.profile) };
+    if (!npcIsPresent(parsed, row.location_id, localTime(gameTime, row.time_zone))) {
+      throw new ConflictException('NPC is not here right now');
+    }
+  }
+
+  private async resolve(client: PoolClient, userId: string, mapId: string): Promise<NpcPresenceResponse> {
+    const result = await this.context(client, userId);
+    const first = result.rows[0];
+    if (!first) throw new ServiceUnavailableException('NPC presence is unavailable.');
+    const gameTime = gameTimeAt({ gameTime: first.clock_time, realTime: first.clock_anchor, rate: first.clock_rate }, new Date());
+    const rows = result.rows.map(row => ({ ...row, profile: npcProfileSchema.parse(row.profile) }));
+    const ids = presentIds(rows, mapId, gameTime, first.time_zone);
+    const next = nextPresenceChange(rows, mapId, gameTime, first.time_zone);
+    return npcPresenceResponseSchema.parse({ mapId, gameTime: gameTime.toISOString(), timeZone: first.time_zone,
+      presentNpcIds: ids, nextChangeAt: next?.toISOString() ?? null });
+  }
+
+  private async context(client: PoolClient, userId: string, npcId?: string) {
+    await client.query(
+      'INSERT INTO public.player_life (user_id,clock_rate) VALUES ($1,$2) ON CONFLICT DO NOTHING',
+      [userId, GAME_TIME_RATE],
+    );
+    return client.query<PresenceRow>(`SELECT n.id,n.location_id,n.profile,l.clock_time,l.clock_anchor,l.clock_rate,co.time_zone
+      FROM public.npcs n
+      JOIN public.characters ch ON ch.user_id=$1
+      JOIN public.countries co ON co.id=ch.country_id
+      JOIN public.player_life l ON l.user_id=ch.user_id
+      WHERE ($2::text IS NULL OR n.id=$2)`, [userId, npcId ?? null]);
+  }
+}

@@ -6,7 +6,7 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_station",
-    "bio": "Welcomes new arrivals and helps them take the bus to Maplewood Town Street.", "gender": "female"
+    "bio": "Welcomes new arrivals and helps them take the bus to Town Street.", "profile": { "profileVersion": 1, "conversationTopics": ["train travel", "Town Street"], "temperament": "Warm and practical" }, "gender": "female"
   },
   {
     "id": "npc_mia",
@@ -15,7 +15,7 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_cafe",
-    "bio": "Friendly barista who loves jazz and talks about the weather.", "gender": "female",
+    "bio": "Friendly barista who loves jazz and talks about the weather.", "profile": { "profileVersion": 1, "hobbies": ["listening to jazz"], "conversationTopics": ["coffee", "weather", "jazz"], "temperament": "Upbeat and welcoming", "moodRules": { "morningHappy": true, "middayMood": "stressed" }, "presenceSchedule": { "timeZoneSource": "player_country", "weeklySlots": [{ "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "start": "08:00", "end": "14:00", "locationId": "loc_cafe" }] } }, "gender": "female",
     "walkImageUrl": "npcs/npc_mia/walk.png",
     "portrait": { "imageUrl": "npcs/npc_mia/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
@@ -26,7 +26,7 @@
     "personality": "serious",
     "speakingLevel": "A2",
     "locationId": "loc_housing",
-    "bio": "Careful landlord. Likes clear answers and polite requests.", "gender": "male"
+    "bio": "Careful landlord. Likes clear answers and polite requests.", "profile": { "profileVersion": 1, "likes": ["clear answers", "polite requests"], "temperament": "Careful and serious" }, "gender": "male"
   },
   {
     "id": "npc_sam",
@@ -35,7 +35,7 @@
     "personality": "shy",
     "speakingLevel": "A2",
     "locationId": "loc_bank",
-    "bio": "Quiet bank clerk. Speaks slowly and explains forms step by step.", "gender": "male"
+    "bio": "Quiet bank clerk. Speaks slowly and explains forms step by step.", "profile": { "profileVersion": 1, "likes": ["explaining forms step by step"], "temperament": "Quiet and patient" }, "gender": "male"
   },
   {
     "id": "npc_cafe_waiter",
@@ -44,7 +44,7 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_cafe",
-    "bio": "A friendly person at the station shop.", "gender": "male",
+    "bio": "A friendly person at the station shop.", "profile": { "profileVersion": 1, "conversationTopics": ["café service", "daily routines"], "temperament": "Friendly and attentive", "presenceSchedule": { "timeZoneSource": "player_country", "weeklySlots": [{ "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "start": "08:00", "end": "14:00", "locationId": "loc_cafe" }] } }, "gender": "male",
     "walkImageUrl": "npcs/npc_cafe_waiter/walk.png",
     "portrait": { "imageUrl": "npcs/npc_cafe_waiter/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
@@ -55,7 +55,7 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_cafe",
-    "bio": "A friendly person at the station shop.", "gender": "female",
+    "bio": "A friendly person at the station shop.", "profile": { "profileVersion": 1, "conversationTopics": ["station visits", "snacks"], "temperament": "Sociable and relaxed" }, "gender": "female",
     "walkImageUrl": "npcs/npc_cafe_customer/walk.png",
     "portrait": { "imageUrl": "npcs/npc_cafe_customer/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
@@ -66,7 +66,7 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_corner_cafe",
-    "bio": "A welcoming barista at Corner Cup Café who helps visitors choose drinks and food.", "gender": "female",
+    "bio": "A welcoming barista at Corner Cup Café who helps visitors choose drinks and food.", "profile": { "profileVersion": 1, "conversationTopics": ["drinks", "food"], "temperament": "Welcoming and helpful", "presenceSchedule": { "timeZoneSource": "player_country", "weeklySlots": [{ "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "start": "08:00", "end": "14:00", "locationId": "loc_corner_cafe" }] } }, "gender": "female",
     "walkImageUrl": "npcs/npc_corner_cup_seller/walk.png",
     "portrait": { "imageUrl": "npcs/npc_corner_cup_seller/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
@@ -77,7 +77,7 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_corner_cafe",
-    "bio": "A friendly café assistant who enjoys chatting with customers.", "gender": "male",
+    "bio": "A friendly café assistant who enjoys chatting with customers.", "profile": { "profileVersion": 1, "likes": ["chatting with customers"], "conversationTopics": ["café work"], "temperament": "Friendly and talkative", "presenceSchedule": { "timeZoneSource": "player_country", "weeklySlots": [{ "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "start": "09:00", "end": "14:00", "locationId": "loc_corner_cafe" }] } }, "gender": "male",
     "walkImageUrl": "npcs/npc_corner_cup_assistant/walk.png",
     "portrait": { "imageUrl": "npcs/npc_corner_cup_assistant/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
@@ -88,7 +88,7 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_corner_cafe",
-    "bio": "A cheerful customer enjoying a drink at Corner Cup Café.", "gender": "female",
+    "bio": "A cheerful customer enjoying a drink at Corner Cup Café.", "profile": { "profileVersion": 1, "likes": ["café drinks"], "temperament": "Cheerful and easygoing" }, "gender": "female",
     "walkImageUrl": "npcs/npc_corner_cup_customer_1/walk.png",
     "portrait": { "imageUrl": "npcs/npc_corner_cup_customer_1/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
@@ -99,7 +99,7 @@
     "personality": "serious",
     "speakingLevel": "A1",
     "locationId": "loc_corner_cafe",
-    "bio": "A thoughtful customer taking a break at Corner Cup Café.", "gender": "female",
+    "bio": "A thoughtful customer taking a break at Corner Cup Café.", "profile": { "profileVersion": 1, "likes": ["quiet café breaks"], "temperament": "Thoughtful and reserved" }, "gender": "female",
     "walkImageUrl": "npcs/npc_corner_cup_customer_2/walk.png",
     "portrait": { "imageUrl": "npcs/npc_corner_cup_customer_2/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
@@ -110,7 +110,7 @@
     "personality": "shy",
     "speakingLevel": "A1",
     "locationId": "loc_corner_cafe",
-    "bio": "A quiet customer enjoying a snack at Corner Cup Café.", "gender": "female",
+    "bio": "A quiet customer enjoying a snack at Corner Cup Café.", "profile": { "profileVersion": 1, "likes": ["café snacks"], "temperament": "Quiet and gentle" }, "gender": "female",
     "walkImageUrl": "npcs/npc_corner_cup_customer_3/walk.png",
     "portrait": { "imageUrl": "npcs/npc_corner_cup_customer_3/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
@@ -121,7 +121,7 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_clothes",
-    "bio": "A friendly person at the station shop.", "gender": "male",
+    "bio": "A friendly person at the station shop.", "profile": { "profileVersion": 1, "conversationTopics": ["clothes", "customer service"], "temperament": "Helpful and energetic", "presenceSchedule": { "timeZoneSource": "player_country", "weeklySlots": [{ "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "start": "08:00", "end": "14:00", "locationId": "loc_clothes" }] } }, "gender": "male",
     "walkImageUrl": "npcs/npc_clothes_seller/walk.png",
     "portrait": { "imageUrl": "npcs/npc_clothes_seller/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
@@ -132,7 +132,7 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_clothes",
-    "bio": "A friendly person at the station shop.", "gender": "male",
+    "bio": "A friendly person at the station shop.", "profile": { "profileVersion": 1, "conversationTopics": ["outfits", "shop displays"], "temperament": "Friendly and observant", "presenceSchedule": { "timeZoneSource": "player_country", "weeklySlots": [{ "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "start": "09:00", "end": "14:00", "locationId": "loc_clothes" }] } }, "gender": "male",
     "walkImageUrl": "npcs/npc_clothes_assistant/walk.png",
     "portrait": { "imageUrl": "npcs/npc_clothes_assistant/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   },
@@ -143,7 +143,7 @@
     "personality": "cheerful",
     "speakingLevel": "A1",
     "locationId": "loc_clothes",
-    "bio": "A friendly person at the station shop.", "gender": "female",
+    "bio": "A friendly person at the station shop.", "profile": { "profileVersion": 1, "conversationTopics": ["shopping", "colours"], "temperament": "Curious and cheerful" }, "gender": "female",
     "walkImageUrl": "npcs/npc_clothes_customer/walk.png",
     "portrait": { "imageUrl": "npcs/npc_clothes_customer/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   }

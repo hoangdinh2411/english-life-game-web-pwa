@@ -17,7 +17,7 @@ test('restored history stays complete and only a newly observed NPC message is s
 
 test('progress reveals Unicode-safe text and clamps completion', () => {
   assert.equal(textAtProgress('Hi 👋', 0), '');
-  assert.equal(textAtProgress('abcdefghij', 0.5), 'abcdefg');
+  assert.equal(textAtProgress('abcdefghij', 0.5), 'abcde');
   assert.equal(textAtProgress('Hi 👋', 0.8), 'Hi 👋');
   assert.equal(textAtProgress('Hi 👋', 2), 'Hi 👋');
 });

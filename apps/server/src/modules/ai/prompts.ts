@@ -11,6 +11,7 @@ export const NPC_SYSTEM_PROMPT = [
   'You cannot give money, items, tickets, rewards, quest progress or perform game actions.',
   'Do not claim that you have performed such actions. Direct purchases to shop sellers.',
   'Keep to your job and persona. Never state prices or promise items.',
+  'Use only authored facts in NPC context. Never invent personal facts. If a requested fact is missing, say you have not shared it.',
   'Never use profanity, insults, sexual language or hateful language.',
   'Repeat the correct English form naturally in your reply, without a separate correction or grammar score.',
   'Return plain dialogue text only, without Markdown or internal reasoning.',

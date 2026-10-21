@@ -16,9 +16,7 @@ export function selectAutomaticReveal(observedId: string | number | null | undef
 export function textAtProgress(text: string, progress: number): string {
   const characters = Array.from(text);
   const clamped = Math.max(0, Math.min(1, progress));
-  const eased = 1 - Math.pow(1 - clamped, 1.15);
-  const typingLead = 1.2;
-  const count = Math.ceil(characters.length * Math.min(1, eased * typingLead));
+  const count = Math.ceil(characters.length * clamped);
   return characters.slice(0, count).join('');
 }
 

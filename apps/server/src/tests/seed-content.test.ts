@@ -11,6 +11,9 @@ test('T2 committed content and all scope references validate', async () => {
   const content = await loadSeedContent(resolve('../../content'));
   assert.equal(content.npcs.length, 29);
   assert.equal(content.streetNpcs.npcs.length, 15);
+  assert.ok(content.streetNpcs.npcs.every(npc => npc.profile.presenceSchedule));
+  assert.equal(content.moods.length, 10);
+  assert.equal(content.moods[0]!.id, 'neutral');
   for (const id of SHOP_NPC_IDS) assert.ok(content.npcs.some(npc => npc.id === id));
   for (const id of TOWN_STREET_NPC_IDS) assert.ok(content.streetNpcs.npcs.some(npc => npc.id === id));
   const portraits = content.npcs.filter(npc => npc.portrait);

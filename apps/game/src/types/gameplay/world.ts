@@ -45,6 +45,7 @@ export interface StationCallbacks {
   onTalk: (id: string) => void;
   onReady: () => void;
   onLocationChange: (location: string) => void;
+  onMapChange?: (mapId: string) => void;
   onPlaceChange?: (location: PlayerLocation) => void;
   onError: (message: string) => void;
   getGameTime?: () => Date | null;
@@ -62,6 +63,7 @@ export interface StationGame {
   ) => void;
   unlockExit: (unlocked: boolean) => void;
   talk: () => void;
+  setPresentNpcIds: (ids: readonly string[]) => void;
 }
 export interface GameCanvasProps {
   minimapVisible?: boolean;
@@ -76,6 +78,8 @@ export interface GameCanvasProps {
   onTalk: (id: string) => void;
   onReadyChange: (ready: boolean) => void;
   onLocationChange: (location: string) => void;
+  onMapChange?: (mapId: string) => void;
+  presentNpcIds?: readonly string[];
   onPlaceChange?: (location: PlayerLocation) => void;
   getGameTime?: () => Date | null;
   onStoreClosed?: (location: StoreLocation) => void;

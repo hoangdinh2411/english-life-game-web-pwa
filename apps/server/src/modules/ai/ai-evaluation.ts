@@ -15,7 +15,7 @@ const conversationMessages = [
   'I cooked pasta yesterday. What did you eat?',
   'How do you usually spend your weekend?',
   'I am learning English because I want to travel.',
-  'What do people like about Maplewood?',
+  'What do people like about Sweden?',
   'Tell me about your job in simple words.',
   'I feel nervous when I speak English.',
   'What kind of books do you read?',

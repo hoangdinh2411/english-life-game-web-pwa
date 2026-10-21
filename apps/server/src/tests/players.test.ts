@@ -53,9 +53,10 @@ test('R4 character validation rejects forged state and unknown choices', async (
   const app = module.createNestApplication(); app.setGlobalPrefix('api/v1');
   try {
     await app.listen(0, '127.0.0.1');
-    for (const body of [{ name: ' ', cityId: 'city_unknown', avatarId: 'avatar_unknown' },
-      { name: 'Learner', cityId: 'city_unknown', avatarId: 'avatar_unknown' },
-      { name: 'Learner', cityId: 'city_unknown', avatarId: 'avatar_unknown', coins: 999 }]) {
+    for (const body of [{ name: ' ', countryId: 'country_unknown', avatarId: 'avatar_unknown' },
+      { name: 'Learner', countryId: 'country_unknown', avatarId: 'avatar_unknown' },
+      { name: 'Learner', countryId: 'country_unknown', avatarId: 'avatar_unknown', coins: 999 },
+      { name: 'Learner', cityId: 'city_maplewood', avatarId: 'avatar_unknown' }]) {
       const response = await fetch(await app.getUrl() + '/api/v1/characters', { method: 'POST',
         headers: { Authorization: 'Bearer fixture', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       assert.equal(response.status, 400);

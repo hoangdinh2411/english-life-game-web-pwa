@@ -6,12 +6,20 @@ import { Test } from '@nestjs/testing';
 import type { ChatStreamRequest, ConversationTurn } from '@life-abroad/shared';
 import { ChatStreamService, type ChatEvent } from '../modules/conversations/chat-stream.service';
 import { ConversationsService } from '../modules/conversations/conversations.service';
+import { ConflictException } from '@nestjs/common';
+import { chatErrorMessage } from '../modules/conversations/chat.controller';
 
 const request: ChatStreamRequest = {
   npcId: 'npc_mila_florist', conversationId: randomUUID(), clientMessageId: randomUUID(),
   text: 'Do you like football?', coach: false,
 };
 const turn = { npcMessage: { text: 'Hello there friend' } } as ConversationTurn;
+
+test('streaming preserves safe business errors but hides unexpected failures', () => {
+  assert.equal(chatErrorMessage(new ConflictException('You have no energy. Sleep or buy something to eat or drink')),
+    'You have no energy. Sleep or buy something to eat or drink');
+  assert.equal(chatErrorMessage(new Error('database password leaked')), 'Chat is unavailable right now.');
+});
 
 test('T10e forwards checked chunks without fake word delays and emits done only after save', async () => {
   let saved = false;

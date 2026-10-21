@@ -38,6 +38,12 @@ test@gmail.com / 12341234.
 Finished tasks are removed to keep this board short. Git history and
 `docs/TECH.md` keep the details.
 
+- [x] **NPC-01 — Stabilize the baseline before NPC work.** Disable Vite's test
+      WebSocket so parallel tests do not contend for port 24678; keep the
+      Corner Cup portal registered while its `label` remains empty because the
+      map already renders the label; remove the invalid town `gender` schema
+      field. Verified with focused portal checks plus game and server suites.
+
 ## NOW
 
 - [ ] **NPC speech audio prototype (Azure TTS + client DSP).** Complete the
@@ -50,18 +56,18 @@ Finished tasks are removed to keep this board short. Git history and
         owner approval. The player's ID-card gender is unrelated. Done when
         content validation passes, removing one gender makes it fail, and the
         owner approves the proposals.
-  - [ ] **S2 — Voice pools and deterministic resolution.** Add one editable
+  - [x] **S2 — Voice pools and deterministic resolution.** Add one editable
         voice-pool content file with Azure voices per gender and optional
         `voiceOverride` values keyed by stable NPC ID. Resolve an override
         first; otherwise use a stable hash of NPC ID within its gender pool.
         Done when male/female selection, stability, same-gender variation,
         gender changes, and override precedence have focused tests.
-  - [ ] **S3 — Azure generation and emotion styles.** Add a server-only Azure
+  - [x] **S3 — Azure generation and emotion styles.** Add a server-only Azure
         TTS adapter. Map the three NPC emotions to a supported Azure style and
         use the default style when the selected voice lacks that style. Done
         when SSML escaping, supported styles, default fallback, provider errors,
         and generated audio metadata are tested without exposing the key.
-  - [ ] **S4 — Private fixed-script audio cache.** Generate one canonical file
+  - [x] **S4 — Private fixed-script audio cache.** Generate one canonical file
         per cache key based on text, language, voice, style, format and TTS
         version/settings—never map, NPC ID, speed or pitch. Store private audio
         through the asset/storage boundary, keep only references and metadata
@@ -69,19 +75,19 @@ Finished tasks are removed to keep this board short. Git history and
         players. Done when shared lines reuse a file per voice, NPC-specific
         lines work, changed generation input invalidates the key, and retries or
         concurrent requests do not duplicate Azure calls/files.
-  - [ ] **S5 — AI reply audio cache.** Generate persisted AI reply text on
+  - [x] **S5 — AI reply audio cache.** Generate persisted AI reply text on
         demand, cache exact repeats for a configurable 30–3600 seconds, and
         never persist the source text or personal/sensitive text. Remove expired
         rows and objects. Done when exact repeats skip Azure, changed text does
         not, expiry removes the private object, and authored script routing still
         wins before AI fallback.
-  - [ ] **S6 — Authenticated client playback integration.** Attach speech to
+  - [x] **S6 — Authenticated client playback integration.** Attach speech to
         authenticated conversation responses without allowing arbitrary client
         text synthesis. Cover shared, NPC-specific, opening, history and AI
         replies; keep text readable when speech generation or signed URLs fail.
         Done when the existing test account can hear each covered reply and no
         private audio enters the service-worker cache.
-  - [ ] **S7 — Client DSP and settings.** Use one shared Web Audio
+  - [x] **S7 — Client DSP and settings.** Use one shared Web Audio
         `AudioContext` and `@soundtouchjs/audio-worklet` to change bounded speed
         and pitch independently after download. Add Game Settings controls;
         never create stored variants or include playback settings in cache keys.
@@ -93,6 +99,13 @@ Finished tasks are removed to keep this board short. Git history and
         browsers, plus fixed/AI reuse, emotion/style, signed-URL expiry and stale
         AI cleanup. Record only concise results here by marking verified slices;
         then collapse the completed parent into DONE.
+    - [x] Focused automated checks: fixed/AI reuse, emotion/style mapping,
+          signed-URL retry behavior and stale AI cleanup (2026-10-20).
+    - [x] Authenticated Chromium check: replay works without console errors and
+          dialogue has no horizontal overflow at 320/375 px (2026-10-20).
+    - [ ] Physical Android Chrome: audio quality, response time and CPU behavior.
+    - [ ] Physical iOS Safari: audio quality, response time and CPU behavior.
+    - [ ] Live signed-URL expiry and fixed/AI cache reuse against local storage.
 
 - [ ] **Shop polish follow-up (browser checks only).** Code, 173 unit tests,
       typecheck, lint, build, content and PWA checks already pass. Remaining:
@@ -137,6 +150,92 @@ Finished tasks are removed to keep this board short. Git history and
   under the menu button.
 
 ## NEXT
+
+- [ ] **NPC life system — implement only one numbered slice per request.** Do
+      not start the next slice automatically. All NPC facts must come from
+      validated content/database data; missing facts get a natural non-answer.
+      Server authority remains unchanged for quests, money, inventory, rewards,
+      mood, presence and relationships. Store workers stay professional and
+      customer-focused; social state never changes prices, stock, opening hours
+      or transaction validity. These tasks do not change sleep or energy.
+  - [ ] **NPC-02 — Country-first onboarding: Sweden.** Add a validated country
+        catalog and forward-only database structure. Seed Sweden with ID
+        `country_sweden`, ISO `SE`, flag 🇸🇪 and IANA time zone
+        `Europe/Stockholm`. Players choose a country, not a city. Keep the city
+        hierarchy internal for later expansion and assign its starter city on
+        the server. UI and dialogue show Sweden and generic location names such
+        as Train Station and Town Street, never Maplewood. Done when shared
+        contracts, server persistence, onboarding UI, content validation,
+        migration checks and focused tests pass without exposing city choice.
+  - [x] **NPC-03 — Versioned NPC profile JSONB.** Add strict
+        `profileVersion: 1` content validation and `npcs.profile jsonb` through
+        the next available forward migration. Support only authored optional
+        facts such as age, hometown, family, hobbies, favourite food,
+        likes/dislikes, conversation topics, temperament and daily routine.
+        Author distinct profiles in `content/` rather than inferring or
+        inventing facts. Done when malformed/unknown fields fail validation,
+        every NPC seeds a profile, runtime reads the database value, and a
+        missing fact cannot appear in a response.
+  - [x] **NPC-04 — Data-driven mood catalog and base mood.** Add editable mood
+        rows for neutral, happy, hungry, stressed, tired, relaxed, sleepy, sad,
+        upset and angry; NPC mood references the catalog and defaults to
+        neutral. Resolve base mood from server-owned game time in the selected
+        country's IANA zone: morning happiness where temperament permits,
+        hunger/stress around 11:00–12:00, tiredness after 16:00, relaxation
+        after 19:00 and possible sleepiness around 21:00–22:00. Age may shift
+        hunger/energy/sleep timing but must never imply anger or friendliness.
+        Exceptional moods are deterministic per NPC/game date and limited to
+        authored rules. Done when boundary, age, temperament, rollover and DST
+        tests pass and no cron job is required.
+  - [x] **NPC-05 — Server-authoritative NPC presence schedules.** Add validated
+        weekly work/appearance slots to NPC profiles, including multiple shifts
+        and overnight windows. Resolve them from game-local time and country
+        time zone. Street NPCs without schedules are absent; store workers use
+        authored shifts constrained by venue hours, with venue hours as the
+        fallback only when their shift is missing. Return a presence allowlist
+        and next boundary to the client; hide and disable absent actors. Reject
+        a new conversation when an NPC is absent, but allow an already-open
+        conversation to finish. Done when server, Phaser interaction, refresh,
+        reconnect, boundary and failure-mode tests pass.
+  - [ ] **NPC-06 — Per-player NPC relationships and reactions.** Add persistent
+        familiarity (0–100), affinity (-100–100), derived relationship stages,
+        and an expiring per-player reaction mood. Use deterministic, bounded
+        social signals for greetings, thanks, polite requests, apologies and
+        explicit insults; learner mistakes and ambiguous messages cause no
+        penalty. Save relationship changes in the same transaction as the
+        conversation turn and reuse the existing message idempotency key.
+        Done when caps, expiry, apology, concurrency and replay tests pass and
+        store behaviour remains commercially identical.
+  - [ ] **NPC-07 — Database-backed natural everyday dialogue.** Cover name,
+        age, origin, family, job, workplace, hobbies, food, preferences,
+        books, music, art, pets, travel, school, local places, routines,
+        current activity, plans, wellbeing, weather, thanks, apologies,
+        compliments and farewells. Recognize natural English plus common learner
+        forms such as “What you name?”, “How old you?” and “Where you from?”.
+        Render only allowlisted values loaded from database context. Street NPCs
+        may make broad small talk; store NPCs answer briefly and redirect to
+        service. Preserve every quest/order intent, price and state transition.
+        Done when exhaustive table-driven cases and all seller/quest regression
+        tests pass without fabricated facts or hard-coded location names.
+  - [ ] **NPC-08 — Adaptive response level and mood-aware delivery.** Default to
+        CEFR A2 when learner data is unavailable. Combine stored learner level
+        and observable input complexity, moving at most one CEFR band per turn.
+        Mood and relationship affect tone/length, never facts. AI prompts may
+        receive only validated allowlisted NPC facts, place, effective mood,
+        relationship stage and safe recent history; store prompts retain the
+        service-first rule. Speech styles use only provider-supported mappings
+        with a neutral fallback. Done when level bounds, prompt privacy,
+        missing-fact and voice-style tests pass.
+  - [ ] **NPC-09 — Integration, documentation and release verification.** Merge
+        the completed slices carefully with the speech/audio work; resolve
+        forward-migration numbering without editing applied migrations. Update
+        `docs/GAME.md` and `docs/TECH.md` once with the durable country, profile,
+        mood, presence, relationship and dialogue contracts. Run content
+        validation, typecheck, lint, unit tests and build; run integration tests
+        only against the configured local Supabase and report unavailable
+        infrastructure honestly. Check relevant UI at 320, 375 and 1024 px.
+        Done only when the full repository gates pass and no unrelated changes
+        are included.
 
 - [ ] **T36 — ID card quest (guided, step by step).** The only guided quest: the
       Goals list shows every step: (1) go to the tax office, (2) ask a staff
