@@ -169,7 +169,7 @@
     {
       "id": "seller_directions",
       "text": {
-        "default": "Please ask the receptionist at the station information desk for a bus ticket to Town Street. Have you spoken to the receptionist yet?"
+        "default": "Please ask the receptionist at the station information desk for a bus ticket to {townLocationName}. Have you spoken to the receptionist yet?"
       }
     }
   ]

@@ -352,6 +352,16 @@ shop companion scripts; the first coffee quest remains attached to Mia.
   boundary, hiding absent actors. `POST /conversations` rejects absent NPCs;
   message requests for an existing conversation do not repeat the presence
   check.
+- `npc_relationships` stores private per-player/NPC familiarity, affinity and
+  temporary reaction mood. Relationship stages are derived server-side. Explicit
+  social signals update this row inside the conversation-turn transaction; a
+  locked row and `npc_relationship_events` keyed by the existing client message
+  UUID provide concurrency safety, daily caps and replay idempotency.
+- Dialogue context loads the NPC's strict profile plus country, city and place
+  names from PostgreSQL. The renderer substitutes only an explicit token
+  allowlist and routes missing values to authored fallback text. Deterministic
+  everyday intents run after NPC and role scripts; seller and quest intents
+  retain priority and authority.
 - Protected `GET /life/catalog` returns the seeded shop catalog.
 - Protected `GET /life/orders` returns the latest ten café orders for the signed-in player. Each order stores item names, quantities and unit prices as purchased, its total and timestamp.
 - `POST /life/sleep` takes `{ key: UUID }`, adds eight game hours immediately and restores 100 energy.

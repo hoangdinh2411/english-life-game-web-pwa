@@ -1,10 +1,10 @@
 import { ConflictException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, TOWN_STREET_NPC_IDS, ConversationHistoryPage, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, type PendingOrder, type SellerState } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, TOWN_STREET_NPC_IDS, ConversationHistoryPage, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, npcProfileSchema, SHOP_NPC_IDS, type PendingOrder, type SellerState } from '@life-abroad/shared';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { DialogueContext } from '../dialogue/dialogue.service';
 import { conversationNpcSchema } from '@life-abroad/shared';
-import { SHOP_NPC_IDS, type LearningHistoryTurn } from '@life-abroad/shared';
+import type { LearningHistoryTurn } from '@life-abroad/shared';
 
 interface MessageRow { id: string; sender: 'player' | 'npc'; text: string; created_at: Date; metadata: unknown }
 export interface ConversationRow { id: string; npc_id: string; current_node_id: string | null; opening_variation_index: number; pending_order: unknown; ended_at: Date | null }
@@ -55,12 +55,24 @@ export class ConversationsRepository {
     return Number(result.rows[0]?.count ?? 0);
   }
 
-  async context(client: PoolClient, npcId: string = ARRIVAL_NPC_ID): Promise<DialogueContext> {
-    const result = await client.query<{ name: string; role_id: string; personality: string }>(
-      'SELECT name,role_id,personality FROM public.npcs WHERE id=$1', [npcId]);
+  async context(client: PoolClient, userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<DialogueContext> {
+    const result = await client.query<{ name: string; role_id: string; personality: string; profile: unknown;
+      location_name: string; city_name: string; country_name: string; town_location_name: string }>(`SELECT n.name,n.role_id,n.personality,n.profile,
+      l.name AS location_name,ci.name AS city_name,co.name AS country_name,
+      (SELECT name FROM public.locations WHERE city_id=ci.id AND type='street' ORDER BY id LIMIT 1) AS town_location_name
+      FROM public.npcs n
+      JOIN public.locations l ON l.id=n.location_id
+      JOIN public.characters ch ON ch.user_id=$1
+      JOIN public.countries co ON co.id=ch.country_id
+      JOIN public.cities ci ON ci.id=co.starter_city_id
+      WHERE n.id=$2`, [userId, npcId]);
     const npc = result.rows[0];
     if (!npc) throw new ServiceUnavailableException('NPC content is unavailable');
-    return { npcId, npcName: npc.name, roleId: npc.role_id, personality: npc.personality };
+    return { npcId, npcName: npc.name, roleId: npc.role_id, personality: npc.personality,
+      profile: npcProfileSchema.parse(npc.profile), locationName: npc.location_name,
+      cityName: npc.city_name, countryName: npc.country_name,
+      townLocationName: npc.town_location_name,
+      store: (SHOP_NPC_IDS as readonly string[]).includes(npcId) };
   }
 
   async create(client: PoolClient, userId: string, npcId: string = ARRIVAL_NPC_ID, openingVariation = 0): Promise<string> {

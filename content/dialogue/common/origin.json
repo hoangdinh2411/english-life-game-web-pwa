@@ -5,9 +5,9 @@
     {
       "id": "global_origin",
       "text": {
-        "default": "I live here in Sweden. Where are you from?",
-        "cheerful": "I love meeting people from other places! What is your hometown like?",
-        "shy": "I am from Sweden. Do you come from a city or a village?"
+        "default": "I am from {hometown}.",
+        "cheerful": "I am from {hometown}. What is your hometown like?",
+        "shy": "My hometown is {hometown}."
       }
     }
   ]

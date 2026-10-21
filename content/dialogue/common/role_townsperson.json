@@ -5,53 +5,15 @@
   "nodes": [
     {
       "id": "townsperson_start",
-      "text": {
-        "default": "Hello! I live in Sweden. How are you today?"
-      },
+      "text": { "default": "Hello! It is nice to meet you in {cityName}. How are you today?" },
       "variations": [
-        "Hello! I live in Sweden. How are you today?",
-        "Hi there! It is nice to meet someone new in town.",
-        "Good day! Do you like exploring new places?",
-        "Hello! I am taking a walk around town. What brings you here?",
-        "Hi! What do you like to do in your free time?"
-      ],
-      "intents": [
-        { "name": "hobbies", "keywords": ["hobby", "hobbies", "free time", "what do you like to do", "what do you enjoy", "what do you enjoy doing"], "next": "townsperson_hobbies" },
-        { "name": "food", "keywords": ["food", "favorite food", "favourite food", "what do you like to eat", "hungry"], "next": "townsperson_food" },
-        { "name": "work", "keywords": ["your job", "what do you do", "where do you work", "work"], "next": "townsperson_work" },
-        { "name": "maplewood", "keywords": ["maplewood", "this town", "the town", "places to visit"], "next": "townsperson_maplewood" },
-        { "name": "books", "keywords": ["book", "books", "reading"], "next": "townsperson_books" },
-        { "name": "flowers", "keywords": ["flower", "flowers", "garden", "gardening"], "next": "townsperson_flowers" },
-        { "name": "music", "keywords": ["music", "song", "songs", "instrument"], "next": "townsperson_music" },
-        { "name": "pets", "keywords": ["dog", "dogs", "pet", "pets", "animals"], "next": "townsperson_pets" },
-        { "name": "art", "keywords": ["art", "painting", "draw", "drawing"], "next": "townsperson_art" },
-        { "name": "travel", "keywords": ["travel", "bicycle", "bike", "journey"], "next": "townsperson_travel" },
-        { "name": "school", "keywords": ["school", "teacher", "class", "students"], "next": "townsperson_school" }
+        "Hello! It is nice to meet you in {cityName}. How are you today?",
+        "Hi there! It is nice to meet someone new in {cityName}.",
+        "Good day! What would you like to talk about?",
+        "Hello! I am spending time near {locationName}. How are you?",
+        "Hi! What would you like to know about me?"
       ],
       "fallback": "global_repeat"
-    },
-    {
-      "id": "townsperson_hobbies",
-      "text": { "default": "I enjoy simple things, like walking and meeting people. What do you enjoy?", "cheerful": "I love walking around town and meeting people! What do you enjoy?", "shy": "I like quiet walks and a good book. What do you enjoy?", "serious": "I enjoy staying active after work. What do you do for fun?" }
-    },
-    {
-      "id": "townsperson_food",
-      "text": { "default": "I like fresh bread and a warm cup of tea. What food do you like?", "cheerful": "Fresh bread is the best! What is your favorite food?", "shy": "I like soup on a cool day. What do you like to eat?", "serious": "I like a good meal after a busy day. What is your favorite?" }
-    },
-    {
-      "id": "townsperson_work",
-      "text": { "default": "I work here in town. My job keeps me busy, but I like this neighborhood.", "cheerful": "I have a nice job here in town. It is lovely to see familiar faces!", "shy": "I work nearby. I like the quiet streets before the town gets busy.", "serious": "I work hard during the day. What kind of work do you enjoy?" }
-    },
-    {
-      "id": "townsperson_maplewood",
-      "text": { "default": "This is a friendly town. I like the plaza and the river walk.", "cheerful": "I love this town! The plaza and river walk are lovely places to visit.", "shy": "The river walk is peaceful. It is my favorite place in town.", "serious": "The town is easy to explore. The plaza is a good place to start." }
-    },
-    { "id": "townsperson_books", "text": { "default": "A good book makes a quiet afternoon better. What do you like to read?", "cheerful": "I always have a story to recommend! What do you like to read?", "shy": "I enjoy stories about new places. Do you like reading?", "serious": "I read to learn something new. What kind of books do you prefer?" } },
-    { "id": "townsperson_flowers", "text": { "default": "Flowers bring color to the streets. Do you have a favorite?", "cheerful": "I love seeing flowers around town! Which ones do you like?", "shy": "I like the little flowers beside the river. What flowers do you like?", "serious": "Plants need care and patience. Do you enjoy gardening?" } },
-    { "id": "townsperson_music", "text": { "default": "Music makes a walk feel shorter. What kind of music do you enjoy?", "cheerful": "I love a cheerful song! What music do you like?", "shy": "Soft music helps me relax. Do you play an instrument?", "serious": "I enjoy music after work. What do you listen to?" } },
-    { "id": "townsperson_pets", "text": { "default": "Animals make good walking companions. Do you have a pet?", "cheerful": "Dogs are so friendly! Do you have a pet?", "shy": "I like calm dogs. Do you like animals?", "serious": "Pets need time and care. Do you have one?" } },
-    { "id": "townsperson_art", "text": { "default": "The rooftops and gardens make nice subjects to draw. Do you like art?", "cheerful": "There is so much to paint in town! What do you like to draw?", "shy": "I like sketching quiet corners of town. Do you draw?", "serious": "A short sketch is a good way to notice details. Do you make art?" } },
-    { "id": "townsperson_travel", "text": { "default": "There are many nice places to see nearby. Where would you like to travel?", "cheerful": "I love a new journey! Where would you like to go?", "shy": "I like short trips to quiet places. Do you enjoy travelling?", "serious": "A good route makes a trip easier. Do you like to travel?" } },
-    { "id": "townsperson_school", "text": { "default": "Learning something new can be fun. What did you like to study?", "cheerful": "School is full of interesting things to learn! What subject do you like?", "shy": "I liked reading at school. What was your favorite subject?", "serious": "Practice helps us improve. What did you enjoy learning?" } }
+    }
   ]
 }

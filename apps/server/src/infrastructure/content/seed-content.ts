@@ -16,7 +16,7 @@ export async function loadSeedContent(root: string) {
   const streetNpcs = streetNpcContentSchema.parse(await json(join(root, 'seed/street-npcs.json')));
   const npcs = npcCatalogSchema.parse([...catalogNpcs, ...streetNpcs.npcs.map(npc => ({
     id: npc.id, name: npc.name, gender: npc.gender, role: npc.role, personality: npc.personality,
-    speakingLevel: npc.speakingLevel, locationId: npc.locationId, bio: npc.bio, profile: npc.profile,
+    speakingLevel: npc.speakingLevel, locationId: npc.locationId, bio: npc.bio, profile: { ...npc.profile, job: npc.job },
     portrait: npc.portrait,
   }))]);
   const quests = questCatalogSchema.parse(await json(join(root, 'seed/quests.json')));

@@ -1,5 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { normalizeDialogue } from '@life-abroad/shared';
+import { normalizeDialogue, type NpcProfile } from '@life-abroad/shared';
 import { CachedDialogueNode, DialogueCacheService } from '../../infrastructure/content/dialogue-cache.service';
 
 export interface DialogueContext {
@@ -9,6 +9,12 @@ export interface DialogueContext {
   personality: string;
   currentNodeId?: string;
   variationIndex?: number;
+  profile?: NpcProfile;
+  locationName?: string;
+  cityName?: string;
+  countryName?: string;
+  townLocationName?: string;
+  store?: boolean;
 }
 
 export interface DialogueReply {
@@ -69,7 +75,7 @@ export class DialogueService {
         if (!directionRequest && !intent.keywords.some(keyword => matches(text, keyword))) continue;
         const target = find(intent.next);
         // A stale/broken link must never acknowledge a successful intent.
-        if (target) return this.render(target, context, intent.name);
+        if (target) return this.render(target, context, intent.name, find('global_missing_fact'));
       }
     }
     // Specific clarification first, then role clarification, then the global repeat.
@@ -84,12 +90,53 @@ export class DialogueService {
     throw new ServiceUnavailableException('Dialogue fallback is unavailable.');
   }
 
-  private render(entry: CachedDialogueNode, context: DialogueContext, intent: string | null): DialogueReply {
-    const text = entry.node.variations?.[(context.variationIndex ?? 0) % entry.node.variations.length]
+  private render(entry: CachedDialogueNode, context: DialogueContext, intent: string | null,
+    missing?: CachedDialogueNode): DialogueReply {
+    const authored = entry.node.variations?.[(context.variationIndex ?? 0) % entry.node.variations.length]
       ?? entry.node.text[context.personality] ?? entry.node.text.default;
+    const profile = context.profile;
+    const list = (values: string[] | undefined): string | undefined => values?.join(', ');
+    const topic = (pattern: RegExp): string | undefined => {
+      const values = [...(profile?.hobbies ?? []), ...(profile?.likes ?? []), ...(profile?.conversationTopics ?? []),
+        ...(profile?.dailyRoutine ?? [])];
+      const matched = values.filter(value => pattern.test(value));
+      return matched.length ? matched.join(', ') : undefined;
+    };
+    const values: Record<string, string | undefined> = {
+      npcName: context.npcName,
+      age: profile?.age === undefined ? undefined : String(profile.age),
+      hometown: profile?.hometown,
+      family: list(profile?.family),
+      job: profile?.job ?? context.roleId.replaceAll('_', ' '),
+      workplace: context.locationName,
+      hobbies: list(profile?.hobbies),
+      favouriteFood: profile?.favouriteFood,
+      likes: list(profile?.likes),
+      dislikes: list(profile?.dislikes),
+      books: topic(/book|read|story|librar/i), music: topic(/music|song|jazz|instrument/i),
+      art: topic(/art|paint|draw|sketch/i), pets: topic(/pet|dog|cat|animal/i),
+      travel: topic(/travel|journey|cycl|bicycle|road/i), school: topic(/school|teach|class|student|learn/i),
+      routine: list(profile?.dailyRoutine), cityName: context.cityName,
+      locationName: context.locationName, countryName: context.countryName,
+      townLocationName: context.townLocationName,
+    };
+    const deferred = new Set(['hours', 'item', 'price', 'order', 'total', 'menu']);
+    let unavailable = false;
+    const rendered = authored.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g, (token, key: string) => {
+      if (deferred.has(key)) return token;
+      const value = values[key];
+      if (value === undefined) { unavailable = true; return token; }
+      return value;
+    });
+    const base = unavailable && missing
+      ? missing.node.text[context.personality] ?? missing.node.text.default
+      : rendered;
+    const text = context.store && intent && !['ask_menu', 'ask_price', 'order', 'paid'].includes(intent)
+      ? `${base} What can I help you with in the shop?`
+      : base;
     return {
       node: entry.node,
-      text: context.npcName ? text.replaceAll('{npcName}', context.npcName) : text,
+      text,
       intent,
       misunderstood: intent === null,
     };

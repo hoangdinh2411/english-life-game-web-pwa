@@ -197,7 +197,7 @@ Finished tasks are removed to keep this board short. Git history and
         a new conversation when an NPC is absent, but allow an already-open
         conversation to finish. Done when server, Phaser interaction, refresh,
         reconnect, boundary and failure-mode tests pass.
-  - [ ] **NPC-06 — Per-player NPC relationships and reactions.** Add persistent
+  - [x] **NPC-06 — Per-player NPC relationships and reactions.** Add persistent
         familiarity (0–100), affinity (-100–100), derived relationship stages,
         and an expiring per-player reaction mood. Use deterministic, bounded
         social signals for greetings, thanks, polite requests, apologies and

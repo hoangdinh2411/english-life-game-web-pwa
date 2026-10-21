@@ -41,7 +41,7 @@
     {
       "id": "station_receptionist_directions",
       "text": {
-        "default": "Take the bus to Town Street. The station receptionist can help you with a ticket."
+        "default": "Take the bus to {townLocationName}. The station receptionist can help you with a ticket."
       }
     },
     {

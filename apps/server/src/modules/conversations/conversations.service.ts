@@ -16,6 +16,8 @@ import type { AiReplyResult } from '../ai/ai.service';
 import type { ConversationHistoryPage } from '@life-abroad/shared';
 import { ConversationSpeechService } from '../speech/conversation-speech.service';
 import { NpcPresenceService } from '../npcs/npc-presence.service';
+import { NpcRelationshipService } from '../npcs/npc-relationship.service';
+import { classifySocialSignal } from '../npcs/social-signal';
 
 const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
 
@@ -38,7 +40,7 @@ export class ConversationsService {
     private readonly seller: SellerService, private readonly coffee: CoffeeQuestService,
     private readonly ai: AiService, private readonly prompts: NpcPromptService,
     private readonly aiUsage: AiUsageService, private readonly speech: ConversationSpeechService,
-    private readonly presence: NpcPresenceService) {}
+    private readonly presence: NpcPresenceService, private readonly relationships: NpcRelationshipService) {}
 
   learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
     return this.conversations.learningHistory(userId);
@@ -50,7 +52,7 @@ export class ConversationsService {
       const arrival = await this.quests.getArrival(userId, client);
       if (isCafeSeller(npcId) || npcId === 'npc_clothes_seller') {
         const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
-        const baseContext = await this.conversations.context(client, npcId);
+        const baseContext = await this.conversations.context(client, userId, npcId);
         const id = await this.conversations.create(client, userId, npcId, openingVariation);
         const context = { ...baseContext, variationIndex: openingVariation };
         const greeting = transientOpening(id, await this.seller.opening(context));
@@ -61,7 +63,7 @@ export class ConversationsService {
       }
       if (npcId !== ARRIVAL_NPC_ID) {
         const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
-        const baseContext = await this.conversations.context(client, npcId);
+        const baseContext = await this.conversations.context(client, userId, npcId);
         const openingNode = (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId) ? 'townsperson_start' : 'shop_start';
         const id = await this.conversations.create(client, userId, npcId, openingVariation);
         const context = { ...baseContext, variationIndex: openingVariation };
@@ -72,7 +74,7 @@ export class ConversationsService {
       }
       if (arrival.locationId !== STATION_LOCATION_ID) throw new ConflictException('Visit the station receptionist first');
       const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
-      const baseContext = await this.conversations.context(client);
+      const baseContext = await this.conversations.context(client, userId);
       const id = await this.conversations.create(client, userId, npcId, openingVariation);
       const context = { ...baseContext, variationIndex: openingVariation };
       const opening = await this.dialogue.node(context, 'receptionist_start');
@@ -130,7 +132,7 @@ export class ConversationsService {
       if (conversation.ended_at) throw new ConflictException('This conversation has ended. Start a new conversation');
       if (receptionist && arrival.locationId !== STATION_LOCATION_ID) throw new ConflictException('Visit the station receptionist first');
       await this.life.consumeMessage(client, userId);
-      const context = { ...await this.conversations.context(client, conversation.npc_id),
+      const context = { ...await this.conversations.context(client, userId, conversation.npc_id),
         variationIndex: await this.conversations.variationIndex(client, userId, conversation.npc_id),
         ...(conversation.current_node_id ? { currentNodeId: conversation.current_node_id } : {}) };
       const history = await this.conversations.messages(client, id);
@@ -214,6 +216,9 @@ export class ConversationsService {
         responseText = farewellClosing(request.text);
         metadata = { ...metadata, farewellStage: 'confirm' };
       }
+      const socialSignal = classifySocialSignal(request.text, metadata.intent);
+      if (socialSignal) metadata = { ...metadata, relationship: await this.relationships.apply(
+        client, userId, conversation.npc_id, socialSignal, request.clientMessageId) };
       if (stream && (!aiResult || aiResult.fallback)) {
         if (stream.signal.aborted) throw stream.signal.reason ?? new Error('Chat stream cancelled.');
         await stream.beforeSave(responseText);

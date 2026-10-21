@@ -9,11 +9,14 @@ import { DatabaseService } from '../infrastructure/database/database.service';
 import { loadSeedContent } from '../infrastructure/content/seed-content';
 import { DialogueService } from '../modules/dialogue/dialogue.service';
 
-const receptionist = { npcId: 'npc_receptionist', roleId: 'station_receptionist', personality: 'cheerful' };
+const receptionist = { npcId: 'npc_receptionist', roleId: 'station_receptionist', personality: 'cheerful',
+  profile: { profileVersion: 1 as const }, locationName: 'Central Station', cityName: 'Test City',
+  countryName: 'Test Country', townLocationName: 'Market Street' };
 
 test('T19 waiter small-talk topics support personality replies and at least five understood turns', async () => {
   const { engine } = await fixture();
-  const context = { npcId: 'npc_cafe_waiter', roleId: 'shop_companion', personality: 'cheerful' };
+  const context = { npcId: 'npc_cafe_waiter', roleId: 'shop_companion', personality: 'cheerful', store: true,
+    profile: { profileVersion: 1 as const, hometown: 'Uppsala' }, locationName: 'Test Café', cityName: 'Test City' };
   const topics = [
     ['How are you?', 'global_wellbeing'],
     ['How is the weather?', 'global_weather'],
@@ -50,17 +53,18 @@ test('T19 waiter small-talk topics support personality replies and at least five
 
 test('Town Street residents open casual conversations and understand common topics', async () => {
   const { engine } = await fixture();
-  const context = { npcId: 'npc_mila_florist', roleId: 'townsperson', personality: 'cheerful' };
+  const context = { npcId: 'npc_mila_florist', roleId: 'townsperson', personality: 'cheerful',
+    profile: { profileVersion: 1 as const, job: 'Florist', hobbies: ['arranging flowers'], favouriteFood: 'soup',
+      conversationTopics: ['flowers'] }, locationName: 'Test Street', cityName: 'Test City' };
   const opening = await engine.node(context, 'townsperson_start');
-  assert.match(opening.text, /Sweden|meet someone new|exploring new places/i);
+  assert.match(opening.text, /Test City/);
   const topics = [
     ['How are you?', 'global_wellbeing'],
     ['How is the weather?', 'global_weather'],
-    ['What do you like to do in your free time?', 'townsperson_hobbies'],
-    ['What food do you like?', 'townsperson_food'],
-    ['What do you do for work?', 'townsperson_work'],
-    ['What places should I visit in Maplewood?', 'townsperson_maplewood'],
-    ['Do you like flowers?', 'townsperson_flowers'],
+    ['What are your hobbies?', 'global_hobbies'],
+    ['What food you like?', 'global_food'],
+    ['What do you do for work?', 'global_job'],
+    ['What places are near here?', 'global_local_places'],
   ] as const;
   for (const [input, expectedNode] of topics) {
     const reply = await engine.reply(context, input, false);
@@ -68,8 +72,54 @@ test('Town Street residents open casual conversations and understand common topi
     assert.equal(reply.misunderstood, false, input);
   }
   const personalities = await Promise.all(['cheerful', 'shy', 'serious'].map(personality =>
-    engine.reply({ ...context, personality }, 'What do you enjoy doing?', false)));
-  assert.equal(new Set(personalities.map(reply => reply.text)).size, 3);
+    engine.reply({ ...context, personality }, 'What are your hobbies?', false)));
+  assert.ok(personalities.every(reply => /arranging flowers/.test(reply.text)));
+});
+
+test('NPC-07 answers every everyday topic from allowlisted context or the authored missing-fact response', async () => {
+  const { engine } = await fixture();
+  const context = { npcId: 'npc_mila_florist', npcName: 'Mila', roleId: 'townsperson', personality: 'cheerful',
+    locationName: 'Harbour Lane', cityName: 'Northport', countryName: 'Testland', townLocationName: 'Harbour Lane',
+    profile: { profileVersion: 1 as const, age: 34, hometown: 'Uppsala', family: ['my sister Ana'], job: 'Florist',
+      hobbies: ['arranging flowers', 'reading novels'], favouriteFood: 'vegetable soup', likes: ['dogs'],
+      dislikes: ['loud traffic'], conversationTopics: ['jazz music', 'painting', 'travel'],
+      dailyRoutine: ['open the flower shop early'] } };
+  const cases = [
+    ['What you name?', 'global_name', 'Mila'], ['How old you?', 'global_age', '34'],
+    ['Where you from?', 'global_origin', 'Uppsala'], ['Tell me about your family', 'global_family', 'sister Ana'],
+    ['What you do for work?', 'global_job', 'Florist'], ['Where you work?', 'global_workplace', 'Harbour Lane'],
+    ['What are your hobbies?', 'global_hobbies', 'arranging flowers'], ['What food you like?', 'global_food', 'vegetable soup'],
+    ['What do you like?', 'global_likes', 'dogs'], ["What don't you like?", 'global_dislikes', 'loud traffic'],
+    ['Do you read?', 'global_books', 'reading novels'], ['What music do you like?', 'global_music', 'jazz music'],
+    ['Do you paint?', 'global_art', 'painting'], ['Do you have a pet?', 'global_pets', 'dogs'],
+    ['Do you like travel?', 'global_travel', 'travel'], ['What is this place?', 'global_local_places', 'Northport'],
+    ['What is your daily routine?', 'global_routine', 'open the flower shop early'],
+    ['How are you?', 'global_wellbeing', 'great'], ['How is the weather today?', 'global_weather', 'live weather'],
+    ['Thank you', 'global_thanks', "You're welcome"], ["I'm sorry", 'global_apology', 'apologizing'],
+    ['You are kind', 'global_compliment', 'kind'], ['Goodbye', 'global_goodbye', 'Bye'],
+  ] as const;
+  for (const [input, node, fact] of cases) {
+    const reply = await engine.reply(context, input);
+    assert.equal(reply.node.id, node, input);
+    assert.match(reply.text, new RegExp(fact, 'i'), input);
+    assert.doesNotMatch(reply.text, /\{\w+\}/, input);
+  }
+  for (const input of ['Do you like school?', 'What are you doing now?', 'What are your plans?']) {
+    const reply = await engine.reply(context, input);
+    assert.match(reply.text, /haven't shared/i, input);
+    assert.doesNotMatch(reply.text, /\{\w+\}/, input);
+  }
+});
+
+test('NPC-07 store small talk is brief, factual, and redirects without changing service intent', async () => {
+  const { engine } = await fixture();
+  const context = { npcId: 'npc_mia', npcName: 'Mia', roleId: 'barista', personality: 'cheerful', store: true,
+    profile: { profileVersion: 1 as const, hobbies: ['listening to jazz'] },
+    locationName: 'Dynamic Café', cityName: 'Dynamic City' };
+  const reply = await engine.reply(context, 'What is your name?', true);
+  assert.equal(reply.intent, 'ask_name');
+  assert.match(reply.text, /Mia.*help you.*shop/i);
+  assert.ok(reply.text.split(/[.!?]+/).filter(Boolean).length <= 2);
 });
 
 async function fixture() {
@@ -125,9 +175,9 @@ test('T4 applies NPC then role then global intent precedence and personality wor
   assert.equal((await engine.reply(receptionist, 'I feel fine')).node.id, 'global_fine');
   const greeting = await engine.reply(receptionist, 'hello');
   assert.equal(greeting.node.id, 'receptionist_welcome');
-  assert.equal(greeting.text, greeting.node.text.cheerful);
+  assert.equal(greeting.text, 'Welcome to Test Country! The bus takes you to Market Street. Would you like a bus ticket?');
   const defaultGreeting = await engine.reply({ ...receptionist, personality: 'unknown' }, 'hello');
-  assert.equal(defaultGreeting.text, defaultGreeting.node.text.default);
+  assert.equal(defaultGreeting.text, 'Welcome! You can take the bus to Market Street. Would you like a bus ticket?');
   const other = { ...receptionist, npcId: 'another_receptionist' };
   assert.equal((await engine.reply(other, 'bus ticket')).node.id, 'station_receptionist_ticket');
   const stranger = { ...other, roleId: 'unrelated' };

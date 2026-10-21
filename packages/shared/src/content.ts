@@ -107,6 +107,7 @@ export const presenceScheduleSchema = z.object({
 
 export const npcProfileSchema = z.object({
   profileVersion: z.literal(1),
+  job: text.optional(),
   age: z.number().int().min(18).max(120).optional(),
   hometown: text.optional(),
   family: profileList.optional(),

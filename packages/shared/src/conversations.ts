@@ -40,6 +40,12 @@ export const chatStreamRequestSchema = z.object({
 }).strict();
 export const conversationIdSchema = z.string().uuid();
 export const conversationSpeechSchema = z.object({ url: z.string().url() }).strict();
+export const relationshipStageSchema = z.enum(['strained', 'stranger', 'acquaintance', 'friendly', 'friend', 'close_friend']);
+export const npcRelationshipSchema = z.object({
+  familiarity: z.number().int().min(0).max(100), affinity: z.number().int().min(-100).max(100),
+  stage: relationshipStageSchema, reactionMood: z.enum(['upset', 'angry']).nullable(),
+  reactionExpiresAt: z.string().datetime().nullable(),
+}).strict();
 export const conversationMessageSchema = z.object({
   id: z.string().uuid(), sender: z.enum(['player', 'npc']), text: z.string(),
   createdAt: z.string().datetime(), ai: z.literal(true).optional(), speech: conversationSpeechSchema.optional(),
@@ -51,6 +57,7 @@ export const turnMetadataSchema = z.object({
   seller: sellerStateSchema.optional(),
   coffeeQuest: coffeeQuestStateSchema.optional(),
   ai: z.literal(true).optional(),
+  relationship: npcRelationshipSchema.optional(),
 }).strict();
 export const conversationTurnSchema = turnMetadataSchema.extend({
   playerMessage: conversationMessageSchema, npcMessage: conversationMessageSchema,
@@ -73,6 +80,7 @@ export type TurnMetadata = z.infer<typeof turnMetadataSchema>;
 export type ConversationTurn = z.infer<typeof conversationTurnSchema>;
 export type Conversation = z.infer<typeof conversationSchema>;
 export type ConversationHistoryPage = z.infer<typeof conversationHistoryPageSchema>;
+export type NpcRelationship = z.infer<typeof npcRelationshipSchema>;
 
 // Server-side history seam for learning; raw metadata is validated by its consumer.
 export interface LearningHistoryTurn {

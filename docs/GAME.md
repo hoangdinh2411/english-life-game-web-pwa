@@ -67,6 +67,16 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   absent; shop actors remain constrained by venue hours. The client displays
   and enables only the server presence allowlist, while conversations already
   in progress may finish after a schedule boundary.
+- Each player builds a separate relationship with each NPC. Familiarity and
+  affinity change slowly from explicit greetings, thanks, polite requests,
+  apologies and insults. Ambiguous language and learner mistakes do not count.
+  Insult reactions expire in game time, apologies soften rather than erase
+  negative affinity, and shop rules and prices never depend on relationship.
+- NPCs answer everyday questions with validated profile and location facts,
+  including common learner forms such as “How old you?” and “Where you from?”.
+  Missing facts receive a natural non-answer instead of invented detail. Shop
+  NPCs keep small talk brief and redirect to service without changing orders,
+  prices or quest behavior.
 - Shop and station NPCs have individual names. Venue hours use game time:
   organizations 08:00–16:00, stores 08:00–14:00 and workplaces 07:00–17:00.
   The current playable map gates its store interiors; closed entrances show the

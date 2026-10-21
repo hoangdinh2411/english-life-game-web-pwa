@@ -15,6 +15,7 @@ import { AiService } from '../modules/ai/ai.service';
 import { NpcPromptService } from '../modules/ai/npc-prompt.service';
 import { AiUsageService } from '../modules/ai/ai-usage.service';
 import { NpcPresenceService } from '../modules/npcs/npc-presence.service';
+import { NpcRelationshipService } from '../modules/npcs/npc-relationship.service';
 
 test('T10c all NPCs use AI after scripts while pending gameplay and replay bypass it', async () => {
   let npcId = 'npc_mila_florist';
@@ -28,6 +29,7 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
   let limited = false;
   let aiFallback = false;
   let presenceChecks = 0;
+  let relationshipCalls = 0;
   const order: string[] = [];
   const scripted = { text: 'Scripted reply', node: { id: 'global_repeat' }, intent: null, misunderstood: true };
   let arrival = { locationId: 'loc_station' };
@@ -72,11 +74,14 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
         fallback: aiFallback, usedProvider: true };
     } })
     .overrideProvider(AiUsageService).useValue({ limited: async () => limited, record: async () => undefined })
-    .overrideProvider(NpcPresenceService).useValue({ assertCanStart: async () => { presenceChecks++; } }).compile();
+    .overrideProvider(NpcPresenceService).useValue({ assertCanStart: async () => { presenceChecks++; } })
+    .overrideProvider(NpcRelationshipService).useValue({ apply: async () => { relationshipCalls++; return {
+      familiarity: 1, affinity: -100, stage: 'strained', reactionMood: null, reactionExpiresAt: null,
+    }; } }).compile();
   try {
     const service = module.get(ConversationsService);
-    const send = () => service.send('existing-user', randomUUID(), {
-      text: 'Tell me about autumn', clientMessageId: randomUUID(), coach: false,
+    const send = (text = 'Tell me about autumn') => service.send('existing-user', randomUUID(), {
+      text, clientMessageId: randomUUID(), coach: false,
     });
     const first = await send();
     assert.match(first.npcMessage.text, /AI text/);
@@ -107,6 +112,11 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
     limited = true; assert.equal((await send()).npcMessage.text, 'Friendly limit'); limited = false;
     enabled = false; await send();
     assert.equal(aiCalls, 5);
+    npcId = 'npc_mia'; understood = true;
+    assert.equal((await send('Thank you')).npcMessage.text, 'Scripted sale');
+    assert.equal(relationshipCalls, 1, 'relationship state must not change seller routing');
+    replay = true; await send('Thank you');
+    assert.equal(relationshipCalls, 1, 'replayed seller turns must not change the relationship twice');
     assert.equal(presenceChecks, 0, 'continuing an existing conversation must not re-check presence');
   } finally { await module.close(); }
 });

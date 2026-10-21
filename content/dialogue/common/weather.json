@@ -5,9 +5,9 @@
     {
       "id": "global_weather",
       "text": {
-        "default": "I hope we have a sunny afternoon. What weather do you like?",
-        "cheerful": "The sunshine makes me happy! What weather do you enjoy?",
-        "shy": "I like cool mornings. What is the weather like where you are from?"
+        "default": "I don't have live weather information. What is it like outside?",
+        "cheerful": "I don't have live weather information. What weather do you enjoy?",
+        "shy": "I cannot check live weather. Is it calm outside?"
       }
     }
   ]
