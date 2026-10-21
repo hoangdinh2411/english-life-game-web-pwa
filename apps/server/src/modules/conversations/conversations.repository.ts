@@ -4,7 +4,6 @@ import { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { DialogueContext } from '../dialogue/dialogue.service';
 import { conversationNpcSchema } from '@life-abroad/shared';
-import type { LearningHistoryTurn } from '@life-abroad/shared';
 
 interface MessageRow { id: string; sender: 'player' | 'npc'; text: string; created_at: Date; metadata: unknown }
 export interface ConversationRow { id: string; npc_id: string; current_node_id: string | null; opening_variation_index: number; pending_order: unknown; ended_at: Date | null }
@@ -30,20 +29,6 @@ export class ConversationsRepository {
       WHERE p.user_id=$1 AND q.npc_id=$2 AND p.status='active' AND p.current_step_id IS NOT NULL
     ) AS pending`, [userId, npcId]);
     return result.rows[0]!.pending;
-  }
-
-  async learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
-    const result = await this.database.query<MessageRow & { npc_id: string }>(`SELECT n.id,n.created_at,c.npc_id,p.text,n.metadata
-      FROM public.conversations c
-      JOIN public.messages n ON n.conversation_id=c.id AND n.sender='npc'
-      JOIN public.messages p ON p.conversation_id=c.id AND p.sender='player'
-        AND p.client_message_id=n.client_message_id
-      WHERE c.user_id=$1 AND (
-        n.metadata->'correction' IS NOT NULL AND n.metadata->'correction' <> 'null'::jsonb
-        OR c.npc_id=ANY($2::text[]) AND n.metadata->>'intent' IN ('order','ask_price'))
-      ORDER BY n.created_at DESC,n.sequence DESC LIMIT 100`, [userId, [...SHOP_NPC_IDS]]);
-    return result.rows.map(row => ({ id: row.id, createdAt: row.created_at.toISOString(),
-      npcId: row.npc_id, text: row.text, metadata: row.metadata }));
   }
 
   async variationIndex(client: PoolClient, userId: string, npcId: string, opening = false): Promise<number> {
@@ -119,14 +104,14 @@ export class ConversationsRepository {
     const player = result.rows.find(row => row.sender === 'player');
     const npc = result.rows.find(row => row.sender === 'npc');
     if (!player || !npc) throw new ServiceUnavailableException('Conversation replay is unavailable');
-    if (player.text !== request.text || (player.metadata as { coach?: unknown } | null)?.coach !== request.coach) {
+    if (player.text !== request.text) {
       throw new ConflictException('Message ID was already used for a different request');
     }
     return { ...turnMetadataSchema.parse(npc.metadata), playerMessage: message(player), npcMessage: message(npc) };
   }
 
   async append(client: PoolClient, id: string, sender: 'player' | 'npc', text: string,
-    requestId: string | null = null, metadata: TurnMetadata | { coach: boolean } | null = null,
+    requestId: string | null = null, metadata: TurnMetadata | null = null,
     messageId?: string): Promise<ConversationMessage> {
     const result = await client.query<MessageRow>(`INSERT INTO public.messages
       (id,conversation_id,sender,text,client_message_id,metadata) VALUES (COALESCE($1::uuid,gen_random_uuid()),$2,$3,$4,$5,$6)

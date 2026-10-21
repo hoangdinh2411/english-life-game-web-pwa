@@ -8,7 +8,6 @@ import type { ConversationSnapshot } from "./conversation-controller";
 import { useNarration } from "../../speech/use-narration";
 import { useSpeech } from "../../speech/use-speech";
 import { npcVoice } from "../../speech/npc-voice";
-import { usePreferences } from "../hud/usePreferences";
 import {
   shouldUseTypingFallback,
   useNpcMessageReveal,
@@ -30,7 +29,7 @@ export function SavedConversation({
   state: ConversationSnapshot;
   sound: boolean;
   online: boolean;
-  send: (text: string, coach: boolean) => Promise<boolean>;
+  send: (text: string) => Promise<boolean>;
   loadOlder?: () => Promise<boolean>;
   retry: () => void;
   displayNpc?: {
@@ -45,12 +44,7 @@ export function SavedConversation({
   onClose?: () => void;
 }) {
   const [text, setText] = useState(state.retryMessage?.text ?? "");
-  const { coach, set } = usePreferences();
-  const [feedbackOpen, setFeedbackOpen] = useState(true);
   const [hintOpen, setHintOpen] = useState(false);
-  useEffect(() => {
-    setFeedbackOpen(true);
-  }, [coach]);
   const [finalizing, setFinalizing] = useState(false);
   const [dismissEndPrompt, setDismissEndPrompt] = useState(false);
   const sending = useRef(false);
@@ -88,10 +82,22 @@ export function SavedConversation({
     voice.playback,
     shouldUseTypingFallback(sound, voice.ready, voice.error),
   );
-  const narrationPending = Boolean(sound && voice.ready && !voice.error && lastNpc &&
-    (voice.playback.revision !== lastNpc.id || voice.playback.progress < 1));
-  const showEndPrompt = state.farewellStage === "confirm" && latestMessage?.sender === "npc" &&
-    !state.pending && !state.streaming && !reveal?.revealing && !voice.speaking && !narrationPending && !dismissEndPrompt;
+  const narrationPending = Boolean(
+    sound &&
+    voice.ready &&
+    !voice.error &&
+    lastNpc &&
+    (voice.playback.revision !== lastNpc.id || voice.playback.progress < 1),
+  );
+  const showEndPrompt =
+    state.farewellStage === "confirm" &&
+    latestMessage?.sender === "npc" &&
+    !state.pending &&
+    !state.streaming &&
+    !reveal?.revealing &&
+    !voice.speaking &&
+    !narrationPending &&
+    !dismissEndPrompt;
   useEffect(() => {
     const element = history.current;
     if (!element) return;
@@ -113,10 +119,7 @@ export function SavedConversation({
         setFinalizing(true);
         reply = await speech.finish();
       }
-      const preference = original
-        ? (state.retryMessage?.coach ?? coach)
-        : coach;
-      if (reply !== null && (await send(reply, preference))) {
+      if (reply !== null && (await send(reply))) {
         setText("");
         setDismissEndPrompt(false);
       }
@@ -126,11 +129,23 @@ export function SavedConversation({
     }
   };
   if (showEndPrompt) {
-    return <div className="flex flex-wrap items-center gap-2" role="group" aria-label="End the conversation">
-      <span>End the conversation?</span>
-      <GameButton label="Yes" onClick={() => onClose?.()} />
-      <GameButton label="No" onClick={() => setDismissEndPrompt(true)} />
-    </div>;
+    return (
+      <div
+        className="flex flex-wrap items-center gap-2"
+        role="group"
+        aria-label="End the conversation"
+      >
+        <span>End the conversation?</span>
+        <GameButton
+          label="Yes"
+          onClick={() => onClose?.()}
+        />
+        <GameButton
+          label="No"
+          onClick={() => setDismissEndPrompt(true)}
+        />
+      </div>
+    );
   }
   return (
     <>
@@ -143,14 +158,27 @@ export function SavedConversation({
         onScroll={(event) => {
           const element = event.currentTarget;
           const cursor = state.conversation?.historyCursor;
-          if (element.scrollTop > 8 || !cursor?.hasMore || !loadOlder || state.historyLoading) return;
+          if (
+            element.scrollTop > 8 ||
+            !cursor?.hasMore ||
+            !loadOlder ||
+            state.historyLoading
+          )
+            return;
           previousScrollHeight.current = element.scrollHeight;
           void loadOlder().then((loaded) => {
             if (!loaded) previousScrollHeight.current = null;
           });
         }}
       >
-        {state.historyLoading ? <p role="status" className="text-center text-sm text-muted">Loading earlier messages…</p> : null}
+        {state.historyLoading ? (
+          <p
+            role="status"
+            className="text-center text-sm text-muted"
+          >
+            Loading earlier messages…
+          </p>
+        ) : null}
         {state.conversation?.messages.map((message) => (
           <DialogueMessage
             key={message.id}
@@ -207,7 +235,10 @@ export function SavedConversation({
             portrait={
               displayNpc?.portrait ?? npcPortraits.npc_station_information
             }
-            portraitPosition={displayNpc?.portraitPosition(state.streamedReply, !state.streamedReply)}
+            portraitPosition={displayNpc?.portraitPosition(
+              state.streamedReply,
+              !state.streamedReply,
+            )}
             portraitGrid={displayNpc?.portraitGrid}
             replayVisible={false}
           />
@@ -278,42 +309,6 @@ export function SavedConversation({
           onClick={retry}
         />
       ) : null}
-      <button
-        type="button"
-        className="game-button hidden lg:block min-h-11 [padding:10px_16px] border-0 rounded-[12px] bg-[#315749] text-[#fff8e7] text-[15px] font-bold coach-toggle [align-self:flex-start]"
-        aria-pressed={coach}
-        disabled={state.pending || Boolean(state.retryMessage)}
-        onClick={() => set("coach", !coach)}
-      >
-        {coach ? "Coach on" : "Coach off"}
-      </button>
-      {coach ? (
-        <div className="lg:hidden">
-          <GameButton
-            label="Coach"
-            onClick={() => setFeedbackOpen((value) => !value)}
-          />
-        </div>
-      ) : null}
-      {coach && feedbackOpen ? (
-        state.correction ? (
-          <aside
-            className="coach-feedback flex flex-col [gap:5px] p-2.5 rounded-[12px] bg-[#e5eddf] [overflow-wrap:anywhere]"
-            aria-label="Coach feedback"
-          >
-            <strong>A natural way to say it</strong>
-            <p>{state.correction.improved}</p>
-            <p className="hint text-muted text-[13px] leading-[1.4]">
-              {state.correction.reason}
-            </p>
-          </aside>
-        ) : (
-          <p className="hint text-muted text-[13px] leading-[1.4]">
-            Coach can offer a gentle correction after your next reply. It never
-            blocks your progress.
-          </p>
-        )
-      ) : null}
       <MessageComposer
         text={text}
         onChange={setText}
@@ -333,11 +328,9 @@ export function SavedConversation({
           setText("");
         }}
       />
-      {speech.supported ? (
+      {speech.listening ? (
         <p className="hint text-muted text-[13px] leading-[1.4]">
-          {speech.listening
-            ? "Recording… Stop to review, or Send to finish."
-            : "Voice may use an online speech service. Review before sending."}
+          Recording… Stop to review, or Send to finish.
         </p>
       ) : null}
       {speech.interim ? <p role="status">{speech.interim}</p> : null}

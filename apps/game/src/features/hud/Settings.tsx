@@ -2,20 +2,16 @@ import { usePreferences } from './usePreferences';
 import { useId, useState } from 'react';
 
 export function Settings({ compact = false }: { compact?: boolean }) {
-  const { sound, coach, speechRate, speechPitch, set } = usePreferences();
+  const { sound, speechRate, speechPitch, set } = usePreferences();
   const [expanded, setExpanded] = useState(false);
   const id = useId();
   return <section aria-label="Settings" className={compact ? 'flex flex-wrap justify-end gap-2 lg:hidden' : 'flex flex-col gap-2'}>
     {!compact ? <h3 className="font-bold">Settings</h3> : null}
-    {(['sound', 'coach'] as const).filter(setting => !compact || expanded || setting === 'sound').map(setting => {
-      const enabled = setting === 'sound' ? sound : coach;
-      const name = setting === 'sound' ? 'Sound' : 'Coach';
-      return <button key={setting} type="button" role="switch" aria-label={name} aria-checked={enabled}
-        onClick={() => set(setting, !enabled)}
+    <button type="button" role="switch" aria-label="Sound" aria-checked={sound}
+        onClick={() => set('sound', !sound)}
         className={`min-h-11 rounded-xl border-2 border-[#315749] bg-[#fff8e9] px-3 text-[#263630] ${compact && !expanded ? 'min-w-11 p-1' : 'flex items-center justify-between gap-3'}`}>
-        {compact && !expanded ? <span aria-hidden="true">{sound ? '🔊' : '🔇'}</span> : <><span>{name}</span><span className="font-bold">{enabled ? 'On' : 'Off'}</span></>}
-      </button>;
-    })}
+        {compact && !expanded ? <span aria-hidden="true">{sound ? '🔊' : '🔇'}</span> : <><span>Sound</span><span className="font-bold">{sound ? 'On' : 'Off'}</span></>}
+      </button>
     {(!compact || expanded) ? <div className="grid gap-2">
       <label className="grid gap-1 text-sm" htmlFor={`${id}-speech-rate`}>
         <span>Voice speed: <strong>{speechRate.toFixed(2)}×</strong></span>

@@ -13,7 +13,7 @@ import { ServiceUnavailableException } from '@nestjs/common';
 
 // Catches charges before confirmation, duplicate payment, lost pending orders,
 // and successful-looking replies when a transaction actually failed.
-test('T17 seller Auth/API: existing account, pending order, pay once, cancel, insufficient funds and Coach', async () => {
+test('T17 seller Auth/API: existing account, pending order, pay once, cancel and insufficient funds', async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
   assert.equal(url.hostname, '127.0.0.1'); assert.ok(['54322', '55422'].includes(url.port));
   const authUrl = process.env.SUPABASE_URL ?? '';
@@ -67,10 +67,10 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     const conversation = conversationSchema.parse(await created.json());
     assert.match(conversation.messages[0]!.text, /what|welcome|hello|hi/i);
     const path = `/conversations/${conversation.id}`;
-    const send = (text: string, coach = false, clientMessageId = randomUUID()) =>
-      call(path + '/messages', { text, coach, clientMessageId });
-    const turn = async (text: string, coach = false) => {
-      const response = await send(text, coach); assert.equal(response.status, 201);
+    const send = (text: string, clientMessageId = randomUUID()) =>
+      call(path + '/messages', { text, clientMessageId });
+    const turn = async (text: string) => {
+      const response = await send(text); assert.equal(response.status, 201);
       const value = conversationTurnSchema.parse(await response.json());
       assert.ok(value.seller);
       return { ...value, seller: value.seller };
@@ -84,7 +84,6 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     assert.match((await turn('I feel sick')).npcMessage.text, /sorry|not feeling well/i);
     assert.match((await turn('What do you have?')).npcMessage.text, /Espresso.*\$5/);
     assert.match((await turn('How much is a cappuccino?')).npcMessage.text, /\$7/);
-    assert.equal((await turn('I want buy coffee', true)).correction?.improved, 'I want to buy coffee.');
     assert.equal((await stats()).coins, 500);
     assert.equal((await turn('I would like two cappuccinos please')).seller.pendingOrder?.total, 14);
     const saved = await (await call(path)).json() as { seller: { pendingOrder: { quantity: number } } };
@@ -114,11 +113,11 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     assert.equal(Number(ordersBeforePayment.rows[0]!.count), 0);
     assert.equal((await turn('Yes please')).intent, 'order', 'repeat an unconfirmed order before paying');
     const paidMessageId = randomUUID();
-    const paidResponse = await send('Yes please', false, paidMessageId);
+    const paidResponse = await send('Yes please', paidMessageId);
     assert.equal(paidResponse.status, 201);
     const paidTurn = conversationTurnSchema.parse(await paidResponse.json());
     assert.equal(paidTurn.intent, 'paid');
-    assert.deepEqual(await (await send('Yes please', false, paidMessageId)).json(), paidTurn,
+    assert.deepEqual(await (await send('Yes please', paidMessageId)).json(), paidTurn,
       'replayed payment confirmation returns its receipt without creating a second order');
     const orderRow = await client.query<{ id: string; items: unknown; total: number }>(
       'SELECT id,items,total FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2', [userId, cafeOrderId]);
@@ -146,14 +145,14 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     finally { repository.append = append; }
     assert.deepEqual(await stats(), before);
     const key = randomUUID();
-    const responses = await Promise.all(Array.from({ length: 4 }, () => send('Yes please', false, key)));
+    const responses = await Promise.all(Array.from({ length: 4 }, () => send('Yes please', key)));
     let receipt: unknown;
     for (const response of responses) {
       assert.equal(response.status, 201);
       const value: unknown = await response.json(); receipt ??= value; assert.deepEqual(value, receipt);
     }
     assert.equal((await stats()).coins, 486);
-    assert.equal((await send('different', false, key)).status, 409);
+    assert.equal((await send('different', key)).status, 409);
     assert.equal((await turn('Yes please')).intent, 'no_order');
     assert.equal((await stats()).coins, 486);
     const failedCafeOrder = await turn('Three smoothies please');
@@ -166,7 +165,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     assert.equal(Number(failedHistory.rows[0]!.count), 0, 'failed payment creates no history entry');
     assert.equal((await turn('Cancel')).seller.pendingOrder, null);
     assert.equal((await turn('Goodbye')).seller.closed, true);
-    assert.deepEqual(await (await send('Yes please', false, key)).json(), receipt);
+    assert.deepEqual(await (await send('Yes please', key)).json(), receipt);
     assert.equal((await send('An espresso please')).status, 409);
     // T20 clothing orders use the saved seller conversation and charge once.
     // This test's outer transaction restores the existing account afterward.
@@ -180,7 +179,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     assert.equal(clothesOpened.seller?.shop, 'clothes');
     const clothesPath = `/conversations/${clothesOpened.id}`;
     const clothesTurn = async (text: string, clientMessageId = randomUUID()) => {
-      const response = await call(`${clothesPath}/messages`, { clientMessageId, text, coach: false });
+      const response = await call(`${clothesPath}/messages`, { clientMessageId, text });
       assert.equal(response.status, 201, text);
       return conversationTurnSchema.parse(await response.json());
     };
@@ -236,7 +235,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     await setStoreTime('07:59');
     const closedOpening = conversationSchema.parse(await (await call('/conversations', { npcId: 'npc_clothes_seller' })).json());
     const closedReply = await call(`/conversations/${closedOpening.id}/messages`, {
-      text: 'What shirts do you have?', coach: false, clientMessageId: randomUUID(),
+      text: 'What shirts do you have?', clientMessageId: randomUUID(),
     });
     assert.equal(closedReply.status, 201);
     assert.match(conversationTurnSchema.parse(await closedReply.json()).npcMessage.text, /08:00.*20:00/);
@@ -253,7 +252,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
       const response = await call('/conversations', { npcId }); assert.equal(response.status, 201);
       const opened = conversationSchema.parse(await response.json()); assert.equal(opened.npcId, npcId);
       const messagePath = `/conversations/${opened.id}/messages`;
-      const body = { clientMessageId: randomUUID(), text: 'How can I leave the station?', coach: false };
+      const body = { clientMessageId: randomUUID(), text: 'How can I leave the station?' };
       const before = await stats();
       const reply = await call(messagePath, body); assert.equal(reply.status, 201);
       const answered = conversationTurnSchema.parse(await reply.json());
@@ -264,7 +263,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
       assert.equal((await stats()).energy, before.energy - 1);
       const saved = conversationSchema.parse(await (await call(`/conversations/${opened.id}`)).json());
       assert.equal(saved.npcId, npcId); assert.equal(saved.messages.length, 3);
-      const orderReply = await call(messagePath, { clientMessageId: randomUUID(), text: npcId.startsWith('npc_clothes_') ? 'What shirts do you have?' : 'Can I order coffee?', coach: true });
+      const orderReply = await call(messagePath, { clientMessageId: randomUUID(), text: npcId.startsWith('npc_clothes_') ? 'What shirts do you have?' : 'Can I order coffee?' });
       assert.equal(orderReply.status, 201);
       const orderText = conversationTurnSchema.parse(await orderReply.json()).npcMessage.text;
       assert.match(orderText, npcId === 'npc_clothes_seller' ? /blue.*green.*red.*yellow/i : /seller|Mia/);
@@ -294,7 +293,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
       ['Where are you from?', 'origin'],
     ] as const;
     for (const [text, intent] of smallTalk) {
-      const response = await call(waiterPath, { clientMessageId: randomUUID(), text, coach: false });
+      const response = await call(waiterPath, { clientMessageId: randomUUID(), text });
       assert.equal(response.status, 201, text);
       const turn = conversationTurnSchema.parse(await response.json());
       assert.equal(turn.intent, intent, text);
@@ -302,7 +301,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
       assert.notEqual(turn.npcMessage.text, 'Sorry, can you say that again?', text);
     }
     const unknown = await call(waiterPath, {
-      clientMessageId: randomUUID(), text: 'purple flying sandwich', coach: false,
+      clientMessageId: randomUUID(), text: 'purple flying sandwich',
     });
     assert.equal(unknown.status, 201);
     const fallback = conversationTurnSchema.parse(await unknown.json());
@@ -315,7 +314,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel, in
     const station = conversationSchema.parse(await receptionist.json());
     assert.equal(station.seller, undefined);
     const stationReply = await call(`/conversations/${station.id}/messages`, {
-      clientMessageId: randomUUID(), text: 'purple flying sandwich', coach: false,
+      clientMessageId: randomUUID(), text: 'purple flying sandwich',
     });
     assert.equal(stationReply.status, 201);
     assert.equal(conversationTurnSchema.parse(await stationReply.json()).misunderstood, true);

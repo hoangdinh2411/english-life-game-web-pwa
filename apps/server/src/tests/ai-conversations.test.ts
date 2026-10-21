@@ -41,7 +41,7 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
       load: async () => ({ npc_id: npcId }),
       messages: async () => [],
       replay: async () => replay ? {
-        arrival: replayedArrival, intent: null, misunderstood: false, correction: null,
+        arrival: replayedArrival, intent: null, misunderstood: false,
         playerMessage: { sender: 'player', text: 'Tell me about autumn' },
         npcMessage: { sender: 'npc', text: 'Saved reply' },
       } : null,
@@ -86,7 +86,7 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
   try {
     const service = module.get(ConversationsService);
     const send = (text = 'Tell me about autumn') => service.send('existing-user', randomUUID(), {
-      text, clientMessageId: randomUUID(), coach: false,
+      text, clientMessageId: randomUUID(),
     });
     const first = await send();
     assert.match(first.npcMessage.text, /AI text/);

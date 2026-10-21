@@ -50,7 +50,7 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     assert.equal(conversation.messages[0]!.sender, 'npc');
     assert.equal(conversation.arrival.status, 'not_started');
     const path = `/conversations/${conversation.id}`;
-    const send = (text: string, coach = false, clientMessageId = randomUUID()) => call(path + '/messages', { text, coach, clientMessageId });
+    const send = (text: string, clientMessageId = randomUUID()) => call(path + '/messages', { text, clientMessageId });
     assert.equal((await send('Could I have a bus ticket, please?')).status, 409);
     assert.equal(conversationSchema.parse(await (await call(path)).json()).messages.length, 0,
       'an unanswered opening stays out of saved conversation history');
@@ -60,12 +60,11 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     assert.equal(misunderstood.arrival.status, 'not_started');
     const greeting = conversationTurnSchema.parse(await (await send('Hello!')).json());
     assert.equal(greeting.arrival.currentStepId, 'arrival_ask');
-    const imperfect = conversationTurnSchema.parse(await (await send('I want get to Maplewood', true)).json());
+    const imperfect = conversationTurnSchema.parse(await (await send('I want get to Maplewood')).json());
     assert.equal(imperfect.intent, 'ask_town_directions');
     assert.equal(imperfect.arrival.currentStepId, 'arrival_exit');
     assert.equal(imperfect.arrival.ticket.issued, true);
     assert.match(imperfect.npcMessage.text, /Here is your bus ticket/);
-    assert.equal(imperfect.correction?.improved, 'I want to get to Maplewood.');
     assert.equal((await send("I don't want a bus ticket")).status, 201);
     assert.equal(arrivalStateSchema.parse(await (await call('/quests/arrival')).json()).ticket.issued, true);
 
@@ -82,7 +81,7 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     assert.deepEqual(await (await call(path)).json(), before);
 
     const requestId = randomUUID();
-    const responses = await Promise.all(Array.from({ length: 6 }, () => send('A bus ticket, please', false, requestId)));
+    const responses = await Promise.all(Array.from({ length: 6 }, () => send('A bus ticket, please', requestId)));
     let issued: ReturnType<typeof conversationTurnSchema.parse> | undefined;
     for (const response of responses) {
       assert.equal(response.status, 201);
@@ -93,10 +92,8 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     assert.ok(issued);
     assert.deepEqual(issued.arrival.ticket, { issued: true, used: false });
     assert.equal(issued.arrival.canEnterTownStreet, true);
-    assert.equal(issued.correction, null);
     assert.match(issued.npcMessage.text, /Here is your bus ticket/);
-    assert.equal((await send('different text', false, requestId)).status, 409);
-    assert.equal((await send('A bus ticket, please', true, requestId)).status, 409);
+    assert.equal((await send('different text', requestId)).status, 409);
     const repeated = conversationTurnSchema.parse(await (await send('Could I have a bus ticket, please?')).json());
     assert.deepEqual(repeated.arrival, issued.arrival);
     const saved = conversationSchema.parse(await (await call(path)).json());
@@ -132,7 +129,7 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
       assert.equal(arrivalStateSchema.parse(await exit.json()).rewardsGranted, true);
     }
     assert.equal((await database.query('SELECT * FROM quest_reward_claims WHERE user_id=$1', [userId])).rowCount, 1);
-    assert.deepEqual(await (await send('A bus ticket, please', false, requestId)).json(), issued);
+    assert.deepEqual(await (await send('A bus ticket, please', requestId)).json(), issued);
     assert.equal((await send('Hello')).status, 409);
     assert.equal((await call('/conversations', { npcId: 'npc_receptionist' })).status, 409);
     const final = conversationSchema.parse(await (await call(path)).json());

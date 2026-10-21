@@ -8,7 +8,6 @@ test('greetings cannot swallow unsupported questions', () => {
       const reply = stationReply('npc_station_information', step, input);
       assert.equal(reply.aiFallback, true);
       assert.equal(reply.step, step);
-      assert.equal(reply.correction, undefined);
       assert.ok(!reply.text.includes('ID card'));
     }
   }

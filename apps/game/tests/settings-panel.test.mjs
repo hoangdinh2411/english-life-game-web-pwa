@@ -13,12 +13,12 @@ try {
     // The first run records the missing Settings surface as an assertion failure.
   }
 
-  test('Settings uses a separate scroll-safe overlay with every existing preference', () => {
+  test('Settings uses a separate scroll-safe overlay with audio preferences', () => {
     assert.equal(typeof SettingsPanel, 'function');
     const html = renderToStaticMarkup(createElement(SettingsPanel, { practice: false, onClose() {} }));
     assert.match(html, /aria-label="Settings"/);
     assert.match(html, />Sound</);
-    assert.match(html, />Coach</);
+    assert.doesNotMatch(html, /Coach/);
     assert.match(html, /Voice speed:/);
     assert.match(html, /Voice pitch:/);
     assert.match(html, />Close Settings</);

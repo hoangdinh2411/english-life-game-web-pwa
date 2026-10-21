@@ -7,7 +7,7 @@ const server = await createServer({ server: { middlewareMode: true }, appType: '
 try {
   const { SavedConversation } = await server.ssrLoadModule('/src/features/dialogue/SavedConversation.tsx');
   const arrival = { questId: 'q_station_arrival', status: 'active', currentStepId: 'arrival_ask', ticket: { issued: false, used: false }, canEnterTownStreet: false, locationId: 'loc_station', rewardsGranted: false };
-  const state = { arrival, conversation: { id: 'test-session', npcId: 'npc_receptionist', messages: [] }, pending: false, error: '', correction: null, retryMessage: { text: 'My unsent reply', coach: true, clientMessageId: 'test-message' }, streaming: false, streamedReply: '', announcement: '' };
+  const state = { arrival, conversation: { id: 'test-session', npcId: 'npc_receptionist', messages: [] }, pending: false, error: '', retryMessage: { text: 'My unsent reply', clientMessageId: 'test-message' }, streaming: false, streamedReply: '', announcement: '' };
   // Going offline must preserve the retry draft and disable its composer, with no queued write.
   test('offline conversation keeps the draft visible, disables sending, and explains reconnection', () => {
     const html = renderToStaticMarkup(createElement(SavedConversation, { state, sound: false, online: false, send: async () => { throw new Error('Unexpected send'); }, retry: () => {} }));
@@ -28,7 +28,7 @@ try {
     const thinking = renderToStaticMarkup(createElement(SavedConversation, { state: { ...state, pending: true, streaming: true, streamedReply: '', retryMessage: null }, online: true, sound: false, send: async () => true, retry: () => {} }));
     assert.match(thinking, /Thinking…/);
     assert.doesNotMatch(thinking, /AI reply/);
-    const typing = renderToStaticMarkup(createElement(SavedConversation, { state: { ...state, pending: true, streaming: true, streamedReply: 'A safe sentence.', retryMessage: { text: 'What movie?', coach: false, clientMessageId: 'stream-message' } }, online: true, sound: false, send: async () => true, retry: () => {} }));
+    const typing = renderToStaticMarkup(createElement(SavedConversation, { state: { ...state, pending: true, streaming: true, streamedReply: 'A safe sentence.', retryMessage: { text: 'What movie?', clientMessageId: 'stream-message' } }, online: true, sound: false, send: async () => true, retry: () => {} }));
     assert.match(typing, /reveal-layout-reserve/);
     assert.doesNotMatch(typing, /animate-pulse/);
     assert.ok(typing.indexOf('What movie?') < typing.indexOf('A safe sentence.'));

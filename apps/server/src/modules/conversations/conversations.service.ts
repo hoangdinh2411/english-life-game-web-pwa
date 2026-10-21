@@ -1,14 +1,13 @@
 import { LifeService } from '../life/life.service';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
-import { ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, SHOP_NPC_IDS, TOWN_STREET_NPC_IDS, checkGrammar, Conversation, ConversationMessage, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID, TurnMetadata, venueHoursLabel, detectIntent, farewellClosing, isDirectQuestion } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, SHOP_NPC_IDS, TOWN_STREET_NPC_IDS, Conversation, ConversationMessage, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID, TurnMetadata, venueHoursLabel, detectIntent, farewellClosing, isDirectQuestion } from '@life-abroad/shared';
 import { DialogueService } from '../dialogue/dialogue.service';
 import { QuestsService } from '../quests/quests.service';
 import { ConversationsRepository, sellerState } from './conversations.repository';
 import { SellerService } from './seller.service';
 import { conversationNpcSchema } from '@life-abroad/shared';
 import { CoffeeQuestService } from '../quests/coffee-quest.service';
-import type { LearningHistoryTurn } from '@life-abroad/shared';
 import { AiService } from '../ai/ai.service';
 import { NpcPromptService } from '../ai/npc-prompt.service';
 import { AiUsageService } from '../ai/ai-usage.service';
@@ -43,10 +42,6 @@ export class ConversationsService {
     private readonly aiUsage: AiUsageService, private readonly speech: ConversationSpeechService,
     private readonly presence: NpcPresenceService, private readonly relationships: NpcRelationshipService,
     private readonly moods: NpcMoodService) {}
-
-  learningHistory(userId: string): Promise<LearningHistoryTurn[]> {
-    return this.conversations.learningHistory(userId);
-  }
 
   async create(userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<Conversation> {
     const conversation = await this.conversations.transaction(async client => {
@@ -155,7 +150,6 @@ export class ConversationsService {
       const currentIsGoodbye = detectIntent(request.text)?.id === 'goodbye';
       const answeringFarewellQuestion = priorGoodbyes > 0 && priorNpcIndex > lastGoodbyeIndex
         && priorNpcMessage !== undefined && isDirectQuestion(priorNpcMessage.text);
-      const correction = request.coach ? checkGrammar(request.text) ?? null : null;
       let metadata: TurnMetadata;
       let responseText: string;
       let nodeId: string;
@@ -164,7 +158,7 @@ export class ConversationsService {
         const reply = await this.dialogue.node(context, 'global_store_closed');
         responseText = reply.text.replace('{hours}', venueHoursLabel('store'));
         nodeId = reply.node.id;
-        metadata = { arrival, intent: 'shop_closed', misunderstood: false, correction,
+        metadata = { arrival, intent: 'shop_closed', misunderstood: false,
           ...(isCafeSeller(conversation.npc_id) || conversation.npc_id === 'npc_clothes_seller' ? { seller: sellerState(conversation) } : {}),
           ...([SELLER_NPC_ID, 'npc_cafe_waiter'].includes(conversation.npc_id) ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
       } else if (isCafeSeller(conversation.npc_id) || conversation.npc_id === 'npc_clothes_seller') {
@@ -176,9 +170,9 @@ export class ConversationsService {
           if (conversation.npc_id === SELLER_NPC_ID) {
             if (reply.greeted && event !== 'greet') await this.coffee.apply(client, userId, 'greet');
             const coffeeQuest = event ? await this.coffee.apply(client, userId, event) : await this.coffee.get(userId, client);
-            metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction, coffeeQuest };
-          } else metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction };
-        } else metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, correction };
+            metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller, coffeeQuest };
+          } else metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller };
+        } else metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, seller: reply.seller };
       } else {
         const reply = await this.dialogue.reply(context, request.text);
         responseText = reply.text; nodeId = reply.node.id;
@@ -189,7 +183,7 @@ export class ConversationsService {
             ? 'receptionist_directions_ticket_issued' : 'receptionist_ticket_issued');
           responseText = receipt.text; nodeId = receipt.node.id;
         }
-        metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood, correction,
+        metadata = { arrival, intent: reply.intent, misunderstood: reply.misunderstood,
           ...(conversation.npc_id === 'npc_cafe_waiter' ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
       }
       // All NPC roles reach this gate only after their authoritative scripts.
@@ -238,7 +232,7 @@ export class ConversationsService {
         await this.conversations.append(client, id, 'npc', openingText, null, null, openingMessageId(id));
       }
       const playerMessage = await this.conversations.append(client, id, 'player', request.text,
-        request.clientMessageId, { coach: request.coach });
+        request.clientMessageId);
       const npcMessage = await this.conversations.append(client, id, 'npc', responseText, request.clientMessageId, metadata);
       await this.conversations.setNode(client, id, nodeId);
       if (aiResult) await this.aiUsage.record(client, userId, id, request.clientMessageId, aiResult);

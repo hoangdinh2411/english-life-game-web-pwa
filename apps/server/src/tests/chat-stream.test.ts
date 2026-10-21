@@ -11,7 +11,7 @@ import { chatErrorMessage } from '../modules/conversations/chat.controller';
 
 const request: ChatStreamRequest = {
   npcId: 'npc_mila_florist', conversationId: randomUUID(), clientMessageId: randomUUID(),
-  text: 'Do you like football?', coach: false,
+  text: 'Do you like football?',
 };
 const turn = { npcMessage: { text: 'Hello there friend' } } as ConversationTurn;
 

@@ -69,3 +69,14 @@ test('speaker control keeps a fixed layout slot when speech is hidden', () => {
   assert.match(hidden, /speaker-control-slot[^"].*invisible|invisible[^"].*speaker-control-slot/);
   assert.doesNotMatch(hidden, /<button/);
 });
+
+test('player messages place the avatar on the right while NPC avatars stay on the left', () => {
+  const player = renderToStaticMarkup(createElement(DialogueMessage, {
+    name: 'You', portrait: '/player.png', text: 'Hello.', player: true,
+  }));
+  const npc = renderToStaticMarkup(createElement(DialogueMessage, {
+    name: 'Mia', portrait: '/mia.png', text: 'Hi.',
+  }));
+  assert.match(player, /dialogue-message-row[^"]*flex-row-reverse/);
+  assert.doesNotMatch(npc, /dialogue-message-row[^"]*flex-row-reverse/);
+});

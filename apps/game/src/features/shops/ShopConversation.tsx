@@ -45,9 +45,9 @@ export function ShopConversation({ npcId, sound, onClose, onRefresh }: {
     },
   }));
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
-  const send = async (text: string, coach: boolean) => {
+  const send = async (text: string) => {
     const previousQuest = controller.getSnapshot().conversation?.coffeeQuest;
-    const sent = await controller.send(text, coach);
+    const sent = await controller.send(text);
     const currentQuest = controller.getSnapshot().conversation?.coffeeQuest;
     if (sent && shouldShowCoffeeQuestToast(previousQuest, currentQuest)) {
       setQuestToast(currentQuest);

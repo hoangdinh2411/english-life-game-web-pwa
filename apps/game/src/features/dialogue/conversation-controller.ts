@@ -14,7 +14,6 @@ export interface ConversationSnapshot {
   conversation: Conversation | null;
   pending: boolean;
   error: string;
-  correction: ConversationTurn['correction'];
   retryMessage: SendMessageRequest | null;
   streaming: boolean;
   streamedReply: string;
@@ -38,7 +37,7 @@ export async function revealStreamChunk(text: string, emit: (piece: string) => v
 
 // Private state lives only in memory. All mutations come from authenticated API responses.
 export function createConversationController(api: ConversationApi) {
-  let state: ConversationSnapshot = { arrival: null, conversation: null, pending: false, error: '', correction: null, retryMessage: null,
+  let state: ConversationSnapshot = { arrival: null, conversation: null, pending: false, error: '', retryMessage: null,
     streaming: false, streamedReply: '', announcement: '', farewellStage: undefined, historyLoading: false };
   let epoch = 0;
   let disposed = false;
@@ -101,15 +100,15 @@ export function createConversationController(api: ConversationApi) {
         if (!disposed) update({ historyLoading: false });
       }
     },
-    send: (input: string, coach = false) => {
+    send: (input: string) => {
       const text = input.trim();
       const conversation = state.conversation;
       if (!conversation || !text || state.pending || disposed) return Promise.resolve(false);
-      if (retry && (retry.text !== text || retry.coach !== coach)) {
+      if (retry && retry.text !== text) {
         update({ error: 'Retry your previous reply before sending a different message.' });
         return Promise.resolve(false);
       }
-      const body = retry ?? { text, coach, clientMessageId: crypto.randomUUID() };
+      const body = retry ?? { text, clientMessageId: crypto.randomUUID() };
       retry = body;
       update({ retryMessage: body });
       return run(async () => {
@@ -139,7 +138,7 @@ export function createConversationController(api: ConversationApi) {
         const seller = turn.seller;
         const coffeeQuest = turn.coffeeQuest;
         return { conversation: { ...conversation, messages, arrival, ...(seller ? { seller } : {}),
-          ...(coffeeQuest ? { coffeeQuest } : {}) }, arrival, correction: turn.correction ?? null, retryMessage: null,
+          ...(coffeeQuest ? { coffeeQuest } : {}) }, arrival, retryMessage: null,
           farewellStage: turn.farewellStage };
       }).finally(() => {
         streamCancellation = null;

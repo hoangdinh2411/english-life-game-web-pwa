@@ -53,7 +53,7 @@ test('T18 existing account: prerequisite, drink-only ordered progress, atomic re
     const stats = async () => (await client.query<{coins:number;xp:number;energy:number}>('SELECT coins,xp,energy FROM player_stats WHERE user_id=$1',[userId])).rows[0]!;
     assert.equal((await coffee.get(userId)).available, false);
     let session = await conversations.create(userId,'npc_mia');
-    const send = (text:string,key=randomUUID()) => conversations.send(userId,session.id,{text,clientMessageId:key,coach:false});
+    const send = (text:string,key=randomUUID()) => conversations.send(userId,session.id,{text,clientMessageId:key});
     assert.equal((await send('Hello')).coffeeQuest?.status,'not_started');
     await quests.applyReceptionistIntent(userId,'npc_receptionist','greet');
     await quests.applyReceptionistIntent(userId,'npc_receptionist','request_bus_ticket');
@@ -101,8 +101,8 @@ test('T18 existing account: prerequisite, drink-only ordered progress, atomic re
     assert.equal((await stats()).xp,before.xp+20); assert.equal((await stats()).coins,before.coins-2*price+5);
     assert.match((await send('How can I leave the station?')).npcMessage.text,/receptionist/i);
     const waiter=await conversations.create(userId,'npc_cafe_waiter');
-    assert.match((await conversations.send(userId,waiter.id,{text:'Can I order coffee?',clientMessageId:randomUUID(),coach:false})).npcMessage.text,/Mia/);
-    assert.match((await conversations.send(userId,waiter.id,{text:'How can I leave?',clientMessageId:randomUUID(),coach:false})).npcMessage.text,/receptionist/i);
+    assert.match((await conversations.send(userId,waiter.id,{text:'Can I order coffee?',clientMessageId:randomUUID()})).npcMessage.text,/Mia/);
+    assert.match((await conversations.send(userId,waiter.id,{text:'How can I leave?',clientMessageId:randomUUID()})).npcMessage.text,/receptionist/i);
   } finally {
     await module.close(); await auth.auth.signOut({scope:'local'});
     await client.query('ROLLBACK'); client.release(); await pool.end();

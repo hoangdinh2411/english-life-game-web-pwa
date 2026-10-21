@@ -87,7 +87,6 @@ apps/server/src/
     conversations/        # scripted session + append-only messages (implemented)
     quests/               # ordered arrival steps + bus-ticket entitlement (implemented)
     economy/              # transactional one-time quest rewards (implemented)
-    learning/             # saved corrections and useful shop phrase review (implemented)
   infrastructure/         # database, content cache, external adapters
   common/                 # truly cross-cutting filters/pipes/guards
 ```
@@ -122,7 +121,9 @@ also includes at most the last six complete conversation turns. Account
 identifiers, known player names and emails are removed from current input and
 history. Schedule rules, mood rules and the player profile never reach the
 provider. Store prompts answer service requests first and redirect unrelated
-chat. Mood and relationship may change tone or length but never facts or game
+chat. When meaning is clear but phrasing is unnatural, the prompt asks the NPC
+to weave the natural form into its reply once without announcing or explaining
+the correction; harmless errors may be ignored. Mood and relationship may change tone or length but never facts or game
 state; missing NPC facts must not be invented.
 Free Gemini keys remain for fictional development data only. Authenticated
 free chat uses Gemini's native stream through `POST /chat/stream`. The server
@@ -152,7 +153,7 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
 `content/`; don't hide it in TypeScript components or controllers.
 
 ## Trust and data boundaries
-- Client-only Sound/Coach preferences live under `life-abroad.preferences` in
+- Client-only audio preferences live under `life-abroad.preferences` in
   device `localStorage` (`src/features/hud`). Invalid/blocked storage falls back
   to defaults/in-memory state; no account data or tokens are stored with them.
 - Browser calls **Supabase SDK only for authentication** (`apps/game/src/api/supabase-auth.ts`).
@@ -280,21 +281,20 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
   profile in the background to update XP without closing the dialogue.
 - `GET /conversations/:id`: returns the owner's ordered messages and current
   arrival state. Another owner's ID returns 404; all routes require Auth.
-- `POST /conversations/:id/messages` with `{ clientMessageId: <UUID>, text,
-  coach?: boolean }`: trimmed text of 1–2000 characters, Coach defaults off.
-  Returns `{ playerMessage, npcMessage, intent, misunderstood, correction,
-  arrival }`; messages contain `{ id, sender, text, createdAt }`. Grammar feedback
-  is optional and never prevents recognized meaning from progressing. Greet
+- `POST /conversations/:id/messages` with `{ clientMessageId: <UUID>, text }`:
+  trimmed text of 1–2000 characters. Returns `{ playerMessage, npcMessage,
+  intent, misunderstood, arrival }`; messages contain `{ id, sender, text,
+  createdAt }`. Greet
   before asking directions/requesting a ticket; only a ticket request issues it.
   Out-of-order requests return 409 without appending messages or changing state.
   Both messages, node state, quest steps and ticket commit in one transaction.
-  Retry the same conversation/message UUID with the same text/Coach setting to
+  Retry the same conversation/message UUID with the same text to
   receive the original response without duplicate messages; changed payloads
   return 409. Replay includes the original arrival snapshot; GET gives current
   state. After entering Town Street, history/replay remain readable but new
   station messages are rejected. No edit/delete message endpoints are exposed.
-- `POST /chat/stream` with `{ npcId, conversationId, clientMessageId, text,
-  coach? }` (protected): emits SSE `token` events word by word, then `done`, or
+- `POST /chat/stream` with `{ npcId, conversationId, clientMessageId, text }`
+  (protected): emits SSE `token` events word by word, then `done`, or
   `error`. Only complete replies persist. AI messages carry `metadata.ai: true`;
   provider/model token estimates are recorded in `ai_usage` and daily totals.
   Exact retries replay the saved response without another energy or usage charge.
@@ -317,13 +317,7 @@ positive integer charges lock the balance row in a transaction, reject insuffici
 funds with 409, and replay matching keys without charging again. Reusing a key for
 a different charge returns 409. `spendInTransaction` lets life purchases charge inside their effect transaction.
 
-**Learning review (T12):** protected `GET /learning/review` returns deduplicated
-useful shop phrases with saved examples and up to 20 recent Coach corrections.
-It reads the latest 100 relevant conversation turns through the conversations
-  service; no separate vocabulary storage or migration is needed. The non-pausing game
-menu opens **English review**; private review data stays network-only.
-
-**Planned (not callable yet):** other quest endpoints; vocabulary journal.
+**Planned (not callable yet):** other quest endpoints; player-curated saved-line storage.
 Don't add `/auth/*` to NestJS; Supabase SDK owns auth.
 
 **Shop catalog (T16):** `content/seed/shops.json` is a Zod-validated

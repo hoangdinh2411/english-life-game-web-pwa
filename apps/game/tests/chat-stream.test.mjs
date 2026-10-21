@@ -10,7 +10,7 @@ try {
   test('T10f parses split SSE chunks, exposes words immediately, and returns the completed turn', async () => {
     const turn = { playerMessage: { id: globalThis.crypto.randomUUID(), sender: 'player', text: 'Hello', createdAt: new Date().toISOString() },
       npcMessage: { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'Hi there.', createdAt: new Date().toISOString(), ai: true },
-      intent: null, misunderstood: false, correction: null,
+      intent: null, misunderstood: false,
       arrival: { questId: 'q_station_arrival', status: 'active', currentStepId: null, ticket: { issued: false, used: false }, canEnterTownStreet: false, locationId: 'loc_station', rewardsGranted: false }, ai: true };
     const chunks = ['event: token\ndata: {"text":"Hi "}\n\nev', 'ent: token\ndata: {"text":"there."}\n\nevent: done\ndata: ', `${JSON.stringify({ turn })}\n\n`];
     const response = new globalThis.Response(new globalThis.ReadableStream({ start(controller) { for (const chunk of chunks) controller.enqueue(new globalThis.TextEncoder().encode(chunk)); controller.close(); } }),

@@ -20,10 +20,9 @@ try {
     // The first run records the missing menu feature as an assertion failure.
   }
 
-  test('the game menu presents the five actions in the approved order', () => {
+  test('the game menu presents the four actions in the approved order', () => {
     assert.equal(typeof GameMenu, 'function');
     const html = renderToStaticMarkup(createElement(GameMenu, {
-      onOpenReview() {},
       onOpenTutorial() {},
       onSignOut() {},
       onReturnToGame() {},
@@ -31,7 +30,6 @@ try {
     }));
     const labels = [...html.matchAll(/<button[^>]*>([^<]+)<\/button>/g)].map(match => match[1]);
     assert.deepEqual(labels, [
-      'English Review',
       'Movement Tutorial',
       'Sign Out',
       'Return to the Game',

@@ -36,7 +36,7 @@ test('T7 validates typed messages and IDs, rejects forged state and uses verifie
       assert.equal((await post('', body)).status, 400);
     }
     for (const body of [null, {}, { ...request, text: ' ' }, { ...request, text: 'a'.repeat(2001) },
-      { ...request, clientMessageId: 'invalid' }, { ...request, coach: 'true' },
+      { ...request, clientMessageId: 'invalid' },
       { ...request, intent: 'request_bus_ticket' }, { ...request, ticket: true }, { ...request, xp: 999 }]) {
       assert.equal((await post(`/${id}/messages`, body)).status, 400);
     }

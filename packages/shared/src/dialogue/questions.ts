@@ -29,7 +29,7 @@ export function isDirectQuestion(input: string): boolean {
   return finalQuestion(input) !== undefined;
 }
 
-// Presentation only: never change the original input used for corrections/history.
+// Presentation only: never change the original input saved in conversation history.
 export function formatPlayerMessage(input: string): string {
   const text = input.trim();
   if (!isDirectQuestion(text)) return text;

@@ -18,7 +18,7 @@ export class ChatStreamService {
     this.activeUsers.add(userId);
     try {
       const turn = await this.conversations.sendStreaming(userId, request.conversationId, request.npcId, {
-        clientMessageId: request.clientMessageId, text: request.text, coach: request.coach,
+        clientMessageId: request.clientMessageId, text: request.text,
       }, async text => {
         if (signal.aborted) throw signal.reason ?? new Error('Chat stream cancelled.');
         emit({ event: 'token', data: { text } });

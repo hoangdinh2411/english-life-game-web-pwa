@@ -22,7 +22,6 @@ import { StoreClosedDialogue } from "../features/shops/StoreClosedDialogue";
 import type { StoreLocation } from "../types/gameplay/world";
 import { isStreetNpc, STREET_NPCS, type StreetNpcId } from "../features/npcs/street-npcs";
 import { TownspersonConversation } from "../features/npcs/TownspersonConversation";
-import { ReviewDialogue } from "../features/learning/ReviewDialogue";
 import { usePreferences } from "../features/hud/usePreferences";
 import { useNpcPresence } from "../features/npcs/use-npc-presence";
 import { GameMenu } from "../features/game-menu/GameMenu";
@@ -63,7 +62,6 @@ export default function StationScreen({
   const [menu, setMenu] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [reviewOpen, setReviewOpen] = useState(false);
   const [closedStore, setClosedStore] = useState<StoreLocation | null>(null);
   const [activeMapId, setActiveMapId] = useState<string>(arrival?.initialLocation.placeId ?? "loc_station");
   const [goals, setGoals] = useState(false);
@@ -86,7 +84,6 @@ export default function StationScreen({
   const worldPaused =
     tutorial ||
     profileOpen ||
-    reviewOpen ||
     closedStore !== null ||
     goals ||
     exitReminder ||
@@ -330,7 +327,6 @@ export default function StationScreen({
       ) : null}
       {menu ? (
         <GameMenu
-          onOpenReview={() => { setMenu(false); setReviewOpen(true); }}
           onOpenTutorial={() => { setMenu(false); setTutorial(true); }}
           onSignOut={onSignOut}
           onReturnToGame={closeMenu}
@@ -344,7 +340,6 @@ export default function StationScreen({
           onClose={() => setSettingsOpen(false)}
         />
       ) : null}
-      {reviewOpen ? <ReviewDialogue onClose={() => setReviewOpen(false)} /> : null}
       {life?.sleepTransition ? (
         <div
           className={`sleep-transition fixed inset-0 z-[1000] grid place-items-center bg-[#080d12] text-card [animation:sleep-darken_2s_ease-in-out_forwards] [&.waking]:[animation:sleep-wake_2s_ease-in-out_forwards] [@media(prefers-reduced-motion:reduce)]:[animation-duration:0.01ms] [@media(prefers-reduced-motion:reduce)]:[&.waking]:[animation-duration:0.01ms]  ${life.sleepTransition}`}

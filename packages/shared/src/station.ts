@@ -4,7 +4,7 @@ import { checkGrammar, detectIntent } from './dialogue/language';
 import { splitGreeting } from './dialogue/questions';
 
 export type StationSpeaker = 'npc_station_information' | 'npc_passenger_backpack' | 'npc_passenger_suitcase';
-export interface StationExchange { text: string; hint: string; step: number; directions: boolean; correction?: { original: string; improved: string; reason: string }; followUp?: 'directions' | 'conversation'; aiFallback?: true }
+export interface StationExchange { text: string; hint: string; step: number; directions: boolean; followUp?: 'directions' | 'conversation'; aiFallback?: true }
 const HINT = 'Ask about an ID card, or say goodbye.';
 export function stationGreeting(npc: StationSpeaker): StationExchange {
   const key = npc === 'npc_station_information' ? 'receptionist' : npc === 'npc_passenger_backpack' ? 'backpack' : 'suitcase';
@@ -26,8 +26,7 @@ export function stationReply(npc: StationSpeaker, step: number, input: string, f
   if (intent?.id === 'goodbye' || intent?.id === 'thank') return { ...base, text: script.nodes.goodbye.text };
   const feedback = checkGrammar(input);
   if (feedback) {
-    const { original, improved, reason, question } = feedback;
-    return { ...base, step: receptionist && step === 0 ? 1 : step, text: script.nodes.confirmation.text.replace('{question}', question), correction: { original, improved, reason }, followUp: requestsDirections ? 'directions' : 'conversation', hint: 'Reply naturally: confirm, explain more, or tell me what you meant.' };
+    return { ...base, step: receptionist && step === 0 ? 1 : step, text: script.nodes.confirmation.text.replace('{question}', feedback.question), followUp: requestsDirections ? 'directions' : 'conversation', hint: 'Reply naturally: confirm, explain more, or tell me what you meant.' };
   }
   if (requestsDirections || (intent?.id === 'confirm' && followUp === 'directions')) return receptionist ? { ...base, text: script.nodes.directions.text, step: 2, directions: true } : { ...base, text: script.nodes.passenger_directions.text };
   if (intent?.id === 'greet' && receptionist) return { ...base, text: script.nodes.request.text, step: Math.max(1, step) };

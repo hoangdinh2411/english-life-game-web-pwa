@@ -24,7 +24,6 @@ test('metadata rejects malformed values, misspelled context fields and duplicate
 test('tags do not impose tense or reject conversational fragments', () => {
   for (const input of ['It was good.', 'A little tiring.', 'I’m tired now, but the journey was lovely.']) {
     const reply = stationReply('npc_passenger_suitcase', 0, input);
-    assert.equal(reply.correction, undefined);
     assert.equal(reply.step, 0);
   }
 });

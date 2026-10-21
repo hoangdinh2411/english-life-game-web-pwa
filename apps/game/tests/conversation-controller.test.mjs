@@ -32,7 +32,7 @@ try {
     const controller = createConversationController({
       load: async () => { loadCalls += 1; return initialArrival; },
       start: async () => ({ id: '00000000-0000-4000-8000-000000000004', npcId: 'npc_receptionist', messages: [openingMessage], arrival: initialArrival }),
-      send: async () => ({ playerMessage, npcMessage, intent: 'request_ticket', misunderstood: false, correction: null, arrival: updatedArrival }),
+      send: async () => ({ playerMessage, npcMessage, intent: 'request_ticket', misunderstood: false, arrival: updatedArrival }),
     });
 
     assert.equal(await controller.load(), true);
@@ -59,7 +59,7 @@ try {
         await new Promise(resolve => { release = resolve; });
         return { playerMessage: { id: globalThis.crypto.randomUUID(), sender: 'player', text: body.text, createdAt: new Date().toISOString() },
           npcMessage: { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'Hello there.', createdAt: new Date().toISOString(), ai: true },
-          intent: null, misunderstood: false, correction: null, arrival, ai: true };
+          intent: null, misunderstood: false, arrival, ai: true };
       } });
     await controller.start();
     const sending = controller.send('Hi');
@@ -82,7 +82,7 @@ try {
         onToken('Movies are fun.');
         return { playerMessage: { id: globalThis.crypto.randomUUID(), sender: 'player', text: body.text, createdAt: new Date().toISOString() },
           npcMessage: { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'Movies are fun.', createdAt: new Date().toISOString(), ai: true },
-          intent: null, misunderstood: false, correction: null, arrival, ai: true };
+          intent: null, misunderstood: false, arrival, ai: true };
       } });
     await controller.start();
     assert.equal(await controller.send('Yes, movies sometimes'), true);

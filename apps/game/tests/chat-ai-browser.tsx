@@ -8,7 +8,7 @@ import '../src/styles.css';
 
 const arrival = { questId: 'q_station_arrival', status: 'active' as const, currentStepId: null,
   ticket: { issued: false, used: false }, canEnterTownStreet: false, locationId: 'loc_town_street' as const, rewardsGranted: false };
-const saved: ConversationSnapshot = { arrival, pending: false, streaming: false, streamedReply: '', error: '', correction: null,
+const saved: ConversationSnapshot = { arrival, pending: false, streaming: false, streamedReply: '', error: '',
   retryMessage: null, announcement: 'Reply complete.', conversation: { id: crypto.randomUUID(), npcId: 'npc_lina_librarian', arrival,
     messages: [{ id: crypto.randomUUID(), sender: 'player', text: 'What books do you enjoy?', createdAt: new Date().toISOString() },
       { id: crypto.randomUUID(), sender: 'npc', text: 'I enjoy gentle mysteries and travel stories.', createdAt: new Date().toISOString(), ai: true }] } };

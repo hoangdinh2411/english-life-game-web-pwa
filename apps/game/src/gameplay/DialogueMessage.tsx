@@ -20,9 +20,9 @@ export function DialogueMessage({
 
   return (
     <div
-      className={`dialogue-message flex flex-col items-start gap-1 [padding:6px_0] [&.player]:flex-row-reverse [&_img]:shrink-0 [&_img]:rounded-[12px] [&_img]:bg-[#e5d8ba] ${player ? "player [&_.message-bubble]:bg-[#e5eddf]" : ""}`}
+      className={`dialogue-message flex flex-col gap-1 [padding:6px_0] [&_img]:shrink-0 [&_img]:rounded-[12px] [&_img]:bg-[#e5d8ba] ${player ? "player items-end [&_.message-bubble]:bg-[#e5eddf]" : "items-start"}`}
     >
-      <div className="flex flex-1 gap-2">
+      <div className={`dialogue-message-row flex flex-1 gap-2 ${player ? "flex-row-reverse" : ""}`}>
         {portraitPosition ? (
           <span
             role="img"

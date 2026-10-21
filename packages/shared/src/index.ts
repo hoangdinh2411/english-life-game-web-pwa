@@ -15,6 +15,5 @@ export * from './quests';
 export * from './conversations';
 export * from './assets';
 export * from './life';
-export * from './learning';
 export * from './player-location';
 export * from './npcs';

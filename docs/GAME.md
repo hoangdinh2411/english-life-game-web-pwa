@@ -89,7 +89,7 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   owner's dialogue with opening hours. The pause menu does not list
   opening-hour schedules.
 - The existing Phaser **train station** is playable local practice with a
-  receptionist and two passengers, sample conversations, Coach feedback,
+  receptionist and two passengers, sample conversations,
   movement/portals, recorded audio, and optional browser speech-to-text. Its
   current receptionist asks about an **ID card**, and its street exit is
   unlocked by that conversation—not by a bus ticket. This is **legacy practice
@@ -99,7 +99,7 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   in the game HUD. The profile shows saved XP, wallet and energy; the pause menu
   contains only game controls. Café orders stay in seller conversations.
   Below 1024px the card is compact, Goals includes its status badge, and the
-  single menu button opens Sound/Coach Settings saved on this device. Dialogue
+  single menu button opens audio Settings saved on this device. Dialogue
   Settings remain reachable during conversations; full profile details include
   appearance. The normal desktop HUD keeps its existing layout.
   Sleep is available below 50% energy and advances eight game hours with the
@@ -129,7 +129,7 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
 
 Arrive at the **train station** → approach the **receptionist** → ask how to
 reach town and request a **bus ticket** → type a reply → recognize its
-**intent** → advance ordered arrival-quest steps → offer a gentle correction →
+**intent** → advance ordered arrival-quest steps → model natural English in the NPC reply →
 **server** records the bus ticket → use the ticket to leave the station for
 **Town Street** → complete the arrival quest → **server** awards
 XP/coins **once** → ticket, quest state and rewards survive reload/sign-in.
@@ -138,8 +138,8 @@ The ticket can be a server-verified **arrival-quest entitlement**; do not build
 an entire inventory system just for this item. Speech input stays optional. The
 café/Mia quest comes **after** the player reaches the town streets. Server quest
 state, the guarded street-exit API and client wiring are implemented. The
-arrival UI shows saved ordered progress, ticket receipts and optional Coach
-feedback. Connection failures preserve the reply for an idempotent retry; a live
+arrival UI shows saved ordered progress and ticket receipts. Connection failures
+preserve the reply for an idempotent retry; a live
 offline session keeps its draft in memory and disables remote actions until
 reconnection. Local `/practice` stays available without saved rewards.
 
@@ -147,17 +147,19 @@ reconnection. Local `/practice` stays available without saved rewards.
 
 - **Meaning first:** understandable but imperfect English can complete a step.
   Do not punish learners with red marks or block progress for minor grammar.
-- NPCs respond in natural corrected English. Detailed coaching is optional via
-  the Coach UI; don't assert an unvalidated grammar score or CEFR certification.
+- When the learner's meaning is clear, NPCs may weave the natural English form
+  into their reply once without announcing a correction, explaining grammar or
+  interrupting the conversation. Harmless errors may be ignored.
 - CEFR A1–C1 guides per-turn dialogue complexity. This does not persist an
   automatic level promotion; promotion rules and XP thresholds remain unapproved.
 - Scripted quest dialogue is deterministic and usable without AI. Lookup
   priority: NPC-specific → role → global. Intent keywords/next-node links come
   from validated dialogue JSON; personality changes wording, not rewards.
-- **English review** in the non-pausing game menu shows saved Coach corrections and
-  useful phrases from shop orders and price questions, with the player's examples.
-  It keeps useful phrases rather than collecting every word.
-- AI free chat and the vocabulary journal are future features.
+- A future **English review** will be a player-curated notebook. Players may save
+  useful NPC lines or their own lines deliberately; it will not automatically
+  collect corrections or every conversation. It is not exposed until saving and
+  persistence are implemented.
+- AI free chat is a future feature.
   AI chat must not grant quests/rewards. Any AI caps/costs are still undecided.
 - Typing must always work. Browser speech is optional, never required. While
   recording, a waveform replaces the text field; Stop keeps the transcript,

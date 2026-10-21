@@ -14,7 +14,6 @@ import '../src/styles.css';
 const state: ConversationSnapshot = {
   arrival: null, conversation: null, pending: false, error: '', retryMessage: null,
   streaming: false, streamedReply: '', announcement: '',
-  correction: { original: 'I new here', improved: 'I am new here.', reason: 'Use am after I.', question: 'you are new here' },
 };
 function HudFixture() {
   const { sound } = usePreferences();

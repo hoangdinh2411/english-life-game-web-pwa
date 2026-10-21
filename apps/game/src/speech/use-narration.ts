@@ -38,7 +38,7 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
     // back to the browser voice. Player-written replay can still use TTS.
     const recordedFallback = street ? { ...fallback, speak: (message: string, voiceGender: VoiceGender = 'male') => {
       if (message === currentText.current || findClip(message, voiceGender, audioCatalogRef.current ?? [])) {
-        setSpeaking(false); setError('This recording could not play. You can still read the dialogue; retry the speaker or reopen the conversation.');
+        setSpeaking(false); setError('This recording could not play.');
       } else fallback.speak(message, voiceGender);
     } } : fallback;
     return createRecordedNarrator((message, voiceGender) => {
