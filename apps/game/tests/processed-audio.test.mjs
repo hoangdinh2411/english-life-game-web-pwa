@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { applyWorkletPlaybackSettings, createCorsAudioElement, createProcessedAudio } from '../src/speech/processed-audio.ts';
 
-test('AudioWorklet applies speed once while pitch remains independent', () => {
+test('native media time tracks speed while AudioWorklet keeps pitch independent', () => {
   const audio = { preservesPitch: true, playbackRate: 0.5 };
   const processor = { playbackRate: { value: 1 }, pitch: { value: 1 } };
   applyWorkletPlaybackSettings(audio, processor, { speechRate: 1.3, speechPitch: 0.8 });
-  assert.deepEqual(audio, { preservesPitch: false, playbackRate: 1 });
-  assert.deepEqual(processor, { playbackRate: { value: 1.3 }, pitch: { value: 0.8 } });
+  assert.deepEqual(audio, { preservesPitch: true, playbackRate: 1.3 });
+  assert.deepEqual(processor, { playbackRate: { value: 1 }, pitch: { value: 0.8 } });
 });
 
 test('signed speech enables anonymous CORS before assigning its URL', () => {

@@ -59,7 +59,7 @@ Finished tasks are removed to keep this board short. Git history and
         load/save account preferences through NestJS with slider debounce,
         latest-value-wins, visible failure state and Retry. Local practice must
         make no preference API calls.
-  - [ ] **T38.3 — Non-pausing game menu shell.** Extract the menu with English
+  - [x] **T38.3 — Non-pausing game menu shell.** Extract the menu with English
         Review, Movement Tutorial, Sign Out/Leave Local Practice, Return to Game
         and Settings. Capture player input without pausing NPCs or game time.
   - [ ] **T38.4 — Separate Settings overlay.** Move full controls out of the

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { npcIsVisible } from '../src/features/npcs/npc-presence.ts';
+import * as npcPresence from '../src/features/npcs/npc-presence.ts';
 
 test('NPC-05 Phaser visibility and interaction allow only present actors', () => {
   const present = new Set(['npc_mila_florist']);
@@ -15,4 +16,13 @@ test('NPC-05 Phaser visibility and interaction allow only present actors', () =>
 test('GameCanvas forwards Phaser map changes so presence refreshes for the destination map', async () => {
   const source = await readFile(new URL('../src/gameplay/GameCanvas.tsx', import.meta.url), 'utf8');
   assert.match(source, /onMapChange:\s*\(mapId\)\s*=>\s*\{\s*if \(!cancelled\) callbacks\.current\.onMapChange\?\.\(mapId\);\s*\}/);
+});
+
+test('NPC presence received before Phaser startup is applied when the game becomes ready', () => {
+  assert.equal(typeof npcPresence.syncNpcPresence, 'function');
+  const updates = [];
+  npcPresence.syncNpcPresence({ setPresentNpcIds: ids => updates.push(ids) }, ['npc_jamal_dog_walker']);
+  assert.deepEqual(updates, [['npc_jamal_dog_walker']]);
+  npcPresence.syncNpcPresence(null, ['npc_mila_florist']);
+  assert.deepEqual(updates, [['npc_jamal_dog_walker']]);
 });

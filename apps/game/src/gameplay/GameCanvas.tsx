@@ -6,6 +6,7 @@ import type {
   NpcTalkPrompt,
   StationGame,
 } from "../types/gameplay/world";
+import { syncNpcPresence } from "../features/npcs/npc-presence";
 export default function GameCanvas({
   paused,
   worldPaused = paused,
@@ -63,6 +64,8 @@ export default function GameCanvas({
   exitRef.current = exitUnlocked;
   const appearanceRef = useRef(appearance);
   appearanceRef.current = appearance;
+  const presentNpcIdsRef = useRef(presentNpcIds);
+  presentNpcIdsRef.current = presentNpcIds;
   useEffect(() => {
     game.current?.setAppearance(appearance);
   }, [appearance]);
@@ -169,6 +172,7 @@ export default function GameCanvas({
         },
       });
       game.current = instance;
+      syncNpcPresence(instance, presentNpcIdsRef.current);
       instance.pause(
         pausedRef.current || document.hidden,
         worldPausedRef.current || document.hidden,
@@ -210,7 +214,7 @@ export default function GameCanvas({
     game.current?.unlockExit(exitUnlocked);
   }, [exitUnlocked]);
   useEffect(() => {
-    if (presentNpcIds) game.current?.setPresentNpcIds(presentNpcIds);
+    syncNpcPresence(game.current, presentNpcIds);
   }, [presentNpcIds]);
   return (
     <div className="game-canvas absolute inset-0">

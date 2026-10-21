@@ -28,6 +28,11 @@ test('missing narration uses typing instead of leaving a new NPC message blank',
   assert.equal(shouldUseTypingFallback(true, true, 'Playback failed'), true);
 });
 
+test('audio playback progress is the text reveal source at every speech speed', () => {
+  assert.equal(textAtProgress('abcdefghij', 0.25), 'abc');
+  assert.equal(textAtProgress('abcdefghij', 0.75), 'abcdefgh');
+});
+
 test('toggling speech does not restart a completed NPC message reveal', () => {
   const completed = preserveCompletedReveal('message-1', 1, null);
   assert.deepEqual(completed, { progress: 1, completedMessageId: 'message-1' });

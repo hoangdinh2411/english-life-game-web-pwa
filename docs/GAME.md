@@ -154,7 +154,7 @@ reconnection. Local `/practice` stays available without saved rewards.
 - Scripted quest dialogue is deterministic and usable without AI. Lookup
   priority: NPC-specific → role → global. Intent keywords/next-node links come
   from validated dialogue JSON; personality changes wording, not rewards.
-- **English review** in the paused game menu shows saved Coach corrections and
+- **English review** in the non-pausing game menu shows saved Coach corrections and
   useful phrases from shop orders and price questions, with the player's examples.
   It keeps useful phrases rather than collecting every word.
 - AI free chat and the vocabulary journal are future features.

@@ -10,9 +10,12 @@ interface SoundTouchOutput extends AudioNode {
 
 export function applyWorkletPlaybackSettings(audio: HTMLAudioElement, processor: SoundTouchOutput,
   settings: PlaybackSettings): void {
-  audio.preservesPitch = false;
-  audio.playbackRate = 1;
-  processor.playbackRate.value = settings.speechRate;
+  // Keep speed on the media element so currentTime, timeupdate and ended all
+  // describe the sound the learner is actually hearing. The worklet owns only
+  // the independent pitch adjustment.
+  audio.preservesPitch = true;
+  audio.playbackRate = settings.speechRate;
+  processor.playbackRate.value = 1;
   processor.pitch.value = settings.speechPitch;
 }
 

@@ -320,7 +320,7 @@ a different charge returns 409. `spendInTransaction` lets life purchases charge 
 **Learning review (T12):** protected `GET /learning/review` returns deduplicated
 useful shop phrases with saved examples and up to 20 recent Coach corrections.
 It reads the latest 100 relevant conversation turns through the conversations
-service; no separate vocabulary storage or migration is needed. The paused game
+  service; no separate vocabulary storage or migration is needed. The non-pausing game
 menu opens **English review**; private review data stays network-only.
 
 **Planned (not callable yet):** other quest endpoints; vocabulary journal.

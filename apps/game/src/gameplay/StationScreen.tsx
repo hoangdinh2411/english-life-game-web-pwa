@@ -24,8 +24,10 @@ import { isStreetNpc, STREET_NPCS, type StreetNpcId } from "../features/npcs/str
 import { TownspersonConversation } from "../features/npcs/TownspersonConversation";
 import { ReviewDialogue } from "../features/learning/ReviewDialogue";
 import { usePreferences } from "../features/hud/usePreferences";
-import { Settings } from "../features/hud/Settings";
 import { useNpcPresence } from "../features/npcs/use-npc-presence";
+import { GameMenu } from "../features/game-menu/GameMenu";
+import { gameMenuCanvasState } from "../features/game-menu/game-menu-state";
+import { SettingsPanel } from "../features/game-menu/SettingsPanel";
 
 const TUTORIAL_KEY = "movementTutorialSeen";
 
@@ -59,6 +61,7 @@ export default function StationScreen({
   const [stationReady, setStationReady] = useState(false);
   const [location, setLocation] = useState("Sweden · Train Station");
   const [menu, setMenu] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [closedStore, setClosedStore] = useState<StoreLocation | null>(null);
@@ -82,14 +85,22 @@ export default function StationScreen({
   const countryName = location.split(" · ")[0] ?? "Sweden";
   const worldPaused =
     tutorial ||
-    menu ||
     profileOpen ||
     reviewOpen ||
     closedStore !== null ||
     goals ||
     exitReminder ||
     Boolean(arrival?.pending || arrival?.error);
-  const overlayOpen = npcId !== null || worldPaused;
+  const inputOnlyOverlayOpen = menu || settingsOpen;
+  const overlayOpen = npcId !== null || worldPaused || inputOnlyOverlayOpen;
+  const canvasPause = gameMenuCanvasState({
+    menuOpen: inputOnlyOverlayOpen,
+    worldBlockerOpen:
+      !stationReady ||
+      worldPaused ||
+      Boolean(life?.sleepTransition) ||
+      Boolean(arrival && !arrival.online),
+  });
   const showGoals = shouldShowQuestBoard({
     tutorialOpen: overlayOpen,
     mapReady: stationReady,
@@ -122,15 +133,8 @@ export default function StationScreen({
           onStoreClosed: (store) => setClosedStore(store),
         } : {})}
         conversationNpcId={npcId}
-        worldPaused={
-          !stationReady || worldPaused || Boolean(life?.sleepTransition) || Boolean(arrival && !arrival.online)
-        }
-        paused={
-          !stationReady ||
-          overlayOpen ||
-          Boolean(life?.sleepTransition) ||
-          Boolean(arrival && !arrival.online)
-        }
+        worldPaused={canvasPause.worldPaused}
+        paused={canvasPause.playerInputPaused || npcId !== null}
         onTalk={(id) => {
           if (id === "npc_station_information") arrival?.onOpenReceptionist();
           if (
@@ -325,32 +329,20 @@ export default function StationScreen({
         </DialogueFrame>
       ) : null}
       {menu ? (
-        <DialogueFrame onClose={closeMenu}>
-          <h2 className="text-[18px] font-extrabold">Paused</h2>
-          <Settings />
-          {!practice ? <GameButton label="English review" onClick={() => { setMenu(false); setReviewOpen(true); }} /> : null}
-          <GameButton
-            label="Movement tutorial"
-            onClick={() => {
-              setMenu(false);
-              setTutorial(true);
-            }}
-          />
-          <GameButton
-            label="Return to game"
-            onClick={closeMenu}
-          />
-          {pwa.updateReady ? (
-            <GameButton
-              label="Reload to update"
-              onClick={() => void pwa.update()}
-            />
-          ) : null}
-          <GameButton
-            label={practice ? "Leave local practice" : "Sign out"}
-            onClick={onSignOut}
-          />
-        </DialogueFrame>
+        <GameMenu
+          onOpenReview={() => { setMenu(false); setReviewOpen(true); }}
+          onOpenTutorial={() => { setMenu(false); setTutorial(true); }}
+          onSignOut={onSignOut}
+          onReturnToGame={closeMenu}
+          onOpenSettings={() => { setMenu(false); setSettingsOpen(true); }}
+          {...(pwa.updateReady ? { onUpdate: () => void pwa.update() } : {})}
+        />
+      ) : null}
+      {settingsOpen ? (
+        <SettingsPanel
+          practice={practice}
+          onClose={() => setSettingsOpen(false)}
+        />
       ) : null}
       {reviewOpen ? <ReviewDialogue onClose={() => setReviewOpen(false)} /> : null}
       {life?.sleepTransition ? (
