@@ -46,6 +46,33 @@ Finished tasks are removed to keep this board short. Git history and
 
 ## NOW
 
+- [ ] **T38 — Non-pausing game menu, synchronized Settings and movement tutorial.**
+      Implement only one slice per request and stop after its checks. The menu
+      and all utility overlays must leave NPC movement and game time running;
+      they may capture player input. The approved design is
+      `docs/specs/2026-10-21-game-menu-tutorial-design.md`, and the executable
+      plan is `docs/plans/2026-10-21-game-menu-settings-tutorial.md`.
+  - [ ] **T38.1 — Server preference contract and persistence.** Add validated,
+        authenticated storage for Coach, Voice Speed and Voice Pitch, including
+        atomic first-device initialization, bounds, ownership and RLS tests.
+  - [ ] **T38.2 — Client preference synchronization.** Keep Sound device-local;
+        load/save account preferences through NestJS with slider debounce,
+        latest-value-wins, visible failure state and Retry. Local practice must
+        make no preference API calls.
+  - [ ] **T38.3 — Non-pausing game menu shell.** Extract the menu with English
+        Review, Movement Tutorial, Sign Out/Leave Local Practice, Return to Game
+        and Settings. Capture player input without pausing NPCs or game time.
+  - [ ] **T38.4 — Separate Settings overlay.** Move full controls out of the
+        game menu, preserve compact dialogue controls, add save/error feedback,
+        and verify the layout at 320px, 375px and desktop width.
+  - [ ] **T38.5 — Five-page tutorial behavior.** Implement page state, first-run
+        `localStorage`, menu replay from page one, correct return destination,
+        Back/Next/Skip/Start Exploring, arrow keys and Escape without pausing
+        the simulated world.
+  - [ ] **T38.6 — Tutorial art and final verification.** Add compact game-style
+        illustrations, run responsive and behavioral checks, prove continuous
+        NPC/time behavior, run repository gates and update maintained docs.
+
 - [ ] **NPC speech audio prototype (Azure TTS + client DSP).** Complete the
       following slices in order. Keep the test scope to a few shared lines,
       NPC-specific lines, and AI fallback replies for one NPC. Do not mark the
