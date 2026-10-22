@@ -47,3 +47,18 @@ test('approach, selection and pause freeze the route clock; resuming stays conti
   assert.equal(state.elapsed, previous.elapsed + 50);
   assert.ok(Math.hypot(state.x - previous.x, state.y - previous.y) <= 1.501);
 });
+
+test('Ruth stops on her desk patrol for interaction and world pause, then resumes in place', () => {
+  const ruth = stationNpc('npc_station_information');
+  const state = { x: ruth.x, y: ruth.y, elapsed: 0 };
+  const far = { x: 100, y: 100 };
+  advanceNpc(ruth.id, state, ruth, far, 50, false, null, movePlayer, ruth.patrol);
+  const moving = { ...state };
+  advanceNpc(ruth.id, state, ruth, far, 50, false, ruth.id, movePlayer, ruth.patrol);
+  assert.deepEqual(state, moving);
+  advanceNpc(ruth.id, state, ruth, far, 50, true, null, movePlayer, ruth.patrol);
+  assert.deepEqual(state, moving);
+  advanceNpc(ruth.id, state, ruth, far, 50, false, null, movePlayer, ruth.patrol);
+  assert.equal(state.elapsed, moving.elapsed + 50);
+  assert.ok(Math.hypot(state.x - moving.x, state.y - moving.y) < 3);
+});

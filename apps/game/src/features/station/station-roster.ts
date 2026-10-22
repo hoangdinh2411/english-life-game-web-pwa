@@ -41,6 +41,10 @@ export const STATION_ROSTER = [
 
 export const STATION_PASSENGERS = STATION_ROSTER.filter(npc => npc.id !== 'npc_station_information');
 
+export function isStationSpeaker(id: string): id is StationSpeaker {
+  return STATION_ROSTER.some(npc => npc.id === id);
+}
+
 export function stationNpc(id: StationSpeaker): StationNpcDefinition {
   const npc = STATION_ROSTER.find(candidate => candidate.id === id);
   if (!npc) throw new Error(`Unknown station NPC ${id}`);

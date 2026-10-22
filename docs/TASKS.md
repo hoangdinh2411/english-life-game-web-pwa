@@ -89,7 +89,7 @@ Finished tasks are removed to keep this board short. Git history and
         Done when focused tests prove identical inputs are stable, date or
         bucket changes can change the roster, bounds hold, and every invalid
         configuration fails with its location and field identified.
-  - [ ] **T39.2 — Station roster, assets and receptionist patrol.** Keep Ruth
+  - [x] **T39.2 — Station roster, assets and receptionist patrol.** Keep Ruth
         present as the existing receptionist identity and bundle her required
         asset locally. Keep exactly three stable passenger identities with
         matching name, portrait, sprite, voice and dialogue, selecting one or

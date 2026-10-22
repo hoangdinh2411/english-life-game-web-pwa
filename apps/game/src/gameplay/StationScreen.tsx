@@ -27,6 +27,7 @@ import { useNpcPresence } from "../features/npcs/use-npc-presence";
 import { GameMenu } from "../features/game-menu/GameMenu";
 import { gameMenuCanvasState } from "../features/game-menu/game-menu-state";
 import { SettingsPanel } from "../features/game-menu/SettingsPanel";
+import { isStationSpeaker } from "../features/station/station-roster";
 
 const TUTORIAL_KEY = "movementTutorialSeen";
 
@@ -135,12 +136,7 @@ export default function StationScreen({
         paused={canvasPause.playerInputPaused || npcId !== null}
         onTalk={(id) => {
           if (id === "npc_station_information") arrival?.onOpenReceptionist();
-          if (
-            id === "npc_station_information" ||
-            id === "npc_passenger_backpack" ||
-            id === "npc_passenger_suitcase"
-          )
-            setNpcId(id);
+          if (isStationSpeaker(id)) setNpcId(id);
           if (!practice && isShopNpc(id)) setNpcId(id);
           if (!practice && isStreetNpc(id)) setNpcId(id);
         }}
