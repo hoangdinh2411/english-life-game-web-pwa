@@ -83,9 +83,14 @@ data deterministically falls back to `2000-01-01` in the daytime bucket.
 Venue-specific service staff,
 ambient pools, limits and safe spawn/exclusion geometry live in
 `apps/game/src/features/shops/venue-npc-config.ts`. To add a store, add its NPC
-content/assets, register one validated venue configuration, and author safe
-actor coordinates; do not add a second selection algorithm. Store opening
-hours remain in `features/shops/shop-navigation.ts`.
+content and portrait/walking assets, add its display identity to
+`features/shops/shop-npcs.ts`, and bundle required service textures through
+`features/shops/service-npc-assets.ts`. Then add one validated venue
+configuration and walkable customer-only spawn and exclusion zones; keep exits,
+counters and primary paths clear. The registry owns selection, so a venue does
+not need its own selector. Verify the new roster with focused game tests,
+`pnpm content:validate`, `pnpm --filter game build` and `pnpm check:pwa`. Store
+opening hours remain in `features/shops/shop-navigation.ts`.
 
 Required store staff use bundled atlases from
 `features/shops/service-npc-assets.ts`; generated map packs retain actor

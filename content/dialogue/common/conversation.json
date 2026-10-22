@@ -9,6 +9,20 @@
       }
     },
     {
+      "id": "global_incomplete_question",
+      "text": {
+        "default": "Could you finish your question?"
+      },
+      "variations": [
+        "What were you going to say?",
+        "Could you finish your question?",
+        "Sorry, I don't understand. What do you mean?",
+        "Could you say a little more?",
+        "What would you like to ask?",
+        "Sorry, I didn't catch that. Could you try again?"
+      ]
+    },
+    {
       "id": "global_ai_limit",
       "text": {
         "default": "Let's practise with the prepared conversations for now. We can chat freely again later."

@@ -40,6 +40,11 @@ function asksForDirections(input: string): boolean {
   return /^how (?:do |can |could |would )?(?:i|we) (?:get|go|travel|reach) (?:to )?(?:the )?[a-z0-9]+(?: [a-z0-9]+){0,5}$/.test(input);
 }
 
+function isIncompleteQuestion(input: string): boolean {
+  if (/^(?:how|where) are you$/.test(input)) return false;
+  return /^(?:(?:what|why|where|when|how) )?(?:am|are|is|was|were|do|does|did|can|could|would|will|have|has) (?:i|you|he|she|it|we|they)$/.test(input);
+}
+
 @Injectable()
 export class DialogueService {
   constructor(private readonly cache: DialogueCacheService) {}
@@ -65,6 +70,10 @@ export class DialogueService {
       applicable.find(entry => entry.node.id === id);
     const current = find(context.currentNodeId);
     const text = words(input);
+    if (isIncompleteQuestion(text)) {
+      const clarification = find('global_incomplete_question');
+      if (clarification) return { ...this.render(clarification, context, null), misunderstood: false };
+    }
     // Do not turn an explicit refusal into a positive request.
     const refused = /\b(?:(?:don't|do not|not|never)\s+(?:want|need|like|request|ask|asking)|(?:no|not)\s+(?:a\s+|the\s+)?(?:bus\s+)?tickets?)\b/.test(text);
     if (text && !refused) for (const group of groups) {

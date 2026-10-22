@@ -90,9 +90,10 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   The current playable map gates its store interiors; closed entrances show the
   owner's dialogue with opening hours. The pause menu does not list
   opening-hour schedules.
-- The existing Phaser **train station** is playable local practice with a
-  receptionist and one or two passengers selected from three identities, sample conversations,
-  movement/portals, recorded audio, and optional browser speech-to-text. Its
+- The existing Phaser **train station** is playable local practice with
+  receptionist Ruth and one or two deterministically selected passengers from
+  Sofia, Elias and Ingrid, sample conversations, movement/portals, recorded
+  audio, and optional browser speech-to-text. Its
   current receptionist asks about an **ID card**, and its street exit is
   unlocked by that conversation—not by a bus ticket. This is **legacy practice
   behavior**, not the new opening quest. It works without an account and gives

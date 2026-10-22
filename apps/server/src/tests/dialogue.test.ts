@@ -198,6 +198,28 @@ test('NPCs answer name questions, including a common learner mistake', async () 
   }
 });
 
+test('incomplete question stems get an immediate clarification instead of an AI-eligible misunderstanding', async () => {
+  const { engine } = await fixture();
+  const expected = new Set([
+    'What were you going to say?',
+    'Could you finish your question?',
+    "Sorry, I don't understand. What do you mean?",
+    'Could you say a little more?',
+    'What would you like to ask?',
+    "Sorry, I didn't catch that. Could you try again?",
+  ]);
+
+  for (const [variationIndex, input] of ['are you', 'Can you?', 'What do you…'].entries()) {
+    const reply = await engine.reply({ ...receptionist, variationIndex }, input);
+    assert.equal(reply.node.id, 'global_incomplete_question', input);
+    assert.equal(reply.intent, null, input);
+    assert.equal(reply.misunderstood, false, input);
+    assert.ok(expected.has(reply.text), reply.text);
+  }
+
+  assert.notEqual((await engine.reply(receptionist, 'Are you from Sweden?')).node.id, 'global_incomplete_question');
+});
+
 test('T4 misunderstandings, boundaries and refusals never return a successful intent', async () => {
   const { engine } = await fixture();
   for (const input of ['', '   ', 'this is something else', 'ticketseller', "I don't want a bus ticket", 'not a bus ticket', '🚀', 'SELECT * FROM quests']) {
