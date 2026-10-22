@@ -86,7 +86,7 @@ Finished tasks are removed to keep this board short. Git history and
         countries, Unicode names and invalid names, no-character accounts,
         same/different replays and concurrent submissions have focused and
         integration coverage with one character, one grant and one world.
-  - [ ] **ONB-01.3 — One authoritative world-clock service.** Add a NestJS
+  - [x] **ONB-01.3 — One authoritative world-clock service.** Add a NestJS
         world-clock domain that joins character → world → country and returns
         `{ gameTimeUtc, timeZone, clockRate }`, where game UTC is
         `start + (serverNow - start) × rate`. Convert that instant through the

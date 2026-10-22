@@ -1,7 +1,8 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { gameTimeAt, moodIdSchema, npcProfileSchema, type MoodId, type NpcProfile } from '@life-abroad/shared';
+import { moodIdSchema, npcProfileSchema, type MoodId, type NpcProfile } from '@life-abroad/shared';
 import { createHash } from 'node:crypto';
 import type { PoolClient } from 'pg';
+import { WorldClockService, zonedGameTime } from '../world-clock/world-clock.service';
 
 export interface LocalGameTime {
   date: string;
@@ -17,10 +18,6 @@ export interface NpcMoodContext {
 interface MoodContextRow {
   profile: unknown;
   current_mood_id: string;
-  clock_time: Date;
-  clock_anchor: Date;
-  clock_rate: number;
-  time_zone: string;
 }
 
 function minute(value: string): number {
@@ -33,11 +30,8 @@ function inWindow(now: number, start: number, end: number): boolean {
 }
 
 export function localGameTime(instant: Date, timeZone: string): LocalGameTime {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-  }).formatToParts(instant);
-  const value = (type: Intl.DateTimeFormatPartTypes): string => parts.find(part => part.type === type)?.value ?? '';
-  return { date: `${value('year')}-${value('month')}-${value('day')}`, minutes: Number(value('hour')) * 60 + Number(value('minute')) };
+  const local = zonedGameTime(instant, timeZone);
+  return { date: local.date, minutes: local.minutes };
 }
 
 function selected(seed: string, chancePercent: number): boolean {
@@ -70,18 +64,15 @@ export function resolveBaseNpcMood(npcId: string, profile: NpcProfile, local: Lo
 
 @Injectable()
 export class NpcMoodService {
+  constructor(private readonly worldClock: WorldClockService) {}
+
   async resolve(client: PoolClient, userId: string, npcId: string): Promise<NpcMoodContext> {
-    const result = await client.query<MoodContextRow>(`SELECT n.profile,n.current_mood_id,
-      l.clock_time,l.clock_anchor,l.clock_rate,co.time_zone
-      FROM public.npcs n
-      JOIN public.characters ch ON ch.user_id=$1
-      JOIN public.countries co ON co.id=ch.country_id
-      JOIN public.player_life l ON l.user_id=ch.user_id
-      WHERE n.id=$2`, [userId, npcId]);
+    const result = await client.query<MoodContextRow>(`SELECT n.profile,n.current_mood_id
+      FROM public.npcs n WHERE n.id=$2`, [userId, npcId]);
     const row = result.rows[0];
     if (!row) throw new ServiceUnavailableException('NPC mood context is unavailable.');
-    const gameTime = gameTimeAt({ gameTime: row.clock_time, realTime: row.clock_anchor, rate: row.clock_rate }, new Date());
-    const moodId = resolveBaseNpcMood(npcId, npcProfileSchema.parse(row.profile), localGameTime(gameTime, row.time_zone));
+    const clock = await this.worldClock.read(userId, client);
+    const moodId = resolveBaseNpcMood(npcId, npcProfileSchema.parse(row.profile), localGameTime(clock.gameTimeUtc, clock.timeZone));
     if (moodId !== row.current_mood_id) {
       await client.query('UPDATE public.npcs SET current_mood_id=$2,mood_updated_at=now() WHERE id=$1', [npcId, moodId]);
     }

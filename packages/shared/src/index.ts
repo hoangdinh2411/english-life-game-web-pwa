@@ -18,3 +18,4 @@ export * from './life';
 export * from './player-location';
 export * from './npcs';
 export * from './player-preferences';
+export * from './world-clock';

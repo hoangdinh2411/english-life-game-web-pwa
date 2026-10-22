@@ -1,8 +1,8 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { gameTimeAt, npcRelationshipSchema, type NpcRelationship } from '@life-abroad/shared';
+import { npcRelationshipSchema, type NpcRelationship } from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
-import { localGameTime } from './npc-mood.service';
 import type { SocialSignal } from './social-signal';
+import { WorldClockService, zonedGameTime } from '../world-clock/world-clock.service';
 
 const DAILY_FAMILIARITY_CAP = 5;
 const DAILY_POSITIVE_AFFINITY_CAP = 8;
@@ -13,13 +13,6 @@ interface RelationshipRow {
   affinity: number;
   interaction_mood_id: string | null;
   mood_expires_at: Date | null;
-}
-
-interface ClockRow {
-  clock_time: Date;
-  clock_anchor: Date;
-  clock_rate: number;
-  time_zone: string;
 }
 
 interface DailyTotals { familiarity: string; positive_affinity: string; negative_affinity: string }
@@ -63,8 +56,10 @@ function output(row: RelationshipRow, gameTime: Date): NpcRelationship {
 
 @Injectable()
 export class NpcRelationshipService {
-  async context(client: PoolClient, userId: string, npcId: string, realNow = new Date()): Promise<NpcRelationship> {
-    const gameTime = await this.gameTime(client, userId, realNow);
+  constructor(private readonly worldClock: WorldClockService) {}
+
+  async context(client: PoolClient, userId: string, npcId: string): Promise<NpcRelationship> {
+    const gameTime = (await this.worldClock.read(userId, client)).gameTimeUtc;
     const row = await this.lock(client, userId, npcId);
     if (row.mood_expires_at && row.mood_expires_at <= gameTime) {
       row.interaction_mood_id = null; row.mood_expires_at = null;
@@ -75,8 +70,10 @@ export class NpcRelationshipService {
   }
 
   async apply(client: PoolClient, userId: string, npcId: string, signal: SocialSignal,
-    clientMessageId: string, realNow = new Date()): Promise<NpcRelationship> {
-    const { gameTime, gameDate } = await this.gameContext(client, userId, realNow);
+    clientMessageId: string): Promise<NpcRelationship> {
+    const clock = await this.worldClock.read(userId, client);
+    const gameTime = clock.gameTimeUtc;
+    const gameDate = zonedGameTime(gameTime, clock.timeZone).date;
     const row = await this.lock(client, userId, npcId);
     if (row.mood_expires_at && row.mood_expires_at <= gameTime) {
       row.interaction_mood_id = null; row.mood_expires_at = null;
@@ -116,18 +113,5 @@ export class NpcRelationshipService {
     return row;
   }
 
-  private async gameTime(client: PoolClient, userId: string, realNow: Date): Promise<Date> {
-    return (await this.gameContext(client, userId, realNow)).gameTime;
-  }
-
-  private async gameContext(client: PoolClient, userId: string, realNow: Date): Promise<{ gameTime: Date; gameDate: string }> {
-    const result = await client.query<ClockRow>(`SELECT l.clock_time,l.clock_anchor,l.clock_rate,co.time_zone
-      FROM public.player_life l JOIN public.characters ch ON ch.user_id=l.user_id
-      JOIN public.countries co ON co.id=ch.country_id WHERE l.user_id=$1`, [userId]);
-    const row = result.rows[0];
-    if (!row) throw new ServiceUnavailableException('NPC relationship clock is unavailable.');
-    const gameTime = gameTimeAt({ gameTime: row.clock_time, realTime: row.clock_anchor, rate: row.clock_rate }, realNow);
-    return { gameTime, gameDate: localGameTime(gameTime, row.time_zone).date };
-  }
 }
 

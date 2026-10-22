@@ -12,10 +12,8 @@ function fakeClient(initial: Partial<State> = {}): { client: PoolClient; state: 
   const state: State = { familiarity: 0, affinity: 0, interaction_mood_id: null, mood_expires_at: null, ...initial };
   const events: Event[] = [];
   const queries: string[] = [];
-  const anchor = new Date('2026-06-01T10:00:00.000Z');
   const query = async (sql: string, values: unknown[] = []) => {
     queries.push(sql);
-    if (sql.includes('SELECT l.clock_time')) return { rows: [{ clock_time: anchor, clock_anchor: anchor, clock_rate: 1, time_zone: 'UTC' }], rowCount: 1 };
     if (sql.includes('INSERT INTO public.npc_relationships')) return { rows: [], rowCount: 1 };
     if (sql.includes('FROM public.npc_relationships') && sql.includes('FOR UPDATE')) return { rows: [{ ...state }], rowCount: 1 };
     if (sql.includes('SELECT 1 FROM public.npc_relationship_events')) {
@@ -46,6 +44,12 @@ function fakeClient(initial: Partial<State> = {}): { client: PoolClient; state: 
   return { client: { query } as unknown as PoolClient, state, events, queries };
 }
 
+function serviceAt(initial: Date): { service: NpcRelationshipService; setTime: (next: Date) => void } {
+  let now = initial;
+  const worldClock = { read: async () => ({ gameTimeUtc: now, timeZone: 'UTC' }) };
+  return { service: new NpcRelationshipService(worldClock as never), setTime: next => { now = next; } };
+}
+
 test('NPC-06 classifies only explicit deterministic social signals', () => {
   assert.equal(classifySocialSignal('Hello!', null), 'greeting');
   assert.equal(classifySocialSignal('Thank you very much.', null), 'thanks');
@@ -69,8 +73,8 @@ test('NPC-06 derives documented stages at exact boundaries', () => {
 
 test('NPC-06 caps daily gains and never exceeds score bounds', async () => {
   const fake = fakeClient({ familiarity: 98, affinity: 99 });
-  const service = new NpcRelationshipService();
-  for (let index = 0; index < 12; index++) await service.apply(fake.client, 'user', 'npc', 'thanks', randomUUID(), new Date('2026-06-01T10:00:00Z'));
+  const { service } = serviceAt(new Date('2026-06-01T10:00:00Z'));
+  for (let index = 0; index < 12; index++) await service.apply(fake.client, 'user', 'npc', 'thanks', randomUUID());
   assert.equal(fake.state.familiarity, 100);
   assert.equal(fake.state.affinity, 100);
   assert.equal(fake.events.reduce((sum, event) => sum + event.familiarity, 0), 2);
@@ -79,22 +83,27 @@ test('NPC-06 caps daily gains and never exceeds score bounds', async () => {
 
 test('NPC-06 expires reactions, escalates repeated insults, and softens with apology', async () => {
   const fake = fakeClient();
-  const service = new NpcRelationshipService();
-  const first = await service.apply(fake.client, 'user', 'npc', 'insult', randomUUID(), new Date('2026-06-01T10:00:00Z'));
+  const clock = serviceAt(new Date('2026-06-01T10:00:00Z'));
+  const service = clock.service;
+  const first = await service.apply(fake.client, 'user', 'npc', 'insult', randomUUID());
   assert.equal(first.reactionMood, 'upset'); assert.equal(first.affinity, -8);
-  const repeated = await service.apply(fake.client, 'user', 'npc', 'insult', randomUUID(), new Date('2026-06-01T10:01:00Z'));
+  clock.setTime(new Date('2026-06-01T10:01:00Z'));
+  const repeated = await service.apply(fake.client, 'user', 'npc', 'insult', randomUUID());
   assert.equal(repeated.reactionMood, 'angry'); assert.equal(repeated.affinity, -20);
-  const capped = await service.apply(fake.client, 'user', 'npc', 'insult', randomUUID(), new Date('2026-06-01T10:01:30Z'));
+  clock.setTime(new Date('2026-06-01T10:01:30Z'));
+  const capped = await service.apply(fake.client, 'user', 'npc', 'insult', randomUUID());
   assert.equal(capped.affinity, -24, 'negative affinity is capped per game day');
-  const apology = await service.apply(fake.client, 'user', 'npc', 'apology', randomUUID(), new Date('2026-06-01T10:02:00Z'));
+  clock.setTime(new Date('2026-06-01T10:02:00Z'));
+  const apology = await service.apply(fake.client, 'user', 'npc', 'apology', randomUUID());
   assert.equal(apology.reactionMood, 'upset'); assert.equal(apology.affinity, -22);
-  const expired = await service.context(fake.client, 'user', 'npc', new Date('2026-06-01T12:00:01Z'));
+  clock.setTime(new Date('2026-06-01T12:00:01Z'));
+  const expired = await service.context(fake.client, 'user', 'npc');
   assert.equal(expired.reactionMood, null); assert.equal(fake.state.affinity, -22);
 });
 
 test('NPC-06 serializes concurrent replays and applies a message key once', async () => {
   const fake = fakeClient();
-  const service = new NpcRelationshipService();
+  const { service } = serviceAt(new Date('2026-06-01T10:00:00Z'));
   const key = randomUUID();
   let transactionQueue = Promise.resolve();
   const transaction = <T>(work: () => Promise<T>): Promise<T> => {

@@ -1,8 +1,9 @@
 import { ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { GAME_TIME_RATE, gameTimeAt, npcPresenceResponseSchema, npcProfileSchema, SHOP_NPC_IDS, TOWN_STREET_NPC_IDS,
+import { npcPresenceResponseSchema, npcProfileSchema, SHOP_NPC_IDS, TOWN_STREET_NPC_IDS,
   type NpcPresenceResponse, type NpcProfile } from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
+import { WorldClockService, zonedGameTime } from '../world-clock/world-clock.service';
 
 const DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 const SHOP_IDS = new Set<string>(SHOP_NPC_IDS);
@@ -12,10 +13,6 @@ interface PresenceRow {
   id: string;
   location_id: string;
   profile: unknown;
-  clock_time: Date;
-  clock_anchor: Date;
-  clock_rate: number;
-  time_zone: string;
 }
 
 interface PresenceLocalTime {
@@ -24,13 +21,8 @@ interface PresenceLocalTime {
 }
 
 function localTime(instant: Date, timeZone: string): PresenceLocalTime {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-  }).formatToParts(instant);
-  const value = (type: Intl.DateTimeFormatPartTypes): string => parts.find(part => part.type === type)?.value ?? '';
-  const day = value('weekday').slice(0, 3).toLowerCase() as PresenceLocalTime['day'];
-  if (!DAYS.includes(day)) throw new ServiceUnavailableException('Country time zone is unavailable.');
-  return { day, minutes: Number(value('hour')) * 60 + Number(value('minute')) };
+  const local = zonedGameTime(instant, timeZone);
+  return { day: local.day, minutes: local.minutes };
 }
 
 function minute(value: string): number {
@@ -89,7 +81,7 @@ export function nextPresenceChange(rows: Array<PresenceRow & { profile: NpcProfi
 
 @Injectable()
 export class NpcPresenceService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseService, private readonly worldClock: WorldClockService) {}
 
   forMap(userId: string, mapId: string): Promise<NpcPresenceResponse> {
     return this.database.transaction(client => this.resolve(client, userId, mapId));
@@ -99,9 +91,9 @@ export class NpcPresenceService {
     const result = await this.context(client, userId, npcId);
     const row = result.rows[0];
     if (!row) throw new ConflictException('NPC is not here right now');
-    const gameTime = gameTimeAt({ gameTime: row.clock_time, realTime: row.clock_anchor, rate: row.clock_rate }, new Date());
+    const clock = await this.worldClock.read(userId, client);
     const parsed = { ...row, profile: npcProfileSchema.parse(row.profile) };
-    if (!npcIsPresent(parsed, row.location_id, localTime(gameTime, row.time_zone))) {
+    if (!npcIsPresent(parsed, row.location_id, localTime(clock.gameTimeUtc, clock.timeZone))) {
       throw new ConflictException('NPC is not here right now');
     }
   }
@@ -110,24 +102,17 @@ export class NpcPresenceService {
     const result = await this.context(client, userId);
     const first = result.rows[0];
     if (!first) throw new ServiceUnavailableException('NPC presence is unavailable.');
-    const gameTime = gameTimeAt({ gameTime: first.clock_time, realTime: first.clock_anchor, rate: first.clock_rate }, new Date());
+    const clock = await this.worldClock.read(userId, client);
+    const gameTime = clock.gameTimeUtc;
     const rows = result.rows.map(row => ({ ...row, profile: npcProfileSchema.parse(row.profile) }));
-    const ids = presentIds(rows, mapId, gameTime, first.time_zone);
-    const next = nextPresenceChange(rows, mapId, gameTime, first.time_zone);
-    return npcPresenceResponseSchema.parse({ mapId, gameTime: gameTime.toISOString(), timeZone: first.time_zone,
+    const ids = presentIds(rows, mapId, gameTime, clock.timeZone);
+    const next = nextPresenceChange(rows, mapId, gameTime, clock.timeZone);
+    return npcPresenceResponseSchema.parse({ mapId, gameTime: gameTime.toISOString(), timeZone: clock.timeZone,
       presentNpcIds: ids, nextChangeAt: next?.toISOString() ?? null });
   }
 
   private async context(client: PoolClient, userId: string, npcId?: string) {
-    await client.query(
-      'INSERT INTO public.player_life (user_id,clock_rate) VALUES ($1,$2) ON CONFLICT DO NOTHING',
-      [userId, GAME_TIME_RATE],
-    );
-    return client.query<PresenceRow>(`SELECT n.id,n.location_id,n.profile,l.clock_time,l.clock_anchor,l.clock_rate,co.time_zone
-      FROM public.npcs n
-      JOIN public.characters ch ON ch.user_id=$1
-      JOIN public.countries co ON co.id=ch.country_id
-      JOIN public.player_life l ON l.user_id=ch.user_id
+    return client.query<PresenceRow>(`SELECT n.id,n.location_id,n.profile FROM public.npcs n
       WHERE ($2::text IS NULL OR n.id=$2)`, [userId, npcId ?? null]);
   }
 }

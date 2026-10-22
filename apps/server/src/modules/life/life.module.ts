@@ -6,7 +6,8 @@ import { ShopsModule } from '../shops/shops.module';
 import { LifeController } from './life.controller';
 import { LifeRepository } from './life.repository';
 import { LifeService } from './life.service';
+import { WorldClockModule } from '../world-clock/world-clock.module';
 
-@Module({ imports: [DatabaseModule, AuthModule, EconomyModule, ShopsModule], controllers: [LifeController],
+@Module({ imports: [DatabaseModule, AuthModule, EconomyModule, ShopsModule, WorldClockModule], controllers: [LifeController],
   providers: [LifeRepository, LifeService], exports: [LifeService] })
 export class LifeModule {}

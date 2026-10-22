@@ -54,7 +54,8 @@ test('NPC-05 conversation-start guard rejects absent NPCs and malformed profiles
     clock_time: new Date('2026-06-01T08:00:00Z'), clock_anchor: new Date(), clock_rate: 1,
     time_zone: 'Europe/Stockholm',
   }] }));
-  const service = new NpcPresenceService({} as never);
+  const worldClock = { read: async () => ({ gameTimeUtc: new Date('2026-06-01T08:00:00Z'), timeZone: 'Europe/Stockholm' }) };
+  const service = new NpcPresenceService({} as never, worldClock as never);
   await assert.rejects(service.assertCanStart(client, 'user', 'npc_mila_florist'), /NPC is not here right now/);
   profile = { profileVersion: 1, unknown: true };
   await assert.rejects(service.assertCanStart(client, 'user', 'npc_mila_florist'), /unrecognized key/i);

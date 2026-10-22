@@ -58,7 +58,8 @@ test('NPC-04 runtime reads server clock/country/profile and lazily persists a ch
     if (sql.startsWith('SELECT id,label')) return { rows: [{ id: 'happy', label: 'Happy', guidance: 'Sound upbeat.' }] };
     return { rows: [] };
   });
-  const mood = await new NpcMoodService().resolve(client, 'user-id', 'npc_mia');
+  const worldClock = { read: async () => ({ gameTimeUtc: new Date('2026-06-01T06:00:00Z'), timeZone: 'Europe/Stockholm' }) };
+  const mood = await new NpcMoodService(worldClock as never).resolve(client, 'user-id', 'npc_mia');
   assert.equal(mood.id, 'happy');
   assert.ok(queries.some(sql => sql.startsWith('UPDATE public.npcs SET current_mood_id')));
 });

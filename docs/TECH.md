@@ -365,6 +365,8 @@ shop companion scripts; the first coffee quest remains attached to Mia.
 ## Saved life and direct purchases
 
 - Protected `GET /life` returns `{ energy, coins, gameTime, serverTime, clockRate, appearance, ownedShirts }`.
+- Protected `GET /world-clock` joins the authenticated character to its shared country world and returns
+  `{ gameTimeUtc, timeZone, clockRate }`. Server decisions convert that instant through the country IANA zone.
   State initializes lazily for a character at 100 energy and 08:00 on game day 2000-01-01.
   Its game clock advances at the configured rate (2× by default), including time
   away from the app. The server persists game time, real-time anchor and rate;
@@ -393,7 +395,7 @@ shop companion scripts; the first coffee quest remains attached to Mia.
   retain priority and authority.
 - Protected `GET /life/catalog` returns the seeded shop catalog.
 - Protected `GET /life/orders` returns the latest ten café orders for the signed-in player. Each order stores item names, quantities and unit prices as purchased, its total and timestamp.
-- `POST /life/sleep` takes `{ key: UUID }`, adds eight game hours immediately and restores 100 energy.
+- `POST /life/sleep` takes `{ key: UUID }` and restores 100 energy without changing the shared world clock.
 - `POST /life/purchase` takes `{ key: UUID, itemIds: string[] }`: one item or one drink plus
   one food. Stores accept purchases only from 08:00 until 20:00. Prices come from PostgreSQL.
   Payment, café order history and consumption/wardrobe changes share a transaction. Clothes purchases are not included in café order history. Consumables create no inventory;

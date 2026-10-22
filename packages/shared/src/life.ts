@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const GAME_TIME_RATE = 2;
-export const SLEEP_HOURS = 8;
 export interface SavedGameClock { gameTime: Date; realTime: Date; rate: number }
 export function gameTimeAt(clock: SavedGameClock, realNow: Date): Date {
   const elapsed = Math.max(0, realNow.getTime() - clock.realTime.getTime());
@@ -20,10 +19,13 @@ export const appearanceSchema = z.object({
 export type Appearance = z.infer<typeof appearanceSchema>;
 export const VENUE_HOURS = { organization: [8, 16], store: [8, 14], workplace: [7, 17] } as const;
 export type VenueKind = keyof typeof VENUE_HOURS;
-export function isVenueOpen(kind: VenueKind, time: Date): boolean {
-  const hour = time.getUTCHours();
+export function isVenueOpenAtLocalMinute(kind: VenueKind, localMinutes: number): boolean {
+  const hour = Math.floor(localMinutes / 60);
   const [opens, closes] = VENUE_HOURS[kind];
   return hour >= opens && hour < closes;
+}
+export function isVenueOpen(kind: VenueKind, time: Date): boolean {
+  return isVenueOpenAtLocalMinute(kind, time.getUTCHours() * 60 + time.getUTCMinutes());
 }
 export function venueHoursLabel(kind: VenueKind): string {
   const [opens, closes] = VENUE_HOURS[kind];
