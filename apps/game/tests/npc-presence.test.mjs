@@ -28,9 +28,8 @@ test('NPC presence received before Phaser startup is applied when the game becom
 });
 
 test('controlled presence retains an active speaker until reconciliation', () => {
-  const selected = ['npc_station_information', 'npc_passenger_backpack'];
-  assert.deepEqual([...npcPresence.effectiveNpcIds(selected, 'npc_passenger_visitor')], [
-    'npc_station_information', 'npc_passenger_backpack', 'npc_passenger_visitor',
-  ]);
-  assert.deepEqual([...npcPresence.effectiveNpcIds(selected, null)], selected);
+  const current = ['npc_station_information', 'npc_passenger_visitor'];
+  const next = ['npc_station_information', 'npc_passenger_backpack'];
+  assert.deepEqual([...npcPresence.effectiveNpcIds(next, 'npc_passenger_visitor', current)], current);
+  assert.deepEqual([...npcPresence.effectiveNpcIds(next, null, current)], next);
 });

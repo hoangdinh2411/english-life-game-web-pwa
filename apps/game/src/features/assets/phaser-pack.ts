@@ -5,6 +5,8 @@ import { packKey } from './map-pack';
 import { isServiceNpc, SHOP_NPCS } from '../shops/shop-npcs';
 import { findStreetNpc, STREET_NPCS } from '../npcs/street-npcs';
 import { venueNpcConfigForMapId } from '../shops/venue-npc-config';
+import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES } from '../shops/venue-npc-config';
+import { ambientNpcSpawnPoints } from '../npcs/controlled-presence';
 
 type Diagnostic = (message: string) => void;
 
@@ -129,12 +131,23 @@ export function preparePack(
     if (!diagnosedAmbientNpcIds.has(npcId)) diagnostic(optionalAmbientDiagnostic(npcId, pack.mapId));
     diagnosedAmbientNpcIds.add(npcId);
   };
+  const ambientSpawns = venueConfig ? ambientNpcSpawnPoints(
+    venueConfig,
+    VENUE_SPAWN_ZONES,
+    VENUE_EXCLUSION_ZONES,
+    authoredActors.flatMap(actor => actor.npcId ? [actor.npcId] : []),
+    diagnostic,
+  ) : new Map<string, { x: number; y: number }>();
   const actors = authoredActors.flatMap(actor => {
     const streetNpc = pack.mapId === 'loc_town_street' && actor.npcId ? findStreetNpc(actor.npcId) : undefined;
     const definition = streetNpc ?? (actor.npcId ? SHOP_NPCS.find(npc => npc.id === actor.npcId) : SHOP_NPCS.find(npc => npc.frame === actor.frame));
     if (!definition || definition.frame !== actor.frame) throw new Error('Shop NPC identity or atlas frame is invalid.');
     const ambient = venueConfig?.ambientNpcPool.includes(definition.id) ?? false;
     if (ambient && unavailableAmbientNpcIds.has(definition.id)) return [];
+    if (ambient && !ambientSpawns.has(definition.id)) {
+      diagnostic(`Optional ambient NPC spawn unavailable: ${definition.id} at ${pack.mapId}.`);
+      return [];
+    }
     const bundledTexture = actor.npcId ? serviceTexture(actor.npcId) : undefined;
     const texture = bundledTexture ? undefined : pack.assets.find(asset => asset.key === actor.texture && asset.type === 'image' && asset.npcId === null);
     const atlas = texture && pack.assets.find(asset => asset.key === `${texture.key}-atlas` && asset.type === 'json' && asset.npcId === texture.npcId && asset.version === texture.version);
@@ -155,7 +168,7 @@ export function preparePack(
         throw new Error('Shop NPC walking frames are missing. Please retry after the map upload finishes.');
       }
     }
-    return [{ ...actor, npcId: definition.id, texture: bundledTexture ?? packKey(pack, texture!) }];
+    return [{ ...actor, ...ambientSpawns.get(definition.id), npcId: definition.id, texture: bundledTexture ?? packKey(pack, texture!) }];
   });
   if (pack.mapId === 'loc_town_street' && actors.length !== STREET_NPCS.length) throw new Error(`Town Street needs ${STREET_NPCS.length} configured resident NPC assets.`);
   return { background: packKey(pack, background), player: packKey(pack, player), walkPrefix, animationKeys, actors };

@@ -107,7 +107,7 @@ Finished tasks are removed to keep this board short. Git history and
         a location-load error. Done when adding a fixture venue needs only NPC
         definitions, zones and registry data—no selector changes—and focused
         store, asset-failure and opening-hours tests pass.
-  - [ ] **T39.4 — Safe spawning and boundary reconciliation.** Make actor
+  - [x] **T39.4 — Safe spawning and boundary reconciliation.** Make actor
         creation consume configured spawn and exclusion zones so ambient NPCs
         never block portals, counters, desks, fitting areas or primary paths.
         Reconcile actors only when the effective seed/configuration changes;

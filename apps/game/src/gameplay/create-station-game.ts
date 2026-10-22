@@ -14,8 +14,8 @@ import { npcNeedsTalk } from './arrival-hud';
 import type { MinimapSnapshot } from '../features/minimap/model';
 import { effectiveNpcIds, npcIsVisible } from '../features/npcs/npc-presence';
 import { mapLocationFromPlayerLocation, playerLocationFromMapLocation } from '../features/location/player-location';
-import { activeNpcIds, countryLocalSeedInput } from '../features/npcs/controlled-presence';
-import { venueNpcConfig } from '../features/shops/venue-npc-config';
+import { activeNpcIds, ambientNpcSpawnPoints, countryLocalSeedInput } from '../features/npcs/controlled-presence';
+import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES, venueNpcConfig } from '../features/shops/venue-npc-config';
 import { bundledServiceAtlases, bundledServiceTexture } from '../features/shops/service-npc-assets';
 const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Sweden · Train Station', cafe: 'Sweden · Café', corner_cafe: 'Sweden · Corner Cup Café', clothes: 'Sweden · Clothes Shop', street: 'Sweden · Town Street' };
 
@@ -38,6 +38,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let presentNpcIds = callbacks.practice ? null : new Set<string>();
   let controlledNpcIds: ReadonlySet<string> = new Set();
   let controlledPresenceSignature = '';
+  const presenceDiagnostics = new Set<string>();
   let exitUnlocked = false;
   let blockedPortal: string | null = null;
   const savedPosition: Point = callbacks.initialLocation
@@ -62,8 +63,14 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     if (activeLocation === 'street') return { ids: new Set<string>(), signature: 'street' };
     const gameTime = callbacks.getGameTime?.() ?? null;
     const local = countryLocalSeedInput(gameTime, callbacks.getTimeZone?.() ?? null);
-    const ids = activeNpcIds(venueNpcConfig(activeLocation), gameTime, callbacks.getTimeZone?.() ?? null);
-    return { ids: effectiveNpcIds(ids, conversationNpcId), signature: `${local.date}:${activeLocation}:${local.bucket}:${conversationNpcId ?? ''}:${ids.join(',')}` };
+    const config = venueNpcConfig(activeLocation);
+    const availableAmbient = config.ambientNpcPool.filter(id => !unavailableAmbientNpcIds.has(id));
+    const selectedIds = activeNpcIds(config, gameTime, callbacks.getTimeZone?.() ?? null, availableAmbient, message => {
+      if (!presenceDiagnostics.has(message)) console.warn(message);
+      presenceDiagnostics.add(message);
+    });
+    const signature = `${local.date}:${local.bucket}:${JSON.stringify(config)}:${availableAmbient.join(',')}`;
+    return { ids: effectiveNpcIds(selectedIds, conversationNpcId, [...controlledNpcIds]), signature };
   };
   const isPresent = (id: string): boolean => conversationNpcId === id || (activeLocation === 'street'
     ? npcIsVisible(activeLocation, id, presentNpcIds)
@@ -95,7 +102,12 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     }
     create() {
       refreshAppearance = () => { if (this.worldReady) this.applyAppearance(); };
-      refreshPresence = () => { if (this.worldReady) this.applyPresence(); };
+      refreshPresence = () => {
+        if (!this.worldReady) return;
+        if (activeLocation === 'street') { this.applyPresence(); return; }
+        const controlled = controlledPresence();
+        if (conversationNpcId === null && controlled.signature !== controlledPresenceSignature) this.applyPresence(controlled);
+      };
       const stationOwned = activeLocation === 'station';
       this.events.once('shutdown', () => {
         this.worldReady = false;
@@ -155,7 +167,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.transitionPending = false;
       this.labels = [];
       this.npcActors = [];
-      npcs = activeLocation === 'station' ? STATION_NPCS.map(npc => ({ ...npc })) : [];
+      const stationSpawns = activeLocation === 'station' ? ambientNpcSpawnPoints(
+        venueNpcConfig('station'), VENUE_SPAWN_ZONES, VENUE_EXCLUSION_ZONES, STATION_NPCS.map(npc => npc.id),
+      ) : new Map<string, Point>();
+      npcs = activeLocation === 'station' ? STATION_NPCS.map(npc => ({ ...npc, ...stationSpawns.get(npc.id) })) : [];
       const background = this.add.image(0, 0, resources?.background ?? 'station').setOrigin(0);
       if (activeLocation === 'street') background.setScale(STREET_MAP_SCALE);
       this.marker = this.add.circle(0, 0, 16, 0xf6df9e, 0.5).setStrokeStyle(3, 0x426f61).setVisible(false);
@@ -393,8 +408,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       }
       this.loadNextStreetNpcArt();
     }
-    private applyPresence() {
-      const controlled = controlledPresence();
+    private applyPresence(controlled = controlledPresence()) {
       controlledNpcIds = controlled.ids;
       controlledPresenceSignature = controlled.signature;
       npcs = this.npcActors.filter(actor => isPresent(actor.npc.id)).map(actor => actor.npc);
@@ -540,7 +554,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (_time >= this.nextPresenceCheck) {
         this.nextPresenceCheck = _time + 1000;
         const controlled = controlledPresence();
-        if (controlled.signature !== controlledPresenceSignature) this.applyPresence();
+        if (conversationNpcId === null && controlled.signature !== controlledPresenceSignature) this.applyPresence(controlled);
       }
       updateNpcActors(this.npcActors, position, delta, worldPaused, conversationNpcId);
       if (activeLocation === 'street') this.ensureVisibleStreetNpcArt();

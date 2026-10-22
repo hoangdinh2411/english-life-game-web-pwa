@@ -61,3 +61,20 @@ test('pack loading tolerates a failed optional customer download and reports its
   assert.deepEqual([...unavailable], ['npc_cafe_customer']);
   assert.deepEqual(diagnostics, ['Optional ambient NPC asset unavailable: npc_cafe_customer at loc_cafe.']);
 });
+
+test('ambient actors use configured spawn zones instead of unsafe authored coordinates', () => {
+  const animations = { animations: Array.from({length:4},(_,row)=>({key:`walk-${row}`,texture:'player',frames:[row*4],frameRate:7,repeat:-1})) };
+  const actors = { actors: [
+    {npcId:'npc_mia',texture:'service-npc_mia',frame:'walk',x:800,y:400,scale:0.6},
+    {npcId:'npc_cafe_waiter',texture:'service-npc_cafe_waiter',frame:'walk',x:900,y:400,scale:0.6},
+    {npcId:'npc_cafe_customer',texture:'npc-npc_cafe_customer',frame:'walk',x:768,y:900,scale:0.6},
+  ] };
+  const assets = [['background','map'],['player','spritesheet'],['animations','animation'],['actors','json'],['npc-npc_cafe_customer','image']]
+    .map(([key,type])=>({key,type,version:1,npcId:null}));
+  const frames = new Set(['walk', ...Array.from({length:16},(_,index)=>`walk-${Math.floor(index/4)}-${index%4}`)]);
+  const scene = { cache:{json:{get:key=>key.includes(':actors:')?actors:animations}}, textures:{get:key=>({has:frame=>key.includes(':player:') || frames.has(frame)})},anims:{create:()=>{}} };
+  const result = preparePack(scene,{mapId:'loc_cafe',assets},id=>id === 'npc_cafe_customer' ? undefined : `service-${id}`);
+  const customer = result.actors.find(actor => actor.npcId === 'npc_cafe_customer');
+  assert.ok(customer.x >= 390 && customer.x <= 470 && customer.y >= 560 && customer.y <= 640);
+  assert.equal(customer.x >= 650 && customer.x <= 890 && customer.y >= 790, false);
+});

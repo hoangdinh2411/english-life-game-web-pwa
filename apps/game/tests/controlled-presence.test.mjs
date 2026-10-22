@@ -2,10 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   activeNpcIds,
+  ambientNpcSpawnPoints,
   countryLocalSeedInput,
   validateVenueNpcConfig,
 } from '../src/features/npcs/controlled-presence.ts';
-import { venueNpcConfig } from '../src/features/shops/venue-npc-config.ts';
+import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES, venueNpcConfig } from '../src/features/shops/venue-npc-config.ts';
+import { canWalk } from '../src/gameplay/station-navigation.ts';
+import { shopCanWalk } from '../src/features/shops/shop-navigation.ts';
 
 const at = (day, hour) => new Date(Date.UTC(2026, 9, day, hour));
 const sweden = 'Europe/Stockholm';
@@ -49,6 +52,48 @@ test('date or bucket changes can produce a different valid roster and bounds alw
     assert.ok(ambient.length <= config.ambientCount.max);
     assert.ok(config.serviceNpcIds.every(id => ids.includes(id)));
   }
+});
+
+test('an undersized available ambient pool returns each valid NPC once and reports a safe diagnostic', () => {
+  const config = {
+    ...valid,
+    ambientNpcPool: ['guest', 'guest_two'],
+    ambientCount: { min: 2, max: 2 },
+  };
+  const diagnostics = [];
+  const ids = activeNpcIds(config, at(21, 12), sweden, ['guest'], message => diagnostics.push(message));
+  assert.deepEqual(ids, ['staff', 'optional', 'guest']);
+  assert.deepEqual(diagnostics, ['Ambient NPC pool undersized at cafe: requested 2, available 1.']);
+});
+
+test('configured ambient spawn points are unique, walkable and outside exclusion zones', () => {
+  for (const location of ['station', 'cafe', 'corner_cafe', 'clothes']) {
+    const config = venueNpcConfig(location);
+    const points = ambientNpcSpawnPoints(config, VENUE_SPAWN_ZONES, VENUE_EXCLUSION_ZONES, config.ambientNpcPool);
+    assert.equal(points.size, config.ambientNpcPool.length);
+    const spawned = [...points.values()];
+    assert.equal(new Set(spawned.map(point => `${point.x}:${point.y}`)).size, points.size);
+    for (const [index, point] of spawned.entries()) for (const other of spawned.slice(index + 1)) {
+      assert.ok(Math.hypot(point.x - other.x, point.y - other.y) >= 38, `${location} spawns must not overlap`);
+    }
+    for (const point of spawned) {
+      assert.equal(location === 'station' ? canWalk(point) : shopCanWalk(location, point, []), true, `${location} spawn must be walkable`);
+      for (const exclusionId of config.exclusionZoneIds) {
+        const zone = VENUE_EXCLUSION_ZONES[exclusionId];
+        assert.equal(point.x >= zone.left && point.x <= zone.right && point.y >= zone.top && point.y <= zone.bottom, false);
+      }
+    }
+  }
+});
+
+test('exclusion zones keep ambient spawn anchors clear of movement into unsafe areas', () => {
+  const points = ambientNpcSpawnPoints(
+    valid,
+    { customers: { left: 0, right: 200, top: 0, bottom: 100 } },
+    { entrance: { left: 0, right: 80, top: 0, bottom: 100 } },
+    ['guest'],
+  );
+  assert.deepEqual(points.get('guest'), { x: 150, y: 50 });
 });
 
 test('invalid clock or country time zone uses one deterministic daytime fallback', () => {

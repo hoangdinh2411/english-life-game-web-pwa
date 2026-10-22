@@ -8,7 +8,8 @@ export const VENUE_SPAWN_ZONES = {
   station_passengers_right: { left: 910, right: 990, top: 350, bottom: 420 },
   station_passengers_south: { left: 570, right: 650, top: 660, bottom: 740 },
   cafe_customers: { left: 390, right: 470, top: 560, bottom: 640 },
-  corner_cafe_customers: { left: 390, right: 1120, top: 560, bottom: 790 },
+  corner_cafe_customers_left: { left: 400, right: 560, top: 560, bottom: 640 },
+  corner_cafe_customers_right: { left: 960, right: 1120, top: 560, bottom: 640 },
   clothes_customers: { left: 930, right: 1010, top: 650, bottom: 730 },
 } as const satisfies Readonly<Record<string, Bounds>>;
 
@@ -29,7 +30,7 @@ const catalog = {
 const configs = [
   { locationId: 'station', serviceNpcIds: ['npc_station_information'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_passenger_backpack', 'npc_passenger_suitcase', 'npc_passenger_visitor'], ambientCount: { min: 1, max: 2 }, spawnZoneIds: ['station_passengers_left', 'station_passengers_right', 'station_passengers_south'], exclusionZoneIds: ['station_desk'], timeBuckets: ['morning', 'daytime', 'evening'] },
   { locationId: 'cafe', serviceNpcIds: ['npc_mia', 'npc_cafe_waiter'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_cafe_customer'], ambientCount: { min: 0, max: 1 }, spawnZoneIds: ['cafe_customers'], exclusionZoneIds: ['cafe_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
-  { locationId: 'corner_cafe', serviceNpcIds: ['npc_corner_cup_seller', 'npc_corner_cup_assistant'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_corner_cup_customer_1', 'npc_corner_cup_customer_2', 'npc_corner_cup_customer_3'], ambientCount: { min: 1, max: 2 }, spawnZoneIds: ['corner_cafe_customers'], exclusionZoneIds: ['corner_cafe_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
+  { locationId: 'corner_cafe', serviceNpcIds: ['npc_corner_cup_seller', 'npc_corner_cup_assistant'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_corner_cup_customer_1', 'npc_corner_cup_customer_2', 'npc_corner_cup_customer_3'], ambientCount: { min: 1, max: 2 }, spawnZoneIds: ['corner_cafe_customers_left', 'corner_cafe_customers_right'], exclusionZoneIds: ['corner_cafe_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
   { locationId: 'clothes', serviceNpcIds: ['npc_clothes_seller', 'npc_clothes_assistant'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_clothes_customer'], ambientCount: { min: 0, max: 1 }, spawnZoneIds: ['clothes_customers'], exclusionZoneIds: ['clothes_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
 ] as const satisfies readonly VenueNpcConfig[];
 

@@ -40,8 +40,8 @@ test('Town Street defers resident atlases until their actors are near', async ()
   assert.deepEqual(calls, [['image', 'pack:loc_town_street:map:background:v1', 'http://fixture/map.png'], ['json', 'pack:loc_town_street:map:actors:v1', 'http://fixture/actors.json']]);
 });
 
-// Catches ignoring uploaded actor placement or displaying a frame from another shop.
-test('preparePack resolves authored per-NPC textures and positions', () => {
+// Catches unsafe uploaded ambient placement or displaying a frame from another shop.
+test('preparePack resolves service positions and configured ambient placement', () => {
   const actorIds = ['npc_mia','npc_cafe_waiter','npc_cafe_customer'];
   const assets = [
     { key: 'background', type: 'map', version: 2, npcId: null }, { key: 'player', type: 'spritesheet', version: 2, npcId: null },
@@ -56,7 +56,11 @@ test('preparePack resolves authored per-NPC textures and positions', () => {
       { animations: [0, 1, 2, 3].map(row => ({ key: `walk-${row}`, texture: 'player', frames: [row * 4], frameRate: 7, repeat: -1 })) } } },
     textures: { get: () => ({ has: () => true }) }, anims: { create: () => {} },
   };
-  assert.deepEqual(preparePack(scene, pack).actors, actors.map(actor => ({ ...actor, texture: `pack:loc_cafe:map:${actor.texture}:v2` })));
+  assert.deepEqual(preparePack(scene, pack).actors, actors.map(actor => ({
+    ...actor,
+    ...(actor.npcId === 'npc_cafe_customer' ? { x: 430, y: 600 } : {}),
+    texture: `pack:loc_cafe:map:${actor.texture}:v2`,
+  })));
 });
 
 test('preparePack maps repeated Corner Cup frames to explicit NPC identities', () => {
@@ -73,7 +77,16 @@ test('preparePack maps repeated Corner Cup frames to explicit NPC identities', (
       { animations: [0,1,2,3].map(row => ({ key:`walk-${row}`,texture:'player',frames:[row*4],frameRate:7,repeat:-1 })) } } },
     textures: { get: () => ({ has: () => true }) }, anims: { create: () => {} },
   };
-  assert.deepEqual(preparePack(scene,pack).actors,actors.map(actor => ({ ...actor, texture:`pack:loc_corner_cafe:map:${actor.texture}:v2` })));
+  const customerSpawns = {
+    npc_corner_cup_customer_1: { x: 480, y: 600 },
+    npc_corner_cup_customer_2: { x: 1040, y: 600 },
+    npc_corner_cup_customer_3: { x: 440, y: 600 },
+  };
+  assert.deepEqual(preparePack(scene,pack).actors,actors.map(actor => ({
+    ...actor,
+    ...(customerSpawns[actor.npcId] ?? {}),
+    texture:`pack:loc_corner_cafe:map:${actor.texture}:v2`,
+  })));
 });
 
 test('preparePack validates and resolves all authored Town Street resident actors', async () => {

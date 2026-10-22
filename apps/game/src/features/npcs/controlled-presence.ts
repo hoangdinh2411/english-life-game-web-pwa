@@ -1,4 +1,4 @@
-import type { Bounds, MapLocation } from '../../types/gameplay/world';
+import type { Bounds, MapLocation, Point } from '../../types/gameplay/world';
 
 export const TIME_BUCKETS = ['morning', 'daytime', 'evening'] as const;
 export type TimeBucket = typeof TIME_BUCKETS[number];
@@ -26,6 +26,8 @@ export interface CountryLocalSeedInput {
   date: string;
   bucket: TimeBucket;
 }
+
+type Diagnostic = (message: string) => void;
 
 // Missing or invalid clock/time-zone data must never introduce wall-clock randomness.
 export const DETERMINISTIC_TIME_FALLBACK: CountryLocalSeedInput = {
@@ -125,10 +127,63 @@ function seededOrder(values: readonly string[], seed: string): string[] {
   });
 }
 
-export function activeNpcIds(config: VenueNpcConfig, time: Date | null, timeZone: string | null): string[] {
+export function activeNpcIds(
+  config: VenueNpcConfig,
+  time: Date | null,
+  timeZone: string | null,
+  availableAmbientNpcIds: readonly string[] = config.ambientNpcPool,
+  diagnostic: Diagnostic = () => undefined,
+): string[] {
   const local = countryLocalSeedInput(time, timeZone);
   const seed = `${local.date}:${config.locationId}:${local.bucket}`;
   const range = config.ambientCount.max - config.ambientCount.min + 1;
   const count = config.ambientCount.min + stableHash(`${seed}:count`) % range;
-  return [...config.serviceNpcIds, ...config.optionalStaffNpcIds, ...seededOrder(config.ambientNpcPool, seed).slice(0, count)];
+  const available = [...new Set(availableAmbientNpcIds)].filter(id => config.ambientNpcPool.includes(id));
+  if (available.length < count) {
+    diagnostic(`Ambient NPC pool undersized at ${config.locationId}: requested ${count}, available ${available.length}.`);
+  }
+  return [...config.serviceNpcIds, ...config.optionalStaffNpcIds, ...seededOrder(available, seed).slice(0, count)];
+}
+
+function contains(bounds: Bounds, point: Point): boolean {
+  return point.x >= bounds.left && point.x <= bounds.right && point.y >= bounds.top && point.y <= bounds.bottom;
+}
+
+function clearsExclusion(bounds: Bounds, point: Point): boolean {
+  const movementClearance = 40;
+  return !contains({
+    left: bounds.left - movementClearance,
+    right: bounds.right + movementClearance,
+    top: bounds.top - movementClearance,
+    bottom: bounds.bottom + movementClearance,
+  }, point);
+}
+
+function zoneCandidates(zone: Bounds): Point[] {
+  const center = { x: (zone.left + zone.right) / 2, y: (zone.top + zone.bottom) / 2 };
+  const horizontal = [0.25, 0.75].map(x => ({ x: zone.left + (zone.right - zone.left) * x, y: center.y }));
+  const vertical = [0.25, 0.75].map(y => ({ x: center.x, y: zone.top + (zone.bottom - zone.top) * y }));
+  return [center, ...horizontal, ...vertical];
+}
+
+export function ambientNpcSpawnPoints(
+  config: VenueNpcConfig,
+  spawnZones: Readonly<Record<string, Bounds>>,
+  exclusionZones: Readonly<Record<string, Bounds>>,
+  npcIds: readonly string[],
+  diagnostic: Diagnostic = () => undefined,
+): ReadonlyMap<string, Point> {
+  const exclusions = config.exclusionZoneIds.map(id => exclusionZones[id]).filter((zone): zone is Bounds => zone !== undefined);
+  const candidatesByZone = config.spawnZoneIds.flatMap(id => {
+    const zone = spawnZones[id];
+    return zone ? [zoneCandidates(zone)] : [];
+  });
+  const candidates = Array.from({ length: Math.max(0, ...candidatesByZone.map(points => points.length)) }, (_, index) =>
+    candidatesByZone.flatMap(points => points[index] ? [points[index]] : []),
+  ).flat().filter(point => exclusions.every(zone => clearsExclusion(zone, point)));
+  const ambientIds = [...new Set(npcIds)].filter(id => config.ambientNpcPool.includes(id));
+  if (candidates.length < ambientIds.length) {
+    diagnostic(`Ambient NPC spawn capacity is insufficient at ${config.locationId}.`);
+  }
+  return new Map(ambientIds.slice(0, candidates.length).map((id, index) => [id, candidates[index]!]));
 }

@@ -12,6 +12,10 @@ export function npcIsVisible(location: MapLocation, npcId: string, presentNpcIds
   return location === 'station' || presentNpcIds === null || presentNpcIds.has(npcId);
 }
 
-export function effectiveNpcIds(selectedIds: readonly string[], conversationNpcId: string | null): ReadonlySet<string> {
-  return new Set(conversationNpcId === null ? selectedIds : [...selectedIds, conversationNpcId]);
+export function effectiveNpcIds(
+  selectedIds: readonly string[],
+  conversationNpcId: string | null,
+  currentIds: readonly string[] = selectedIds,
+): ReadonlySet<string> {
+  return new Set(conversationNpcId === null ? selectedIds : [...currentIds, conversationNpcId]);
 }
