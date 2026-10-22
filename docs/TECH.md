@@ -261,10 +261,12 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
   their starter-city mapping remains server-only.
 - `GET /me` → `{ user, character, stats }`; `character: null` before creation,
   `stats` contains existing `xp`/`coins` even before a character exists.
-- `POST /characters` with `{ name, countryId, avatarId }`; validates the country,
-  assigns its internal starter city on the server, persists both selections,
-  creates one character atomically, adds the configured starting grant, and
-  returns 409 for a duplicate.
+- `POST /characters` with `{ name, countryId }`; trims and NFC-normalizes a
+  2–20-character Unicode name, validates the database country, finds or creates
+  its shared clock world, and atomically creates the character at the trusted
+  starter location with the configured starting grant. An identical normalized
+  replay returns the saved profile; a different replay returns 409. The server
+  stores `avatar_traveler_01` only as a temporary compatibility default.
 - `POST /players/location` with `{ mapId, placeId, x, y }`; saves the
   authenticated character's outdoor parent map, exact playable place and
   bounded position. Only authored map/place pairs are accepted; this does not

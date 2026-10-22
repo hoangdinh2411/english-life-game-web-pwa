@@ -27,7 +27,6 @@ export interface OnboardingOptions {
 export interface CreateCharacterRequest {
   name: string;
   countryId: string;
-  avatarId: string;
 }
 
 export interface Character {
@@ -57,12 +56,16 @@ export interface PlayerResponse {
 export function parseCreateCharacterRequest(value: unknown): CreateCharacterRequest {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('Invalid character request');
   const request = value as Record<string, unknown>;
-  if (Object.keys(request).some((key) => !['name', 'countryId', 'avatarId'].includes(key))) throw new Error('Unexpected character request field');
-  const { name, countryId, avatarId } = request;
-  if (typeof name !== 'string' || name.trim().length === 0 || name.length > 2000) throw new Error('Name must contain a non-whitespace character and be under 2000 characters');
+  if (Object.keys(request).some((key) => !['name', 'countryId'].includes(key))) throw new Error('Unexpected character request field');
+  const { countryId } = request;
+  if (typeof request.name !== 'string') throw new Error('Invalid character name');
+  const name = request.name.trim().normalize('NFC');
+  const length = [...name].length;
+  if (length < 2 || length > 20 || !/^\p{L}[\p{L}\p{M}]*(?:[ '-]\p{L}[\p{L}\p{M}]*)*$/u.test(name)) {
+    throw new Error('Invalid character name');
+  }
   if (typeof countryId !== 'string' || !/^country_[a-z0-9_]+$/.test(countryId)) throw new Error('Invalid country id');
-  if (typeof avatarId !== 'string' || !/^avatar_[a-z0-9_]+$/.test(avatarId)) throw new Error('Invalid avatar id');
-  return { name, countryId, avatarId };
+  return { name, countryId };
 }
 
 function parseCountry(value: unknown, includeStarterCity: boolean): CountryOption | CountryCatalogEntry {

@@ -73,7 +73,7 @@ Finished tasks are removed to keep this board short. Git history and
         migration and FK/unique/immutability tests pass, concurrent first-world
         creation cannot duplicate a world, and no flag data/path is stored on
         player or world rows.
-  - [ ] **ONB-01.2 — Atomic and idempotent first-run API.** Change the request
+  - [x] **ONB-01.2 — Atomic and idempotent first-run API.** Change the request
         contract to `{ countryId, name }`; never accept world, clock, starter
         location, energy or avatar values. Trim and NFC-normalize the name,
         then allow 2–20 Unicode letters/marks with one space, ASCII apostrophe

@@ -1,6 +1,5 @@
-import { ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import type {
-  CountryCatalogEntry,
   CreateCharacterRequest,
   PlayerLocation,
   PlayerPreferences,
@@ -29,6 +28,12 @@ interface PlayerPreferencesRow {
   updated_at: Date | string;
 }
 
+interface StarterCountryRow {
+  id: string;
+  starter_city_id: string;
+  starter_location_id: string;
+}
+
 function mapPreferences(row: PlayerPreferencesRow): PlayerPreferences {
   return {
     coachEnabled: row.coach_enabled,
@@ -42,17 +47,31 @@ function mapPreferences(row: PlayerPreferencesRow): PlayerPreferences {
 export class PlayersRepository {
   constructor(private readonly database: DatabaseService, private readonly economy: EconomyService) {}
 
-  async createCharacter(userId: string, request: CreateCharacterRequest, country: CountryCatalogEntry): Promise<PlayerState> {
+  async createCharacter(userId: string, request: CreateCharacterRequest): Promise<PlayerState> {
     return this.database.transaction(async client => {
       // Serialize creation and grant the starter money in the same transaction.
       const profile = await client.query('SELECT id FROM public.profiles WHERE id = $1 FOR UPDATE', [userId]);
       if (profile.rowCount !== 1) throw new ServiceUnavailableException('Player profile is unavailable');
+      const countryResult = await client.query<StarterCountryRow>(`SELECT id,starter_city_id,starter_location_id
+        FROM public.countries WHERE id=$1`, [request.countryId]);
+      const country = countryResult.rows[0];
+      if (!country) throw new BadRequestException('Unknown country');
       const before = await this.getPlayer(userId, client);
-      if (before.character) throw new ConflictException('A character already exists');
+      if (before.character) {
+        if (before.character.name !== request.name || before.character.countryId !== request.countryId) {
+          throw new ConflictException('A different character already exists');
+        }
+        return { ...before, character: before.character, inventory: [], questProgress: [] };
+      }
+      const world = await client.query<{ id: string }>(`INSERT INTO public.worlds (country_id) VALUES ($1)
+        ON CONFLICT (country_id) DO UPDATE SET country_id=excluded.country_id RETURNING id`, [country.id]);
+      const worldId = world.rows[0]?.id;
+      if (!worldId) throw new ServiceUnavailableException('Country world is unavailable');
       await client.query(`INSERT INTO public.characters
-        (user_id, name, outfit, country_id, current_city_id, current_map_id, current_place_id, current_position_x, current_position_y)
-        VALUES ($1, $2, $3, $4, $5, 'loc_station', 'loc_station', 768, 370)`,
-        [userId, request.name, JSON.stringify({ avatarId: request.avatarId }), country.id, country.starterCityId]);
+        (user_id, name, outfit, country_id, world_id, current_city_id, current_map_id, current_place_id, current_position_x, current_position_y)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $7, 768, 370)`,
+        [userId, request.name, JSON.stringify({ avatarId: 'avatar_traveler_01' }), country.id, worldId,
+          country.starter_city_id, country.starter_location_id]);
       await this.economy.grantStartingBalance(client, userId);
       const player = await this.getPlayer(userId, client);
       if (!player.character) throw new ServiceUnavailableException('Character state is unavailable');

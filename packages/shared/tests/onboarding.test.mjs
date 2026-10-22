@@ -2,14 +2,22 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseCountryCatalog, parseCreateCharacterRequest, parseOnboardingOptions } from '../dist/onboarding.js';
 
-// A permissive parser could let clients choose balances or reference arbitrary content.
-test('creation accepts the minimal name and stable selections but rejects authority fields', () => {
-  assert.deepEqual(parseCreateCharacterRequest({ name: 'Ánh', countryId: 'country_sweden', avatarId: 'avatar_traveler_01' }), {
-    name: 'Ánh', countryId: 'country_sweden', avatarId: 'avatar_traveler_01',
+// A permissive parser could let clients choose server-owned setup state or save malformed names.
+test('creation normalizes valid Unicode names and rejects every server-owned field', () => {
+  assert.deepEqual(parseCreateCharacterRequest({ name: '  A\u030Ang-Marie O\'Neil  ', countryId: 'country_sweden' }), {
+    name: "Ång-Marie O'Neil", countryId: 'country_sweden',
   });
-  assert.throws(() => parseCreateCharacterRequest({ name: 'Ánh', countryId: 'country_sweden', avatarId: 'avatar_traveler_01', xp: 500 }), /unexpected/i);
-  assert.throws(() => parseCreateCharacterRequest({ name: '  ', countryId: 'country_sweden', avatarId: 'avatar_traveler_01' }), /name/i);
-  assert.throws(() => parseCreateCharacterRequest({ name: 'Ánh', cityId: 'city_maplewood', avatarId: 'avatar_traveler_01' }), /unexpected/i);
+  for (const field of ['avatarId', 'worldId', 'clockRate', 'clockStartUtc', 'starterCityId', 'starterLocationId', 'energy']) {
+    assert.throws(() => parseCreateCharacterRequest({ name: 'Ánh', countryId: 'country_sweden', [field]: 'forged' }), /unexpected/i);
+  }
+});
+
+test('creation requires a 2-20 character name with single approved separators', () => {
+  for (const name of ['', 'A', 'A'.repeat(21), 'Anne  Marie', '-Anne', 'Anne-', 'Anne–Marie', 'Anne\tMarie', 'R2 D2']) {
+    assert.throws(() => parseCreateCharacterRequest({ name, countryId: 'country_sweden' }), /name/i);
+  }
+  assert.deepEqual(parseCreateCharacterRequest({ name: '李 明', countryId: 'country_china' }), { name: '李 明', countryId: 'country_china' });
+  assert.throws(() => parseCreateCharacterRequest({ name: 'Anne', countryId: 'missing' }), /country/i);
 });
 
 // Malformed or duplicate catalogs must fail instead of presenting unstable selections.

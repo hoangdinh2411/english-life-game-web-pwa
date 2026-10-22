@@ -52,11 +52,11 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
     assert.equal(before.user.id, userId);
     await database.query('UPDATE player_stats SET xp = 23, coins = 7 WHERE user_id = $1', [userId]);
     const optionsResponse = await call('/onboarding/options');
-    const options = await optionsResponse.json() as { countries: Array<{ id: string }>; avatars: Array<{ id: string }> };
-    assert.ok(options.countries[0]); assert.ok(options.avatars[0]);
-    const request = { name: '  R4 Learner  ', countryId: options.countries[0].id, avatarId: options.avatars[0].id };
+    const options = await optionsResponse.json() as { countries: Array<{ id: string }> };
+    assert.ok(options.countries[0]);
+    const request = { name: '  Replay Learner  ', countryId: options.countries[0].id };
     for (const body of [null, {}, { ...request, xp: 999 }, { ...request, userId }, { ...request, name: ' ' },
-      { ...request, name: 'a'.repeat(2001) }, { ...request, countryId: 'country_unknown' }, { ...request, avatarId: 'avatar_unknown' }]) {
+      { ...request, name: 'a'.repeat(21) }, { ...request, countryId: 'country_unknown' }, { ...request, avatarId: 'avatar_unknown' }]) {
       assert.equal((await call('/characters', body)).status, 400);
     }
     assert.equal((await database.query('SELECT * FROM characters WHERE user_id = $1', [userId])).rowCount, 0);
@@ -73,14 +73,17 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
     assert.equal((await database.query('SELECT * FROM characters WHERE user_id = $1', [userId])).rowCount, 0);
     assert.deepEqual(((await (await call('/me')).json()) as { stats: unknown }).stats, { xp: 23, coins: 7 });
     const responses = await Promise.all([call('/characters', request), call('/characters', request)]);
-    assert.deepEqual(responses.map(response => response.status).sort(), [201, 409]);
-    const created = await responses.find(response => response.status === 201)!.json();
+    assert.deepEqual(responses.map(response => response.status).sort(), [201, 201]);
+    const created = await responses[0]!.json();
     assert.deepEqual(created, {
       user: { id: userId, email, displayName: 'R4 learner' },
-      character: { id: userId, userId, ...request, lastLocation: { mapId: 'loc_station', placeId: 'loc_station', x: 768, y: 370 } },
+      character: { id: userId, userId, name: 'Replay Learner', countryId: request.countryId,
+        avatarId: 'avatar_traveler_01', cityId: 'city_maplewood',
+        lastLocation: { mapId: 'loc_station', placeId: 'loc_station', x: 768, y: 370 } },
       stats: { xp: 23, coins: 507 }, inventory: [], questProgress: [],
     });
-    assert.equal((await call('/characters', request)).status, 409);
+    assert.equal((await call('/characters', request)).status, 201);
+    assert.equal((await call('/characters', { ...request, name: 'Other Learner' })).status, 409);
     assert.equal((await database.query('SELECT * FROM characters WHERE user_id = $1', [userId])).rowCount, 1);
     const state = await database.query('SELECT xp, coins, energy, last_energy_update FROM player_stats WHERE user_id = $1', [userId]);
     assert.deepEqual(state.rows[0], { xp: 23, coins: 507, energy: null, last_energy_update: null });
@@ -162,11 +165,12 @@ test('T15 new character starts with $500 and reload retains it', async () => {
     await database.query('INSERT INTO auth.users (id,email,raw_user_meta_data) VALUES ($1,$2,$3)',
       [userId, `t15-${userId}@example.com`, {}]);
     const options = await module.get(OnboardingService).getOptions();
-    const request = { name: 'Wallet Learner', countryId: options.countries[0]!.id, avatarId: options.avatars[0]!.id };
+    const request = { name: 'Wallet Learner', countryId: options.countries[0]!.id };
     const players = module.get(PlayersService);
     assert.deepEqual((await players.createCharacter(userId, request)).stats, { xp: 0, coins: 500 });
     assert.deepEqual((await players.getPlayer(userId)).stats, { xp: 0, coins: 500 });
-    await assert.rejects(players.createCharacter(userId, request), /already exists/);
+    assert.deepEqual((await players.createCharacter(userId, request)).stats, { xp: 0, coins: 500 });
+    await assert.rejects(players.createCharacter(userId, { ...request, name: 'Other Wallet' }), /different character/);
     assert.deepEqual((await players.getPlayer(userId)).stats, { xp: 0, coins: 500 });
   } finally {
     await database.query('DELETE FROM auth.users WHERE id=$1', [userId]);

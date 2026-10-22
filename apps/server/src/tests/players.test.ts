@@ -45,8 +45,8 @@ test('R4 player routes reject missing and invalid bearer tokens', async () => {
   } finally { await app.close(); }
 });
 
-// Extra authority fields and noncatalog choices must fail before any database write.
-test('R4 character validation rejects forged state and unknown choices', async () => {
+// Extra authority fields and malformed names must fail before any database write.
+test('ONB-01.2 character validation rejects forged state and malformed names', async () => {
   const module = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(SupabaseTokenVerifier).useValue({ verify: async () => '11111111-1111-4111-8111-111111111111' })
     .overrideProvider(DatabaseService).useValue({
@@ -57,10 +57,11 @@ test('R4 character validation rejects forged state and unknown choices', async (
   const app = module.createNestApplication(); app.setGlobalPrefix('api/v1');
   try {
     await app.listen(0, '127.0.0.1');
-    for (const body of [{ name: ' ', countryId: 'country_unknown', avatarId: 'avatar_unknown' },
-      { name: 'Learner', countryId: 'country_unknown', avatarId: 'avatar_unknown' },
-      { name: 'Learner', countryId: 'country_unknown', avatarId: 'avatar_unknown', coins: 999 },
-      { name: 'Learner', cityId: 'city_maplewood', avatarId: 'avatar_unknown' }]) {
+    for (const body of [{ name: ' ', countryId: 'country_sweden' }, { name: 'A', countryId: 'country_sweden' },
+      { name: 'Learner', countryId: 'country_sweden', avatarId: 'avatar_unknown' },
+      { name: 'Learner', countryId: 'country_sweden', coins: 999 },
+      { name: 'Learner', countryId: 'country_sweden', worldId: 'forged' },
+      { name: 'Learner', cityId: 'city_maplewood' }]) {
       const response = await fetch(await app.getUrl() + '/api/v1/characters', { method: 'POST',
         headers: { Authorization: 'Bearer fixture', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       assert.equal(response.status, 400);

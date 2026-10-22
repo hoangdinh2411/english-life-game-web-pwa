@@ -29,7 +29,7 @@ test('life HTTP persists energy/time/outfit and atomically replays purchases, sl
       method: body === undefined ? 'GET' : 'POST', ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     assert.equal((await call('/life')).status, 409);
     const options = await (await call('/onboarding/options')).json() as { countries: { id: string }[]; avatars: { id: string }[] };
-    assert.equal((await call('/characters', { name: 'Life learner', countryId: options.countries[0]!.id, avatarId: options.avatars[0]!.id })).status, 201);
+    assert.equal((await call('/characters', { name: 'Life learner', countryId: options.countries[0]!.id })).status, 201);
     const getState = async () => {
       const response = await call('/life'); assert.equal(response.status, 200);
       return lifeStateSchema.parse(await response.json());
