@@ -2,7 +2,7 @@ import { usePreferences } from './usePreferences';
 import { useId, useState } from 'react';
 
 export function Settings({ compact = false }: { compact?: boolean }) {
-  const { sound, speechRate, speechPitch, set } = usePreferences();
+  const { sound, speechRate, set } = usePreferences();
   const [expanded, setExpanded] = useState(false);
   const id = useId();
   return <section aria-label="Settings" className={compact ? 'flex flex-wrap justify-end gap-2 lg:hidden' : 'flex flex-col gap-2'}>
@@ -17,11 +17,6 @@ export function Settings({ compact = false }: { compact?: boolean }) {
         <span>Voice speed: <strong>{speechRate.toFixed(2)}×</strong></span>
         <input id={`${id}-speech-rate`} className="h-11" type="range" min="0.75" max="1.5" step="0.05"
           value={speechRate} onChange={event => set('speechRate', Number(event.currentTarget.value))} />
-      </label>
-      <label className="grid gap-1 text-sm" htmlFor={`${id}-speech-pitch`}>
-        <span>Voice pitch: <strong>{speechPitch.toFixed(2)}×</strong></span>
-        <input id={`${id}-speech-pitch`} className="h-11" type="range" min="0.75" max="1.25" step="0.05"
-          value={speechPitch} onChange={event => set('speechPitch', Number(event.currentTarget.value))} />
       </label>
     </div> : null}
     {compact ? <button type="button" aria-label="Dialogue settings" aria-expanded={expanded} onClick={() => setExpanded(value => !value)} className="min-h-11 min-w-11 rounded-xl border-2 border-[#315749] bg-dialogue text-ink"><span aria-hidden="true">⚙</span></button> : null}

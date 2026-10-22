@@ -21,3 +21,21 @@ export const npcVoice: Record<StationSpeaker | Conversation['npcId'], VoiceGende
   npc_clothes_customer: 'female',
   ...streetNpcVoices,
 };
+
+function stableNpcHash(npcId: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < npcId.length; index += 1) {
+    hash = Math.imul(hash ^ npcId.charCodeAt(index), 16777619);
+  }
+  return hash >>> 0;
+}
+
+export function npcPlaybackSettings(npcId: string | undefined, speechRate: number): {
+  speechRate: number;
+  speechPitch: number;
+} {
+  const speechPitch = npcId
+    ? Number((0.85 + stableNpcHash(npcId) / 0xffffffff * 0.3).toFixed(4))
+    : 1;
+  return { speechRate, speechPitch };
+}

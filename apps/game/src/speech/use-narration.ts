@@ -6,6 +6,7 @@ import { createRecordedNarrator } from './recorded-narration';
 import { TOWN_STREET_NPC_IDS } from '@life-abroad/shared';
 import { preferences } from '../features/hud/usePreferences';
 import { createProcessedAudio } from './processed-audio';
+import { npcPlaybackSettings } from './npc-voice';
 function findClip(text: string, gender: VoiceGender, catalog: StationAudioCatalog): string | null {
   return catalog.find((clip) => clip.text === text && clip.gender === gender)?.asset ?? null;
 }
@@ -32,8 +33,12 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
         if (active !== null) setPlayback(current => ({ revision: active,
           progress: current.revision === active ? Math.max(current.progress, progress) : progress }));
       } };
+    const playbackSettings = () => {
+      const { speechRate } = preferences.getSnapshot();
+      return npcPlaybackSettings(npcId, speechRate);
+    };
     const fallback = createNarrator(browserVoice ? window.speechSynthesis : null,
-      (message) => new SpeechSynthesisUtterance(message), callbacks, () => preferences.getSnapshot());
+      (message) => new SpeechSynthesisUtterance(message), callbacks, playbackSettings);
     // A missing/broken authored street clip must not silently switch the NPC
     // back to the browser voice. Player-written replay can still use TTS.
     const recordedFallback = street ? { ...fallback, speak: (message: string, voiceGender: VoiceGender = 'male') => {
@@ -45,10 +50,9 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
       const catalog = audioCatalogRef.current;
       return catalog ? findClip(message, voiceGender, catalog) : null;
     }, (url) => {
-      const { speechRate, speechPitch } = preferences.getSnapshot();
-      return createProcessedAudio(url, { speechRate, speechPitch });
+      return createProcessedAudio(url, playbackSettings());
     }, recordedFallback, callbacks);
-  }, [browserVoice, street]);
+  }, [browserVoice, npcId, street]);
   useEffect(() => {
     let cancelled = false;
     setAudioCatalog(null);

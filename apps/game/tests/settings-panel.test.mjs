@@ -20,7 +20,7 @@ try {
     assert.match(html, />Sound</);
     assert.doesNotMatch(html, /Coach/);
     assert.match(html, /Voice speed:/);
-    assert.match(html, /Voice pitch:/);
+    assert.doesNotMatch(html, /Voice pitch:/);
     assert.match(html, />Close Settings</);
     assert.doesNotMatch(html, /Back to Game Menu/);
     assert.match(html, /overflow-y-auto/);

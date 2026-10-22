@@ -39,17 +39,17 @@ Finished tasks are removed to keep this board short. Git history and
 `docs/TECH.md` keep the details.
 
 - [x] **NPC-01 — Stabilize the baseline before NPC work.** Disable Vite's test
-      WebSocket so parallel tests do not contend for port 24678; keep the
-      Corner Cup portal registered while its `label` remains empty because the
-      map already renders the label; remove the invalid town `gender` schema
-      field. Verified with focused portal checks plus game and server suites.
+      WebSocket so parallel tests do not contend for port 24678; keep the Corner
+      Cup portal registered while its `label` remains empty because the map
+      already renders the label; remove the invalid town `gender` schema field.
+      Verified with focused portal checks plus game and server suites.
 
 ## NOW
 
-- [ ] **T38 — Non-pausing game menu, synchronized Settings and movement tutorial.**
-      Implement only one slice per request and stop after its checks. The menu
-      and all utility overlays must leave NPC movement and game time running;
-      they may capture player input. The approved design is
+- [ ] **T38 — Non-pausing game menu, synchronized Settings and movement
+      tutorial.** Implement only one slice per request and stop after its
+      checks. The menu and all utility overlays must leave NPC movement and game
+      time running; they may capture player input. The approved design is
       `docs/specs/2026-10-21-game-menu-tutorial-design.md`, and the executable
       plan is `docs/plans/2026-10-21-game-menu-settings-tutorial.md`.
   - [x] **T38.1 — Server preference contract and persistence.** Add validated,
@@ -73,8 +73,8 @@ Finished tasks are removed to keep this board short. Git history and
         illustrations, run responsive and behavioral checks, prove continuous
         NPC/time behavior, run repository gates and update maintained docs.
 
-- [ ] **T39 — Complete controlled NPC presence for stations and stores.**
-      Finish the partially implemented behavior in
+- [ ] **T39 — Complete controlled NPC presence for stations and stores.** Finish
+      the partially implemented behavior in
       `docs/specs/2026-10-21-controlled-npc-presence-design.md`. Implement only
       one slice per request and stop after its checks. Keep Town Street on its
       existing authored server schedules; do not change quests, rewards, store
@@ -99,12 +99,12 @@ Finished tasks are removed to keep this board short. Git history and
         arrival, directions, tutorial and patrol-boundary tests pass.
   - [x] **T39.3 — Reusable café and clothes-store configuration.** Register the
         current station café, Corner Cup and clothes shop through the common
-        venue registry. Keep required sellers/managers and current assistants
-        as bundled service NPCs; select customers from each venue's ambient
-        pool and customer-only zones. Closed stores remain inaccessible. A
-        missing optional ambient asset skips that NPC with a non-sensitive
-        diagnostic, while a missing required service definition or asset shows
-        a location-load error. Done when adding a fixture venue needs only NPC
+        venue registry. Keep required sellers/managers and current assistants as
+        bundled service NPCs; select customers from each venue's ambient pool
+        and customer-only zones. Closed stores remain inaccessible. A missing
+        optional ambient asset skips that NPC with a non-sensitive diagnostic,
+        while a missing required service definition or asset shows a
+        location-load error. Done when adding a fixture venue needs only NPC
         definitions, zones and registry data—no selector changes—and focused
         store, asset-failure and opening-hours tests pass.
   - [x] **T39.4 — Safe spawning and boundary reconciliation.** Make actor
@@ -112,10 +112,10 @@ Finished tasks are removed to keep this board short. Git history and
         never block portals, counters, desks, fitting areas or primary paths.
         Reconcile actors only when the effective seed/configuration changes;
         retain an active speaker across a bucket boundary and reconcile after
-        the conversation closes. World pause stops movement and resumes from
-        the current route position. Undersized pools return each valid NPC at
-        most once and emit a non-sensitive diagnostic. Done when focused Phaser
-        tests cover placement, exclusion, pause/resume, conversation deferral,
+        the conversation closes. World pause stops movement and resumes from the
+        current route position. Undersized pools return each valid NPC at most
+        once and emit a non-sensitive diagnostic. Done when focused Phaser tests
+        cover placement, exclusion, pause/resume, conversation deferral,
         boundary changes and undersized pools.
   - [ ] **T39.5 — Regression, responsive QA and maintained docs.** Run focused
         game/shared tests, content validation, typecheck, lint, production game
@@ -150,17 +150,17 @@ Finished tasks are removed to keep this board short. Git history and
   - [x] **S4 — Private fixed-script audio cache.** Generate one canonical file
         per cache key based on text, language, voice, style, format and TTS
         version/settings—never map, NPC ID, speed or pitch. Store private audio
-        through the asset/storage boundary, keep only references and metadata
-        in PostgreSQL, and return short-lived signed URLs to authenticated
-        players. Done when shared lines reuse a file per voice, NPC-specific
-        lines work, changed generation input invalidates the key, and retries or
-        concurrent requests do not duplicate Azure calls/files.
+        through the asset/storage boundary, keep only references and metadata in
+        PostgreSQL, and return short-lived signed URLs to authenticated players.
+        Done when shared lines reuse a file per voice, NPC-specific lines work,
+        changed generation input invalidates the key, and retries or concurrent
+        requests do not duplicate Azure calls/files.
   - [x] **S5 — AI reply audio cache.** Generate persisted AI reply text on
         demand, cache exact repeats for a configurable 30–3600 seconds, and
         never persist the source text or personal/sensitive text. Remove expired
         rows and objects. Done when exact repeats skip Azure, changed text does
-        not, expiry removes the private object, and authored script routing still
-        wins before AI fallback.
+        not, expiry removes the private object, and authored script routing
+        still wins before AI fallback.
   - [x] **S6 — Authenticated client playback integration.** Attach speech to
         authenticated conversation responses without allowing arbitrary client
         text synthesis. Cover shared, NPC-specific, opening, history and AI
@@ -176,14 +176,15 @@ Finished tasks are removed to keep this board short. Git history and
         independent controls plus fallback.
   - [ ] **S8 — End-to-end mobile verification.** With the existing test account,
         verify audio quality, response time and CPU behavior on supported mobile
-        browsers, plus fixed/AI reuse, emotion/style, signed-URL expiry and stale
-        AI cleanup. Record only concise results here by marking verified slices;
-        then collapse the completed parent into DONE.
+        browsers, plus fixed/AI reuse, emotion/style, signed-URL expiry and
+        stale AI cleanup. Record only concise results here by marking verified
+        slices; then collapse the completed parent into DONE.
     - [x] Focused automated checks: fixed/AI reuse, emotion/style mapping,
           signed-URL retry behavior and stale AI cleanup (2026-10-20).
     - [x] Authenticated Chromium check: replay works without console errors and
           dialogue has no horizontal overflow at 320/375 px (2026-10-20).
-    - [ ] Physical Android Chrome: audio quality, response time and CPU behavior.
+    - [ ] Physical Android Chrome: audio quality, response time and CPU
+          behavior.
     - [ ] Physical iOS Safari: audio quality, response time and CPU behavior.
     - [ ] Live signed-URL expiry and fixed/AI cache reuse against local storage.
 
@@ -247,15 +248,15 @@ Finished tasks are removed to keep this board short. Git history and
         as Train Station and Town Street, never Maplewood. Done when shared
         contracts, server persistence, onboarding UI, content validation,
         migration checks and focused tests pass without exposing city choice.
-  - [x] **NPC-03 — Versioned NPC profile JSONB.** Add strict
-        `profileVersion: 1` content validation and `npcs.profile jsonb` through
-        the next available forward migration. Support only authored optional
-        facts such as age, hometown, family, hobbies, favourite food,
-        likes/dislikes, conversation topics, temperament and daily routine.
-        Author distinct profiles in `content/` rather than inferring or
-        inventing facts. Done when malformed/unknown fields fail validation,
-        every NPC seeds a profile, runtime reads the database value, and a
-        missing fact cannot appear in a response.
+  - [x] **NPC-03 — Versioned NPC profile JSONB.** Add strict `profileVersion: 1`
+        content validation and `npcs.profile jsonb` through the next available
+        forward migration. Support only authored optional facts such as age,
+        hometown, family, hobbies, favourite food, likes/dislikes, conversation
+        topics, temperament and daily routine. Author distinct profiles in
+        `content/` rather than inferring or inventing facts. Done when
+        malformed/unknown fields fail validation, every NPC seeds a profile,
+        runtime reads the database value, and a missing fact cannot appear in a
+        response.
   - [x] **NPC-04 — Data-driven mood catalog and base mood.** Add editable mood
         rows for neutral, happy, hungry, stressed, tired, relaxed, sleepy, sad,
         upset and angry; NPC mood references the catalog and defaults to
@@ -283,20 +284,20 @@ Finished tasks are removed to keep this board short. Git history and
         social signals for greetings, thanks, polite requests, apologies and
         explicit insults; learner mistakes and ambiguous messages cause no
         penalty. Save relationship changes in the same transaction as the
-        conversation turn and reuse the existing message idempotency key.
-        Done when caps, expiry, apology, concurrency and replay tests pass and
-        store behaviour remains commercially identical.
-  - [x] **NPC-07 — Database-backed natural everyday dialogue.** Cover name,
-        age, origin, family, job, workplace, hobbies, food, preferences,
-        books, music, art, pets, travel, school, local places, routines,
-        current activity, plans, wellbeing, weather, thanks, apologies,
-        compliments and farewells. Recognize natural English plus common learner
-        forms such as “What you name?”, “How old you?” and “Where you from?”.
-        Render only allowlisted values loaded from database context. Street NPCs
-        may make broad small talk; store NPCs answer briefly and redirect to
-        service. Preserve every quest/order intent, price and state transition.
-        Done when exhaustive table-driven cases and all seller/quest regression
-        tests pass without fabricated facts or hard-coded location names.
+        conversation turn and reuse the existing message idempotency key. Done
+        when caps, expiry, apology, concurrency and replay tests pass and store
+        behaviour remains commercially identical.
+  - [x] **NPC-07 — Database-backed natural everyday dialogue.** Cover name, age,
+        origin, family, job, workplace, hobbies, food, preferences, books,
+        music, art, pets, travel, school, local places, routines, current
+        activity, plans, wellbeing, weather, thanks, apologies, compliments and
+        farewells. Recognize natural English plus common learner forms such as
+        “What you name?”, “How old you?” and “Where you from?”. Render only
+        allowlisted values loaded from database context. Street NPCs may make
+        broad small talk; store NPCs answer briefly and redirect to service.
+        Preserve every quest/order intent, price and state transition. Done when
+        exhaustive table-driven cases and all seller/quest regression tests pass
+        without fabricated facts or hard-coded location names.
   - [x] **NPC-08 — Adaptive response level and mood-aware delivery.** Default to
         CEFR A2 when learner data is unavailable. Combine stored learner level
         and observable input complexity, moving at most one CEFR band per turn.
@@ -309,13 +310,13 @@ Finished tasks are removed to keep this board short. Git history and
   - [x] **NPC-09 — Integration, documentation and release verification.** Merge
         the completed slices carefully with the speech/audio work; resolve
         forward-migration numbering without editing applied migrations. Update
-        `docs/GAME.md` and `docs/TECH.md` once with the durable country, profile,
-        mood, presence, relationship and dialogue contracts. Run content
-        validation, typecheck, lint, unit tests and build; run integration tests
-        only against the configured local Supabase and report unavailable
-        infrastructure honestly. Check relevant UI at 320, 375 and 1024 px.
-        Done only when the full repository gates pass and no unrelated changes
-        are included.
+        `docs/GAME.md` and `docs/TECH.md` once with the durable country,
+        profile, mood, presence, relationship and dialogue contracts. Run
+        content validation, typecheck, lint, unit tests and build; run
+        integration tests only against the configured local Supabase and report
+        unavailable infrastructure honestly. Check relevant UI at 320, 375 and
+        1024 px. Done only when the full repository gates pass and no unrelated
+        changes are included.
 
 - [ ] **T36 — ID card quest (guided, step by step).** The only guided quest: the
       Goals list shows every step: (1) go to the tax office, (2) ask a staff
@@ -354,12 +355,12 @@ Finished tasks are removed to keep this board short. Git history and
       gender: male or female, as specified; name and origin: plain text of 1 to
       60 characters). Coach corrections still apply. Check: answers kept in
       order; resume after reload; each address phrase gives `null`, and "12
-      Maple Street" is stored. - [ ] **d. Photo (upload or camera): kept in the
-      browser until the player confirms.** After the five questions the staff
-      member asks for a photo. The chat panel offers **Upload photo**, **Take
-      photo** and **Use my character picture** (skips the photo). Use a file
-      input (`accept="image/*"`, with `capture` for the camera) so it works in
-      the phone PWA and falls back to the file picker on desktop. The client
+      Maple Street" is stored. - [ ] **d. Photo (upload or camera)**: kept in
+      the browser until the player confirms.** After the five questions the
+      staff member asks for a photo. The chat panel offers **Upload photo**,
+      **Take photo** and **Use my character picture** (skips the photo). Use a
+      file input (`accept="image/*"`, with `capture` for the camera) so it works
+      in the phone PWA and falls back to the file picker on desktop. The client
       shows a preview from local memory (`URL.createObjectURL`) with "Use this"
       and "Choose another", and scales the picture down in the browser (longest
       side about 1200 px), which also keeps the upload small. **Nothing is sent
@@ -438,7 +439,7 @@ Finished tasks are removed to keep this board short. Git history and
       reload and sign-in; the NPC of the current step gets the yellow `!` tag
       and the minimap marks it. Out-of-order attempts get a friendly scripted
       hint and change nothing. Check: replay, two simultaneous requests,
-      reload. - [ ] **i. Privacy and final checks.** Name, date of birth,
+      reload. - [ ] **i. Privacy and final checks\*\* Name, date of birth,
       address, origin, the ID number and the photo are never sent to the AI
       prompt and never logged in production; account deletion removes the card
       and the photo. The flow, the photo step and the card panel say: "Use your

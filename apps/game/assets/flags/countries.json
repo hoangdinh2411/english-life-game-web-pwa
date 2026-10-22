@@ -1,0 +1,3137 @@
+[
+ {
+  "id": "country_afghanistan",
+  "name": "Afghanistan",
+  "iso": "AF",
+  "flag": "🇦🇫",
+  "timeZone": "Asia/Kabul",
+  "allTimeZones": [
+   "Asia/Kabul"
+  ],
+  "flagSvg": "flags/svg/af.svg",
+  "flagPng": "flags/png/af.png"
+ },
+ {
+  "id": "country_albania",
+  "name": "Albania",
+  "iso": "AL",
+  "flag": "🇦🇱",
+  "timeZone": "Europe/Tirane",
+  "allTimeZones": [
+   "Europe/Tirane"
+  ],
+  "flagSvg": "flags/svg/al.svg",
+  "flagPng": "flags/png/al.png"
+ },
+ {
+  "id": "country_algeria",
+  "name": "Algeria",
+  "iso": "DZ",
+  "flag": "🇩🇿",
+  "timeZone": "Africa/Algiers",
+  "allTimeZones": [
+   "Africa/Algiers"
+  ],
+  "flagSvg": "flags/svg/dz.svg",
+  "flagPng": "flags/png/dz.png"
+ },
+ {
+  "id": "country_american_samoa",
+  "name": "American Samoa",
+  "iso": "AS",
+  "flag": "🇦🇸",
+  "timeZone": "Pacific/Pago_Pago",
+  "allTimeZones": [
+   "Pacific/Pago_Pago"
+  ],
+  "flagSvg": "flags/svg/as.svg",
+  "flagPng": "flags/png/as.png"
+ },
+ {
+  "id": "country_andorra",
+  "name": "Andorra",
+  "iso": "AD",
+  "flag": "🇦🇩",
+  "timeZone": "Europe/Andorra",
+  "allTimeZones": [
+   "Europe/Andorra"
+  ],
+  "flagSvg": "flags/svg/ad.svg",
+  "flagPng": "flags/png/ad.png"
+ },
+ {
+  "id": "country_angola",
+  "name": "Angola",
+  "iso": "AO",
+  "flag": "🇦🇴",
+  "timeZone": "Africa/Luanda",
+  "allTimeZones": [
+   "Africa/Luanda"
+  ],
+  "flagSvg": "flags/svg/ao.svg",
+  "flagPng": "flags/png/ao.png"
+ },
+ {
+  "id": "country_anguilla",
+  "name": "Anguilla",
+  "iso": "AI",
+  "flag": "🇦🇮",
+  "timeZone": "America/Anguilla",
+  "allTimeZones": [
+   "America/Anguilla"
+  ],
+  "flagSvg": "flags/svg/ai.svg",
+  "flagPng": "flags/png/ai.png"
+ },
+ {
+  "id": "country_antarctica",
+  "name": "Antarctica",
+  "iso": "AQ",
+  "flag": "🇦🇶",
+  "timeZone": "Antarctica/McMurdo",
+  "allTimeZones": [
+   "Antarctica/McMurdo",
+   "Antarctica/Casey",
+   "Antarctica/Davis",
+   "Antarctica/DumontDUrville",
+   "Antarctica/Mawson",
+   "Antarctica/Palmer",
+   "Antarctica/Rothera",
+   "Antarctica/Syowa",
+   "Antarctica/Troll",
+   "Antarctica/Vostok"
+  ],
+  "flagSvg": "flags/svg/aq.svg",
+  "flagPng": "flags/png/aq.png"
+ },
+ {
+  "id": "country_antigua_and_barbuda",
+  "name": "Antigua and Barbuda",
+  "iso": "AG",
+  "flag": "🇦🇬",
+  "timeZone": "America/Antigua",
+  "allTimeZones": [
+   "America/Antigua"
+  ],
+  "flagSvg": "flags/svg/ag.svg",
+  "flagPng": "flags/png/ag.png"
+ },
+ {
+  "id": "country_argentina",
+  "name": "Argentina",
+  "iso": "AR",
+  "flag": "🇦🇷",
+  "timeZone": "America/Argentina/Buenos_Aires",
+  "allTimeZones": [
+   "America/Argentina/Buenos_Aires",
+   "America/Argentina/Cordoba",
+   "America/Argentina/Salta",
+   "America/Argentina/Jujuy",
+   "America/Argentina/Tucuman",
+   "America/Argentina/Catamarca",
+   "America/Argentina/La_Rioja",
+   "America/Argentina/San_Juan",
+   "America/Argentina/Mendoza",
+   "America/Argentina/San_Luis",
+   "America/Argentina/Rio_Gallegos",
+   "America/Argentina/Ushuaia"
+  ],
+  "flagSvg": "flags/svg/ar.svg",
+  "flagPng": "flags/png/ar.png"
+ },
+ {
+  "id": "country_armenia",
+  "name": "Armenia",
+  "iso": "AM",
+  "flag": "🇦🇲",
+  "timeZone": "Asia/Yerevan",
+  "allTimeZones": [
+   "Asia/Yerevan"
+  ],
+  "flagSvg": "flags/svg/am.svg",
+  "flagPng": "flags/png/am.png"
+ },
+ {
+  "id": "country_aruba",
+  "name": "Aruba",
+  "iso": "AW",
+  "flag": "🇦🇼",
+  "timeZone": "America/Aruba",
+  "allTimeZones": [
+   "America/Aruba"
+  ],
+  "flagSvg": "flags/svg/aw.svg",
+  "flagPng": "flags/png/aw.png"
+ },
+ {
+  "id": "country_australia",
+  "name": "Australia",
+  "iso": "AU",
+  "flag": "🇦🇺",
+  "timeZone": "Australia/Lord_Howe",
+  "allTimeZones": [
+   "Australia/Lord_Howe",
+   "Antarctica/Macquarie",
+   "Australia/Hobart",
+   "Australia/Melbourne",
+   "Australia/Sydney",
+   "Australia/Broken_Hill",
+   "Australia/Brisbane",
+   "Australia/Lindeman",
+   "Australia/Adelaide",
+   "Australia/Darwin",
+   "Australia/Perth",
+   "Australia/Eucla"
+  ],
+  "flagSvg": "flags/svg/au.svg",
+  "flagPng": "flags/png/au.png"
+ },
+ {
+  "id": "country_austria",
+  "name": "Austria",
+  "iso": "AT",
+  "flag": "🇦🇹",
+  "timeZone": "Europe/Vienna",
+  "allTimeZones": [
+   "Europe/Vienna"
+  ],
+  "flagSvg": "flags/svg/at.svg",
+  "flagPng": "flags/png/at.png"
+ },
+ {
+  "id": "country_azerbaijan",
+  "name": "Azerbaijan",
+  "iso": "AZ",
+  "flag": "🇦🇿",
+  "timeZone": "Asia/Baku",
+  "allTimeZones": [
+   "Asia/Baku"
+  ],
+  "flagSvg": "flags/svg/az.svg",
+  "flagPng": "flags/png/az.png"
+ },
+ {
+  "id": "country_bahamas",
+  "name": "Bahamas",
+  "iso": "BS",
+  "flag": "🇧🇸",
+  "timeZone": "America/Nassau",
+  "allTimeZones": [
+   "America/Nassau"
+  ],
+  "flagSvg": "flags/svg/bs.svg",
+  "flagPng": "flags/png/bs.png"
+ },
+ {
+  "id": "country_bahrain",
+  "name": "Bahrain",
+  "iso": "BH",
+  "flag": "🇧🇭",
+  "timeZone": "Asia/Bahrain",
+  "allTimeZones": [
+   "Asia/Bahrain"
+  ],
+  "flagSvg": "flags/svg/bh.svg",
+  "flagPng": "flags/png/bh.png"
+ },
+ {
+  "id": "country_bangladesh",
+  "name": "Bangladesh",
+  "iso": "BD",
+  "flag": "🇧🇩",
+  "timeZone": "Asia/Dhaka",
+  "allTimeZones": [
+   "Asia/Dhaka"
+  ],
+  "flagSvg": "flags/svg/bd.svg",
+  "flagPng": "flags/png/bd.png"
+ },
+ {
+  "id": "country_barbados",
+  "name": "Barbados",
+  "iso": "BB",
+  "flag": "🇧🇧",
+  "timeZone": "America/Barbados",
+  "allTimeZones": [
+   "America/Barbados"
+  ],
+  "flagSvg": "flags/svg/bb.svg",
+  "flagPng": "flags/png/bb.png"
+ },
+ {
+  "id": "country_belarus",
+  "name": "Belarus",
+  "iso": "BY",
+  "flag": "🇧🇾",
+  "timeZone": "Europe/Minsk",
+  "allTimeZones": [
+   "Europe/Minsk"
+  ],
+  "flagSvg": "flags/svg/by.svg",
+  "flagPng": "flags/png/by.png"
+ },
+ {
+  "id": "country_belgium",
+  "name": "Belgium",
+  "iso": "BE",
+  "flag": "🇧🇪",
+  "timeZone": "Europe/Brussels",
+  "allTimeZones": [
+   "Europe/Brussels"
+  ],
+  "flagSvg": "flags/svg/be.svg",
+  "flagPng": "flags/png/be.png"
+ },
+ {
+  "id": "country_belize",
+  "name": "Belize",
+  "iso": "BZ",
+  "flag": "🇧🇿",
+  "timeZone": "America/Belize",
+  "allTimeZones": [
+   "America/Belize"
+  ],
+  "flagSvg": "flags/svg/bz.svg",
+  "flagPng": "flags/png/bz.png"
+ },
+ {
+  "id": "country_benin",
+  "name": "Benin",
+  "iso": "BJ",
+  "flag": "🇧🇯",
+  "timeZone": "Africa/Porto-Novo",
+  "allTimeZones": [
+   "Africa/Porto-Novo"
+  ],
+  "flagSvg": "flags/svg/bj.svg",
+  "flagPng": "flags/png/bj.png"
+ },
+ {
+  "id": "country_bermuda",
+  "name": "Bermuda",
+  "iso": "BM",
+  "flag": "🇧🇲",
+  "timeZone": "Atlantic/Bermuda",
+  "allTimeZones": [
+   "Atlantic/Bermuda"
+  ],
+  "flagSvg": "flags/svg/bm.svg",
+  "flagPng": "flags/png/bm.png"
+ },
+ {
+  "id": "country_bhutan",
+  "name": "Bhutan",
+  "iso": "BT",
+  "flag": "🇧🇹",
+  "timeZone": "Asia/Thimphu",
+  "allTimeZones": [
+   "Asia/Thimphu"
+  ],
+  "flagSvg": "flags/svg/bt.svg",
+  "flagPng": "flags/png/bt.png"
+ },
+ {
+  "id": "country_bolivia",
+  "name": "Bolivia",
+  "iso": "BO",
+  "flag": "🇧🇴",
+  "timeZone": "America/La_Paz",
+  "allTimeZones": [
+   "America/La_Paz"
+  ],
+  "flagSvg": "flags/svg/bo.svg",
+  "flagPng": "flags/png/bo.png"
+ },
+ {
+  "id": "country_bonaire_sint_eustatius_and_saba",
+  "name": "Bonaire, Sint Eustatius and Saba",
+  "iso": "BQ",
+  "flag": "🇧🇶",
+  "timeZone": "America/Kralendijk",
+  "allTimeZones": [
+   "America/Kralendijk"
+  ],
+  "flagSvg": "flags/svg/bq.svg",
+  "flagPng": "flags/png/bq.png"
+ },
+ {
+  "id": "country_bosnia_and_herzegovina",
+  "name": "Bosnia and Herzegovina",
+  "iso": "BA",
+  "flag": "🇧🇦",
+  "timeZone": "Europe/Sarajevo",
+  "allTimeZones": [
+   "Europe/Sarajevo"
+  ],
+  "flagSvg": "flags/svg/ba.svg",
+  "flagPng": "flags/png/ba.png"
+ },
+ {
+  "id": "country_botswana",
+  "name": "Botswana",
+  "iso": "BW",
+  "flag": "🇧🇼",
+  "timeZone": "Africa/Gaborone",
+  "allTimeZones": [
+   "Africa/Gaborone"
+  ],
+  "flagSvg": "flags/svg/bw.svg",
+  "flagPng": "flags/png/bw.png"
+ },
+ {
+  "id": "country_brazil",
+  "name": "Brazil",
+  "iso": "BR",
+  "flag": "🇧🇷",
+  "timeZone": "America/Noronha",
+  "allTimeZones": [
+   "America/Noronha",
+   "America/Belem",
+   "America/Fortaleza",
+   "America/Recife",
+   "America/Araguaina",
+   "America/Maceio",
+   "America/Bahia",
+   "America/Sao_Paulo",
+   "America/Campo_Grande",
+   "America/Cuiaba",
+   "America/Santarem",
+   "America/Porto_Velho",
+   "America/Boa_Vista",
+   "America/Manaus",
+   "America/Eirunepe",
+   "America/Rio_Branco"
+  ],
+  "flagSvg": "flags/svg/br.svg",
+  "flagPng": "flags/png/br.png"
+ },
+ {
+  "id": "country_british_indian_ocean_territory",
+  "name": "British Indian Ocean Territory",
+  "iso": "IO",
+  "flag": "🇮🇴",
+  "timeZone": "Indian/Chagos",
+  "allTimeZones": [
+   "Indian/Chagos"
+  ],
+  "flagSvg": "flags/svg/io.svg",
+  "flagPng": "flags/png/io.png"
+ },
+ {
+  "id": "country_brunei_darussalam",
+  "name": "Brunei Darussalam",
+  "iso": "BN",
+  "flag": "🇧🇳",
+  "timeZone": "Asia/Brunei",
+  "allTimeZones": [
+   "Asia/Brunei"
+  ],
+  "flagSvg": "flags/svg/bn.svg",
+  "flagPng": "flags/png/bn.png"
+ },
+ {
+  "id": "country_bulgaria",
+  "name": "Bulgaria",
+  "iso": "BG",
+  "flag": "🇧🇬",
+  "timeZone": "Europe/Sofia",
+  "allTimeZones": [
+   "Europe/Sofia"
+  ],
+  "flagSvg": "flags/svg/bg.svg",
+  "flagPng": "flags/png/bg.png"
+ },
+ {
+  "id": "country_burkina_faso",
+  "name": "Burkina Faso",
+  "iso": "BF",
+  "flag": "🇧🇫",
+  "timeZone": "Africa/Ouagadougou",
+  "allTimeZones": [
+   "Africa/Ouagadougou"
+  ],
+  "flagSvg": "flags/svg/bf.svg",
+  "flagPng": "flags/png/bf.png"
+ },
+ {
+  "id": "country_burundi",
+  "name": "Burundi",
+  "iso": "BI",
+  "flag": "🇧🇮",
+  "timeZone": "Africa/Bujumbura",
+  "allTimeZones": [
+   "Africa/Bujumbura"
+  ],
+  "flagSvg": "flags/svg/bi.svg",
+  "flagPng": "flags/png/bi.png"
+ },
+ {
+  "id": "country_cabo_verde",
+  "name": "Cabo Verde",
+  "iso": "CV",
+  "flag": "🇨🇻",
+  "timeZone": "Atlantic/Cape_Verde",
+  "allTimeZones": [
+   "Atlantic/Cape_Verde"
+  ],
+  "flagSvg": "flags/svg/cv.svg",
+  "flagPng": "flags/png/cv.png"
+ },
+ {
+  "id": "country_cambodia",
+  "name": "Cambodia",
+  "iso": "KH",
+  "flag": "🇰🇭",
+  "timeZone": "Asia/Phnom_Penh",
+  "allTimeZones": [
+   "Asia/Phnom_Penh"
+  ],
+  "flagSvg": "flags/svg/kh.svg",
+  "flagPng": "flags/png/kh.png"
+ },
+ {
+  "id": "country_cameroon",
+  "name": "Cameroon",
+  "iso": "CM",
+  "flag": "🇨🇲",
+  "timeZone": "Africa/Douala",
+  "allTimeZones": [
+   "Africa/Douala"
+  ],
+  "flagSvg": "flags/svg/cm.svg",
+  "flagPng": "flags/png/cm.png"
+ },
+ {
+  "id": "country_canada",
+  "name": "Canada",
+  "iso": "CA",
+  "flag": "🇨🇦",
+  "timeZone": "America/St_Johns",
+  "allTimeZones": [
+   "America/St_Johns",
+   "America/Halifax",
+   "America/Glace_Bay",
+   "America/Moncton",
+   "America/Goose_Bay",
+   "America/Blanc-Sablon",
+   "America/Toronto",
+   "America/Iqaluit",
+   "America/Atikokan",
+   "America/Winnipeg",
+   "America/Resolute",
+   "America/Rankin_Inlet",
+   "America/Regina",
+   "America/Swift_Current",
+   "America/Edmonton",
+   "America/Cambridge_Bay",
+   "America/Inuvik",
+   "America/Vancouver",
+   "America/Creston",
+   "America/Dawson_Creek",
+   "America/Fort_Nelson",
+   "America/Whitehorse",
+   "America/Dawson"
+  ],
+  "flagSvg": "flags/svg/ca.svg",
+  "flagPng": "flags/png/ca.png"
+ },
+ {
+  "id": "country_cayman_islands",
+  "name": "Cayman Islands",
+  "iso": "KY",
+  "flag": "🇰🇾",
+  "timeZone": "America/Cayman",
+  "allTimeZones": [
+   "America/Cayman"
+  ],
+  "flagSvg": "flags/svg/ky.svg",
+  "flagPng": "flags/png/ky.png"
+ },
+ {
+  "id": "country_central_african_republic",
+  "name": "Central African Republic",
+  "iso": "CF",
+  "flag": "🇨🇫",
+  "timeZone": "Africa/Bangui",
+  "allTimeZones": [
+   "Africa/Bangui"
+  ],
+  "flagSvg": "flags/svg/cf.svg",
+  "flagPng": "flags/png/cf.png"
+ },
+ {
+  "id": "country_chad",
+  "name": "Chad",
+  "iso": "TD",
+  "flag": "🇹🇩",
+  "timeZone": "Africa/Ndjamena",
+  "allTimeZones": [
+   "Africa/Ndjamena"
+  ],
+  "flagSvg": "flags/svg/td.svg",
+  "flagPng": "flags/png/td.png"
+ },
+ {
+  "id": "country_chile",
+  "name": "Chile",
+  "iso": "CL",
+  "flag": "🇨🇱",
+  "timeZone": "America/Santiago",
+  "allTimeZones": [
+   "America/Santiago",
+   "America/Coyhaique",
+   "America/Punta_Arenas",
+   "Pacific/Easter"
+  ],
+  "flagSvg": "flags/svg/cl.svg",
+  "flagPng": "flags/png/cl.png"
+ },
+ {
+  "id": "country_china",
+  "name": "China",
+  "iso": "CN",
+  "flag": "🇨🇳",
+  "timeZone": "Asia/Shanghai",
+  "allTimeZones": [
+   "Asia/Shanghai",
+   "Asia/Urumqi"
+  ],
+  "flagSvg": "flags/svg/cn.svg",
+  "flagPng": "flags/png/cn.png"
+ },
+ {
+  "id": "country_christmas_island",
+  "name": "Christmas Island",
+  "iso": "CX",
+  "flag": "🇨🇽",
+  "timeZone": "Indian/Christmas",
+  "allTimeZones": [
+   "Indian/Christmas"
+  ],
+  "flagSvg": "flags/svg/cx.svg",
+  "flagPng": "flags/png/cx.png"
+ },
+ {
+  "id": "country_cocos_keeling_islands",
+  "name": "Cocos (Keeling) Islands",
+  "iso": "CC",
+  "flag": "🇨🇨",
+  "timeZone": "Indian/Cocos",
+  "allTimeZones": [
+   "Indian/Cocos"
+  ],
+  "flagSvg": "flags/svg/cc.svg",
+  "flagPng": "flags/png/cc.png"
+ },
+ {
+  "id": "country_colombia",
+  "name": "Colombia",
+  "iso": "CO",
+  "flag": "🇨🇴",
+  "timeZone": "America/Bogota",
+  "allTimeZones": [
+   "America/Bogota"
+  ],
+  "flagSvg": "flags/svg/co.svg",
+  "flagPng": "flags/png/co.png"
+ },
+ {
+  "id": "country_comoros",
+  "name": "Comoros",
+  "iso": "KM",
+  "flag": "🇰🇲",
+  "timeZone": "Indian/Comoro",
+  "allTimeZones": [
+   "Indian/Comoro"
+  ],
+  "flagSvg": "flags/svg/km.svg",
+  "flagPng": "flags/png/km.png"
+ },
+ {
+  "id": "country_congo",
+  "name": "Congo",
+  "iso": "CG",
+  "flag": "🇨🇬",
+  "timeZone": "Africa/Brazzaville",
+  "allTimeZones": [
+   "Africa/Brazzaville"
+  ],
+  "flagSvg": "flags/svg/cg.svg",
+  "flagPng": "flags/png/cg.png"
+ },
+ {
+  "id": "country_congo_the_democratic_republic_of_the",
+  "name": "Congo, The Democratic Republic of the",
+  "iso": "CD",
+  "flag": "🇨🇩",
+  "timeZone": "Africa/Kinshasa",
+  "allTimeZones": [
+   "Africa/Kinshasa",
+   "Africa/Lubumbashi"
+  ],
+  "flagSvg": "flags/svg/cd.svg",
+  "flagPng": "flags/png/cd.png"
+ },
+ {
+  "id": "country_cook_islands",
+  "name": "Cook Islands",
+  "iso": "CK",
+  "flag": "🇨🇰",
+  "timeZone": "Pacific/Rarotonga",
+  "allTimeZones": [
+   "Pacific/Rarotonga"
+  ],
+  "flagSvg": "flags/svg/ck.svg",
+  "flagPng": "flags/png/ck.png"
+ },
+ {
+  "id": "country_costa_rica",
+  "name": "Costa Rica",
+  "iso": "CR",
+  "flag": "🇨🇷",
+  "timeZone": "America/Costa_Rica",
+  "allTimeZones": [
+   "America/Costa_Rica"
+  ],
+  "flagSvg": "flags/svg/cr.svg",
+  "flagPng": "flags/png/cr.png"
+ },
+ {
+  "id": "country_croatia",
+  "name": "Croatia",
+  "iso": "HR",
+  "flag": "🇭🇷",
+  "timeZone": "Europe/Zagreb",
+  "allTimeZones": [
+   "Europe/Zagreb"
+  ],
+  "flagSvg": "flags/svg/hr.svg",
+  "flagPng": "flags/png/hr.png"
+ },
+ {
+  "id": "country_cuba",
+  "name": "Cuba",
+  "iso": "CU",
+  "flag": "🇨🇺",
+  "timeZone": "America/Havana",
+  "allTimeZones": [
+   "America/Havana"
+  ],
+  "flagSvg": "flags/svg/cu.svg",
+  "flagPng": "flags/png/cu.png"
+ },
+ {
+  "id": "country_cura_ao",
+  "name": "Curaçao",
+  "iso": "CW",
+  "flag": "🇨🇼",
+  "timeZone": "America/Curacao",
+  "allTimeZones": [
+   "America/Curacao"
+  ],
+  "flagSvg": "flags/svg/cw.svg",
+  "flagPng": "flags/png/cw.png"
+ },
+ {
+  "id": "country_cyprus",
+  "name": "Cyprus",
+  "iso": "CY",
+  "flag": "🇨🇾",
+  "timeZone": "Asia/Nicosia",
+  "allTimeZones": [
+   "Asia/Nicosia",
+   "Asia/Famagusta"
+  ],
+  "flagSvg": "flags/svg/cy.svg",
+  "flagPng": "flags/png/cy.png"
+ },
+ {
+  "id": "country_czechia",
+  "name": "Czechia",
+  "iso": "CZ",
+  "flag": "🇨🇿",
+  "timeZone": "Europe/Prague",
+  "allTimeZones": [
+   "Europe/Prague"
+  ],
+  "flagSvg": "flags/svg/cz.svg",
+  "flagPng": "flags/png/cz.png"
+ },
+ {
+  "id": "country_c_te_d_ivoire",
+  "name": "Côte d'Ivoire",
+  "iso": "CI",
+  "flag": "🇨🇮",
+  "timeZone": "Africa/Abidjan",
+  "allTimeZones": [
+   "Africa/Abidjan"
+  ],
+  "flagSvg": "flags/svg/ci.svg",
+  "flagPng": "flags/png/ci.png"
+ },
+ {
+  "id": "country_denmark",
+  "name": "Denmark",
+  "iso": "DK",
+  "flag": "🇩🇰",
+  "timeZone": "Europe/Copenhagen",
+  "allTimeZones": [
+   "Europe/Copenhagen"
+  ],
+  "flagSvg": "flags/svg/dk.svg",
+  "flagPng": "flags/png/dk.png"
+ },
+ {
+  "id": "country_djibouti",
+  "name": "Djibouti",
+  "iso": "DJ",
+  "flag": "🇩🇯",
+  "timeZone": "Africa/Djibouti",
+  "allTimeZones": [
+   "Africa/Djibouti"
+  ],
+  "flagSvg": "flags/svg/dj.svg",
+  "flagPng": "flags/png/dj.png"
+ },
+ {
+  "id": "country_dominica",
+  "name": "Dominica",
+  "iso": "DM",
+  "flag": "🇩🇲",
+  "timeZone": "America/Dominica",
+  "allTimeZones": [
+   "America/Dominica"
+  ],
+  "flagSvg": "flags/svg/dm.svg",
+  "flagPng": "flags/png/dm.png"
+ },
+ {
+  "id": "country_dominican_republic",
+  "name": "Dominican Republic",
+  "iso": "DO",
+  "flag": "🇩🇴",
+  "timeZone": "America/Santo_Domingo",
+  "allTimeZones": [
+   "America/Santo_Domingo"
+  ],
+  "flagSvg": "flags/svg/do.svg",
+  "flagPng": "flags/png/do.png"
+ },
+ {
+  "id": "country_ecuador",
+  "name": "Ecuador",
+  "iso": "EC",
+  "flag": "🇪🇨",
+  "timeZone": "America/Guayaquil",
+  "allTimeZones": [
+   "America/Guayaquil",
+   "Pacific/Galapagos"
+  ],
+  "flagSvg": "flags/svg/ec.svg",
+  "flagPng": "flags/png/ec.png"
+ },
+ {
+  "id": "country_egypt",
+  "name": "Egypt",
+  "iso": "EG",
+  "flag": "🇪🇬",
+  "timeZone": "Africa/Cairo",
+  "allTimeZones": [
+   "Africa/Cairo"
+  ],
+  "flagSvg": "flags/svg/eg.svg",
+  "flagPng": "flags/png/eg.png"
+ },
+ {
+  "id": "country_el_salvador",
+  "name": "El Salvador",
+  "iso": "SV",
+  "flag": "🇸🇻",
+  "timeZone": "America/El_Salvador",
+  "allTimeZones": [
+   "America/El_Salvador"
+  ],
+  "flagSvg": "flags/svg/sv.svg",
+  "flagPng": "flags/png/sv.png"
+ },
+ {
+  "id": "country_equatorial_guinea",
+  "name": "Equatorial Guinea",
+  "iso": "GQ",
+  "flag": "🇬🇶",
+  "timeZone": "Africa/Malabo",
+  "allTimeZones": [
+   "Africa/Malabo"
+  ],
+  "flagSvg": "flags/svg/gq.svg",
+  "flagPng": "flags/png/gq.png"
+ },
+ {
+  "id": "country_eritrea",
+  "name": "Eritrea",
+  "iso": "ER",
+  "flag": "🇪🇷",
+  "timeZone": "Africa/Asmara",
+  "allTimeZones": [
+   "Africa/Asmara"
+  ],
+  "flagSvg": "flags/svg/er.svg",
+  "flagPng": "flags/png/er.png"
+ },
+ {
+  "id": "country_estonia",
+  "name": "Estonia",
+  "iso": "EE",
+  "flag": "🇪🇪",
+  "timeZone": "Europe/Tallinn",
+  "allTimeZones": [
+   "Europe/Tallinn"
+  ],
+  "flagSvg": "flags/svg/ee.svg",
+  "flagPng": "flags/png/ee.png"
+ },
+ {
+  "id": "country_eswatini",
+  "name": "Eswatini",
+  "iso": "SZ",
+  "flag": "🇸🇿",
+  "timeZone": "Africa/Mbabane",
+  "allTimeZones": [
+   "Africa/Mbabane"
+  ],
+  "flagSvg": "flags/svg/sz.svg",
+  "flagPng": "flags/png/sz.png"
+ },
+ {
+  "id": "country_ethiopia",
+  "name": "Ethiopia",
+  "iso": "ET",
+  "flag": "🇪🇹",
+  "timeZone": "Africa/Addis_Ababa",
+  "allTimeZones": [
+   "Africa/Addis_Ababa"
+  ],
+  "flagSvg": "flags/svg/et.svg",
+  "flagPng": "flags/png/et.png"
+ },
+ {
+  "id": "country_falkland_islands_malvinas",
+  "name": "Falkland Islands (Malvinas)",
+  "iso": "FK",
+  "flag": "🇫🇰",
+  "timeZone": "Atlantic/Stanley",
+  "allTimeZones": [
+   "Atlantic/Stanley"
+  ],
+  "flagSvg": "flags/svg/fk.svg",
+  "flagPng": "flags/png/fk.png"
+ },
+ {
+  "id": "country_faroe_islands",
+  "name": "Faroe Islands",
+  "iso": "FO",
+  "flag": "🇫🇴",
+  "timeZone": "Atlantic/Faroe",
+  "allTimeZones": [
+   "Atlantic/Faroe"
+  ],
+  "flagSvg": "flags/svg/fo.svg",
+  "flagPng": "flags/png/fo.png"
+ },
+ {
+  "id": "country_fiji",
+  "name": "Fiji",
+  "iso": "FJ",
+  "flag": "🇫🇯",
+  "timeZone": "Pacific/Fiji",
+  "allTimeZones": [
+   "Pacific/Fiji"
+  ],
+  "flagSvg": "flags/svg/fj.svg",
+  "flagPng": "flags/png/fj.png"
+ },
+ {
+  "id": "country_finland",
+  "name": "Finland",
+  "iso": "FI",
+  "flag": "🇫🇮",
+  "timeZone": "Europe/Helsinki",
+  "allTimeZones": [
+   "Europe/Helsinki"
+  ],
+  "flagSvg": "flags/svg/fi.svg",
+  "flagPng": "flags/png/fi.png"
+ },
+ {
+  "id": "country_france",
+  "name": "France",
+  "iso": "FR",
+  "flag": "🇫🇷",
+  "timeZone": "Europe/Paris",
+  "allTimeZones": [
+   "Europe/Paris"
+  ],
+  "flagSvg": "flags/svg/fr.svg",
+  "flagPng": "flags/png/fr.png"
+ },
+ {
+  "id": "country_french_guiana",
+  "name": "French Guiana",
+  "iso": "GF",
+  "flag": "🇬🇫",
+  "timeZone": "America/Cayenne",
+  "allTimeZones": [
+   "America/Cayenne"
+  ],
+  "flagSvg": "flags/svg/gf.svg",
+  "flagPng": "flags/png/gf.png"
+ },
+ {
+  "id": "country_french_polynesia",
+  "name": "French Polynesia",
+  "iso": "PF",
+  "flag": "🇵🇫",
+  "timeZone": "Pacific/Tahiti",
+  "allTimeZones": [
+   "Pacific/Tahiti",
+   "Pacific/Marquesas",
+   "Pacific/Gambier"
+  ],
+  "flagSvg": "flags/svg/pf.svg",
+  "flagPng": "flags/png/pf.png"
+ },
+ {
+  "id": "country_french_southern_territories",
+  "name": "French Southern Territories",
+  "iso": "TF",
+  "flag": "🇹🇫",
+  "timeZone": "Indian/Kerguelen",
+  "allTimeZones": [
+   "Indian/Kerguelen"
+  ],
+  "flagSvg": "flags/svg/tf.svg",
+  "flagPng": "flags/png/tf.png"
+ },
+ {
+  "id": "country_gabon",
+  "name": "Gabon",
+  "iso": "GA",
+  "flag": "🇬🇦",
+  "timeZone": "Africa/Libreville",
+  "allTimeZones": [
+   "Africa/Libreville"
+  ],
+  "flagSvg": "flags/svg/ga.svg",
+  "flagPng": "flags/png/ga.png"
+ },
+ {
+  "id": "country_gambia",
+  "name": "Gambia",
+  "iso": "GM",
+  "flag": "🇬🇲",
+  "timeZone": "Africa/Banjul",
+  "allTimeZones": [
+   "Africa/Banjul"
+  ],
+  "flagSvg": "flags/svg/gm.svg",
+  "flagPng": "flags/png/gm.png"
+ },
+ {
+  "id": "country_georgia",
+  "name": "Georgia",
+  "iso": "GE",
+  "flag": "🇬🇪",
+  "timeZone": "Asia/Tbilisi",
+  "allTimeZones": [
+   "Asia/Tbilisi"
+  ],
+  "flagSvg": "flags/svg/ge.svg",
+  "flagPng": "flags/png/ge.png"
+ },
+ {
+  "id": "country_germany",
+  "name": "Germany",
+  "iso": "DE",
+  "flag": "🇩🇪",
+  "timeZone": "Europe/Berlin",
+  "allTimeZones": [
+   "Europe/Berlin",
+   "Europe/Busingen"
+  ],
+  "flagSvg": "flags/svg/de.svg",
+  "flagPng": "flags/png/de.png"
+ },
+ {
+  "id": "country_ghana",
+  "name": "Ghana",
+  "iso": "GH",
+  "flag": "🇬🇭",
+  "timeZone": "Africa/Accra",
+  "allTimeZones": [
+   "Africa/Accra"
+  ],
+  "flagSvg": "flags/svg/gh.svg",
+  "flagPng": "flags/png/gh.png"
+ },
+ {
+  "id": "country_gibraltar",
+  "name": "Gibraltar",
+  "iso": "GI",
+  "flag": "🇬🇮",
+  "timeZone": "Europe/Gibraltar",
+  "allTimeZones": [
+   "Europe/Gibraltar"
+  ],
+  "flagSvg": "flags/svg/gi.svg",
+  "flagPng": "flags/png/gi.png"
+ },
+ {
+  "id": "country_greece",
+  "name": "Greece",
+  "iso": "GR",
+  "flag": "🇬🇷",
+  "timeZone": "Europe/Athens",
+  "allTimeZones": [
+   "Europe/Athens"
+  ],
+  "flagSvg": "flags/svg/gr.svg",
+  "flagPng": "flags/png/gr.png"
+ },
+ {
+  "id": "country_greenland",
+  "name": "Greenland",
+  "iso": "GL",
+  "flag": "🇬🇱",
+  "timeZone": "America/Nuuk",
+  "allTimeZones": [
+   "America/Nuuk",
+   "America/Danmarkshavn",
+   "America/Scoresbysund",
+   "America/Thule"
+  ],
+  "flagSvg": "flags/svg/gl.svg",
+  "flagPng": "flags/png/gl.png"
+ },
+ {
+  "id": "country_grenada",
+  "name": "Grenada",
+  "iso": "GD",
+  "flag": "🇬🇩",
+  "timeZone": "America/Grenada",
+  "allTimeZones": [
+   "America/Grenada"
+  ],
+  "flagSvg": "flags/svg/gd.svg",
+  "flagPng": "flags/png/gd.png"
+ },
+ {
+  "id": "country_guadeloupe",
+  "name": "Guadeloupe",
+  "iso": "GP",
+  "flag": "🇬🇵",
+  "timeZone": "America/Guadeloupe",
+  "allTimeZones": [
+   "America/Guadeloupe"
+  ],
+  "flagSvg": "flags/svg/gp.svg",
+  "flagPng": "flags/png/gp.png"
+ },
+ {
+  "id": "country_guam",
+  "name": "Guam",
+  "iso": "GU",
+  "flag": "🇬🇺",
+  "timeZone": "Pacific/Guam",
+  "allTimeZones": [
+   "Pacific/Guam"
+  ],
+  "flagSvg": "flags/svg/gu.svg",
+  "flagPng": "flags/png/gu.png"
+ },
+ {
+  "id": "country_guatemala",
+  "name": "Guatemala",
+  "iso": "GT",
+  "flag": "🇬🇹",
+  "timeZone": "America/Guatemala",
+  "allTimeZones": [
+   "America/Guatemala"
+  ],
+  "flagSvg": "flags/svg/gt.svg",
+  "flagPng": "flags/png/gt.png"
+ },
+ {
+  "id": "country_guernsey",
+  "name": "Guernsey",
+  "iso": "GG",
+  "flag": "🇬🇬",
+  "timeZone": "Europe/Guernsey",
+  "allTimeZones": [
+   "Europe/Guernsey"
+  ],
+  "flagSvg": "flags/svg/gg.svg",
+  "flagPng": "flags/png/gg.png"
+ },
+ {
+  "id": "country_guinea",
+  "name": "Guinea",
+  "iso": "GN",
+  "flag": "🇬🇳",
+  "timeZone": "Africa/Conakry",
+  "allTimeZones": [
+   "Africa/Conakry"
+  ],
+  "flagSvg": "flags/svg/gn.svg",
+  "flagPng": "flags/png/gn.png"
+ },
+ {
+  "id": "country_guinea_bissau",
+  "name": "Guinea-Bissau",
+  "iso": "GW",
+  "flag": "🇬🇼",
+  "timeZone": "Africa/Bissau",
+  "allTimeZones": [
+   "Africa/Bissau"
+  ],
+  "flagSvg": "flags/svg/gw.svg",
+  "flagPng": "flags/png/gw.png"
+ },
+ {
+  "id": "country_guyana",
+  "name": "Guyana",
+  "iso": "GY",
+  "flag": "🇬🇾",
+  "timeZone": "America/Guyana",
+  "allTimeZones": [
+   "America/Guyana"
+  ],
+  "flagSvg": "flags/svg/gy.svg",
+  "flagPng": "flags/png/gy.png"
+ },
+ {
+  "id": "country_haiti",
+  "name": "Haiti",
+  "iso": "HT",
+  "flag": "🇭🇹",
+  "timeZone": "America/Port-au-Prince",
+  "allTimeZones": [
+   "America/Port-au-Prince"
+  ],
+  "flagSvg": "flags/svg/ht.svg",
+  "flagPng": "flags/png/ht.png"
+ },
+ {
+  "id": "country_holy_see_vatican_city_state",
+  "name": "Holy See (Vatican City State)",
+  "iso": "VA",
+  "flag": "🇻🇦",
+  "timeZone": "Europe/Vatican",
+  "allTimeZones": [
+   "Europe/Vatican"
+  ],
+  "flagSvg": "flags/svg/va.svg",
+  "flagPng": "flags/png/va.png"
+ },
+ {
+  "id": "country_honduras",
+  "name": "Honduras",
+  "iso": "HN",
+  "flag": "🇭🇳",
+  "timeZone": "America/Tegucigalpa",
+  "allTimeZones": [
+   "America/Tegucigalpa"
+  ],
+  "flagSvg": "flags/svg/hn.svg",
+  "flagPng": "flags/png/hn.png"
+ },
+ {
+  "id": "country_hong_kong",
+  "name": "Hong Kong",
+  "iso": "HK",
+  "flag": "🇭🇰",
+  "timeZone": "Asia/Hong_Kong",
+  "allTimeZones": [
+   "Asia/Hong_Kong"
+  ],
+  "flagSvg": "flags/svg/hk.svg",
+  "flagPng": "flags/png/hk.png"
+ },
+ {
+  "id": "country_hungary",
+  "name": "Hungary",
+  "iso": "HU",
+  "flag": "🇭🇺",
+  "timeZone": "Europe/Budapest",
+  "allTimeZones": [
+   "Europe/Budapest"
+  ],
+  "flagSvg": "flags/svg/hu.svg",
+  "flagPng": "flags/png/hu.png"
+ },
+ {
+  "id": "country_iceland",
+  "name": "Iceland",
+  "iso": "IS",
+  "flag": "🇮🇸",
+  "timeZone": "Atlantic/Reykjavik",
+  "allTimeZones": [
+   "Atlantic/Reykjavik"
+  ],
+  "flagSvg": "flags/svg/is.svg",
+  "flagPng": "flags/png/is.png"
+ },
+ {
+  "id": "country_india",
+  "name": "India",
+  "iso": "IN",
+  "flag": "🇮🇳",
+  "timeZone": "Asia/Kolkata",
+  "allTimeZones": [
+   "Asia/Kolkata"
+  ],
+  "flagSvg": "flags/svg/in.svg",
+  "flagPng": "flags/png/in.png"
+ },
+ {
+  "id": "country_indonesia",
+  "name": "Indonesia",
+  "iso": "ID",
+  "flag": "🇮🇩",
+  "timeZone": "Asia/Jakarta",
+  "allTimeZones": [
+   "Asia/Jakarta",
+   "Asia/Pontianak",
+   "Asia/Makassar",
+   "Asia/Jayapura"
+  ],
+  "flagSvg": "flags/svg/id.svg",
+  "flagPng": "flags/png/id.png"
+ },
+ {
+  "id": "country_iran",
+  "name": "Iran",
+  "iso": "IR",
+  "flag": "🇮🇷",
+  "timeZone": "Asia/Tehran",
+  "allTimeZones": [
+   "Asia/Tehran"
+  ],
+  "flagSvg": "flags/svg/ir.svg",
+  "flagPng": "flags/png/ir.png"
+ },
+ {
+  "id": "country_iraq",
+  "name": "Iraq",
+  "iso": "IQ",
+  "flag": "🇮🇶",
+  "timeZone": "Asia/Baghdad",
+  "allTimeZones": [
+   "Asia/Baghdad"
+  ],
+  "flagSvg": "flags/svg/iq.svg",
+  "flagPng": "flags/png/iq.png"
+ },
+ {
+  "id": "country_ireland",
+  "name": "Ireland",
+  "iso": "IE",
+  "flag": "🇮🇪",
+  "timeZone": "Europe/Dublin",
+  "allTimeZones": [
+   "Europe/Dublin"
+  ],
+  "flagSvg": "flags/svg/ie.svg",
+  "flagPng": "flags/png/ie.png"
+ },
+ {
+  "id": "country_isle_of_man",
+  "name": "Isle of Man",
+  "iso": "IM",
+  "flag": "🇮🇲",
+  "timeZone": "Europe/Isle_of_Man",
+  "allTimeZones": [
+   "Europe/Isle_of_Man"
+  ],
+  "flagSvg": "flags/svg/im.svg",
+  "flagPng": "flags/png/im.png"
+ },
+ {
+  "id": "country_israel",
+  "name": "Israel",
+  "iso": "IL",
+  "flag": "🇮🇱",
+  "timeZone": "Asia/Jerusalem",
+  "allTimeZones": [
+   "Asia/Jerusalem"
+  ],
+  "flagSvg": "flags/svg/il.svg",
+  "flagPng": "flags/png/il.png"
+ },
+ {
+  "id": "country_italy",
+  "name": "Italy",
+  "iso": "IT",
+  "flag": "🇮🇹",
+  "timeZone": "Europe/Rome",
+  "allTimeZones": [
+   "Europe/Rome"
+  ],
+  "flagSvg": "flags/svg/it.svg",
+  "flagPng": "flags/png/it.png"
+ },
+ {
+  "id": "country_jamaica",
+  "name": "Jamaica",
+  "iso": "JM",
+  "flag": "🇯🇲",
+  "timeZone": "America/Jamaica",
+  "allTimeZones": [
+   "America/Jamaica"
+  ],
+  "flagSvg": "flags/svg/jm.svg",
+  "flagPng": "flags/png/jm.png"
+ },
+ {
+  "id": "country_japan",
+  "name": "Japan",
+  "iso": "JP",
+  "flag": "🇯🇵",
+  "timeZone": "Asia/Tokyo",
+  "allTimeZones": [
+   "Asia/Tokyo"
+  ],
+  "flagSvg": "flags/svg/jp.svg",
+  "flagPng": "flags/png/jp.png"
+ },
+ {
+  "id": "country_jersey",
+  "name": "Jersey",
+  "iso": "JE",
+  "flag": "🇯🇪",
+  "timeZone": "Europe/Jersey",
+  "allTimeZones": [
+   "Europe/Jersey"
+  ],
+  "flagSvg": "flags/svg/je.svg",
+  "flagPng": "flags/png/je.png"
+ },
+ {
+  "id": "country_jordan",
+  "name": "Jordan",
+  "iso": "JO",
+  "flag": "🇯🇴",
+  "timeZone": "Asia/Amman",
+  "allTimeZones": [
+   "Asia/Amman"
+  ],
+  "flagSvg": "flags/svg/jo.svg",
+  "flagPng": "flags/png/jo.png"
+ },
+ {
+  "id": "country_kazakhstan",
+  "name": "Kazakhstan",
+  "iso": "KZ",
+  "flag": "🇰🇿",
+  "timeZone": "Asia/Almaty",
+  "allTimeZones": [
+   "Asia/Almaty",
+   "Asia/Qyzylorda",
+   "Asia/Qostanay",
+   "Asia/Aqtobe",
+   "Asia/Aqtau",
+   "Asia/Atyrau",
+   "Asia/Oral"
+  ],
+  "flagSvg": "flags/svg/kz.svg",
+  "flagPng": "flags/png/kz.png"
+ },
+ {
+  "id": "country_kenya",
+  "name": "Kenya",
+  "iso": "KE",
+  "flag": "🇰🇪",
+  "timeZone": "Africa/Nairobi",
+  "allTimeZones": [
+   "Africa/Nairobi"
+  ],
+  "flagSvg": "flags/svg/ke.svg",
+  "flagPng": "flags/png/ke.png"
+ },
+ {
+  "id": "country_kiribati",
+  "name": "Kiribati",
+  "iso": "KI",
+  "flag": "🇰🇮",
+  "timeZone": "Pacific/Tarawa",
+  "allTimeZones": [
+   "Pacific/Tarawa",
+   "Pacific/Kanton",
+   "Pacific/Kiritimati"
+  ],
+  "flagSvg": "flags/svg/ki.svg",
+  "flagPng": "flags/png/ki.png"
+ },
+ {
+  "id": "country_north_korea",
+  "name": "North Korea",
+  "iso": "KP",
+  "flag": "🇰🇵",
+  "timeZone": "Asia/Pyongyang",
+  "allTimeZones": [
+   "Asia/Pyongyang"
+  ],
+  "flagSvg": "flags/svg/kp.svg",
+  "flagPng": "flags/png/kp.png"
+ },
+ {
+  "id": "country_south_korea",
+  "name": "South Korea",
+  "iso": "KR",
+  "flag": "🇰🇷",
+  "timeZone": "Asia/Seoul",
+  "allTimeZones": [
+   "Asia/Seoul"
+  ],
+  "flagSvg": "flags/svg/kr.svg",
+  "flagPng": "flags/png/kr.png"
+ },
+ {
+  "id": "country_kuwait",
+  "name": "Kuwait",
+  "iso": "KW",
+  "flag": "🇰🇼",
+  "timeZone": "Asia/Kuwait",
+  "allTimeZones": [
+   "Asia/Kuwait"
+  ],
+  "flagSvg": "flags/svg/kw.svg",
+  "flagPng": "flags/png/kw.png"
+ },
+ {
+  "id": "country_kyrgyzstan",
+  "name": "Kyrgyzstan",
+  "iso": "KG",
+  "flag": "🇰🇬",
+  "timeZone": "Asia/Bishkek",
+  "allTimeZones": [
+   "Asia/Bishkek"
+  ],
+  "flagSvg": "flags/svg/kg.svg",
+  "flagPng": "flags/png/kg.png"
+ },
+ {
+  "id": "country_laos",
+  "name": "Laos",
+  "iso": "LA",
+  "flag": "🇱🇦",
+  "timeZone": "Asia/Vientiane",
+  "allTimeZones": [
+   "Asia/Vientiane"
+  ],
+  "flagSvg": "flags/svg/la.svg",
+  "flagPng": "flags/png/la.png"
+ },
+ {
+  "id": "country_latvia",
+  "name": "Latvia",
+  "iso": "LV",
+  "flag": "🇱🇻",
+  "timeZone": "Europe/Riga",
+  "allTimeZones": [
+   "Europe/Riga"
+  ],
+  "flagSvg": "flags/svg/lv.svg",
+  "flagPng": "flags/png/lv.png"
+ },
+ {
+  "id": "country_lebanon",
+  "name": "Lebanon",
+  "iso": "LB",
+  "flag": "🇱🇧",
+  "timeZone": "Asia/Beirut",
+  "allTimeZones": [
+   "Asia/Beirut"
+  ],
+  "flagSvg": "flags/svg/lb.svg",
+  "flagPng": "flags/png/lb.png"
+ },
+ {
+  "id": "country_lesotho",
+  "name": "Lesotho",
+  "iso": "LS",
+  "flag": "🇱🇸",
+  "timeZone": "Africa/Maseru",
+  "allTimeZones": [
+   "Africa/Maseru"
+  ],
+  "flagSvg": "flags/svg/ls.svg",
+  "flagPng": "flags/png/ls.png"
+ },
+ {
+  "id": "country_liberia",
+  "name": "Liberia",
+  "iso": "LR",
+  "flag": "🇱🇷",
+  "timeZone": "Africa/Monrovia",
+  "allTimeZones": [
+   "Africa/Monrovia"
+  ],
+  "flagSvg": "flags/svg/lr.svg",
+  "flagPng": "flags/png/lr.png"
+ },
+ {
+  "id": "country_libya",
+  "name": "Libya",
+  "iso": "LY",
+  "flag": "🇱🇾",
+  "timeZone": "Africa/Tripoli",
+  "allTimeZones": [
+   "Africa/Tripoli"
+  ],
+  "flagSvg": "flags/svg/ly.svg",
+  "flagPng": "flags/png/ly.png"
+ },
+ {
+  "id": "country_liechtenstein",
+  "name": "Liechtenstein",
+  "iso": "LI",
+  "flag": "🇱🇮",
+  "timeZone": "Europe/Vaduz",
+  "allTimeZones": [
+   "Europe/Vaduz"
+  ],
+  "flagSvg": "flags/svg/li.svg",
+  "flagPng": "flags/png/li.png"
+ },
+ {
+  "id": "country_lithuania",
+  "name": "Lithuania",
+  "iso": "LT",
+  "flag": "🇱🇹",
+  "timeZone": "Europe/Vilnius",
+  "allTimeZones": [
+   "Europe/Vilnius"
+  ],
+  "flagSvg": "flags/svg/lt.svg",
+  "flagPng": "flags/png/lt.png"
+ },
+ {
+  "id": "country_luxembourg",
+  "name": "Luxembourg",
+  "iso": "LU",
+  "flag": "🇱🇺",
+  "timeZone": "Europe/Luxembourg",
+  "allTimeZones": [
+   "Europe/Luxembourg"
+  ],
+  "flagSvg": "flags/svg/lu.svg",
+  "flagPng": "flags/png/lu.png"
+ },
+ {
+  "id": "country_macao",
+  "name": "Macao",
+  "iso": "MO",
+  "flag": "🇲🇴",
+  "timeZone": "Asia/Macau",
+  "allTimeZones": [
+   "Asia/Macau"
+  ],
+  "flagSvg": "flags/svg/mo.svg",
+  "flagPng": "flags/png/mo.png"
+ },
+ {
+  "id": "country_madagascar",
+  "name": "Madagascar",
+  "iso": "MG",
+  "flag": "🇲🇬",
+  "timeZone": "Indian/Antananarivo",
+  "allTimeZones": [
+   "Indian/Antananarivo"
+  ],
+  "flagSvg": "flags/svg/mg.svg",
+  "flagPng": "flags/png/mg.png"
+ },
+ {
+  "id": "country_malawi",
+  "name": "Malawi",
+  "iso": "MW",
+  "flag": "🇲🇼",
+  "timeZone": "Africa/Blantyre",
+  "allTimeZones": [
+   "Africa/Blantyre"
+  ],
+  "flagSvg": "flags/svg/mw.svg",
+  "flagPng": "flags/png/mw.png"
+ },
+ {
+  "id": "country_malaysia",
+  "name": "Malaysia",
+  "iso": "MY",
+  "flag": "🇲🇾",
+  "timeZone": "Asia/Kuala_Lumpur",
+  "allTimeZones": [
+   "Asia/Kuala_Lumpur",
+   "Asia/Kuching"
+  ],
+  "flagSvg": "flags/svg/my.svg",
+  "flagPng": "flags/png/my.png"
+ },
+ {
+  "id": "country_maldives",
+  "name": "Maldives",
+  "iso": "MV",
+  "flag": "🇲🇻",
+  "timeZone": "Indian/Maldives",
+  "allTimeZones": [
+   "Indian/Maldives"
+  ],
+  "flagSvg": "flags/svg/mv.svg",
+  "flagPng": "flags/png/mv.png"
+ },
+ {
+  "id": "country_mali",
+  "name": "Mali",
+  "iso": "ML",
+  "flag": "🇲🇱",
+  "timeZone": "Africa/Bamako",
+  "allTimeZones": [
+   "Africa/Bamako"
+  ],
+  "flagSvg": "flags/svg/ml.svg",
+  "flagPng": "flags/png/ml.png"
+ },
+ {
+  "id": "country_malta",
+  "name": "Malta",
+  "iso": "MT",
+  "flag": "🇲🇹",
+  "timeZone": "Europe/Malta",
+  "allTimeZones": [
+   "Europe/Malta"
+  ],
+  "flagSvg": "flags/svg/mt.svg",
+  "flagPng": "flags/png/mt.png"
+ },
+ {
+  "id": "country_marshall_islands",
+  "name": "Marshall Islands",
+  "iso": "MH",
+  "flag": "🇲🇭",
+  "timeZone": "Pacific/Majuro",
+  "allTimeZones": [
+   "Pacific/Majuro",
+   "Pacific/Kwajalein"
+  ],
+  "flagSvg": "flags/svg/mh.svg",
+  "flagPng": "flags/png/mh.png"
+ },
+ {
+  "id": "country_martinique",
+  "name": "Martinique",
+  "iso": "MQ",
+  "flag": "🇲🇶",
+  "timeZone": "America/Martinique",
+  "allTimeZones": [
+   "America/Martinique"
+  ],
+  "flagSvg": "flags/svg/mq.svg",
+  "flagPng": "flags/png/mq.png"
+ },
+ {
+  "id": "country_mauritania",
+  "name": "Mauritania",
+  "iso": "MR",
+  "flag": "🇲🇷",
+  "timeZone": "Africa/Nouakchott",
+  "allTimeZones": [
+   "Africa/Nouakchott"
+  ],
+  "flagSvg": "flags/svg/mr.svg",
+  "flagPng": "flags/png/mr.png"
+ },
+ {
+  "id": "country_mauritius",
+  "name": "Mauritius",
+  "iso": "MU",
+  "flag": "🇲🇺",
+  "timeZone": "Indian/Mauritius",
+  "allTimeZones": [
+   "Indian/Mauritius"
+  ],
+  "flagSvg": "flags/svg/mu.svg",
+  "flagPng": "flags/png/mu.png"
+ },
+ {
+  "id": "country_mayotte",
+  "name": "Mayotte",
+  "iso": "YT",
+  "flag": "🇾🇹",
+  "timeZone": "Indian/Mayotte",
+  "allTimeZones": [
+   "Indian/Mayotte"
+  ],
+  "flagSvg": "flags/svg/yt.svg",
+  "flagPng": "flags/png/yt.png"
+ },
+ {
+  "id": "country_mexico",
+  "name": "Mexico",
+  "iso": "MX",
+  "flag": "🇲🇽",
+  "timeZone": "America/Mexico_City",
+  "allTimeZones": [
+   "America/Mexico_City",
+   "America/Cancun",
+   "America/Merida",
+   "America/Monterrey",
+   "America/Matamoros",
+   "America/Chihuahua",
+   "America/Ciudad_Juarez",
+   "America/Ojinaga",
+   "America/Mazatlan",
+   "America/Bahia_Banderas",
+   "America/Hermosillo",
+   "America/Tijuana"
+  ],
+  "flagSvg": "flags/svg/mx.svg",
+  "flagPng": "flags/png/mx.png"
+ },
+ {
+  "id": "country_micronesia_federated_states_of",
+  "name": "Micronesia, Federated States of",
+  "iso": "FM",
+  "flag": "🇫🇲",
+  "timeZone": "Pacific/Chuuk",
+  "allTimeZones": [
+   "Pacific/Chuuk",
+   "Pacific/Pohnpei",
+   "Pacific/Kosrae"
+  ],
+  "flagSvg": "flags/svg/fm.svg",
+  "flagPng": "flags/png/fm.png"
+ },
+ {
+  "id": "country_moldova",
+  "name": "Moldova",
+  "iso": "MD",
+  "flag": "🇲🇩",
+  "timeZone": "Europe/Chisinau",
+  "allTimeZones": [
+   "Europe/Chisinau"
+  ],
+  "flagSvg": "flags/svg/md.svg",
+  "flagPng": "flags/png/md.png"
+ },
+ {
+  "id": "country_monaco",
+  "name": "Monaco",
+  "iso": "MC",
+  "flag": "🇲🇨",
+  "timeZone": "Europe/Monaco",
+  "allTimeZones": [
+   "Europe/Monaco"
+  ],
+  "flagSvg": "flags/svg/mc.svg",
+  "flagPng": "flags/png/mc.png"
+ },
+ {
+  "id": "country_mongolia",
+  "name": "Mongolia",
+  "iso": "MN",
+  "flag": "🇲🇳",
+  "timeZone": "Asia/Ulaanbaatar",
+  "allTimeZones": [
+   "Asia/Ulaanbaatar",
+   "Asia/Hovd"
+  ],
+  "flagSvg": "flags/svg/mn.svg",
+  "flagPng": "flags/png/mn.png"
+ },
+ {
+  "id": "country_montenegro",
+  "name": "Montenegro",
+  "iso": "ME",
+  "flag": "🇲🇪",
+  "timeZone": "Europe/Podgorica",
+  "allTimeZones": [
+   "Europe/Podgorica"
+  ],
+  "flagSvg": "flags/svg/me.svg",
+  "flagPng": "flags/png/me.png"
+ },
+ {
+  "id": "country_montserrat",
+  "name": "Montserrat",
+  "iso": "MS",
+  "flag": "🇲🇸",
+  "timeZone": "America/Montserrat",
+  "allTimeZones": [
+   "America/Montserrat"
+  ],
+  "flagSvg": "flags/svg/ms.svg",
+  "flagPng": "flags/png/ms.png"
+ },
+ {
+  "id": "country_morocco",
+  "name": "Morocco",
+  "iso": "MA",
+  "flag": "🇲🇦",
+  "timeZone": "Africa/Casablanca",
+  "allTimeZones": [
+   "Africa/Casablanca"
+  ],
+  "flagSvg": "flags/svg/ma.svg",
+  "flagPng": "flags/png/ma.png"
+ },
+ {
+  "id": "country_mozambique",
+  "name": "Mozambique",
+  "iso": "MZ",
+  "flag": "🇲🇿",
+  "timeZone": "Africa/Maputo",
+  "allTimeZones": [
+   "Africa/Maputo"
+  ],
+  "flagSvg": "flags/svg/mz.svg",
+  "flagPng": "flags/png/mz.png"
+ },
+ {
+  "id": "country_myanmar",
+  "name": "Myanmar",
+  "iso": "MM",
+  "flag": "🇲🇲",
+  "timeZone": "Asia/Yangon",
+  "allTimeZones": [
+   "Asia/Yangon"
+  ],
+  "flagSvg": "flags/svg/mm.svg",
+  "flagPng": "flags/png/mm.png"
+ },
+ {
+  "id": "country_namibia",
+  "name": "Namibia",
+  "iso": "NA",
+  "flag": "🇳🇦",
+  "timeZone": "Africa/Windhoek",
+  "allTimeZones": [
+   "Africa/Windhoek"
+  ],
+  "flagSvg": "flags/svg/na.svg",
+  "flagPng": "flags/png/na.png"
+ },
+ {
+  "id": "country_nauru",
+  "name": "Nauru",
+  "iso": "NR",
+  "flag": "🇳🇷",
+  "timeZone": "Pacific/Nauru",
+  "allTimeZones": [
+   "Pacific/Nauru"
+  ],
+  "flagSvg": "flags/svg/nr.svg",
+  "flagPng": "flags/png/nr.png"
+ },
+ {
+  "id": "country_nepal",
+  "name": "Nepal",
+  "iso": "NP",
+  "flag": "🇳🇵",
+  "timeZone": "Asia/Kathmandu",
+  "allTimeZones": [
+   "Asia/Kathmandu"
+  ],
+  "flagSvg": "flags/svg/np.svg",
+  "flagPng": "flags/png/np.png"
+ },
+ {
+  "id": "country_netherlands",
+  "name": "Netherlands",
+  "iso": "NL",
+  "flag": "🇳🇱",
+  "timeZone": "Europe/Amsterdam",
+  "allTimeZones": [
+   "Europe/Amsterdam"
+  ],
+  "flagSvg": "flags/svg/nl.svg",
+  "flagPng": "flags/png/nl.png"
+ },
+ {
+  "id": "country_new_caledonia",
+  "name": "New Caledonia",
+  "iso": "NC",
+  "flag": "🇳🇨",
+  "timeZone": "Pacific/Noumea",
+  "allTimeZones": [
+   "Pacific/Noumea"
+  ],
+  "flagSvg": "flags/svg/nc.svg",
+  "flagPng": "flags/png/nc.png"
+ },
+ {
+  "id": "country_new_zealand",
+  "name": "New Zealand",
+  "iso": "NZ",
+  "flag": "🇳🇿",
+  "timeZone": "Pacific/Auckland",
+  "allTimeZones": [
+   "Pacific/Auckland",
+   "Pacific/Chatham"
+  ],
+  "flagSvg": "flags/svg/nz.svg",
+  "flagPng": "flags/png/nz.png"
+ },
+ {
+  "id": "country_nicaragua",
+  "name": "Nicaragua",
+  "iso": "NI",
+  "flag": "🇳🇮",
+  "timeZone": "America/Managua",
+  "allTimeZones": [
+   "America/Managua"
+  ],
+  "flagSvg": "flags/svg/ni.svg",
+  "flagPng": "flags/png/ni.png"
+ },
+ {
+  "id": "country_niger",
+  "name": "Niger",
+  "iso": "NE",
+  "flag": "🇳🇪",
+  "timeZone": "Africa/Niamey",
+  "allTimeZones": [
+   "Africa/Niamey"
+  ],
+  "flagSvg": "flags/svg/ne.svg",
+  "flagPng": "flags/png/ne.png"
+ },
+ {
+  "id": "country_nigeria",
+  "name": "Nigeria",
+  "iso": "NG",
+  "flag": "🇳🇬",
+  "timeZone": "Africa/Lagos",
+  "allTimeZones": [
+   "Africa/Lagos"
+  ],
+  "flagSvg": "flags/svg/ng.svg",
+  "flagPng": "flags/png/ng.png"
+ },
+ {
+  "id": "country_niue",
+  "name": "Niue",
+  "iso": "NU",
+  "flag": "🇳🇺",
+  "timeZone": "Pacific/Niue",
+  "allTimeZones": [
+   "Pacific/Niue"
+  ],
+  "flagSvg": "flags/svg/nu.svg",
+  "flagPng": "flags/png/nu.png"
+ },
+ {
+  "id": "country_norfolk_island",
+  "name": "Norfolk Island",
+  "iso": "NF",
+  "flag": "🇳🇫",
+  "timeZone": "Pacific/Norfolk",
+  "allTimeZones": [
+   "Pacific/Norfolk"
+  ],
+  "flagSvg": "flags/svg/nf.svg",
+  "flagPng": "flags/png/nf.png"
+ },
+ {
+  "id": "country_north_macedonia",
+  "name": "North Macedonia",
+  "iso": "MK",
+  "flag": "🇲🇰",
+  "timeZone": "Europe/Skopje",
+  "allTimeZones": [
+   "Europe/Skopje"
+  ],
+  "flagSvg": "flags/svg/mk.svg",
+  "flagPng": "flags/png/mk.png"
+ },
+ {
+  "id": "country_northern_mariana_islands",
+  "name": "Northern Mariana Islands",
+  "iso": "MP",
+  "flag": "🇲🇵",
+  "timeZone": "Pacific/Saipan",
+  "allTimeZones": [
+   "Pacific/Saipan"
+  ],
+  "flagSvg": "flags/svg/mp.svg",
+  "flagPng": "flags/png/mp.png"
+ },
+ {
+  "id": "country_norway",
+  "name": "Norway",
+  "iso": "NO",
+  "flag": "🇳🇴",
+  "timeZone": "Europe/Oslo",
+  "allTimeZones": [
+   "Europe/Oslo"
+  ],
+  "flagSvg": "flags/svg/no.svg",
+  "flagPng": "flags/png/no.png"
+ },
+ {
+  "id": "country_oman",
+  "name": "Oman",
+  "iso": "OM",
+  "flag": "🇴🇲",
+  "timeZone": "Asia/Muscat",
+  "allTimeZones": [
+   "Asia/Muscat"
+  ],
+  "flagSvg": "flags/svg/om.svg",
+  "flagPng": "flags/png/om.png"
+ },
+ {
+  "id": "country_pakistan",
+  "name": "Pakistan",
+  "iso": "PK",
+  "flag": "🇵🇰",
+  "timeZone": "Asia/Karachi",
+  "allTimeZones": [
+   "Asia/Karachi"
+  ],
+  "flagSvg": "flags/svg/pk.svg",
+  "flagPng": "flags/png/pk.png"
+ },
+ {
+  "id": "country_palau",
+  "name": "Palau",
+  "iso": "PW",
+  "flag": "🇵🇼",
+  "timeZone": "Pacific/Palau",
+  "allTimeZones": [
+   "Pacific/Palau"
+  ],
+  "flagSvg": "flags/svg/pw.svg",
+  "flagPng": "flags/png/pw.png"
+ },
+ {
+  "id": "country_palestine_state_of",
+  "name": "Palestine, State of",
+  "iso": "PS",
+  "flag": "🇵🇸",
+  "timeZone": "Asia/Gaza",
+  "allTimeZones": [
+   "Asia/Gaza",
+   "Asia/Hebron"
+  ],
+  "flagSvg": "flags/svg/ps.svg",
+  "flagPng": "flags/png/ps.png"
+ },
+ {
+  "id": "country_panama",
+  "name": "Panama",
+  "iso": "PA",
+  "flag": "🇵🇦",
+  "timeZone": "America/Panama",
+  "allTimeZones": [
+   "America/Panama"
+  ],
+  "flagSvg": "flags/svg/pa.svg",
+  "flagPng": "flags/png/pa.png"
+ },
+ {
+  "id": "country_papua_new_guinea",
+  "name": "Papua New Guinea",
+  "iso": "PG",
+  "flag": "🇵🇬",
+  "timeZone": "Pacific/Port_Moresby",
+  "allTimeZones": [
+   "Pacific/Port_Moresby",
+   "Pacific/Bougainville"
+  ],
+  "flagSvg": "flags/svg/pg.svg",
+  "flagPng": "flags/png/pg.png"
+ },
+ {
+  "id": "country_paraguay",
+  "name": "Paraguay",
+  "iso": "PY",
+  "flag": "🇵🇾",
+  "timeZone": "America/Asuncion",
+  "allTimeZones": [
+   "America/Asuncion"
+  ],
+  "flagSvg": "flags/svg/py.svg",
+  "flagPng": "flags/png/py.png"
+ },
+ {
+  "id": "country_peru",
+  "name": "Peru",
+  "iso": "PE",
+  "flag": "🇵🇪",
+  "timeZone": "America/Lima",
+  "allTimeZones": [
+   "America/Lima"
+  ],
+  "flagSvg": "flags/svg/pe.svg",
+  "flagPng": "flags/png/pe.png"
+ },
+ {
+  "id": "country_philippines",
+  "name": "Philippines",
+  "iso": "PH",
+  "flag": "🇵🇭",
+  "timeZone": "Asia/Manila",
+  "allTimeZones": [
+   "Asia/Manila"
+  ],
+  "flagSvg": "flags/svg/ph.svg",
+  "flagPng": "flags/png/ph.png"
+ },
+ {
+  "id": "country_pitcairn",
+  "name": "Pitcairn",
+  "iso": "PN",
+  "flag": "🇵🇳",
+  "timeZone": "Pacific/Pitcairn",
+  "allTimeZones": [
+   "Pacific/Pitcairn"
+  ],
+  "flagSvg": "flags/svg/pn.svg",
+  "flagPng": "flags/png/pn.png"
+ },
+ {
+  "id": "country_poland",
+  "name": "Poland",
+  "iso": "PL",
+  "flag": "🇵🇱",
+  "timeZone": "Europe/Warsaw",
+  "allTimeZones": [
+   "Europe/Warsaw"
+  ],
+  "flagSvg": "flags/svg/pl.svg",
+  "flagPng": "flags/png/pl.png"
+ },
+ {
+  "id": "country_portugal",
+  "name": "Portugal",
+  "iso": "PT",
+  "flag": "🇵🇹",
+  "timeZone": "Europe/Lisbon",
+  "allTimeZones": [
+   "Europe/Lisbon",
+   "Atlantic/Madeira",
+   "Atlantic/Azores"
+  ],
+  "flagSvg": "flags/svg/pt.svg",
+  "flagPng": "flags/png/pt.png"
+ },
+ {
+  "id": "country_puerto_rico",
+  "name": "Puerto Rico",
+  "iso": "PR",
+  "flag": "🇵🇷",
+  "timeZone": "America/Puerto_Rico",
+  "allTimeZones": [
+   "America/Puerto_Rico"
+  ],
+  "flagSvg": "flags/svg/pr.svg",
+  "flagPng": "flags/png/pr.png"
+ },
+ {
+  "id": "country_qatar",
+  "name": "Qatar",
+  "iso": "QA",
+  "flag": "🇶🇦",
+  "timeZone": "Asia/Qatar",
+  "allTimeZones": [
+   "Asia/Qatar"
+  ],
+  "flagSvg": "flags/svg/qa.svg",
+  "flagPng": "flags/png/qa.png"
+ },
+ {
+  "id": "country_romania",
+  "name": "Romania",
+  "iso": "RO",
+  "flag": "🇷🇴",
+  "timeZone": "Europe/Bucharest",
+  "allTimeZones": [
+   "Europe/Bucharest"
+  ],
+  "flagSvg": "flags/svg/ro.svg",
+  "flagPng": "flags/png/ro.png"
+ },
+ {
+  "id": "country_russian_federation",
+  "name": "Russian Federation",
+  "iso": "RU",
+  "flag": "🇷🇺",
+  "timeZone": "Europe/Kaliningrad",
+  "allTimeZones": [
+   "Europe/Kaliningrad",
+   "Europe/Moscow",
+   "Europe/Kirov",
+   "Europe/Volgograd",
+   "Europe/Astrakhan",
+   "Europe/Saratov",
+   "Europe/Ulyanovsk",
+   "Europe/Samara",
+   "Asia/Yekaterinburg",
+   "Asia/Omsk",
+   "Asia/Novosibirsk",
+   "Asia/Barnaul",
+   "Asia/Tomsk",
+   "Asia/Novokuznetsk",
+   "Asia/Krasnoyarsk",
+   "Asia/Irkutsk",
+   "Asia/Chita",
+   "Asia/Yakutsk",
+   "Asia/Khandyga",
+   "Asia/Vladivostok",
+   "Asia/Ust-Nera",
+   "Asia/Magadan",
+   "Asia/Sakhalin",
+   "Asia/Srednekolymsk",
+   "Asia/Kamchatka",
+   "Asia/Anadyr"
+  ],
+  "flagSvg": "flags/svg/ru.svg",
+  "flagPng": "flags/png/ru.png"
+ },
+ {
+  "id": "country_rwanda",
+  "name": "Rwanda",
+  "iso": "RW",
+  "flag": "🇷🇼",
+  "timeZone": "Africa/Kigali",
+  "allTimeZones": [
+   "Africa/Kigali"
+  ],
+  "flagSvg": "flags/svg/rw.svg",
+  "flagPng": "flags/png/rw.png"
+ },
+ {
+  "id": "country_r_union",
+  "name": "Réunion",
+  "iso": "RE",
+  "flag": "🇷🇪",
+  "timeZone": "Indian/Reunion",
+  "allTimeZones": [
+   "Indian/Reunion"
+  ],
+  "flagSvg": "flags/svg/re.svg",
+  "flagPng": "flags/png/re.png"
+ },
+ {
+  "id": "country_saint_barth_lemy",
+  "name": "Saint Barthélemy",
+  "iso": "BL",
+  "flag": "🇧🇱",
+  "timeZone": "America/St_Barthelemy",
+  "allTimeZones": [
+   "America/St_Barthelemy"
+  ],
+  "flagSvg": "flags/svg/bl.svg",
+  "flagPng": "flags/png/bl.png"
+ },
+ {
+  "id": "country_saint_helena_ascension_and_tristan_da_cunha",
+  "name": "Saint Helena, Ascension and Tristan da Cunha",
+  "iso": "SH",
+  "flag": "🇸🇭",
+  "timeZone": "Atlantic/St_Helena",
+  "allTimeZones": [
+   "Atlantic/St_Helena"
+  ],
+  "flagSvg": "flags/svg/sh.svg",
+  "flagPng": "flags/png/sh.png"
+ },
+ {
+  "id": "country_saint_kitts_and_nevis",
+  "name": "Saint Kitts and Nevis",
+  "iso": "KN",
+  "flag": "🇰🇳",
+  "timeZone": "America/St_Kitts",
+  "allTimeZones": [
+   "America/St_Kitts"
+  ],
+  "flagSvg": "flags/svg/kn.svg",
+  "flagPng": "flags/png/kn.png"
+ },
+ {
+  "id": "country_saint_lucia",
+  "name": "Saint Lucia",
+  "iso": "LC",
+  "flag": "🇱🇨",
+  "timeZone": "America/St_Lucia",
+  "allTimeZones": [
+   "America/St_Lucia"
+  ],
+  "flagSvg": "flags/svg/lc.svg",
+  "flagPng": "flags/png/lc.png"
+ },
+ {
+  "id": "country_saint_martin_french_part",
+  "name": "Saint Martin (French part)",
+  "iso": "MF",
+  "flag": "🇲🇫",
+  "timeZone": "America/Marigot",
+  "allTimeZones": [
+   "America/Marigot"
+  ],
+  "flagSvg": "flags/svg/mf.svg",
+  "flagPng": "flags/png/mf.png"
+ },
+ {
+  "id": "country_saint_pierre_and_miquelon",
+  "name": "Saint Pierre and Miquelon",
+  "iso": "PM",
+  "flag": "🇵🇲",
+  "timeZone": "America/Miquelon",
+  "allTimeZones": [
+   "America/Miquelon"
+  ],
+  "flagSvg": "flags/svg/pm.svg",
+  "flagPng": "flags/png/pm.png"
+ },
+ {
+  "id": "country_saint_vincent_and_the_grenadines",
+  "name": "Saint Vincent and the Grenadines",
+  "iso": "VC",
+  "flag": "🇻🇨",
+  "timeZone": "America/St_Vincent",
+  "allTimeZones": [
+   "America/St_Vincent"
+  ],
+  "flagSvg": "flags/svg/vc.svg",
+  "flagPng": "flags/png/vc.png"
+ },
+ {
+  "id": "country_samoa",
+  "name": "Samoa",
+  "iso": "WS",
+  "flag": "🇼🇸",
+  "timeZone": "Pacific/Apia",
+  "allTimeZones": [
+   "Pacific/Apia"
+  ],
+  "flagSvg": "flags/svg/ws.svg",
+  "flagPng": "flags/png/ws.png"
+ },
+ {
+  "id": "country_san_marino",
+  "name": "San Marino",
+  "iso": "SM",
+  "flag": "🇸🇲",
+  "timeZone": "Europe/San_Marino",
+  "allTimeZones": [
+   "Europe/San_Marino"
+  ],
+  "flagSvg": "flags/svg/sm.svg",
+  "flagPng": "flags/png/sm.png"
+ },
+ {
+  "id": "country_sao_tome_and_principe",
+  "name": "Sao Tome and Principe",
+  "iso": "ST",
+  "flag": "🇸🇹",
+  "timeZone": "Africa/Sao_Tome",
+  "allTimeZones": [
+   "Africa/Sao_Tome"
+  ],
+  "flagSvg": "flags/svg/st.svg",
+  "flagPng": "flags/png/st.png"
+ },
+ {
+  "id": "country_saudi_arabia",
+  "name": "Saudi Arabia",
+  "iso": "SA",
+  "flag": "🇸🇦",
+  "timeZone": "Asia/Riyadh",
+  "allTimeZones": [
+   "Asia/Riyadh"
+  ],
+  "flagSvg": "flags/svg/sa.svg",
+  "flagPng": "flags/png/sa.png"
+ },
+ {
+  "id": "country_senegal",
+  "name": "Senegal",
+  "iso": "SN",
+  "flag": "🇸🇳",
+  "timeZone": "Africa/Dakar",
+  "allTimeZones": [
+   "Africa/Dakar"
+  ],
+  "flagSvg": "flags/svg/sn.svg",
+  "flagPng": "flags/png/sn.png"
+ },
+ {
+  "id": "country_serbia",
+  "name": "Serbia",
+  "iso": "RS",
+  "flag": "🇷🇸",
+  "timeZone": "Europe/Belgrade",
+  "allTimeZones": [
+   "Europe/Belgrade"
+  ],
+  "flagSvg": "flags/svg/rs.svg",
+  "flagPng": "flags/png/rs.png"
+ },
+ {
+  "id": "country_seychelles",
+  "name": "Seychelles",
+  "iso": "SC",
+  "flag": "🇸🇨",
+  "timeZone": "Indian/Mahe",
+  "allTimeZones": [
+   "Indian/Mahe"
+  ],
+  "flagSvg": "flags/svg/sc.svg",
+  "flagPng": "flags/png/sc.png"
+ },
+ {
+  "id": "country_sierra_leone",
+  "name": "Sierra Leone",
+  "iso": "SL",
+  "flag": "🇸🇱",
+  "timeZone": "Africa/Freetown",
+  "allTimeZones": [
+   "Africa/Freetown"
+  ],
+  "flagSvg": "flags/svg/sl.svg",
+  "flagPng": "flags/png/sl.png"
+ },
+ {
+  "id": "country_singapore",
+  "name": "Singapore",
+  "iso": "SG",
+  "flag": "🇸🇬",
+  "timeZone": "Asia/Singapore",
+  "allTimeZones": [
+   "Asia/Singapore"
+  ],
+  "flagSvg": "flags/svg/sg.svg",
+  "flagPng": "flags/png/sg.png"
+ },
+ {
+  "id": "country_sint_maarten_dutch_part",
+  "name": "Sint Maarten (Dutch part)",
+  "iso": "SX",
+  "flag": "🇸🇽",
+  "timeZone": "America/Lower_Princes",
+  "allTimeZones": [
+   "America/Lower_Princes"
+  ],
+  "flagSvg": "flags/svg/sx.svg",
+  "flagPng": "flags/png/sx.png"
+ },
+ {
+  "id": "country_slovakia",
+  "name": "Slovakia",
+  "iso": "SK",
+  "flag": "🇸🇰",
+  "timeZone": "Europe/Bratislava",
+  "allTimeZones": [
+   "Europe/Bratislava"
+  ],
+  "flagSvg": "flags/svg/sk.svg",
+  "flagPng": "flags/png/sk.png"
+ },
+ {
+  "id": "country_slovenia",
+  "name": "Slovenia",
+  "iso": "SI",
+  "flag": "🇸🇮",
+  "timeZone": "Europe/Ljubljana",
+  "allTimeZones": [
+   "Europe/Ljubljana"
+  ],
+  "flagSvg": "flags/svg/si.svg",
+  "flagPng": "flags/png/si.png"
+ },
+ {
+  "id": "country_solomon_islands",
+  "name": "Solomon Islands",
+  "iso": "SB",
+  "flag": "🇸🇧",
+  "timeZone": "Pacific/Guadalcanal",
+  "allTimeZones": [
+   "Pacific/Guadalcanal"
+  ],
+  "flagSvg": "flags/svg/sb.svg",
+  "flagPng": "flags/png/sb.png"
+ },
+ {
+  "id": "country_somalia",
+  "name": "Somalia",
+  "iso": "SO",
+  "flag": "🇸🇴",
+  "timeZone": "Africa/Mogadishu",
+  "allTimeZones": [
+   "Africa/Mogadishu"
+  ],
+  "flagSvg": "flags/svg/so.svg",
+  "flagPng": "flags/png/so.png"
+ },
+ {
+  "id": "country_south_africa",
+  "name": "South Africa",
+  "iso": "ZA",
+  "flag": "🇿🇦",
+  "timeZone": "Africa/Johannesburg",
+  "allTimeZones": [
+   "Africa/Johannesburg"
+  ],
+  "flagSvg": "flags/svg/za.svg",
+  "flagPng": "flags/png/za.png"
+ },
+ {
+  "id": "country_south_georgia_and_the_south_sandwich_islands",
+  "name": "South Georgia and the South Sandwich Islands",
+  "iso": "GS",
+  "flag": "🇬🇸",
+  "timeZone": "Atlantic/South_Georgia",
+  "allTimeZones": [
+   "Atlantic/South_Georgia"
+  ],
+  "flagSvg": "flags/svg/gs.svg",
+  "flagPng": "flags/png/gs.png"
+ },
+ {
+  "id": "country_south_sudan",
+  "name": "South Sudan",
+  "iso": "SS",
+  "flag": "🇸🇸",
+  "timeZone": "Africa/Juba",
+  "allTimeZones": [
+   "Africa/Juba"
+  ],
+  "flagSvg": "flags/svg/ss.svg",
+  "flagPng": "flags/png/ss.png"
+ },
+ {
+  "id": "country_spain",
+  "name": "Spain",
+  "iso": "ES",
+  "flag": "🇪🇸",
+  "timeZone": "Europe/Madrid",
+  "allTimeZones": [
+   "Europe/Madrid",
+   "Africa/Ceuta",
+   "Atlantic/Canary"
+  ],
+  "flagSvg": "flags/svg/es.svg",
+  "flagPng": "flags/png/es.png"
+ },
+ {
+  "id": "country_sri_lanka",
+  "name": "Sri Lanka",
+  "iso": "LK",
+  "flag": "🇱🇰",
+  "timeZone": "Asia/Colombo",
+  "allTimeZones": [
+   "Asia/Colombo"
+  ],
+  "flagSvg": "flags/svg/lk.svg",
+  "flagPng": "flags/png/lk.png"
+ },
+ {
+  "id": "country_sudan",
+  "name": "Sudan",
+  "iso": "SD",
+  "flag": "🇸🇩",
+  "timeZone": "Africa/Khartoum",
+  "allTimeZones": [
+   "Africa/Khartoum"
+  ],
+  "flagSvg": "flags/svg/sd.svg",
+  "flagPng": "flags/png/sd.png"
+ },
+ {
+  "id": "country_suriname",
+  "name": "Suriname",
+  "iso": "SR",
+  "flag": "🇸🇷",
+  "timeZone": "America/Paramaribo",
+  "allTimeZones": [
+   "America/Paramaribo"
+  ],
+  "flagSvg": "flags/svg/sr.svg",
+  "flagPng": "flags/png/sr.png"
+ },
+ {
+  "id": "country_svalbard_and_jan_mayen",
+  "name": "Svalbard and Jan Mayen",
+  "iso": "SJ",
+  "flag": "🇸🇯",
+  "timeZone": "Arctic/Longyearbyen",
+  "allTimeZones": [
+   "Arctic/Longyearbyen"
+  ],
+  "flagSvg": "flags/svg/sj.svg",
+  "flagPng": "flags/png/sj.png"
+ },
+ {
+  "id": "country_sweden",
+  "name": "Sweden",
+  "iso": "SE",
+  "flag": "🇸🇪",
+  "timeZone": "Europe/Stockholm",
+  "allTimeZones": [
+   "Europe/Stockholm"
+  ],
+  "flagSvg": "flags/svg/se.svg",
+  "flagPng": "flags/png/se.png"
+ },
+ {
+  "id": "country_switzerland",
+  "name": "Switzerland",
+  "iso": "CH",
+  "flag": "🇨🇭",
+  "timeZone": "Europe/Zurich",
+  "allTimeZones": [
+   "Europe/Zurich"
+  ],
+  "flagSvg": "flags/svg/ch.svg",
+  "flagPng": "flags/png/ch.png"
+ },
+ {
+  "id": "country_syria",
+  "name": "Syria",
+  "iso": "SY",
+  "flag": "🇸🇾",
+  "timeZone": "Asia/Damascus",
+  "allTimeZones": [
+   "Asia/Damascus"
+  ],
+  "flagSvg": "flags/svg/sy.svg",
+  "flagPng": "flags/png/sy.png"
+ },
+ {
+  "id": "country_taiwan",
+  "name": "Taiwan",
+  "iso": "TW",
+  "flag": "🇹🇼",
+  "timeZone": "Asia/Taipei",
+  "allTimeZones": [
+   "Asia/Taipei"
+  ],
+  "flagSvg": "flags/svg/tw.svg",
+  "flagPng": "flags/png/tw.png"
+ },
+ {
+  "id": "country_tajikistan",
+  "name": "Tajikistan",
+  "iso": "TJ",
+  "flag": "🇹🇯",
+  "timeZone": "Asia/Dushanbe",
+  "allTimeZones": [
+   "Asia/Dushanbe"
+  ],
+  "flagSvg": "flags/svg/tj.svg",
+  "flagPng": "flags/png/tj.png"
+ },
+ {
+  "id": "country_tanzania",
+  "name": "Tanzania",
+  "iso": "TZ",
+  "flag": "🇹🇿",
+  "timeZone": "Africa/Dar_es_Salaam",
+  "allTimeZones": [
+   "Africa/Dar_es_Salaam"
+  ],
+  "flagSvg": "flags/svg/tz.svg",
+  "flagPng": "flags/png/tz.png"
+ },
+ {
+  "id": "country_thailand",
+  "name": "Thailand",
+  "iso": "TH",
+  "flag": "🇹🇭",
+  "timeZone": "Asia/Bangkok",
+  "allTimeZones": [
+   "Asia/Bangkok"
+  ],
+  "flagSvg": "flags/svg/th.svg",
+  "flagPng": "flags/png/th.png"
+ },
+ {
+  "id": "country_timor_leste",
+  "name": "Timor-Leste",
+  "iso": "TL",
+  "flag": "🇹🇱",
+  "timeZone": "Asia/Dili",
+  "allTimeZones": [
+   "Asia/Dili"
+  ],
+  "flagSvg": "flags/svg/tl.svg",
+  "flagPng": "flags/png/tl.png"
+ },
+ {
+  "id": "country_togo",
+  "name": "Togo",
+  "iso": "TG",
+  "flag": "🇹🇬",
+  "timeZone": "Africa/Lome",
+  "allTimeZones": [
+   "Africa/Lome"
+  ],
+  "flagSvg": "flags/svg/tg.svg",
+  "flagPng": "flags/png/tg.png"
+ },
+ {
+  "id": "country_tokelau",
+  "name": "Tokelau",
+  "iso": "TK",
+  "flag": "🇹🇰",
+  "timeZone": "Pacific/Fakaofo",
+  "allTimeZones": [
+   "Pacific/Fakaofo"
+  ],
+  "flagSvg": "flags/svg/tk.svg",
+  "flagPng": "flags/png/tk.png"
+ },
+ {
+  "id": "country_tonga",
+  "name": "Tonga",
+  "iso": "TO",
+  "flag": "🇹🇴",
+  "timeZone": "Pacific/Tongatapu",
+  "allTimeZones": [
+   "Pacific/Tongatapu"
+  ],
+  "flagSvg": "flags/svg/to.svg",
+  "flagPng": "flags/png/to.png"
+ },
+ {
+  "id": "country_trinidad_and_tobago",
+  "name": "Trinidad and Tobago",
+  "iso": "TT",
+  "flag": "🇹🇹",
+  "timeZone": "America/Port_of_Spain",
+  "allTimeZones": [
+   "America/Port_of_Spain"
+  ],
+  "flagSvg": "flags/svg/tt.svg",
+  "flagPng": "flags/png/tt.png"
+ },
+ {
+  "id": "country_tunisia",
+  "name": "Tunisia",
+  "iso": "TN",
+  "flag": "🇹🇳",
+  "timeZone": "Africa/Tunis",
+  "allTimeZones": [
+   "Africa/Tunis"
+  ],
+  "flagSvg": "flags/svg/tn.svg",
+  "flagPng": "flags/png/tn.png"
+ },
+ {
+  "id": "country_turkmenistan",
+  "name": "Turkmenistan",
+  "iso": "TM",
+  "flag": "🇹🇲",
+  "timeZone": "Asia/Ashgabat",
+  "allTimeZones": [
+   "Asia/Ashgabat"
+  ],
+  "flagSvg": "flags/svg/tm.svg",
+  "flagPng": "flags/png/tm.png"
+ },
+ {
+  "id": "country_turks_and_caicos_islands",
+  "name": "Turks and Caicos Islands",
+  "iso": "TC",
+  "flag": "🇹🇨",
+  "timeZone": "America/Grand_Turk",
+  "allTimeZones": [
+   "America/Grand_Turk"
+  ],
+  "flagSvg": "flags/svg/tc.svg",
+  "flagPng": "flags/png/tc.png"
+ },
+ {
+  "id": "country_tuvalu",
+  "name": "Tuvalu",
+  "iso": "TV",
+  "flag": "🇹🇻",
+  "timeZone": "Pacific/Funafuti",
+  "allTimeZones": [
+   "Pacific/Funafuti"
+  ],
+  "flagSvg": "flags/svg/tv.svg",
+  "flagPng": "flags/png/tv.png"
+ },
+ {
+  "id": "country_t_rkiye",
+  "name": "Türkiye",
+  "iso": "TR",
+  "flag": "🇹🇷",
+  "timeZone": "Europe/Istanbul",
+  "allTimeZones": [
+   "Europe/Istanbul"
+  ],
+  "flagSvg": "flags/svg/tr.svg",
+  "flagPng": "flags/png/tr.png"
+ },
+ {
+  "id": "country_uganda",
+  "name": "Uganda",
+  "iso": "UG",
+  "flag": "🇺🇬",
+  "timeZone": "Africa/Kampala",
+  "allTimeZones": [
+   "Africa/Kampala"
+  ],
+  "flagSvg": "flags/svg/ug.svg",
+  "flagPng": "flags/png/ug.png"
+ },
+ {
+  "id": "country_ukraine",
+  "name": "Ukraine",
+  "iso": "UA",
+  "flag": "🇺🇦",
+  "timeZone": "Europe/Simferopol",
+  "allTimeZones": [
+   "Europe/Simferopol",
+   "Europe/Kyiv"
+  ],
+  "flagSvg": "flags/svg/ua.svg",
+  "flagPng": "flags/png/ua.png"
+ },
+ {
+  "id": "country_united_arab_emirates",
+  "name": "United Arab Emirates",
+  "iso": "AE",
+  "flag": "🇦🇪",
+  "timeZone": "Asia/Dubai",
+  "allTimeZones": [
+   "Asia/Dubai"
+  ],
+  "flagSvg": "flags/svg/ae.svg",
+  "flagPng": "flags/png/ae.png"
+ },
+ {
+  "id": "country_united_kingdom",
+  "name": "United Kingdom",
+  "iso": "GB",
+  "flag": "🇬🇧",
+  "timeZone": "Europe/London",
+  "allTimeZones": [
+   "Europe/London"
+  ],
+  "flagSvg": "flags/svg/gb.svg",
+  "flagPng": "flags/png/gb.png"
+ },
+ {
+  "id": "country_united_states",
+  "name": "United States",
+  "iso": "US",
+  "flag": "🇺🇸",
+  "timeZone": "America/New_York",
+  "allTimeZones": [
+   "America/New_York",
+   "America/Detroit",
+   "America/Kentucky/Louisville",
+   "America/Kentucky/Monticello",
+   "America/Indiana/Indianapolis",
+   "America/Indiana/Vincennes",
+   "America/Indiana/Winamac",
+   "America/Indiana/Marengo",
+   "America/Indiana/Petersburg",
+   "America/Indiana/Vevay",
+   "America/Chicago",
+   "America/Indiana/Tell_City",
+   "America/Indiana/Knox",
+   "America/Menominee",
+   "America/North_Dakota/Center",
+   "America/North_Dakota/New_Salem",
+   "America/North_Dakota/Beulah",
+   "America/Denver",
+   "America/Boise",
+   "America/Phoenix",
+   "America/Los_Angeles",
+   "America/Anchorage",
+   "America/Juneau",
+   "America/Sitka",
+   "America/Metlakatla",
+   "America/Yakutat",
+   "America/Nome",
+   "America/Adak",
+   "Pacific/Honolulu"
+  ],
+  "flagSvg": "flags/svg/us.svg",
+  "flagPng": "flags/png/us.png"
+ },
+ {
+  "id": "country_united_states_minor_outlying_islands",
+  "name": "United States Minor Outlying Islands",
+  "iso": "UM",
+  "flag": "🇺🇲",
+  "timeZone": "Pacific/Midway",
+  "allTimeZones": [
+   "Pacific/Midway",
+   "Pacific/Wake"
+  ],
+  "flagSvg": "flags/svg/um.svg",
+  "flagPng": "flags/png/um.png"
+ },
+ {
+  "id": "country_uruguay",
+  "name": "Uruguay",
+  "iso": "UY",
+  "flag": "🇺🇾",
+  "timeZone": "America/Montevideo",
+  "allTimeZones": [
+   "America/Montevideo"
+  ],
+  "flagSvg": "flags/svg/uy.svg",
+  "flagPng": "flags/png/uy.png"
+ },
+ {
+  "id": "country_uzbekistan",
+  "name": "Uzbekistan",
+  "iso": "UZ",
+  "flag": "🇺🇿",
+  "timeZone": "Asia/Samarkand",
+  "allTimeZones": [
+   "Asia/Samarkand",
+   "Asia/Tashkent"
+  ],
+  "flagSvg": "flags/svg/uz.svg",
+  "flagPng": "flags/png/uz.png"
+ },
+ {
+  "id": "country_vanuatu",
+  "name": "Vanuatu",
+  "iso": "VU",
+  "flag": "🇻🇺",
+  "timeZone": "Pacific/Efate",
+  "allTimeZones": [
+   "Pacific/Efate"
+  ],
+  "flagSvg": "flags/svg/vu.svg",
+  "flagPng": "flags/png/vu.png"
+ },
+ {
+  "id": "country_venezuela",
+  "name": "Venezuela",
+  "iso": "VE",
+  "flag": "🇻🇪",
+  "timeZone": "America/Caracas",
+  "allTimeZones": [
+   "America/Caracas"
+  ],
+  "flagSvg": "flags/svg/ve.svg",
+  "flagPng": "flags/png/ve.png"
+ },
+ {
+  "id": "country_vietnam",
+  "name": "Vietnam",
+  "iso": "VN",
+  "flag": "🇻🇳",
+  "timeZone": "Asia/Ho_Chi_Minh",
+  "allTimeZones": [
+   "Asia/Ho_Chi_Minh"
+  ],
+  "flagSvg": "flags/svg/vn.svg",
+  "flagPng": "flags/png/vn.png"
+ },
+ {
+  "id": "country_virgin_islands_british",
+  "name": "Virgin Islands, British",
+  "iso": "VG",
+  "flag": "🇻🇬",
+  "timeZone": "America/Tortola",
+  "allTimeZones": [
+   "America/Tortola"
+  ],
+  "flagSvg": "flags/svg/vg.svg",
+  "flagPng": "flags/png/vg.png"
+ },
+ {
+  "id": "country_virgin_islands_u_s",
+  "name": "Virgin Islands, U.S.",
+  "iso": "VI",
+  "flag": "🇻🇮",
+  "timeZone": "America/St_Thomas",
+  "allTimeZones": [
+   "America/St_Thomas"
+  ],
+  "flagSvg": "flags/svg/vi.svg",
+  "flagPng": "flags/png/vi.png"
+ },
+ {
+  "id": "country_wallis_and_futuna",
+  "name": "Wallis and Futuna",
+  "iso": "WF",
+  "flag": "🇼🇫",
+  "timeZone": "Pacific/Wallis",
+  "allTimeZones": [
+   "Pacific/Wallis"
+  ],
+  "flagSvg": "flags/svg/wf.svg",
+  "flagPng": "flags/png/wf.png"
+ },
+ {
+  "id": "country_western_sahara",
+  "name": "Western Sahara",
+  "iso": "EH",
+  "flag": "🇪🇭",
+  "timeZone": "Africa/El_Aaiun",
+  "allTimeZones": [
+   "Africa/El_Aaiun"
+  ],
+  "flagSvg": "flags/svg/eh.svg",
+  "flagPng": "flags/png/eh.png"
+ },
+ {
+  "id": "country_yemen",
+  "name": "Yemen",
+  "iso": "YE",
+  "flag": "🇾🇪",
+  "timeZone": "Asia/Aden",
+  "allTimeZones": [
+   "Asia/Aden"
+  ],
+  "flagSvg": "flags/svg/ye.svg",
+  "flagPng": "flags/png/ye.png"
+ },
+ {
+  "id": "country_zambia",
+  "name": "Zambia",
+  "iso": "ZM",
+  "flag": "🇿🇲",
+  "timeZone": "Africa/Lusaka",
+  "allTimeZones": [
+   "Africa/Lusaka"
+  ],
+  "flagSvg": "flags/svg/zm.svg",
+  "flagPng": "flags/png/zm.png"
+ },
+ {
+  "id": "country_zimbabwe",
+  "name": "Zimbabwe",
+  "iso": "ZW",
+  "flag": "🇿🇼",
+  "timeZone": "Africa/Harare",
+  "allTimeZones": [
+   "Africa/Harare"
+  ],
+  "flagSvg": "flags/svg/zw.svg",
+  "flagPng": "flags/png/zw.png"
+ },
+ {
+  "id": "country_land_islands",
+  "name": "Åland Islands",
+  "iso": "AX",
+  "flag": "🇦🇽",
+  "timeZone": "Europe/Mariehamn",
+  "allTimeZones": [
+   "Europe/Mariehamn"
+  ],
+  "flagSvg": "flags/svg/ax.svg",
+  "flagPng": "flags/png/ax.png"
+ }
+]
