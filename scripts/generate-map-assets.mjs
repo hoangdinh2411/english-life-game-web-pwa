@@ -7,6 +7,11 @@ import { fileURLToPath } from 'node:url';
 const localAssetRoot = fileURLToPath(new URL('../local-assets/maps/', import.meta.url));
 const streetNpcDataUrl = new URL('../content/seed/street-npcs.json', import.meta.url);
 const npcDataUrl = new URL('../content/seed/npcs.json', import.meta.url);
+const bundledServiceNpcIds = new Set([
+  'npc_mia', 'npc_cafe_waiter',
+  'npc_corner_cup_seller', 'npc_corner_cup_assistant',
+  'npc_clothes_seller', 'npc_clothes_assistant',
+]);
 
 function npcWalkAtlas(outputName) {
   const frame = (column, row) => ({ frame: { x: column * 96, y: row * 171, w: 96, h: 171 }, rotated: false, trimmed: false,
@@ -87,6 +92,10 @@ async function mapAssets(mapId) {
     for (const actor of actors) {
       const npc = byId.get(actor.npcId);
       if (!npc?.walkImageUrl) throw new Error(`${actor.npcId} is missing its walking asset`);
+      if (bundledServiceNpcIds.has(actor.npcId)) {
+        actorData.push({ ...actor, frame: 'walk', texture: `service-${actor.npcId}`, scale: 0.6 });
+        continue;
+      }
       const key = `npc-${actor.npcId}`;
       const filename = `${key}.png`;
       assets.push(

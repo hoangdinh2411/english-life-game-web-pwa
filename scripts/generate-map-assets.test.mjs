@@ -12,12 +12,13 @@ test('saveMapAssets packages existing artwork without replacing it with SVG plac
     assert.equal(typeof generator.saveMapAssets, 'function');
     const directory = await generator.saveMapAssets('loc_cafe', rootDirectory);
     assert.equal(directory, join(rootDirectory, 'loc_cafe'));
-    assert.equal((await readdir(directory)).length, 13);
+    assert.equal((await readdir(directory)).length, 7);
     assert.deepEqual(await readFile(join(directory, 'background.png')), await readFile(new URL('../apps/game/assets/locations/location_cafe_interior.png', import.meta.url)));
     assert.deepEqual(await readFile(join(directory, 'player.png')), await readFile(new URL('../apps/game/assets/runtime/player.png', import.meta.url)));
-    assert.deepEqual(await readFile(join(directory, 'npc-npc_mia.png')), await readFile(new URL('../apps/game/assets/npcs/npc_mia/walk.png', import.meta.url)));
-    assert.deepEqual(await readFile(join(directory, 'portrait-npc_mia.png')), await readFile(new URL('../apps/game/assets/npcs/npc_mia/portraits.png', import.meta.url)));
-    assert.equal(JSON.parse(await readFile(join(directory, 'actors.json'), 'utf8')).actors.length, 3);
+    const actors = JSON.parse(await readFile(join(directory, 'actors.json'), 'utf8')).actors;
+    assert.equal(actors.length, 3);
+    assert.equal(actors.find(actor => actor.npcId === 'npc_mia').texture, 'service-npc_mia');
+    assert.ok(!(await readdir(directory)).includes('npc-npc_mia.png'));
     assert.equal(JSON.parse(await readFile(join(directory, 'animations.json'), 'utf8')).animations.length, 4);
   } finally {
     await rm(rootDirectory, { recursive: true, force: true });

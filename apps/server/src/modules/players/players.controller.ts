@@ -1,5 +1,18 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { createCharacterSchema, playerLocationSchema, type CreateCharacterRequest, type PlayerLocation, type PlayerResponse, type PlayerState } from '@life-abroad/shared';
+import {
+  createCharacterSchema,
+  playerLocationSchema,
+  playerPreferencesInitializeSchema,
+  playerPreferencesUpdateSchema,
+  type CreateCharacterRequest,
+  type PlayerLocation,
+  type PlayerPreferences,
+  type PlayerPreferencesInitialize,
+  type PlayerPreferencesRead,
+  type PlayerPreferencesUpdate,
+  type PlayerResponse,
+  type PlayerState,
+} from '@life-abroad/shared';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { PlayersService } from './players.service';
@@ -23,5 +36,22 @@ export class PlayersController {
   saveLocation(@CurrentUser() userId: string,
     @Body(new SchemaValidationPipe(playerLocationSchema)) location: PlayerLocation): Promise<PlayerLocation> {
     return this.players.saveLocation(userId, location);
+  }
+
+  @Get('players/preferences')
+  getPreferences(@CurrentUser() userId: string): Promise<PlayerPreferencesRead> {
+    return this.players.getPreferences(userId);
+  }
+
+  @Post('players/preferences/initialize')
+  initializePreferences(@CurrentUser() userId: string,
+    @Body(new SchemaValidationPipe(playerPreferencesInitializeSchema)) preferences: PlayerPreferencesInitialize): Promise<PlayerPreferences> {
+    return this.players.initializePreferences(userId, preferences);
+  }
+
+  @Post('players/preferences')
+  updatePreferences(@CurrentUser() userId: string,
+    @Body(new SchemaValidationPipe(playerPreferencesUpdateSchema)) preferences: PlayerPreferencesUpdate): Promise<PlayerPreferences> {
+    return this.players.updatePreferences(userId, preferences);
   }
 }

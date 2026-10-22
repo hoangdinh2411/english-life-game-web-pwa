@@ -127,6 +127,7 @@ export default function StationScreen({
         presentNpcIds={presence.presentNpcIds}
         {...(!practice && life ? {
           getGameTime: () => life.time,
+          getTimeZone: () => presence.timeZone,
           onStoreClosed: (store) => setClosedStore(store),
         } : {})}
         conversationNpcId={npcId}

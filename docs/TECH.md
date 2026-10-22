@@ -74,6 +74,25 @@ shared with the server belong in `packages/shared`, not Phaser scenes. The
 not in a separate sweeping refactor. Do not confuse React local practice state
 with the server-owned ticket and rewards.
 
+### Adding a venue's NPC roster
+
+`apps/game/src/features/npcs/controlled-presence.ts` owns the shared time
+buckets, validated venue contract and seeded ambient selection. Its seed uses
+the selected country's local game date and time bucket; missing or invalid time
+data deterministically falls back to `2000-01-01` in the daytime bucket.
+Venue-specific service staff,
+ambient pools, limits and safe spawn/exclusion geometry live in
+`apps/game/src/features/shops/venue-npc-config.ts`. To add a store, add its NPC
+content/assets, register one validated venue configuration, and author safe
+actor coordinates; do not add a second selection algorithm. Store opening
+hours remain in `features/shops/shop-navigation.ts`.
+
+Required store staff use bundled atlases from
+`features/shops/service-npc-assets.ts`; generated map packs retain actor
+placement but omit those staff images. Customers may remain map-pack assets.
+Town Street continues to use server-authored weekly presence schedules rather
+than controlled randomness.
+
 **Server: NestJS domain modules.** Build only modules required by the current
 task, each with its own controller/service/repository **as needed**:
 

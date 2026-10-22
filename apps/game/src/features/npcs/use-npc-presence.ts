@@ -5,11 +5,13 @@ import { useSession } from '../../session/session-provider';
 export function useNpcPresence(mapId: string, enabled: boolean, online: boolean, clockRate: number) {
   const { runAuthenticated: run } = useSession();
   const [presentNpcIds, setPresentNpcIds] = useState<readonly string[]>([]);
+  const [timeZone, setTimeZone] = useState<string | null>(null);
   const refresh = useCallback(async () => {
     if (!enabled || !online) { setPresentNpcIds([]); return; }
     try {
       const presence = await run(token => loadNpcPresence(token, mapId));
       setPresentNpcIds(presence.presentNpcIds);
+      setTimeZone(presence.timeZone);
       return presence;
     } catch {
       setPresentNpcIds([]);
@@ -31,5 +33,5 @@ export function useNpcPresence(mapId: string, enabled: boolean, online: boolean,
     return () => { cancelled = true; if (timer !== undefined) window.clearTimeout(timer); };
   }, [clockRate, refresh]);
 
-  return { presentNpcIds, refresh };
+  return { presentNpcIds, timeZone, refresh };
 }

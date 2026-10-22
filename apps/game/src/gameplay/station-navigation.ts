@@ -4,6 +4,7 @@ import type {
   StationNpc,
   StationPortal,
 } from "../types/gameplay/world";
+import { STATION_ROSTER } from "../features/station/station-roster";
 
 export const STREET_MAP_SCALE = 1.5;
 export const STREET_MAP_SIZE = {
@@ -139,29 +140,7 @@ export function moveOnStreet(point: Point, delta: Point): Point {
   return result;
 }
 
-export const STATION_NPCS: StationNpc[] = [
-  {
-    id: "npc_passenger_backpack",
-    name: "Peter",
-    texture: "backpack",
-    x: 592,
-    y: 380,
-  },
-  {
-    id: "npc_passenger_suitcase",
-    name: "Emma",
-    texture: "suitcase",
-    x: 950,
-    y: 380,
-  },
-  {
-    id: "npc_station_information",
-    name: "Ruth",
-    texture: "receptionist",
-    x: 850,
-    y: 615,
-  },
-];
+export const STATION_NPCS: StationNpc[] = STATION_ROSTER.map(npc => ({ ...npc }));
 export const STATION_PORTALS: StationPortal[] = [
   { id: "cafe", label: "Café", x: 420, y: 750 },
   { id: "clothes", label: "Clothes Shop", x: 1090, y: 750 },

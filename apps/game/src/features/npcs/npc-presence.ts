@@ -11,3 +11,7 @@ export function syncNpcPresence(target: NpcPresenceTarget | null, ids: readonly 
 export function npcIsVisible(location: MapLocation, npcId: string, presentNpcIds: ReadonlySet<string> | null): boolean {
   return location === 'station' || presentNpcIds === null || presentNpcIds.has(npcId);
 }
+
+export function effectiveNpcIds(selectedIds: readonly string[], conversationNpcId: string | null): ReadonlySet<string> {
+  return new Set(conversationNpcId === null ? selectedIds : [...selectedIds, conversationNpcId]);
+}

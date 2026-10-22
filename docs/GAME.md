@@ -64,9 +64,11 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   timing and never implies anger or friendliness.
 - Authored weekly NPC schedules use the selected country's local game time and
   support split and overnight shifts. Street residents without schedules are
-  absent; shop actors remain constrained by venue hours. The client displays
-  and enables only the server presence allowlist, while conversations already
-  in progress may finish after a schedule boundary.
+  absent. Station passengers and shop customers use deterministic controlled
+  presence based on game date, location and morning/daytime/evening bucket, so
+  repeated entry does not reroll a location. Required service staff remain
+  present while an accessible venue is open, and conversations already in
+  progress may finish after a presence boundary.
 - Each player builds a separate relationship with each NPC. Familiarity and
   affinity change slowly from explicit greetings, thanks, polite requests,
   apologies and insults. Ambiguous language and learner mistakes do not count.
@@ -89,7 +91,7 @@ problems. English is a tool to accomplish a task, not a multiple-choice test.
   owner's dialogue with opening hours. The pause menu does not list
   opening-hour schedules.
 - The existing Phaser **train station** is playable local practice with a
-  receptionist and two passengers, sample conversations,
+  receptionist and one or two passengers selected from three identities, sample conversations,
   movement/portals, recorded audio, and optional browser speech-to-text. Its
   current receptionist asks about an **ID card**, and its street exit is
   unlocked by that conversation—not by a bus ticket. This is **legacy practice

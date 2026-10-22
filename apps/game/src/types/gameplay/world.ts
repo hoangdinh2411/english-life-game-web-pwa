@@ -14,6 +14,8 @@ export interface StationNpc extends Point {
   id: string;
   name: string;
   texture: string;
+  scale?: number;
+  patrol?: { points: readonly Point[]; startWaypoint: number };
 }
 export interface StationPortal extends Point {
   id: string;
@@ -49,6 +51,7 @@ export interface StationCallbacks {
   onPlaceChange?: (location: PlayerLocation) => void;
   onError: (message: string) => void;
   getGameTime?: () => Date | null;
+  getTimeZone?: () => string | null;
   onStoreClosed?: (location: StoreLocation) => void;
   onExitBlocked: () => void;
 }
@@ -82,5 +85,6 @@ export interface GameCanvasProps {
   presentNpcIds?: readonly string[];
   onPlaceChange?: (location: PlayerLocation) => void;
   getGameTime?: () => Date | null;
+  getTimeZone?: () => string | null;
   onStoreClosed?: (location: StoreLocation) => void;
 }

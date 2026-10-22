@@ -1,5 +1,15 @@
 import { ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
-import type { CountryCatalogEntry, CreateCharacterRequest, PlayerLocation, PlayerResponse, PlayerState } from '@life-abroad/shared';
+import type {
+  CountryCatalogEntry,
+  CreateCharacterRequest,
+  PlayerLocation,
+  PlayerPreferences,
+  PlayerPreferencesInitialize,
+  PlayerPreferencesRead,
+  PlayerPreferencesUpdate,
+  PlayerResponse,
+  PlayerState,
+} from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { EconomyService } from '../economy/economy.service';
@@ -10,6 +20,22 @@ interface PlayerRow {
   current_map_id: string | null; current_place_id: string | null;
   current_position_x: number | null; current_position_y: number | null;
   xp: number | null; coins: number | null;
+}
+
+interface PlayerPreferencesRow {
+  coach_enabled: boolean;
+  speech_rate: number;
+  speech_pitch: number;
+  updated_at: Date | string;
+}
+
+function mapPreferences(row: PlayerPreferencesRow): PlayerPreferences {
+  return {
+    coachEnabled: row.coach_enabled,
+    speechRate: row.speech_rate,
+    speechPitch: row.speech_pitch,
+    updatedAt: row.updated_at instanceof Date ? row.updated_at.toISOString() : new Date(row.updated_at).toISOString(),
+  };
 }
 
 @Injectable()
@@ -42,6 +68,50 @@ export class PlayersRepository {
     );
     if (result.rowCount !== 1) throw new ServiceUnavailableException('Character state is unavailable');
     return location;
+  }
+
+  async getPreferences(userId: string): Promise<PlayerPreferencesRead> {
+    const result = await this.database.query<PlayerPreferencesRow>(
+      `SELECT coach_enabled, speech_rate, speech_pitch, updated_at
+       FROM public.player_preferences WHERE user_id = $1`,
+      [userId],
+    );
+    return { preferences: result.rows[0] ? mapPreferences(result.rows[0]) : null };
+  }
+
+  async initializePreferences(userId: string, preferences: PlayerPreferencesInitialize): Promise<PlayerPreferences> {
+    return this.database.transaction(async client => {
+      await client.query(
+        `INSERT INTO public.player_preferences (user_id, coach_enabled, speech_rate, speech_pitch)
+         VALUES ($1, $2, $3, $4) ON CONFLICT (user_id) DO NOTHING`,
+        [userId, preferences.coachEnabled, preferences.speechRate, preferences.speechPitch],
+      );
+      const result = await client.query<PlayerPreferencesRow>(
+        `SELECT coach_enabled, speech_rate, speech_pitch, updated_at
+         FROM public.player_preferences WHERE user_id = $1`,
+        [userId],
+      );
+      const row = result.rows[0];
+      if (!row) throw new ServiceUnavailableException('Player preferences are unavailable');
+      return mapPreferences(row);
+    });
+  }
+
+  async updatePreferences(userId: string, preferences: PlayerPreferencesUpdate): Promise<PlayerPreferences> {
+    const result = await this.database.query<PlayerPreferencesRow>(
+      `INSERT INTO public.player_preferences (user_id, coach_enabled, speech_rate, speech_pitch)
+       VALUES ($1, COALESCE($2::boolean, false), COALESCE($3::real, 1), COALESCE($4::real, 1))
+       ON CONFLICT (user_id) DO UPDATE SET
+         coach_enabled = COALESCE($2::boolean, player_preferences.coach_enabled),
+         speech_rate = COALESCE($3::real, player_preferences.speech_rate),
+         speech_pitch = COALESCE($4::real, player_preferences.speech_pitch),
+         updated_at = now()
+       RETURNING coach_enabled, speech_rate, speech_pitch, updated_at`,
+      [userId, preferences.coachEnabled ?? null, preferences.speechRate ?? null, preferences.speechPitch ?? null],
+    );
+    const row = result.rows[0];
+    if (!row) throw new ServiceUnavailableException('Player preferences are unavailable');
+    return mapPreferences(row);
   }
 
   async getPlayer(userId: string, client?: PoolClient): Promise<PlayerResponse> {

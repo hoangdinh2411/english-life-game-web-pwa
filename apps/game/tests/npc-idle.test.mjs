@@ -1,14 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { npcPose, advanceNpc } from '../src/features/npcs/npc-motion.ts';
+import { npcPose, patrolPose, advanceNpc } from '../src/features/npcs/npc-motion.ts';
 import { canWalk, movePlayer, STATION_NPCS } from '../src/gameplay/station-navigation.ts';
+import { stationNpc } from '../src/features/station/station-roster.ts';
 
 // Checks every station route against the real walkable area, including obstacles.
-test('station patrols remain walkable and counter staff stay stationary', () => {
+test('station patrols remain walkable and the receptionist stays near the desk', () => {
   for (const npc of STATION_NPCS) for (let time = 0; time < 60000; time += 100) {
-    const pose = npcPose(npc.id, npc, time, movePlayer);
+    const patrol = stationNpc(npc.id).patrol;
+    const pose = patrol ? patrolPose(patrol, time) : npcPose(npc.id, npc, time, movePlayer);
     assert.ok(canWalk(pose));
-    if (npc.id === 'npc_station_information') assert.deepEqual(pose, { x: npc.x, y: npc.y, direction: 'down', moving: false });
+    if (npc.id === 'npc_station_information') assert.ok(Math.hypot(pose.x - npc.x, pose.y - npc.y) <= 55);
   }
   const anchor = { x: 800, y: 275 };
   for (const id of ['npc_mia', 'npc_cafe_customer', 'npc_clothes_seller']) {

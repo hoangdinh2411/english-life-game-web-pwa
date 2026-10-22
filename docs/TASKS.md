@@ -52,7 +52,7 @@ Finished tasks are removed to keep this board short. Git history and
       they may capture player input. The approved design is
       `docs/specs/2026-10-21-game-menu-tutorial-design.md`, and the executable
       plan is `docs/plans/2026-10-21-game-menu-settings-tutorial.md`.
-  - [ ] **T38.1 — Server preference contract and persistence.** Add validated,
+  - [x] **T38.1 — Server preference contract and persistence.** Add validated,
         authenticated storage for Coach, Voice Speed and Voice Pitch, including
         atomic first-device initialization, bounds, ownership and RLS tests.
   - [ ] **T38.2 — Client preference synchronization.** Keep Sound device-local;
@@ -72,6 +72,59 @@ Finished tasks are removed to keep this board short. Git history and
   - [ ] **T38.6 — Tutorial art and final verification.** Add compact game-style
         illustrations, run responsive and behavioral checks, prove continuous
         NPC/time behavior, run repository gates and update maintained docs.
+
+- [ ] **T39 — Complete controlled NPC presence for stations and stores.**
+      Finish the partially implemented behavior in
+      `docs/specs/2026-10-21-controlled-npc-presence-design.md`. Implement only
+      one slice per request and stop after its checks. Keep Town Street on its
+      existing authored server schedules; do not change quests, rewards, store
+      hours or server authority.
+  - [x] **T39.1 — Validated venue contract and country-local seed.** Replace the
+        current loose client configuration with one validated shared contract
+        for location, service/optional/ambient NPC IDs, time buckets, spawn
+        zones and exclusion zones. Reject unknown or duplicate IDs, conflicting
+        categories, invalid counts and unusable zones. Derive the deterministic
+        date and morning/daytime/evening bucket from the selected country's
+        game-local time, with one documented deterministic daytime fallback.
+        Done when focused tests prove identical inputs are stable, date or
+        bucket changes can change the roster, bounds hold, and every invalid
+        configuration fails with its location and field identified.
+  - [ ] **T39.2 — Station roster, assets and receptionist patrol.** Keep Ruth
+        present as the existing receptionist identity and bundle her required
+        asset locally. Keep exactly three stable passenger identities with
+        matching name, portrait, sprite, voice and dialogue, selecting one or
+        two per bucket without rerolling on portal re-entry. Constrain Ruth's
+        patrol to the safe desk route and stop/resume it for interaction and
+        world pause. Done when identity, asset-path, selection, navigation,
+        arrival, directions, tutorial and patrol-boundary tests pass.
+  - [ ] **T39.3 — Reusable café and clothes-store configuration.** Register the
+        current station café, Corner Cup and clothes shop through the common
+        venue registry. Keep required sellers/managers and current assistants
+        as bundled service NPCs; select customers from each venue's ambient
+        pool and customer-only zones. Closed stores remain inaccessible. A
+        missing optional ambient asset skips that NPC with a non-sensitive
+        diagnostic, while a missing required service definition or asset shows
+        a location-load error. Done when adding a fixture venue needs only NPC
+        definitions, zones and registry data—no selector changes—and focused
+        store, asset-failure and opening-hours tests pass.
+  - [ ] **T39.4 — Safe spawning and boundary reconciliation.** Make actor
+        creation consume configured spawn and exclusion zones so ambient NPCs
+        never block portals, counters, desks, fitting areas or primary paths.
+        Reconcile actors only when the effective seed/configuration changes;
+        retain an active speaker across a bucket boundary and reconcile after
+        the conversation closes. World pause stops movement and resumes from
+        the current route position. Undersized pools return each valid NPC at
+        most once and emit a non-sensitive diagnostic. Done when focused Phaser
+        tests cover placement, exclusion, pause/resume, conversation deferral,
+        boundary changes and undersized pools.
+  - [ ] **T39.5 — Regression, responsive QA and maintained docs.** Run focused
+        game/shared tests, content validation, typecheck, lint, production game
+        build and PWA checks. With the existing test account, inspect station,
+        both café interiors and the clothes shop at 320px, 375px and desktop;
+        verify NPCs do not block movement, counters or exits and repeated portal
+        entry does not reroll a bucket. Update `docs/GAME.md` and `docs/TECH.md`
+        only for final durable names and extension steps. Mark T39 complete only
+        when all earlier slices and these regression/manual checks pass.
 
 - [ ] **NPC speech audio prototype (Azure TTS + client DSP).** Complete the
       following slices in order. Keep the test scope to a few shared lines,

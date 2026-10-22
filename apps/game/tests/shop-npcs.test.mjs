@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { SHOP_NPCS, isShopNpc } from '../src/features/shops/shop-npcs.ts';
+import { SHOP_NPCS, SERVICE_NPC_IDS, isShopNpc, isServiceNpc } from '../src/features/shops/shop-npcs.ts';
 import { nearestNpc, STATION_NPCS } from '../src/gameplay/station-navigation.ts';
 import { npcVoice } from '../src/speech/npc-voice.ts';
 
@@ -48,5 +48,11 @@ test('Corner Cup has a seller, assistant and three distinct customer NPCs', () =
   assert.ok(cornerCup.some(npc => npc.id === 'npc_corner_cup_seller'));
   assert.ok(cornerCup.some(npc => npc.id === 'npc_corner_cup_assistant'));
   assert.equal(cornerCup.filter(npc => npc.id.includes('customer')).length, 3);
+});
+
+test('required store staff use the bundled service-asset path', () => {
+  assert.equal(SERVICE_NPC_IDS.length, 6);
+  assert.ok(SERVICE_NPC_IDS.every(isServiceNpc));
+  assert.equal(isServiceNpc('npc_corner_cup_customer_1'), false);
 });
 

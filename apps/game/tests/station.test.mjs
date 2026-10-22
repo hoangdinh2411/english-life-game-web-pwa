@@ -21,8 +21,8 @@ test('tap routes around the kiosk to the receptionist without crossing obstacles
   }
 });
 
-test('exactly three NPCs interact only within speaking distance', () => {
-  assert.equal(STATION_NPCS.length, 3);
+test('the receptionist and three passengers interact only within speaking distance', () => {
+  assert.equal(STATION_NPCS.length, 4);
   assert.equal(nearestNpc({ x: 768, y: 370 }), null);
   assert.equal(nearestNpc({ x: 840, y: 615 })?.id, 'npc_station_information');
 });

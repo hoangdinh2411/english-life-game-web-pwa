@@ -22,6 +22,15 @@ export const SHOP_NPCS = [
   { id: 'npc_clothes_assistant', name: 'Alex', frame: 'walk', portrait: portraitFor('npc_clothes_assistant') },
   { id: 'npc_clothes_customer', name: 'Nora', frame: 'walk', portrait: portraitFor('npc_clothes_customer') },
 ] as const;
+export const SERVICE_NPC_IDS = [
+  'npc_mia', 'npc_cafe_waiter',
+  'npc_corner_cup_seller', 'npc_corner_cup_assistant',
+  'npc_clothes_seller', 'npc_clothes_assistant',
+] as const;
+export type ServiceNpcId = typeof SERVICE_NPC_IDS[number];
+export function isServiceNpc(id: string): id is ServiceNpcId {
+  return SERVICE_NPC_IDS.some(value => value === id);
+}
 export type ShopNpcId = typeof SHOP_NPC_IDS[number];
 export function isShopNpc(id: string): id is ShopNpcId {
   return SHOP_NPC_IDS.some(value => value === id);

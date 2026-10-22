@@ -17,3 +17,4 @@ export * from './assets';
 export * from './life';
 export * from './player-location';
 export * from './npcs';
+export * from './player-preferences';

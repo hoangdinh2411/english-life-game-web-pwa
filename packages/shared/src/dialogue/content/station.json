@@ -2,7 +2,8 @@
   "greetings": {
     "receptionist": "Welcome to Sweden! I’m the station receptionist. Say hello, and I can help you find your way.",
     "backpack": "Hi! I just arrived too. Are you new to Sweden?",
-    "suitcase": "Hello! How was your journey?"
+    "suitcase": "Hello! How was your journey?",
+    "visitor": "Hi! Is this your first day in town too?"
   },
   "nodes": {
     "ai_pending": {

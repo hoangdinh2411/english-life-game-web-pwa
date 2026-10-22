@@ -1,1 +1,1 @@
-export const tutorialText = 'Hello! Your new life starts here.\n\nUse W to walk up, A left, S down, and D right. You can also tap a path to walk.\n\nCome to the green information kiosk and say hello to me. Tap a person or press E nearby to talk. The two passengers are happy to chat too.';
+export const tutorialText = 'Hello! Your new life starts here.\n\nUse W to walk up, A left, S down, and D right. You can also tap a path to walk.\n\nCome to the green information kiosk and say hello to me. Tap a person or press E nearby to talk. Other passengers are happy to chat too.';

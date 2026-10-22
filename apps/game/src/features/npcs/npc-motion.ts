@@ -12,6 +12,7 @@ const profiles: Record<string, Motion> = {
   npc_station_information: still,
   npc_passenger_backpack: horizontal(40, 28),
   npc_passenger_suitcase: vertical(28, 20),
+  npc_passenger_visitor: horizontal(24, 18),
   npc_mia: still,
   npc_cafe_waiter: { path: [{ x: 28, y: 0 }, { x: 28, y: 24 }, { x: 0, y: 24 }, { x: 0, y: 0 }], speed: 30 },
   npc_cafe_customer: still,

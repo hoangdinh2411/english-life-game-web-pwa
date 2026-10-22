@@ -3,11 +3,11 @@ import intents from './dialogue/content/intents.station.json';
 import { checkGrammar, detectIntent } from './dialogue/language';
 import { splitGreeting } from './dialogue/questions';
 
-export type StationSpeaker = 'npc_station_information' | 'npc_passenger_backpack' | 'npc_passenger_suitcase';
+export type StationSpeaker = 'npc_station_information' | 'npc_passenger_backpack' | 'npc_passenger_suitcase' | 'npc_passenger_visitor';
 export interface StationExchange { text: string; hint: string; step: number; directions: boolean; followUp?: 'directions' | 'conversation'; aiFallback?: true }
 const HINT = 'Ask about an ID card, or say goodbye.';
 export function stationGreeting(npc: StationSpeaker): StationExchange {
-  const key = npc === 'npc_station_information' ? 'receptionist' : npc === 'npc_passenger_backpack' ? 'backpack' : 'suitcase';
+  const key = npc === 'npc_station_information' ? 'receptionist' : npc === 'npc_passenger_backpack' ? 'backpack' : npc === 'npc_passenger_suitcase' ? 'suitcase' : 'visitor';
   return { text: key === 'suitcase' ? script.nodes.ask_journey.text : script.greetings[key], hint: npc === 'npc_station_information' ? 'Try: “Hello! I’m new here.”' : 'Tell me about yourself or your journey.', step: 0, directions: false };
 }
 // Temporary client practice only; this never grants rewards or durable quest state.

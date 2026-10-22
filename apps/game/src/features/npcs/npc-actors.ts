@@ -36,6 +36,7 @@ export function updateNpcActors(actors: NpcActor[], player: Point, delta: number
   }
   const stoppedNpcId = conversationNpcId ?? nearest?.npc.id ?? null;
   for (const actor of actors) {
+    if (actor.sprite.visible === false) continue;
     const state = { x: actor.npc.x, y: actor.npc.y, elapsed: actor.elapsed };
     const pose = advanceNpc(actor.npc.id, state, actor.anchor, player, delta, paused, stoppedNpcId, actor.clip, actor.patrol, false);
     actor.elapsed = state.elapsed;
