@@ -4,6 +4,20 @@ import { packActorsSchema, packAnimationsSchema } from '@life-abroad/shared';
 import { packKey } from './map-pack';
 import { isServiceNpc, SHOP_NPCS } from '../shops/shop-npcs';
 import { findStreetNpc, STREET_NPCS } from '../npcs/street-npcs';
+import { venueNpcConfigForMapId } from '../shops/venue-npc-config';
+
+type Diagnostic = (message: string) => void;
+
+function ambientNpcForAsset(pack: MapPack, asset: MapPack['assets'][number]): string | undefined {
+  const config = venueNpcConfigForMapId(pack.mapId);
+  return config?.ambientNpcPool.find(id =>
+    asset.key === `npc-${id}` || asset.key === `npc-${id}-atlas` || asset.key === `portrait-${id}`,
+  );
+}
+
+function optionalAmbientDiagnostic(npcId: string, mapId: string): string {
+  return `Optional ambient NPC asset unavailable: ${npcId} at ${mapId}.`;
+}
 
 export function isDeferredStreetNpcAsset(pack: MapPack, asset: MapPack['assets'][number]): boolean {
   return pack.mapId === 'loc_town_street'
@@ -19,10 +33,26 @@ export function isBundledServiceAsset(asset: MapPack['assets'][number]): boolean
   ));
 }
 
-export function loadPack(scene: Phaser.Scene, pack: MapPack, progress: (value: number) => void, signal: AbortSignal): Promise<void> {
+export function loadPack(
+  scene: Phaser.Scene,
+  pack: MapPack,
+  progress: (value: number) => void,
+  signal: AbortSignal,
+  diagnostic: Diagnostic = console.warn,
+): Promise<ReadonlySet<string>> {
   return new Promise((resolve, reject) => {
     let failed = false;
-    const error = () => { failed = true; };
+    const unavailableAmbientNpcIds = new Set<string>();
+    const optionalByLoaderKey = new Map(pack.assets.flatMap(asset => {
+      const npcId = ambientNpcForAsset(pack, asset);
+      return npcId ? [[packKey(pack, asset), npcId] as const] : [];
+    }));
+    const error = (file?: { key?: string }) => {
+      const npcId = file?.key ? optionalByLoaderKey.get(file.key) : undefined;
+      if (!npcId) { failed = true; return; }
+      if (!unavailableAmbientNpcIds.has(npcId)) diagnostic(optionalAmbientDiagnostic(npcId, pack.mapId));
+      unavailableAmbientNpcIds.add(npcId);
+    };
     const cleanup = () => {
       scene.load.off('progress', progress);
       scene.load.off('loaderror', error);
@@ -33,7 +63,7 @@ export function loadPack(scene: Phaser.Scene, pack: MapPack, progress: (value: n
     const complete = () => {
       cleanup();
       if (failed) reject(new Error('Map download failed. Reconnect and retry.'));
-      else resolve();
+      else resolve(unavailableAmbientNpcIds);
     };
     if (signal.aborted) { reject(new Error('Map download cancelled.')); return; }
     signal.addEventListener('abort', abort, { once: true });
@@ -55,7 +85,13 @@ export function loadPack(scene: Phaser.Scene, pack: MapPack, progress: (value: n
   });
 }
 
-export function preparePack(scene: Phaser.Scene, pack: MapPack, serviceTexture: (npcId: string) => string | undefined = () => undefined) {
+export function preparePack(
+  scene: Phaser.Scene,
+  pack: MapPack,
+  serviceTexture: (npcId: string) => string | undefined = () => undefined,
+  unavailableAmbientNpcIds: ReadonlySet<string> = new Set(),
+  diagnostic: Diagnostic = console.warn,
+) {
   const background = pack.assets.find((asset) => asset.type === 'map' && asset.npcId === null);
   const player = pack.assets.find((asset) => asset.key === 'player' && asset.type === 'spritesheet' && asset.npcId === null);
   const playerAnimations = pack.assets.find((asset) => asset.type === 'animation' && asset.npcId === null);
@@ -81,24 +117,46 @@ export function preparePack(scene: Phaser.Scene, pack: MapPack, serviceTexture: 
   const actorAsset = pack.assets.find(asset => asset.key === 'actors' && asset.type === 'json' && asset.npcId === null);
   const shop = pack.mapId === 'loc_cafe' || pack.mapId === 'loc_corner_cafe' || pack.mapId === 'loc_clothes';
   if (shop && !actorAsset) throw new Error('Shop NPC assets are missing. Please retry after the map upload finishes.');
-  const actors = actorAsset ? packActorsSchema.parse(scene.cache.json.get(packKey(pack, actorAsset))).actors.map(actor => {
+  const authoredActors = actorAsset ? packActorsSchema.parse(scene.cache.json.get(packKey(pack, actorAsset))).actors : [];
+  const venueConfig = venueNpcConfigForMapId(pack.mapId);
+  if (venueConfig) {
+    for (const npcId of [...venueConfig.serviceNpcIds, ...venueConfig.optionalStaffNpcIds]) {
+      if (!authoredActors.some(actor => actor.npcId === npcId)) throw new Error(`Required service NPC ${npcId} definition is missing.`);
+    }
+  }
+  const diagnosedAmbientNpcIds = new Set(unavailableAmbientNpcIds);
+  const diagnoseAmbient = (npcId: string) => {
+    if (!diagnosedAmbientNpcIds.has(npcId)) diagnostic(optionalAmbientDiagnostic(npcId, pack.mapId));
+    diagnosedAmbientNpcIds.add(npcId);
+  };
+  const actors = authoredActors.flatMap(actor => {
     const streetNpc = pack.mapId === 'loc_town_street' && actor.npcId ? findStreetNpc(actor.npcId) : undefined;
     const definition = streetNpc ?? (actor.npcId ? SHOP_NPCS.find(npc => npc.id === actor.npcId) : SHOP_NPCS.find(npc => npc.frame === actor.frame));
     if (!definition || definition.frame !== actor.frame) throw new Error('Shop NPC identity or atlas frame is invalid.');
+    const ambient = venueConfig?.ambientNpcPool.includes(definition.id) ?? false;
+    if (ambient && unavailableAmbientNpcIds.has(definition.id)) return [];
     const bundledTexture = actor.npcId ? serviceTexture(actor.npcId) : undefined;
     const texture = bundledTexture ? undefined : pack.assets.find(asset => asset.key === actor.texture && asset.type === 'image' && asset.npcId === null);
     const atlas = texture && pack.assets.find(asset => asset.key === `${texture.key}-atlas` && asset.type === 'json' && asset.npcId === texture.npcId && asset.version === texture.version);
-    if (!bundledTexture && (!texture || (streetNpc && !atlas))) throw new Error('NPC atlas is missing from this pack.');
+    if (!bundledTexture && (!texture || (streetNpc && !atlas))) {
+      if (ambient) { diagnoseAmbient(definition.id); return []; }
+      throw new Error(`Required service NPC ${definition.id} asset is unavailable.`);
+    }
     if (!streetNpc) {
       const textureKey = bundledTexture ?? packKey(pack, texture!);
-      if (!scene.textures.get(textureKey).has(actor.frame)) throw new Error('NPC atlas frame is missing from this pack.');
-      if (shop && Array.from({ length: 16 }, (_, index) => `${actor.frame}-${Math.floor(index / 4)}-${index % 4}`)
-        .some(frame => !scene.textures.get(textureKey).has(frame))) throw new Error('Shop NPC walking frames are missing. Please retry after the map upload finishes.');
+      const textureFrames = scene.textures.get(textureKey);
+      const missingFrame = !textureFrames.has(actor.frame) || shop && Array.from({ length: 16 }, (_, index) => `${actor.frame}-${Math.floor(index / 4)}-${index % 4}`)
+        .some(frame => !textureFrames.has(frame));
+      if (missingFrame) {
+        if (ambient) { diagnoseAmbient(definition.id); return []; }
+        if (venueConfig?.serviceNpcIds.includes(definition.id) || venueConfig?.optionalStaffNpcIds.includes(definition.id)) {
+          throw new Error(`Required service NPC ${definition.id} asset is unavailable.`);
+        }
+        throw new Error('Shop NPC walking frames are missing. Please retry after the map upload finishes.');
+      }
     }
-    return { ...actor, npcId: definition.id, texture: bundledTexture ?? packKey(pack, texture!) };
-  }) : [];
-  const expectedActors = pack.mapId === 'loc_corner_cafe' ? 5 : shop ? 3 : null;
-  if (expectedActors !== null && actors.length !== expectedActors) throw new Error(`Shop map needs ${expectedActors} configured NPC assets.`);
+    return [{ ...actor, npcId: definition.id, texture: bundledTexture ?? packKey(pack, texture!) }];
+  });
   if (pack.mapId === 'loc_town_street' && actors.length !== STREET_NPCS.length) throw new Error(`Town Street needs ${STREET_NPCS.length} configured resident NPC assets.`);
   return { background: packKey(pack, background), player: packKey(pack, player), walkPrefix, animationKeys, actors };
 }

@@ -40,3 +40,15 @@ export function venueNpcConfig(location: Exclude<MapLocation, 'street'>): VenueN
   if (!config) throw new Error(`Venue ${location} field locationId: no NPC configuration is registered`);
   return config;
 }
+
+const locationByMapId = {
+  loc_station: 'station',
+  loc_cafe: 'cafe',
+  loc_corner_cafe: 'corner_cafe',
+  loc_clothes: 'clothes',
+} as const satisfies Readonly<Record<string, Exclude<MapLocation, 'street'>>>;
+
+export function venueNpcConfigForMapId(mapId: string): VenueNpcConfig | undefined {
+  const location = locationByMapId[mapId as keyof typeof locationByMapId];
+  return location ? venueNpcConfig(location) : undefined;
+}

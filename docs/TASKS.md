@@ -97,7 +97,7 @@ Finished tasks are removed to keep this board short. Git history and
         patrol to the safe desk route and stop/resume it for interaction and
         world pause. Done when identity, asset-path, selection, navigation,
         arrival, directions, tutorial and patrol-boundary tests pass.
-  - [ ] **T39.3 — Reusable café and clothes-store configuration.** Register the
+  - [x] **T39.3 — Reusable café and clothes-store configuration.** Register the
         current station café, Corner Cup and clothes shop through the common
         venue registry. Keep required sellers/managers and current assistants
         as bundled service NPCs; select customers from each venue's ambient

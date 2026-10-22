@@ -27,6 +27,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let readMinimap: () => MinimapSnapshot | null = () => null;
   let currentPack: MapPack | null = null;
   let packAnimations: string[] = [];
+  let unavailableAmbientNpcIds: ReadonlySet<string> = new Set();
   let packRequest: AbortController | null = null;
   const mapIds = { station: 'loc_station', street: 'loc_town_street', cafe: 'loc_cafe', corner_cafe: 'loc_corner_cafe', clothes: 'loc_clothes' };
   let authorizing = false;
@@ -133,7 +134,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         void fetchMapPack(mapIds[activeLocation], signal).then(async (pack) => {
           if (signal.aborted || destroyed) return;
           currentPack = pack;
-          await loadPack(this, pack, callbacks.onProgress, signal);
+          unavailableAmbientNpcIds = await loadPack(this, pack, callbacks.onProgress, signal);
           if (!signal.aborted && !destroyed) this.createWorld();
         }).catch((error: unknown) => {
           if (!signal.aborted && !destroyed) callbacks.onError(error instanceof Error ? error.message : 'Map download failed. Please retry.');
@@ -144,7 +145,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const controlled = controlledPresence();
       controlledNpcIds = controlled.ids;
       controlledPresenceSignature = controlled.signature;
-      const resources = currentPack ? preparePack(this, currentPack, bundledServiceTexture) : null;
+      const resources = currentPack ? preparePack(this, currentPack, bundledServiceTexture, unavailableAmbientNpcIds) : null;
       if (activeLocation === 'station' && (!this.textures.exists('station') || stationAtlases.some((atlas) => !this.textures.exists(atlas.key)))) return;
       this.playerTexture = resources?.player ?? 'player';
       this.walkPrefix = resources?.walkPrefix ?? 'walk';
