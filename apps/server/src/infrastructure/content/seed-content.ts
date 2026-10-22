@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { dialogueSchema, moodCatalogSchema, npcCatalogSchema, parseCountryCatalog, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, townSeedSchema, voicePoolsSchema } from '@life-abroad/shared';
+import { dialogueSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, townSeedSchema, voicePoolsSchema } from '@life-abroad/shared';
 
 async function json(path: string): Promise<unknown> {
   try { return JSON.parse(await readFile(path, 'utf8')) as unknown; }
@@ -8,10 +8,8 @@ async function json(path: string): Promise<unknown> {
 }
 
 export async function loadSeedContent(root: string) {
-  const countries = parseCountryCatalog(await json(join(root, 'seed/countries.json')));
   const moods = moodCatalogSchema.parse(await json(join(root, 'seed/moods.json')));
   const town = townSeedSchema.parse(await json(join(root, 'seed/town.json')));
-  if (!countries.every(country => country.starterCityId === town.id)) throw new Error('Country references an unknown starter city');
   const catalogNpcs = npcCatalogSchema.parse(await json(join(root, 'seed/npcs.json')));
   const streetNpcs = streetNpcContentSchema.parse(await json(join(root, 'seed/street-npcs.json')));
   const npcs = npcCatalogSchema.parse([...catalogNpcs, ...streetNpcs.npcs.map(npc => ({
@@ -67,7 +65,7 @@ export async function loadSeedContent(root: string) {
     }
   }
   for (const npcId of Object.keys(voicePools.voiceOverrides)) requireReference(npcIds.has(npcId), `Unknown voice override NPC ${npcId}`);
-  return { countries, moods, town, roles, npcs, streetNpcs, quests, shops, dialogues, voicePools };
+  return { moods, town, roles, npcs, streetNpcs, quests, shops, dialogues, voicePools };
 }
 
 export type SeedContent = Awaited<ReturnType<typeof loadSeedContent>>;

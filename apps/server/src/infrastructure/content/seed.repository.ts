@@ -3,7 +3,7 @@ import { SeedContent } from './seed-content';
 
 // Called inside one transaction; never writes player, Auth or progression data.
 export async function seedContent(client: PoolClient, content: SeedContent): Promise<void> {
-  const { countries, moods, town, roles, npcs, quests, shops, dialogues } = content;
+  const { moods, town, roles, npcs, quests, shops, dialogues } = content;
   for (const mood of moods) await client.query(`INSERT INTO mood_types (id,label,guidance) VALUES ($1,$2,$3)
     ON CONFLICT (id) DO UPDATE SET label=excluded.label,guidance=excluded.guidance,updated_at=now()`,
   [mood.id,mood.label,mood.guidance]);
@@ -15,13 +15,6 @@ export async function seedContent(client: PoolClient, content: SeedContent): Pro
   }
   await client.query(`INSERT INTO cities (id, name, description) VALUES ($1,$2,$3)
     ON CONFLICT (id) DO UPDATE SET name=excluded.name, description=excluded.description`, [town.id, town.name, town.description]);
-  for (const country of countries) await client.query(`INSERT INTO countries (id,name,iso_code,flag,time_zone,starter_city_id) VALUES ($1,$2,$3,$4,$5,$6)
-    ON CONFLICT (id) DO UPDATE SET name=excluded.name,iso_code=excluded.iso_code,flag=excluded.flag,time_zone=excluded.time_zone,starter_city_id=excluded.starter_city_id`,
-  [country.id,country.name,country.isoCode,country.flag,country.timeZone,country.starterCityId]);
-  const country = countries.find(item => item.starterCityId === town.id);
-  if (!country) throw new Error(`No country owns starter city ${town.id}`);
-  await client.query('UPDATE cities SET country_id=$1 WHERE id=$2', [country.id, town.id]);
-  await client.query('UPDATE characters SET country_id=$1 WHERE current_city_id=$2 AND country_id IS NULL', [country.id, town.id]);
   for (const location of town.locations) await client.query(`INSERT INTO locations (id,city_id,name,type) VALUES ($1,$2,$3,$4)
     ON CONFLICT (id) DO UPDATE SET city_id=excluded.city_id,name=excluded.name,type=excluded.type`, [location.id,town.id,location.name,location.type]);
   // Role IDs are authored on NPCs; no separate role-label catalog exists yet.

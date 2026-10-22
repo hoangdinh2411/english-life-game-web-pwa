@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
-import { parseCountryCatalog, parseOnboardingOptions, dialogueSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, practiceDialogueNodeSchema, voicePoolsSchema } from '../packages/shared/dist/index.js';
+import { dialogueSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, practiceDialogueNodeSchema, voicePoolsSchema } from '../packages/shared/dist/index.js';
 
 async function readJson(file) {
   try {
@@ -45,20 +46,13 @@ for (const npc of [...npcCatalog, ...streetNpcContent.npcs]) for (const slot of 
     throw new Error(`${npc.id}: store schedule must stay within venue hours`);
   }
 }
-let countries;
-try {
-  countries = parseCountryCatalog(await readJson('content/seed/countries.json'));
-} catch (error) {
-  throw new Error(`content/seed/countries.json: ${error.message}`);
-}
-const avatars = JSON.parse(await readFile(resolve('content/seed/avatars.json'), 'utf8'));
 if (town.isStarterCity !== true) throw new Error('town.json must explicitly mark the starter city.');
-if (!countries.every(country => country.starterCityId === town.id)) throw new Error('countries.json references an unknown starter city.');
-const options = parseOnboardingOptions({ countries: countries.map(country => ({
-  id: country.id, name: country.name, isoCode: country.isoCode, flag: country.flag, timeZone: country.timeZone,
-})), avatars });
-if (options.countries.length === 0 || options.avatars.length === 0) throw new Error('At least one country and avatar are required.');
-process.stdout.write(`Validated ${options.countries.length} country and ${options.avatars.length} avatar options.\n`);
+const countryGenerator = resolve(import.meta.dirname, 'generate-country-worlds-migration.mjs');
+const countryValidation = spawnSync(process.execPath, [countryGenerator, '--root', '.', '--check'], { encoding: 'utf8' });
+if (countryValidation.status !== 0) throw new Error(countryValidation.stderr || countryValidation.stdout || 'Country catalog validation failed.');
+const avatars = JSON.parse(await readFile(resolve('content/seed/avatars.json'), 'utf8'));
+if (!Array.isArray(avatars) || avatars.length === 0) throw new Error('At least one avatar is required.');
+process.stdout.write(countryValidation.stdout);
 
 for (const file of await readdir(resolve('content/dialogue'), { recursive: true })) {
   if (!file.endsWith('.json')) continue;

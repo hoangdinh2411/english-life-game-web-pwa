@@ -1,16 +1,32 @@
 import { Inject, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { parseCountryCatalog, parseOnboardingOptions, type CountryCatalogEntry, type OnboardingOptions } from '@life-abroad/shared';
+import { parseOnboardingOptions, type CountryCatalogEntry, type OnboardingOptions } from '@life-abroad/shared';
+import { DatabaseService } from '../../infrastructure/database/database.service';
 
 export const ONBOARDING_SEED_DIRECTORY = 'ONBOARDING_SEED_DIRECTORY';
+
+interface CountryRow {
+  id: string;
+  name: string;
+  iso_code: string;
+  time_zone: string;
+  starter_city_id: string;
+}
+
+function isoFlag(isoCode: string): string {
+  return [...isoCode].map(letter => String.fromCodePoint(127397 + letter.charCodeAt(0))).join('');
+}
 
 @Injectable()
 export class OnboardingService {
   private catalog: Promise<OnboardingOptions> | undefined;
   private countries: CountryCatalogEntry[] = [];
 
-  constructor(@Inject(ONBOARDING_SEED_DIRECTORY) private readonly directory: string) {}
+  constructor(
+    @Inject(ONBOARDING_SEED_DIRECTORY) private readonly directory: string,
+    private readonly database: DatabaseService,
+  ) {}
 
   async getOptions(): Promise<OnboardingOptions> {
     // Cache successful reads; failed loads can be retried after content is repaired.
@@ -27,19 +43,20 @@ export class OnboardingService {
   }
 
   private async loadCatalog(): Promise<OnboardingOptions> {
-    const [countriesJson, townJson, avatarsJson] = await Promise.all([
-      readFile(join(this.directory, 'countries.json'), 'utf8'),
-      readFile(join(this.directory, 'town.json'), 'utf8'),
+    const [countryResult, avatarsJson] = await Promise.all([
+      this.database.query<CountryRow>(`SELECT id, name, iso_code, time_zone, starter_city_id
+        FROM public.countries ORDER BY name, id`),
       readFile(join(this.directory, 'avatars.json'), 'utf8'),
     ]);
-    const town: unknown = JSON.parse(townJson);
     const avatars: unknown = JSON.parse(avatarsJson);
-    if (typeof town !== 'object' || town === null || !('isStarterCity' in town) || town.isStarterCity !== true) {
-      throw new Error('town.json must explicitly mark the starter city');
-    }
-    const city = town as Record<string, unknown>;
-    const countries = parseCountryCatalog(JSON.parse(countriesJson));
-    if (!countries.every(country => country.starterCityId === city.id)) throw new Error('Country references an unknown starter city');
+    const countries: CountryCatalogEntry[] = countryResult.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      isoCode: row.iso_code,
+      flag: isoFlag(row.iso_code),
+      timeZone: row.time_zone,
+      starterCityId: row.starter_city_id,
+    }));
     this.countries = countries;
     const options = parseOnboardingOptions({ countries: countries.map(country => ({
       id: country.id, name: country.name, isoCode: country.isoCode, flag: country.flag, timeZone: country.timeZone,

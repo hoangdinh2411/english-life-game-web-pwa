@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, writeFile, rm, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +14,10 @@ async function fixture(run) {
   try {
     await cp(resolve(repository, 'content'), resolve(root, 'content'), { recursive: true });
     await cp(resolve(repository, 'packages/shared/src/dialogue/content'), resolve(root, 'packages/shared/src/dialogue/content'), { recursive: true });
+    await mkdir(resolve(root, 'apps/game/assets'), { recursive: true });
+    await cp(resolve(repository, 'apps/game/assets/flags'), resolve(root, 'apps/game/assets/flags'), { recursive: true });
+    await mkdir(resolve(root, 'apps/server/migrations'), { recursive: true });
+    await cp(resolve(repository, 'apps/server/migrations/032_country_clock_worlds.sql'), resolve(root, 'apps/server/migrations/032_country_clock_worlds.sql'));
     await run(root);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -132,13 +136,38 @@ test('committed content passes', () => {
 
 test('content command rejects an invalid country catalog', async () => {
   await fixture(async (root) => {
-    const path = resolve(root, 'content/seed/countries.json');
+    const path = resolve(root, 'apps/game/assets/flags/countries.json');
     const countries = JSON.parse(await readFile(path, 'utf8'));
     countries[0].timeZone = 'Stockholm';
     await writeFile(path, JSON.stringify(countries));
     const result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
     assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /countries\.json.*time zone/is);
+    assert.match(result.stderr, /countries\.json.*primary zone/is);
+  });
+});
+
+for (const [name, mutate, diagnostic] of [
+  ['duplicate country id', countries => { countries[1].id = countries[0].id; }, /duplicate id/i],
+  ['duplicate ISO code', countries => { countries[1].iso = countries[0].iso; }, /duplicate ISO code/i],
+  ['invalid IANA zone', countries => { countries[0].timeZone = 'Not/A_Zone'; countries[0].allTimeZones = ['Not/A_Zone']; }, /invalid IANA zone/i],
+]) test(`content command rejects ${name}`, async () => {
+  await fixture(async root => {
+    const path = resolve(root, 'apps/game/assets/flags/countries.json');
+    const countries = JSON.parse(await readFile(path, 'utf8'));
+    mutate(countries);
+    await writeFile(path, JSON.stringify(countries));
+    const result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, diagnostic);
+  });
+});
+
+test('content command rejects a missing authored flag file', async () => {
+  await fixture(async root => {
+    await unlink(resolve(root, 'apps/game/assets/flags/svg/af.svg'));
+    const result = spawnSync(process.execPath, [validator], { cwd: root, encoding: 'utf8' });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /ENOENT|no such file/i);
   });
 });
 

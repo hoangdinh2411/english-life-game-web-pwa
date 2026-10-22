@@ -49,7 +49,11 @@ test('R4 player routes reject missing and invalid bearer tokens', async () => {
 test('R4 character validation rejects forged state and unknown choices', async () => {
   const module = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(SupabaseTokenVerifier).useValue({ verify: async () => '11111111-1111-4111-8111-111111111111' })
-    .overrideProvider(DatabaseService).useValue({ transaction: async () => { throw new Error('Unexpected write'); } }).compile();
+    .overrideProvider(DatabaseService).useValue({
+      query: async () => ({ rows: [{ id: 'country_fixture', name: 'Fixtureland', iso_code: 'FX',
+        time_zone: 'Europe/Stockholm', starter_city_id: 'city_maplewood' }] }),
+      transaction: async () => { throw new Error('Unexpected write'); },
+    }).compile();
   const app = module.createNestApplication(); app.setGlobalPrefix('api/v1');
   try {
     await app.listen(0, '127.0.0.1');

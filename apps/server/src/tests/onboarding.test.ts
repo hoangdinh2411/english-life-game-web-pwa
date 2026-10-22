@@ -8,11 +8,24 @@ import { UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../app.module';
 import { SupabaseTokenVerifier } from '../infrastructure/auth/supabase-token-verifier';
+import { DatabaseService } from '../infrastructure/database/database.service';
+
+async function countryRows() {
+  const countries = JSON.parse(await readFile(resolve(__dirname, '../../../../apps/game/assets/flags/countries.json'), 'utf8')) as Array<Record<string, unknown>>;
+  return countries.map(country => ({
+    id: country.id,
+    name: country.name,
+    iso_code: country.iso,
+    time_zone: country.timeZone,
+    starter_city_id: 'city_maplewood',
+  }));
+}
 
 // A missing route, hard-coded catalog or leaked town fields breaks this contract.
 test('NPC-02 returns authored country and avatar options without exposing the starter city', async () => {
   const module = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(SupabaseTokenVerifier).useValue({ verify: async () => 'fixture-user' }).compile();
+    .overrideProvider(SupabaseTokenVerifier).useValue({ verify: async () => 'fixture-user' })
+    .overrideProvider(DatabaseService).useValue({ query: async () => ({ rows: await countryRows() }) }).compile();
   const app = module.createNestApplication();
   app.setGlobalPrefix('api/v1');
   try {
@@ -21,11 +34,11 @@ test('NPC-02 returns authored country and avatar options without exposing the st
       headers: { Authorization: 'Bearer fixture-token' },
     });
     assert.equal(response.status, 200);
-    const countries = JSON.parse(await readFile(resolve(__dirname, '../../../../content/seed/countries.json'), 'utf8')) as Array<Record<string, unknown>>;
+    const countries = JSON.parse(await readFile(resolve(__dirname, '../../../../apps/game/assets/flags/countries.json'), 'utf8')) as Array<Record<string, unknown>>;
     const avatars: unknown = JSON.parse(await readFile(resolve(__dirname, '../../../../content/seed/avatars.json'), 'utf8'));
     const body = await response.json() as Record<string, unknown>;
     assert.deepEqual(body, { countries: countries.map(country => ({
-      id: country.id, name: country.name, isoCode: country.isoCode, flag: country.flag, timeZone: country.timeZone,
+      id: country.id, name: country.name, isoCode: country.iso, flag: country.flag, timeZone: country.timeZone,
     })), avatars });
     assert.equal(JSON.stringify(body).includes('city_maplewood'), false);
   } finally { await app.close(); }
@@ -33,7 +46,8 @@ test('NPC-02 returns authored country and avatar options without exposing the st
 
 test('R3 rejects missing and invalid tokens instead of returning the catalog', async () => {
   const module = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(SupabaseTokenVerifier).useValue({ verify: async () => { throw new UnauthorizedException(); } }).compile();
+    .overrideProvider(SupabaseTokenVerifier).useValue({ verify: async () => { throw new UnauthorizedException(); } })
+    .overrideProvider(DatabaseService).useValue({ query: async () => ({ rows: [] }) }).compile();
   const app = module.createNestApplication();
   app.setGlobalPrefix('api/v1');
   try {
@@ -46,10 +60,12 @@ test('R3 rejects missing and invalid tokens instead of returning the catalog', a
   } finally { await app.close(); }
 });
 
-test('R3 fails safely on missing, malformed, nonstarter and empty content and can retry', async () => {
+test('R3 fails safely on missing, malformed and empty runtime catalogs and can retry', async () => {
   const directory = await mkdtemp(resolve(tmpdir(), 'r3-content-'));
+  let rows: Array<Record<string, unknown>> = [];
   const module = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(SupabaseTokenVerifier).useValue({ verify: async () => 'fixture-user' })
+    .overrideProvider(DatabaseService).useValue({ query: async () => ({ rows }) })
     .overrideProvider('ONBOARDING_SEED_DIRECTORY').useValue(directory).compile();
   const app = module.createNestApplication();
   app.setGlobalPrefix('api/v1');
@@ -57,22 +73,17 @@ test('R3 fails safely on missing, malformed, nonstarter and empty content and ca
     await app.listen(0, '127.0.0.1');
     const url = await app.getUrl() + '/api/v1/onboarding/options';
     const headers = { Authorization: 'Bearer fixture-token' };
-    const city = { id: 'city_fixture', name: 'Internal fixture', isStarterCity: true };
-    const countries = [{ id: 'country_fixture', name: 'Fixtureland', isoCode: 'FX', flag: '🏳️', timeZone: 'Europe/Stockholm', starterCityId: city.id }];
     const avatars = [{ id: 'avatar_fixture', label: 'Authored look', outfitColor: '#527b78' }];
-    for (const content of [null, '{bad json', JSON.stringify({ ...city, isStarterCity: false }), JSON.stringify(city)]) {
-      if (content !== null) await writeFile(resolve(directory, 'town.json'), content);
-      await writeFile(resolve(directory, 'countries.json'), JSON.stringify(countries));
-      await writeFile(resolve(directory, 'avatars.json'), JSON.stringify(content === JSON.stringify(city) ? [] : avatars));
+    for (const content of [null, '{bad json', JSON.stringify([])]) {
+      if (content !== null) await writeFile(resolve(directory, 'avatars.json'), content);
       const response = await fetch(url, { headers });
       assert.equal(response.status, 503);
       assert.deepEqual(await response.json(), { error: { code: 'service_unavailable', message: 'Service unavailable' } });
     }
-    await writeFile(resolve(directory, 'town.json'), JSON.stringify(city));
-    await writeFile(resolve(directory, 'countries.json'), JSON.stringify(countries));
     await writeFile(resolve(directory, 'avatars.json'), JSON.stringify(avatars));
+    rows = [{ id: 'country_fixture', name: 'Fixtureland', iso_code: 'FX', time_zone: 'Europe/Stockholm', starter_city_id: 'city_fixture' }];
     const response = await fetch(url, { headers });
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { countries: [{ id: 'country_fixture', name: 'Fixtureland', isoCode: 'FX', flag: '🏳️', timeZone: 'Europe/Stockholm' }], avatars });
+    assert.deepEqual(await response.json(), { countries: [{ id: 'country_fixture', name: 'Fixtureland', isoCode: 'FX', flag: '🇫🇽', timeZone: 'Europe/Stockholm' }], avatars });
   } finally { await app.close(); await rm(directory, { recursive: true, force: true }); }
 });

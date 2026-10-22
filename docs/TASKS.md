@@ -54,7 +54,7 @@ Finished tasks are removed to keep this board short. Git history and
       Sleep becomes a five-second rest that restores energy without moving
       world time. Implement only one numbered slice per request, keep each
       slice green, and do not start the next slice automatically.
-  - [ ] **ONB-01.1 — Canonical country catalog and additive world schema.** Use
+  - [x] **ONB-01.1 — Canonical country catalog and additive world schema.** Use
         `apps/game/assets/flags/countries.json` as the repository source of
         truth. Add a deterministic generator for a self-contained forward
         migration `032_country_clock_worlds.sql`; deployed migrations must not

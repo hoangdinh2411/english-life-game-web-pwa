@@ -46,6 +46,27 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
     }
     const migrationCount = readdirSync(resolve('migrations')).filter(file => file.endsWith('.sql')).length;
     assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, migrationCount);
+    assert.equal((await clean.query('SELECT * FROM countries')).rowCount, 247);
+    assert.equal((await clean.query(`SELECT count(*)::int AS count FROM countries
+      WHERE starter_city_id='city_maplewood' AND starter_location_id='loc_station'`)).rows[0].count, 247);
+    assert.equal((await clean.query(`SELECT 1 FROM information_schema.columns
+      WHERE table_schema='public' AND table_name='countries' AND column_name='flag'`)).rowCount, 0);
+    assert.equal((await clean.query('SELECT * FROM worlds')).rowCount, 0);
+    const countryId = (await clean.query('SELECT id FROM countries ORDER BY id LIMIT 1')).rows[0].id as string;
+    const creations = await Promise.all([
+      clean.query('INSERT INTO worlds (country_id) VALUES ($1) ON CONFLICT (country_id) DO NOTHING RETURNING id', [countryId]),
+      clean.query('INSERT INTO worlds (country_id) VALUES ($1) ON CONFLICT (country_id) DO NOTHING RETURNING id', [countryId]),
+    ]);
+    assert.equal(creations.reduce((count, result) => count + (result.rowCount ?? 0), 0), 1);
+    assert.equal((await clean.query('SELECT * FROM worlds WHERE country_id=$1', [countryId])).rowCount, 1);
+    const world = (await clean.query('SELECT id, clock_start_utc, clock_rate FROM worlds WHERE country_id=$1', [countryId])).rows[0];
+    assert.ok(world.clock_start_utc);
+    assert.equal(world.clock_rate, 6);
+    for (const update of [
+      ['UPDATE worlds SET country_id=(SELECT id FROM countries WHERE id<>$1 ORDER BY id LIMIT 1) WHERE id=$2', [countryId, world.id]],
+      ['UPDATE worlds SET clock_start_utc=clock_start_utc + interval \'1 second\' WHERE id=$1', [world.id]],
+      ['UPDATE worlds SET clock_rate=7 WHERE id=$1', [world.id]],
+    ] as const) await assert.rejects(clean.query(update[0], [...update[1]]), /immutable|check constraint/);
     const content = await loadSeedContent(resolve('../../content'));
     const seedDatabase = new DatabaseService(new ConfigService({ DATABASE_URL: cleanUrl.toString() }));
     let seedClosed = false;

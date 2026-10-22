@@ -30,6 +30,8 @@
     "supabase:status": "pnpm --filter server supabase:status",
     "supabase:env": "pnpm --filter server supabase:env",
     "content:validate": "pnpm --filter @life-abroad/shared build && node scripts/onboarding-content.mjs",
+    "countries:migration": "node scripts/generate-country-worlds-migration.mjs",
+    "countries:migration:check": "node scripts/generate-country-worlds-migration.mjs --check",
     "test:integration": "pnpm --filter server test:integration",
     "ai:evaluate": "pnpm --filter server ai:evaluate",
     "content:build": "node scripts/placeholder.mjs content:build later-content-export"
