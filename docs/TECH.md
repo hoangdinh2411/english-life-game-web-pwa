@@ -367,6 +367,8 @@ shop companion scripts; the first coffee quest remains attached to Mia.
 - Protected `GET /life` returns `{ energy, coins, gameTime, serverTime, clockRate, appearance, ownedShirts }`.
 - Protected `GET /world-clock` joins the authenticated character to its shared country world and returns
   `{ gameTimeUtc, timeZone, clockRate }`. Server decisions convert that instant through the country IANA zone.
+  The client interpolates display time from `performance.now()` and resynchronizes on load, reconnect,
+  visible-tab return and every 60 seconds; HUD, venue checks and NPC refreshes share that snapshot.
   State initializes lazily for a character at 100 energy and 08:00 on game day 2000-01-01.
   Its game clock advances at the configured rate (2× by default), including time
   away from the app. The server persists game time, real-time anchor and rate;

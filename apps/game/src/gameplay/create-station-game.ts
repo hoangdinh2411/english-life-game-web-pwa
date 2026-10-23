@@ -356,7 +356,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     }
     private enterLocation(location: MapLocation, streetArrival: 'station' | 'corner_cafe' = 'station') {
       if (this.transitionPending) return;
-      if (callbacks.getGameTime && !canEnterLocation(location, callbacks.getGameTime())) {
+      if (callbacks.getGameTime && !canEnterLocation(location, callbacks.getGameTime(), callbacks.getTimeZone?.() ?? null)) {
         const portal = portalAt(position, this.portalsForLocation());
         if (portal) position = activeLocation === 'street'
           ? streetSpawnPoint('corner_cafe')

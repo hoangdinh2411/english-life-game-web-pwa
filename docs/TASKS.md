@@ -97,7 +97,7 @@ Finished tasks are removed to keep this board short. Git history and
         clock, a later joiner sees the existing clock, two countries differ by
         local zone, DST boundaries pass, and all life/shop/NPC decisions use
         injected server time in tests.
-  - [ ] **ONB-01.4 — Display-only client clock synchronization.** Capture
+  - [x] **ONB-01.4 — Display-only client clock synchronization.** Capture
         `performance.now()` when a server snapshot arrives and display
         `Date.parse(gameTimeUtc) + monotonicElapsed × clockRate`, formatting it
         in the returned IANA zone. Resynchronize on load, reconnect, return to

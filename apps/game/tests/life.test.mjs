@@ -5,17 +5,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', ssr: { external: ['@life-abroad/shared'] } });
 try {
-  const { savedGameTime, isDefiniteRejection } = await server.ssrLoadModule('/src/features/life/life-clock.ts');
+  const { isDefiniteRejection } = await server.ssrLoadModule('/src/features/life/life-clock.ts');
   const { PlayerProfileDialogue } = await server.ssrLoadModule('/src/features/life/PlayerProfileDialogue.tsx');
   const { EnergyDisplay } = await server.ssrLoadModule('/src/features/life/EnergyDisplay.tsx');
   const { PlayerInfoCard } = await server.ssrLoadModule('/src/gameplay/PlayerInfoCard.tsx');
   const state = { energy: 50, coins: 500, gameTime: '2026-10-11T10:00:00.000Z', serverTime: '2026-10-11T08:00:00.000Z', clockRate: 2, appearance: { hair: 'brown', shirt: null, trousers: 'navy' }, ownedShirts: [] };
   const catalog = [ { id: 'espresso', name: 'Espresso', kind: 'drink', price: 5, shop: 'cafe' }, { id: 'blue_shirt', name: 'Blue shirt', kind: 'clothing', price: 30, shop: 'clothes' } ];
   const base = { state, catalog, pending: false, error: '', retry: null, act: async () => {}, reload: async () => {}, refresh: async () => {}, time: new Date(state.gameTime) };
-  test('saved clock advances twice elapsed time from authoritative value and never reverses for a local clock shift', () => {
-    assert.equal(savedGameTime(state, 1000, 61000).toISOString(), '2026-10-11T10:02:00.000Z');
-    assert.equal(savedGameTime(state, 1000, 0).toISOString(), state.gameTime);
-  });
   test('uncertain responses retain retry while definite business rejections release it', () => {
     for (const error of [new Error('Network lost'), { status: 401 }, { status: 429 }, { status: 500 }]) assert.equal(isDefiniteRejection(error), false);
     for (const status of [400, 403, 404, 409, 422]) assert.equal(isDefiniteRejection({ status }), true);
@@ -45,12 +41,13 @@ try {
   });
   test('player HUD card opens profile and keeps only a compact identity and clock', () => {
     const props = { playerName: 'Learner', cityName: 'Maplewood', coins: 500, onOpenProfile() {} };
-    const saved = renderToStaticMarkup(createElement(PlayerInfoCard, { ...props, savedTime: new Date(state.gameTime) }));
+    const saved = renderToStaticMarkup(createElement(PlayerInfoCard, { ...props, savedTime: new Date(state.gameTime), timeZone: 'Europe/Stockholm' }));
     assert.match(saved, /aria-label="Open Learner&#x27;s profile"/);
     assert.match(saved, /Maplewood · \$500/);
     assert.doesNotMatch(saved, /aria-valuenow|Experience|XP/);
     assert.doesNotMatch(saved, /UTC/);
     assert.doesNotMatch(saved, /2×|times real time/);
+    assert.match(saved, /12:00/);
   });
   test('player profile shows sourced character status without wardrobe or shop ordering', () => {
     const html = renderToStaticMarkup(createElement(PlayerProfileDialogue, {

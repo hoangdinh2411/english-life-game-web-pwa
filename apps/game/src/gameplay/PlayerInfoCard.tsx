@@ -2,14 +2,15 @@ import type { PlayerInfoCardProps } from "../types/ui/gameplay";
 import { useEffect, useState } from "react";
 import { playerPortrait } from "./portraits";
 import { GAME_TIME_RATE } from "@life-abroad/shared";
+import { formatWorldTime } from "../features/world-clock/world-clock";
 function useGameClock(rate: number) {
-  const [startedAt] = useState(() => Date.now());
+  const [startedAt] = useState(() => performance.now());
   const [now, setNow] = useState(startedAt);
   useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+    const interval = window.setInterval(() => setNow(performance.now()), 1000);
     return () => window.clearInterval(interval);
   }, []);
-  return new Date(startedAt + (now - startedAt) * rate);
+  return new Date(Date.parse('2000-01-01T08:00:00.000Z') + (now - startedAt) * rate);
 }
 export function PlayerInfoCard({
   playerName,
@@ -24,16 +25,8 @@ export function PlayerInfoCard({
   const rate = clockRate ?? GAME_TIME_RATE;
   const practiceTime = useGameClock(rate);
   const gameTime = savedTime ?? practiceTime;
-  const resolvedTimeZone =
-    savedTime !== undefined
-      ? "UTC"
-      : (timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
-  const timeLabel = new Intl.DateTimeFormat(undefined, {
-    timeZone: resolvedTimeZone,
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(gameTime);
+  const resolvedTimeZone = timeZone ?? (savedTime !== undefined ? 'UTC' : Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const timeLabel = savedTime === null ? 'Syncing…' : formatWorldTime(gameTime, resolvedTimeZone);
   return <aside hidden={!visible} className="player-card w-[min(260px,_100%)] max-lg:w-[min(260px,_calc(50vw_-_8px),_100%)] min-w-0 [&[hidden]]:hidden">
     <button type="button" className="pointer-events-auto flex min-h-11 w-full min-w-0 items-center gap-1.5 rounded-[12px] bg-dialogue border-2 border-border p-1 text-left text-ink shadow-[0_2px_6px_#0004] lg:hidden" aria-label={`Open ${playerName}'s profile`} onClick={onOpenProfile}>
       <img alt="" aria-hidden="true" src={playerPortrait} width="24" height="24" className="shrink-0 rounded-full" />

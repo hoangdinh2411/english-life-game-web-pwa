@@ -28,6 +28,8 @@ import { GameMenu } from "../features/game-menu/GameMenu";
 import { gameMenuCanvasState } from "../features/game-menu/game-menu-state";
 import { SettingsPanel } from "../features/game-menu/SettingsPanel";
 import { isStationSpeaker } from "../features/station/station-roster";
+import { useSession } from "../session/session-provider";
+import { useWorldClock } from "../features/world-clock/useWorldClock";
 
 const TUTORIAL_KEY = "movementTutorialSeen";
 
@@ -80,7 +82,10 @@ export default function StationScreen({
   const [practiceDirectionsAsked, setPracticeDirectionsAsked] = useState(false);
   const [exitReminder, setExitReminder] = useState(false);
   const pwa = usePwa();
-  const presence = useNpcPresence(activeMapId, !practice && Boolean(life?.state), pwa.online, life?.state?.clockRate ?? 1);
+  const { runAuthenticated } = useSession();
+  const worldClock = useWorldClock(runAuthenticated, !practice);
+  const presence = useNpcPresence(activeMapId, !practice && Boolean(worldClock.snapshot), pwa.online,
+    worldClock.clockRate, worldClock.revision);
   const countryName = location.split(" · ")[0] ?? "Sweden";
   const worldPaused =
     tutorial ||
@@ -127,8 +132,8 @@ export default function StationScreen({
         onMapChange={setActiveMapId}
         presentNpcIds={presence.presentNpcIds}
         {...(!practice && life ? {
-          getGameTime: () => life.time,
-          getTimeZone: () => presence.timeZone,
+          getGameTime: () => worldClock.time,
+          getTimeZone: () => worldClock.timeZone,
           onStoreClosed: (store) => setClosedStore(store),
         } : {})}
         conversationNpcId={npcId}
@@ -151,7 +156,8 @@ export default function StationScreen({
           coins={coins}
           onOpenProfile={() => setProfileOpen(true)}
           visible={!overlayOpen || profileOpen}
-          {...(life ? { savedTime: life.time, ...(life.state ? { clockRate: life.state.clockRate } : {}) } : {})}
+          {...(!practice ? { savedTime: worldClock.time, clockRate: worldClock.clockRate,
+            ...(worldClock.timeZone ? { timeZone: worldClock.timeZone } : {}) } : {})}
         />
         <div className="station-tools [grid-column:2] [grid-row:1] [justify-self:end] flex gap-2 pointer-events-auto [@media(max-width:479px)]:gap-1">
           <div className="hidden lg:block"><OverlayButton
@@ -224,7 +230,7 @@ export default function StationScreen({
       {closedStore ? (
         <StoreClosedDialogue
           location={closedStore}
-          gameTimeAvailable={Boolean(life?.time)}
+          gameTimeAvailable={Boolean(worldClock.time)}
           onReturn={() => setClosedStore(null)}
         />
       ) : null}
@@ -254,7 +260,7 @@ export default function StationScreen({
           npc={STREET_NPCS.find((npc) => npc.id === npcId)!}
           sound={sound}
           onClose={() => setNpcId(null)}
-          onRefresh={async () => { await life?.refresh(); await presence.refresh(); }}
+          onRefresh={async () => { await life?.refresh(); await worldClock.refresh(); await presence.refresh(); }}
         />
       ) : npcId && isShopNpc(npcId) ? (
         <ShopConversation
@@ -262,7 +268,7 @@ export default function StationScreen({
           npcId={npcId}
           sound={sound}
           onClose={() => setNpcId(null)}
-          onRefresh={async () => { await life?.refresh(); await presence.refresh(); }}
+          onRefresh={async () => { await life?.refresh(); await worldClock.refresh(); await presence.refresh(); }}
         />
       ) : npcId === "npc_station_information" && arrival ? (
         <DialogueFrame soundControl={!arrival.farewellConfirm} confirmationOnly={arrival.farewellConfirm}>

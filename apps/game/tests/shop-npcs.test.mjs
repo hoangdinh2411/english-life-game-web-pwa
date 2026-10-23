@@ -34,12 +34,14 @@ test('closed store hours block shop interiors but never block the street', async
   assert.equal(typeof navigation.canEnterLocation, 'function');
   const { canEnterLocation } = navigation;
   const at = (hour, minute) => new Date(Date.UTC(2026, 9, 13, hour, minute));
-  assert.equal(canEnterLocation('cafe', at(7, 59)), false);
-  assert.equal(canEnterLocation('corner_cafe', at(8, 0)), true);
-  assert.equal(canEnterLocation('clothes', at(13, 59)), true);
-  assert.equal(canEnterLocation('cafe', at(14, 0)), false);
-  assert.equal(canEnterLocation('corner_cafe', null), false);
-  assert.equal(canEnterLocation('street', null), true);
+  assert.equal(canEnterLocation('cafe', at(7, 59), 'UTC'), false);
+  assert.equal(canEnterLocation('corner_cafe', at(8, 0), 'UTC'), true);
+  assert.equal(canEnterLocation('clothes', at(13, 59), 'UTC'), true);
+  assert.equal(canEnterLocation('cafe', at(14, 0), 'UTC'), false);
+  assert.equal(canEnterLocation('cafe', at(12, 0), 'Europe/Stockholm'), false, '14:00 local is closed');
+  assert.equal(canEnterLocation('cafe', at(12, 0), 'America/New_York'), true, '08:00 local is open');
+  assert.equal(canEnterLocation('corner_cafe', null, 'UTC'), false);
+  assert.equal(canEnterLocation('street', null, null), true);
 });
 
 test('Corner Cup has a seller, assistant and three distinct customer NPCs', () => {
