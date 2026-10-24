@@ -1,7 +1,7 @@
 import type { PlayerGender } from '@life-abroad/shared';
 import maleSheet from '../../../assets/runtime/player.png';
 import malePortrait from '../../../assets/runtime/player-portrait.png';
-import femaleSheet from '../../../assets/runtime/player-female.png';
+import femaleSheet from '../../../assets/runtime/player-female-smooth.png';
 import femalePortrait from '../../../assets/runtime/player-female-portrait.png';
 
 export interface PlayerAssets {

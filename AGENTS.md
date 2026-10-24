@@ -20,6 +20,7 @@ Vite + React + TypeScript + Phaser 4 + PWA, **not** Expo/React Native/WebView.
    task.
 6. Large docs: search for the heading you need and read only that section. Never
    read a whole doc.
+7. Never read DONE.md unless the user asks.
 
 ## Non-negotiable boundaries
 

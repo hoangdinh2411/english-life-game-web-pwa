@@ -7,6 +7,7 @@ import { findStreetNpc, STREET_NPCS } from '../npcs/street-npcs';
 import { venueNpcConfigForMapId } from '../shops/venue-npc-config';
 import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES } from '../shops/venue-npc-config';
 import { ambientNpcSpawnPoints } from '../npcs/controlled-presence';
+import { GENERATED_NPC_DISPLAY_SCALE } from '../npcs/actor-display';
 
 type Diagnostic = (message: string) => void;
 
@@ -168,7 +169,13 @@ export function preparePack(
         throw new Error('Shop NPC walking frames are missing. Please retry after the map upload finishes.');
       }
     }
-    return [{ ...actor, ...ambientSpawns.get(definition.id), npcId: definition.id, texture: bundledTexture ?? packKey(pack, texture!) }];
+    return [{
+      ...actor,
+      ...ambientSpawns.get(definition.id),
+      npcId: definition.id,
+      texture: bundledTexture ?? packKey(pack, texture!),
+      scale: GENERATED_NPC_DISPLAY_SCALE,
+    }];
   });
   if (pack.mapId === 'loc_town_street' && actors.length !== STREET_NPCS.length) throw new Error(`Town Street needs ${STREET_NPCS.length} configured resident NPC assets.`);
   return { background: packKey(pack, background), player: packKey(pack, player), walkPrefix, animationKeys, actors };

@@ -1,5 +1,6 @@
 import type { StationSpeaker } from '@life-abroad/shared';
 import type { VoiceGender } from '../../types/speech/narration';
+import { GENERATED_NPC_DISPLAY_SCALE } from '../npcs/actor-display';
 
 export interface StationNpcDefinition {
   id: StationSpeaker;
@@ -26,7 +27,7 @@ export const STATION_ROSTER = [
   },
   {
     id: 'npc_passenger_visitor', name: 'Ingrid', texture: 'visitor', x: 610, y: 700,
-    scale: 0.6, voice: 'female', portrait: 'visitor',
+    scale: GENERATED_NPC_DISPLAY_SCALE, voice: 'female', portrait: 'visitor',
     portraitGrid: { columns: 3, rows: 1 }, portraitPosition: '0% 0%',
   },
   {

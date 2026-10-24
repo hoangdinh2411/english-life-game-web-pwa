@@ -21,8 +21,9 @@ try {
     assert.equal(female.displayScale, 2);
     assert.equal(male.displayScale, 2);
     assert.notEqual(female.sheet, male.sheet);
+    assert.match(female.sheet, /player-female-smooth\.png/);
     assert.notEqual(female.portrait, male.portrait);
-    assert.deepEqual(pngSize(await readFile(new URL('../assets/runtime/player-female.png', import.meta.url))), { width: 128, height: 192 });
+    assert.deepEqual(pngSize(await readFile(new URL('../assets/runtime/player-female-smooth.png', import.meta.url))), { width: 128, height: 192 });
     assert.deepEqual(pngSize(await readFile(new URL('../assets/runtime/player-female-portrait.png', import.meta.url))), { width: 256, height: 256 });
   });
 } finally {

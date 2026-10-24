@@ -1,6 +1,6 @@
 import station from '../../assets/locations/location_station_map_labeled.png';
 import player from '../../assets/runtime/player.png';
-import femalePlayer from '../../assets/runtime/player-female.png';
+import femalePlayer from '../../assets/runtime/player-female-smooth.png';
 import backpack from '../../assets/runtime/backpack.png';
 import suitcase from '../../assets/runtime/suitcase.png';
 import receptionist from '../../assets/runtime/receptionist.png';

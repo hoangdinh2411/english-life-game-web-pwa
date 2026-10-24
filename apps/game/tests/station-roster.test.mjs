@@ -27,6 +27,11 @@ test('station roster has one receptionist and three consistent passenger identit
   }
 });
 
+test('station NPC sprites share the player display height', () => {
+  const frameHeights = { backpack: 48, suitcase: 48, receptionist: 48, visitor: 171 };
+  for (const npc of STATION_ROSTER) assert.equal(frameHeights[npc.texture] * npc.scale, 96);
+});
+
 test('station identities keep bundled sprite and portrait assets', async () => {
   const assets = [
     '../assets/runtime/receptionist.png',
