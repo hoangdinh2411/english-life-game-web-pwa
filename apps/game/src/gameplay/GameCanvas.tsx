@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Minimap, type MinimapBounds } from "../features/minimap/Minimap";
 import { GameButton } from "./GameButton";
 import type {
@@ -37,12 +37,10 @@ export default function GameCanvas({
   onStoreClosed,
   presentNpcIds,
 }: GameCanvasProps) {
-  const stableInitialLocation = useMemo(() => initialLocation, [
-    initialLocation.mapId,
-    initialLocation.placeId,
-    initialLocation.x,
-    initialLocation.y,
-  ]);
+  const initialMapId = initialLocation.mapId;
+  const initialPlaceId = initialLocation.placeId;
+  const initialX = initialLocation.x;
+  const initialY = initialLocation.y;
   const parent = useRef<HTMLDivElement>(null);
   const game = useRef<StationGame | null>(null);
   const readMinimap = useCallback(
@@ -95,7 +93,7 @@ export default function GameCanvas({
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [locationLabel, setLocationLabel] = useState(
-    stableInitialLocation.placeId === "loc_town_street"
+    initialPlaceId === "loc_town_street"
       ? "Town Street"
       : "Train Station",
   );
@@ -125,6 +123,12 @@ export default function GameCanvas({
     const start = async () => {
       const { createStationGame } = await import("./create-station-game");
       if (cancelled) return;
+      const stableInitialLocation = {
+        mapId: initialMapId,
+        placeId: initialPlaceId,
+        x: initialX,
+        y: initialY,
+      };
       instance = createStationGame(host, {
         gender,
         countryName,
@@ -224,7 +228,7 @@ export default function GameCanvas({
       if (game.current === instance) game.current = null;
       host.remove();
     };
-  }, [attempt, stableInitialLocation, serverExit]);
+  }, [attempt, initialMapId, initialPlaceId, initialX, initialY, serverExit]);
   useEffect(() => {
     game.current?.pause(
       paused || document.hidden,

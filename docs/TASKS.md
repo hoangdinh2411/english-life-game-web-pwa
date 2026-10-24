@@ -33,6 +33,9 @@ Do not start server here. The project is running on VS code terminal
 Do not create Git commits. Just suggest a commit message for me; I will commit manually.
 Please test using the account I provided. Don’t create a new user for each test.
 test@gmail.com / 12341234.
+client: localhost:8082
+backend: localhost:3000
+database: localhost:54323
 ```
 
 ## NOW
