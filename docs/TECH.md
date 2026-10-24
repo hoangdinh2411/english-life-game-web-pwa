@@ -76,6 +76,17 @@ with the server-owned ticket and rewards.
 
 ### Adding a venue's NPC roster
 
+NPC walking artwork follows one source contract for every map: a 4×4 RGBA PNG
+sheet, one direction per row and four walk frames per row. Each frame is
+128×192 px, with the visible character normalized to 156 px high, horizontally
+centered, and standing on the shared bottom baseline. Preserve aspect ratio and
+use one transform for every frame in a directional row; never resize individual
+walk frames to simulate motion. Run `pnpm assets:normalize-npcs` on legacy
+96×171 sheets before adding them. Runtime code uses the single
+`NPC_DISPLAY_SCALE`; do not add NPC-ID scale exceptions. Generate props against
+an equivalent declared frame, visual box, center, and ground-contact baseline
+before they enter a map pack so maps never compensate for asset padding.
+
 `apps/game/src/features/npcs/controlled-presence.ts` owns the shared time
 buckets, validated venue contract and seeded ambient selection. Its seed uses
 the selected country's local game date and time bucket; missing or invalid time

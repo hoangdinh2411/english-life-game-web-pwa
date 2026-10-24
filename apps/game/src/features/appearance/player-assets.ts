@@ -13,10 +13,14 @@ export interface PlayerAssets {
 }
 
 const assets: Record<PlayerGender, PlayerAssets> = {
-  male: { sheet: maleSheet, portrait: malePortrait, frame: { width: 32, height: 48 }, displayScale: 2, portraitColumns: 1 },
+  male: { sheet: maleSheet, portrait: malePortrait, frame: { width: 32, height: 48 }, displayScale: 1.95, portraitColumns: 1 },
   female: { sheet: femaleSheet, portrait: femalePortrait, frame: { width: 32, height: 48 }, displayScale: 2, portraitColumns: 1 },
 };
 
 export function playerAssets(gender: PlayerGender): PlayerAssets {
   return assets[gender];
+}
+
+export function playerWalkFrame(row: number, column: number, usesMapPack: boolean): string | number {
+  return usesMapPack ? row * 4 + column : `${row}-${column}`;
 }

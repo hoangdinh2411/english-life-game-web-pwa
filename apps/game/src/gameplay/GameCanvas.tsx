@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Minimap, type MinimapBounds } from "../features/minimap/Minimap";
 import { GameButton } from "./GameButton";
 import type {
@@ -7,6 +7,14 @@ import type {
   StationGame,
 } from "../types/gameplay/world";
 import { syncNpcPresence } from "../features/npcs/npc-presence";
+
+const DEFAULT_INITIAL_LOCATION = {
+  mapId: "loc_station",
+  placeId: "loc_station",
+  x: 768,
+  y: 370,
+} as const;
+
 export default function GameCanvas({
   gender,
   countryName,
@@ -21,7 +29,7 @@ export default function GameCanvas({
   onLocationChange,
   onMapChange,
   onPlaceChange,
-  initialLocation = { mapId: "loc_station", placeId: "loc_station", x: 768, y: 370 },
+  initialLocation = DEFAULT_INITIAL_LOCATION,
   onEnterStreet,
   appearance,
   getGameTime,
@@ -29,6 +37,12 @@ export default function GameCanvas({
   onStoreClosed,
   presentNpcIds,
 }: GameCanvasProps) {
+  const stableInitialLocation = useMemo(() => initialLocation, [
+    initialLocation.mapId,
+    initialLocation.placeId,
+    initialLocation.x,
+    initialLocation.y,
+  ]);
   const parent = useRef<HTMLDivElement>(null);
   const game = useRef<StationGame | null>(null);
   const readMinimap = useCallback(
@@ -81,7 +95,7 @@ export default function GameCanvas({
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [locationLabel, setLocationLabel] = useState(
-    initialLocation.placeId === "loc_town_street"
+    stableInitialLocation.placeId === "loc_town_street"
       ? "Town Street"
       : "Train Station",
   );
@@ -114,7 +128,7 @@ export default function GameCanvas({
       instance = createStationGame(host, {
         gender,
         countryName,
-        initialLocation,
+        initialLocation: stableInitialLocation,
         appearance: appearanceRef.current,
         practice: !serverExit,
         onProgress: (value) => {
@@ -210,7 +224,7 @@ export default function GameCanvas({
       if (game.current === instance) game.current = null;
       host.remove();
     };
-  }, [attempt, initialLocation, serverExit]);
+  }, [attempt, stableInitialLocation, serverExit]);
   useEffect(() => {
     game.current?.pause(
       paused || document.hidden,

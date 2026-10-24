@@ -14,14 +14,14 @@ const bundledServiceNpcIds = new Set([
 ]);
 
 function npcWalkAtlas(outputName) {
-  const frame = (column, row) => ({ frame: { x: column * 96, y: row * 171, w: 96, h: 171 }, rotated: false, trimmed: false,
-    spriteSourceSize: { x: 0, y: 0, w: 96, h: 171 }, sourceSize: { w: 96, h: 171 } });
+  const frame = (column, row) => ({ frame: { x: column * 128, y: row * 192, w: 128, h: 192 }, rotated: false, trimmed: false,
+    spriteSourceSize: { x: 0, y: 0, w: 128, h: 192 }, sourceSize: { w: 128, h: 192 } });
   const frames = { walk: frame(0, 0) };
   // Each source row is one direction; its four columns are the walk cycle.
   for (let direction = 0; direction < 4; direction++) {
     for (let step = 0; step < 4; step++) frames[`walk-${direction}-${step}`] = frame(step, direction);
   }
-  return Buffer.from(JSON.stringify({ frames, meta: { image: outputName, size: { w: 384, h: 684 }, scale: '1' } }));
+  return Buffer.from(JSON.stringify({ frames, meta: { image: outputName, size: { w: 512, h: 768 }, scale: '1' } }));
 }
 
 async function npcAsset(reference) {

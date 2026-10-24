@@ -39,6 +39,7 @@ export function Minimap({ visible, read, onBounds }: Props) {
   const root = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const button = useRef<HTMLButtonElement>(null);
+  const publishedBounds = useRef<MinimapBounds | null>(null);
   const [width, setWidth] = useState(300);
   const open = mode === "visible";
   const choose = useCallback((value: MinimapMode) => {
@@ -50,9 +51,15 @@ export function Minimap({ visible, read, onBounds }: Props) {
     }
   }, []);
   useEffect(() => {
+    const publishBounds = (next: MinimapBounds | null) => {
+      const previous = publishedBounds.current;
+      if (previous === next || previous && next && previous.left === next.left && previous.right === next.right && previous.bottom === next.bottom) return;
+      publishedBounds.current = next;
+      onBounds(next);
+    };
     const element = root.current;
     if (!visible || !element) {
-      onBounds(null);
+      publishBounds(null);
       return;
     }
     const parent = element.parentElement;
@@ -71,7 +78,7 @@ export function Minimap({ visible, read, onBounds }: Props) {
           ),
         );
       }
-      onBounds({
+      publishBounds({
         left: element.offsetLeft,
         right: element.offsetLeft + element.offsetWidth,
         bottom: element.offsetTop + element.offsetHeight,
@@ -85,7 +92,7 @@ export function Minimap({ visible, read, onBounds }: Props) {
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", measure);
-      onBounds(null);
+      publishBounds(null);
     };
   }, [visible, mode, onBounds, snapshot?.width, snapshot?.height]);
   useEffect(() => {

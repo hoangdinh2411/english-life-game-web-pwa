@@ -9,6 +9,8 @@ import playerAtlas from '../../assets/runtime/player.json';
 import backpackAtlas from '../../assets/runtime/backpack.json';
 import suitcaseAtlas from '../../assets/runtime/suitcase.json';
 import receptionistAtlas from '../../assets/runtime/receptionist.json';
+import type { PlayerGender } from '@life-abroad/shared';
+import { NPC_FRAME_HEIGHT, NPC_FRAME_WIDTH, NPC_SHEET_COLUMNS, NPC_SHEET_ROWS } from '../features/npcs/actor-display';
 
 function assetUrl(asset: unknown): string {
   if (typeof asset === 'string') return asset;
@@ -26,9 +28,15 @@ export const stationAtlases = [
   { key: 'visitor', url: assetUrl(visitor), data: {
     frames: Object.fromEntries(Array.from({ length: 16 }, (_, index) => {
       const row = Math.floor(index / 4), column = index % 4;
-      return [`${row}-${column}`, { frame: { x: column * 96, y: row * 171, w: 96, h: 171 }, rotated: false, trimmed: false,
-        spriteSourceSize: { x: 0, y: 0, w: 96, h: 171 }, sourceSize: { w: 96, h: 171 } }];
+      return [`${row}-${column}`, { frame: { x: column * NPC_FRAME_WIDTH, y: row * NPC_FRAME_HEIGHT, w: NPC_FRAME_WIDTH, h: NPC_FRAME_HEIGHT }, rotated: false, trimmed: false,
+        spriteSourceSize: { x: 0, y: 0, w: NPC_FRAME_WIDTH, h: NPC_FRAME_HEIGHT }, sourceSize: { w: NPC_FRAME_WIDTH, h: NPC_FRAME_HEIGHT } }];
     })),
-    meta: { image: 'visitor.png', size: { w: 384, h: 684 }, scale: '1' },
+    meta: { image: 'visitor.png', size: { w: NPC_FRAME_WIDTH * NPC_SHEET_COLUMNS, h: NPC_FRAME_HEIGHT * NPC_SHEET_ROWS }, scale: '1' },
   } },
 ];
+
+export function savedPlayerAtlas(gender: PlayerGender) {
+  const atlas = stationAtlases.find(candidate => candidate.key === `player-${gender}`);
+  if (!atlas) throw new Error(`Player artwork is unavailable for ${gender}.`);
+  return atlas;
+}

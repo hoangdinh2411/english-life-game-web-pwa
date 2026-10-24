@@ -58,12 +58,12 @@ test('Town Street map packages all data-authored residents at their route start 
       const atlas = JSON.parse(await readFile(join(directory, `street-npcs-${index + 1}-atlas.json`), 'utf8'));
       const portrait = await readFile(join(directory, `portrait-${npc.id}.png`));
       assert.deepEqual(image, source);
-      assert.deepEqual([image.readUInt32BE(16), image.readUInt32BE(20)], [384, 684]);
+      assert.deepEqual([image.readUInt32BE(16), image.readUInt32BE(20)], [512, 768]);
       assert.equal(Object.keys(atlas.frames).length, 17);
       assert.deepEqual(portrait, await readFile(new URL(`../apps/game/assets/${npc.portrait.imageUrl}`, import.meta.url)));
       assert.ok(Object.keys(atlas.frames).every(name => name === 'walk' || name.startsWith('walk-')));
-      assert.deepEqual(atlas.frames['walk-0-3'].frame, { x: 288, y: 0, w: 96, h: 171 });
-      assert.deepEqual(atlas.frames['walk-2-1'].frame, { x: 96, y: 342, w: 96, h: 171 });
+      assert.deepEqual(atlas.frames['walk-0-3'].frame, { x: 384, y: 0, w: 128, h: 192 });
+      assert.deepEqual(atlas.frames['walk-2-1'].frame, { x: 128, y: 384, w: 128, h: 192 });
       assert.ok(Object.values(atlas.frames).every(({ frame: item }) => item.y < image.readUInt32BE(20)), `${npc.id} atlas coordinates fit the image`);
     }
   } finally {

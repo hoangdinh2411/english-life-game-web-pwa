@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../src/features/assets/phaser-pack.ts';
+import { NPC_DISPLAY_SCALE } from '../src/features/npcs/actor-display.ts';
 
 // Catches loading the six-character sheet as one giant NPC instead of an atlas.
 test('pack loader pairs an NPC image with its atlas JSON', async () => {
@@ -58,7 +59,7 @@ test('preparePack resolves service positions and configured ambient placement', 
   };
   assert.deepEqual(preparePack(scene, pack).actors, actors.map(actor => ({
     ...actor,
-    scale: 96 / 171,
+    scale: NPC_DISPLAY_SCALE,
     ...(actor.npcId === 'npc_cafe_customer' ? { x: 430, y: 600 } : {}),
     texture: `pack:loc_cafe:map:${actor.texture}:v2`,
   })));
@@ -85,7 +86,7 @@ test('preparePack maps repeated Corner Cup frames to explicit NPC identities', (
   };
   assert.deepEqual(preparePack(scene,pack).actors,actors.map(actor => ({
     ...actor,
-    scale: 96 / 171,
+    scale: NPC_DISPLAY_SCALE,
     ...(customerSpawns[actor.npcId] ?? {}),
     texture:`pack:loc_corner_cafe:map:${actor.texture}:v2`,
   })));
@@ -115,5 +116,5 @@ test('preparePack validates and resolves all authored Town Street resident actor
   assert.equal(resolved.length, 15);
   assert.deepEqual(resolved.map(actor => actor.npcId), STREET_NPCS.map(npc => npc.id));
   assert.ok(resolved.every(actor => actor.texture === 'pack:loc_town_street:map:street-npcs-1:v5'));
-  assert.ok(resolved.every(actor => actor.scale === 96 / 171));
+  assert.ok(resolved.every(actor => actor.scale === NPC_DISPLAY_SCALE));
 });

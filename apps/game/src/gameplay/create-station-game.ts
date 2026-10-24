@@ -1,6 +1,6 @@
 import type { MapLocation, Point, StationCallbacks, StationGame, StationPortal } from '../types/gameplay/world';
 import Phaser from 'phaser';
-import { stationAtlases, stationBackground } from './station-assets';
+import { savedPlayerAtlas, stationAtlases, stationBackground } from './station-assets';
 import type { MapAsset, MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
@@ -18,13 +18,15 @@ import { activeNpcIds, ambientNpcSpawnPoints, countryLocalSeedInput } from '../f
 import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES, venueNpcConfig } from '../features/shops/venue-npc-config';
 import { bundledServiceAtlases, bundledServiceTexture } from '../features/shops/service-npc-assets';
 import { countryLocationLabel } from '../features/location/country-presentation';
+import { playerAssets, playerWalkFrame } from '../features/appearance/player-assets';
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
   let activeLocation: MapLocation = callbacks.initialLocation ? mapLocationFromPlayerLocation(callbacks.initialLocation) : 'station';
   let destroyed = false;
   let appearance = callbacks.practice ? undefined : callbacks.appearance;
-  const savedPlayerTexture = callbacks.practice ? 'player' : `player-${callbacks.gender ?? 'male'}`;
-  const savedPlayerScale = 2;
+  const savedPlayerGender = callbacks.gender ?? 'male';
+  const savedPlayerTexture = callbacks.practice ? 'player' : `player-${savedPlayerGender}`;
+  const savedPlayerScale = callbacks.practice ? 2 : playerAssets(savedPlayerGender).displayScale;
   let refreshAppearance: (() => void) | undefined;
   let readMinimap: () => MinimapSnapshot | null = () => null;
   let currentPack: MapPack | null = null;
@@ -94,6 +96,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     private nextPresenceCheck = 0;
     preload() {
       for (const atlas of bundledServiceAtlases) if (!this.textures.exists(atlas.key)) this.load.atlas(atlas.key, atlas.url, atlas.data);
+      if (!callbacks.practice) {
+        const atlas = savedPlayerAtlas(callbacks.gender ?? 'male');
+        if (!this.textures.exists(atlas.key)) this.load.atlas(atlas.key, atlas.url, atlas.data);
+      }
       if (activeLocation === 'station') {
         this.load.image('station', stationBackground);
         for (const atlas of stationAtlases) if (!this.textures.exists(atlas.key)) this.load.atlas(atlas.key, atlas.url, atlas.data);
@@ -165,6 +171,9 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.walkPrefix = callbacks.practice ? (resources?.walkPrefix ?? 'walk') : `${savedPlayerTexture}-walk`;
       this.sourcePlayerTexture = this.playerTexture;
       this.sourceWalkPrefix = this.walkPrefix;
+      if (!callbacks.practice && savedPlayerGender === 'male') {
+        this.textures.get(this.sourcePlayerTexture).setFilter(P.Textures.FilterMode.NEAREST);
+      }
       packAnimations = resources?.animationKeys ?? [];
       this.transitionPending = false;
       this.labels = [];
@@ -179,7 +188,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       // Station animation frames stay bundled; destination definitions come from Storage.
       if (!currentPack || !callbacks.practice) for (let row = 0; row < 4; row++) {
         const key = `${this.walkPrefix}-${row}`;
-        if (!this.anims.exists(key)) this.anims.create({ key, frames: Array.from({ length: 4 }, (_, column) => ({ key: this.playerTexture, frame: currentPack ? row * 4 + column : `${row}-${column}` })), frameRate: 7, repeat: -1 });
+        if (!this.anims.exists(key)) this.anims.create({ key, frames: Array.from({ length: 4 }, (_, column) => ({
+          key: this.playerTexture,
+          frame: playerWalkFrame(row, column, Boolean(callbacks.practice && currentPack)),
+        })), frameRate: 7, repeat: -1 });
       }
       if (appearance) this.applyAppearance();
       for (const actor of resources?.actors ?? []) {
@@ -501,6 +513,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     applyAppearance() {
       if (!this.textures.exists(this.sourcePlayerTexture)) return;
       this.playerTexture = paintPlayerTexture(this, this.sourcePlayerTexture, 'player:appearance', appearance, false);
+      if (savedPlayerGender === 'male') this.textures.get(this.playerTexture).setFilter(P.Textures.FilterMode.NEAREST);
       for (let row = 0; row < 4; row++) {
         const key = `appearance:walk-${row}`;
         if (!this.anims.exists(key)) {

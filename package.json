@@ -7,6 +7,7 @@
     "pnpm": ">=11"
   },
   "scripts": {
+    "assets:normalize-npcs": "node scripts/normalize-npc-sprites.mjs",
     "assets:upload": "node scripts/upload-map-assets.mjs",
     "assets:generate": "node scripts/save-map-assets.mjs",
     "assets:archive": "node scripts/archive-map-assets.mjs",

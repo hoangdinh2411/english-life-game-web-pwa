@@ -4,6 +4,7 @@ import cornerSeller from '../../../assets/npcs/npc_corner_cup_seller/walk.png';
 import cornerAssistant from '../../../assets/npcs/npc_corner_cup_assistant/walk.png';
 import clothesSeller from '../../../assets/npcs/npc_clothes_seller/walk.png';
 import clothesAssistant from '../../../assets/npcs/npc_clothes_assistant/walk.png';
+import { NPC_FRAME_HEIGHT, NPC_FRAME_WIDTH, NPC_SHEET_COLUMNS, NPC_SHEET_ROWS } from '../npcs/actor-display';
 import { isServiceNpc, type ServiceNpcId } from './shop-npcs';
 
 function assetUrl(asset: unknown): string {
@@ -13,14 +14,14 @@ function assetUrl(asset: unknown): string {
 }
 
 function atlasData(image: string) {
-  const frame = (column: number, row: number) => ({ frame: { x: column * 96, y: row * 171, w: 96, h: 171 }, rotated: false, trimmed: false,
-    spriteSourceSize: { x: 0, y: 0, w: 96, h: 171 }, sourceSize: { w: 96, h: 171 } });
+  const frame = (column: number, row: number) => ({ frame: { x: column * NPC_FRAME_WIDTH, y: row * NPC_FRAME_HEIGHT, w: NPC_FRAME_WIDTH, h: NPC_FRAME_HEIGHT }, rotated: false, trimmed: false,
+    spriteSourceSize: { x: 0, y: 0, w: NPC_FRAME_WIDTH, h: NPC_FRAME_HEIGHT }, sourceSize: { w: NPC_FRAME_WIDTH, h: NPC_FRAME_HEIGHT } });
   return {
     frames: Object.fromEntries([
       ['walk', frame(0, 0)],
       ...Array.from({ length: 16 }, (_, index) => [`walk-${Math.floor(index / 4)}-${index % 4}`, frame(index % 4, Math.floor(index / 4))] as const),
     ]),
-    meta: { image, size: { w: 384, h: 684 }, scale: '1' },
+    meta: { image, size: { w: NPC_FRAME_WIDTH * NPC_SHEET_COLUMNS, h: NPC_FRAME_HEIGHT * NPC_SHEET_ROWS }, scale: '1' },
   };
 }
 

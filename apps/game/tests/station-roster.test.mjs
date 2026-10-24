@@ -6,6 +6,7 @@ import { npcVoice } from '../src/speech/npc-voice.ts';
 import { stationGreeting } from '@life-abroad/shared';
 import { access } from 'node:fs/promises';
 import { tutorialText } from '../src/speech/tutorial-text.ts';
+import { NPC_VISIBLE_HEIGHT, WORLD_NPC_VISIBLE_HEIGHT } from '../src/features/npcs/actor-display.ts';
 
 const { stationNpc, STATION_PASSENGERS, STATION_ROSTER } = stationRoster;
 
@@ -27,9 +28,11 @@ test('station roster has one receptionist and three consistent passenger identit
   }
 });
 
-test('station NPC sprites share the player display height', () => {
-  const frameHeights = { backpack: 48, suitcase: 48, receptionist: 48, visitor: 171 };
-  for (const npc of STATION_ROSTER) assert.equal(frameHeights[npc.texture] * npc.scale, 96);
+test('station NPC sprites have comparable visible character heights', () => {
+  const visibleHeights = { backpack: 48, suitcase: 48, receptionist: 48, visitor: NPC_VISIBLE_HEIGHT };
+  const displayedHeights = STATION_ROSTER.map(npc => visibleHeights[npc.texture] * npc.scale);
+  assert.ok(Math.max(...displayedHeights) - Math.min(...displayedHeights) < 9);
+  assert.equal(displayedHeights[2], WORLD_NPC_VISIBLE_HEIGHT);
 });
 
 test('station identities keep bundled sprite and portrait assets', async () => {

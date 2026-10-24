@@ -18,6 +18,14 @@ test('GameCanvas forwards Phaser map changes so presence refreshes for the desti
   assert.match(source, /onMapChange:\s*\(mapId\)\s*=>\s*\{\s*if \(!cancelled\) callbacks\.current\.onMapChange\?\.\(mapId\);\s*\}/);
 });
 
+test('responsive rerenders do not restart the Phaser game for an unchanged location', async () => {
+  const source = await readFile(new URL('../src/gameplay/GameCanvas.tsx', import.meta.url), 'utf8');
+  assert.match(source, /const DEFAULT_INITIAL_LOCATION = \{/);
+  assert.match(source, /const stableInitialLocation = useMemo\(\(\) => initialLocation,/);
+  assert.match(source, /\}, \[attempt, stableInitialLocation, serverExit\]\);/);
+  assert.doesNotMatch(source, /\}, \[attempt, initialLocation, serverExit\]\);/);
+});
+
 test('NPC presence received before Phaser startup is applied when the game becomes ready', () => {
   assert.equal(typeof npcPresence.syncNpcPresence, 'function');
   const updates = [];
