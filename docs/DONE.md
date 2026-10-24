@@ -1,0 +1,27 @@
+- NPC-01 | Stabilize the baseline before NPC work | 2026-10-24 | Removed test WebSocket contention, preserved the Corner Cup portal, and corrected the town schema.
+- NPC-02 | Country-first onboarding: Sweden | 2026-10-24 | Added validated country-first onboarding with server-owned starter assignment.
+- NPC-03 | Versioned NPC profile JSONB | 2026-10-24 | Added strict authored NPC profiles backed by versioned JSONB.
+- NPC-04 | Data-driven mood catalog and base mood | 2026-10-24 | Added deterministic server-time mood resolution from validated catalog data.
+- NPC-05 | Server-authoritative NPC presence schedules | 2026-10-24 | Added validated schedules, presence boundaries, and absent-NPC enforcement.
+- NPC-06 | Per-player NPC relationships and reactions | 2026-10-24 | Added idempotent private relationship state and bounded social reactions.
+- NPC-07 | Database-backed natural everyday dialogue | 2026-10-24 | Added authored everyday dialogue without fabricated facts or transaction regressions.
+- NPC-08 | Adaptive response level and mood-aware delivery | 2026-10-24 | Added bounded CEFR adaptation with privacy-safe mood and relationship context.
+- NPC-09 | Integration, documentation and release verification | 2026-10-24 | Verified and documented the integrated NPC life-system slices.
+- ONB-01.1 | Canonical country catalog and additive world schema | 2026-10-24 | Added the validated 247-country catalog and immutable shared world schema.
+- ONB-01.2 | Atomic and idempotent first-run API | 2026-10-24 | Added transactional country/name setup with safe replay behavior.
+- ONB-01.3 | One authoritative world-clock service | 2026-10-24 | Centralized shared country-world time and local-zone decisions on the server.
+- ONB-01.4 | Display-only client clock synchronization | 2026-10-24 | Added monotonic client interpolation and lifecycle resynchronization.
+- ONB-01.5 | Accessible one-page country and name UI | 2026-10-24 | Added accessible responsive country search and name setup.
+- ONB-01.6 | Server-authoritative quick rest | 2026-10-24 | Added idempotent energy restoration without changing world time.
+- T38.1 | Server preference contract and persistence | 2026-10-24 | Added validated authenticated preference storage and ownership checks.
+- T38.3 | Non-pausing game menu shell | 2026-10-24 | Added the menu shell without pausing NPC movement or game time.
+- T39.1 | Validated venue contract and country-local seed | 2026-10-24 | Added validated venue configuration and deterministic local-time selection.
+- T39.2 | Station roster, assets and receptionist patrol | 2026-10-24 | Stabilized station identities, assets, selection, and Ruth's safe patrol.
+- T39.3 | Reusable café and clothes-store configuration | 2026-10-24 | Registered shops through the common venue and asset-failure boundaries.
+- T39.4 | Safe spawning and boundary reconciliation | 2026-10-24 | Added safe ambient placement and deferred roster reconciliation.
+- S2 | Voice pools and deterministic resolution | 2026-10-24 | Added deterministic gender-based voice selection with overrides.
+- S3 | Azure generation and emotion styles | 2026-10-24 | Added safe Azure TTS generation and supported emotion-style fallback.
+- S4 | Private fixed-script audio cache | 2026-10-24 | Added private canonical fixed-speech caching with signed delivery.
+- S5 | AI reply audio cache | 2026-10-24 | Added short-lived privacy-safe AI speech caching and cleanup.
+- S6 | Authenticated client playback integration | 2026-10-24 | Added authenticated dialogue playback with readable failure fallback.
+- S7 | Client DSP and settings | 2026-10-24 | Added bounded independent speed/pitch playback and graceful fallback.

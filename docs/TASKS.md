@@ -3,6 +3,8 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
+Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6; T38.1, T38.3; T39.1–T39.4; S2–S7.
+
 ## How to work
 
 - Complete only the task the user requested. If the user explicitly says
@@ -33,17 +35,6 @@ Please test using the account I provided. Don’t create a new user for each tes
 test@gmail.com / 12341234.
 ```
 
-## DONE
-
-Finished tasks are removed to keep this board short. Git history and
-`docs/TECH.md` keep the details.
-
-- [x] **NPC-01 — Stabilize the baseline before NPC work.** Disable Vite's test
-      WebSocket so parallel tests do not contend for port 24678; keep the Corner
-      Cup portal registered while its `label` remains empty because the map
-      already renders the label; remove the invalid town `gender` schema field.
-      Verified with focused portal checks plus game and server suites.
-
 ## NOW
 
 - [ ] **ONB-01 — One-page country setup, shared country clocks and quick rest.**
@@ -54,82 +45,6 @@ Finished tasks are removed to keep this board short. Git history and
       becomes a five-second rest that restores energy without moving world time.
       Implement only one numbered slice per request, keep each slice green, and
       do not start the next slice automatically.
-  - [x] **ONB-01.1 — Canonical country catalog and additive world schema.** Use
-        `apps/game/assets/flags/countries.json` as the repository source of
-        truth. Add a deterministic generator for a self-contained forward
-        migration `032_country_clock_worlds.sql`; deployed migrations must not
-        read runtime asset files. Validate unique IDs/ISO codes, IANA zones,
-        primary-zone membership in `allTimeZones`, and all 247 SVG plus 247 PNG
-        files. Alter the existing `countries` table, remove its stored flag
-        field, seed ID/name/ISO/time zone, and assign trusted
-        `city_maplewood`/`loc_station` starter IDs to every country. Add one
-        `worlds` row at most per country with database-created
-        `clock_start_utc`, immutable `clock_rate = 6`, and an immutable country
-        FK; add nullable `characters.world_id`. Backfill valid legacy country
-        selections into their country world, while missing country/world stays
-        null and means setup is incomplete. Delete the duplicate one-country
-        `content/seed/countries.json`; PostgreSQL becomes the runtime catalog.
-        Done when generation is deterministic, content validation passes, the
-        migration and FK/unique/immutability tests pass, concurrent first-world
-        creation cannot duplicate a world, and no flag data/path is stored on
-        player or world rows.
-  - [x] **ONB-01.2 — Atomic and idempotent first-run API.** Change the request
-        contract to `{ countryId, name }`; never accept world, clock, starter
-        location, energy or avatar values. Trim and NFC-normalize the name, then
-        allow 2–20 Unicode letters/marks with one space, ASCII apostrophe or
-        hyphen between parts. In one transaction lock the existing profile row,
-        validate the database country, find-or-create its world, create the
-        character with trusted starter city/location and `world_id`, grant the
-        starting balance once, and use `avatar_traveler_01` as a server-only
-        compatibility default. The same normalized payload returns the saved
-        profile; a different repeat returns 409. Done when missing/unknown
-        countries, Unicode names and invalid names, no-character accounts,
-        same/different replays and concurrent submissions have focused and
-        integration coverage with one character, one grant and one world.
-  - [x] **ONB-01.3 — One authoritative world-clock service.** Add a NestJS
-        world-clock domain that joins character → world → country and returns
-        `{ gameTimeUtc, timeZone, clockRate }`, where game UTC is
-        `start + (serverNow - start) × rate`. Convert that instant through the
-        country's IANA zone for venue hours, NPC presence, moods and
-        relationships; do not use UTC clock fields as local hours. Replace all
-        runtime reads/writes of per-player clock state and keep calculated game
-        time out of the database. Done when two players in one world share a
-        clock, a later joiner sees the existing clock, two countries differ by
-        local zone, DST boundaries pass, and all life/shop/NPC decisions use
-        injected server time in tests.
-  - [x] **ONB-01.4 — Display-only client clock synchronization.** Capture
-        `performance.now()` when a server snapshot arrives and display
-        `Date.parse(gameTimeUtc) + monotonicElapsed × clockRate`, formatting it
-        in the returned IANA zone. Resynchronize on load, reconnect, return to
-        visibility and every 60 seconds. Never derive game time from
-        `Date.now()` or argument-free `new Date()`; do not remove unrelated
-        wall-clock uses for auth expiry, caching, speech or movement throttles.
-        Done when interpolation/rate, timer cleanup, lifecycle resync and zone
-        formatting tests pass and the HUD, shops and NPC refreshes use the same
-        snapshot contract.
-- [x] **ONB-01.5 — Accessible one-page country and name UI.** Keep only
-      `/new-game`: searchable, scrollable country results with bundled SVG flags
-      resolved from ISO via `import.meta.glob`, one name input and one Continue
-      action. Nothing is preselected. Country search and name entry use compact
-      keyboard/touch text controls without onboarding speech controls. Clear a
-      stale selection when the edited query no longer represents it; retain form
-      values on recoverable errors; disable submission while invalid or pending.
-      Remove obsolete country/avatar/name/review routes, avatar options and
-      their exclusive UI/contracts, and include SVG assets in the PWA build.
-      Done when keyboard/screen-reader behavior, retry/reconnect, routing and
-      PWA tests pass and real renders at 320, 375 and 1024 px have no horizontal
-      overflow with Continue and the list reachable.
-  - [x] **ONB-01.6 — Server-authoritative quick rest.** Keep the existing
-        authenticated `/life/sleep` action and `player_actions` idempotency
-        ledger, but never alter game time. After the existing row locks, read
-        integer energy; allow only `0–29`, add exactly 50 points capped at 100,
-        and reject `30+` with “You are not tired yet.” A same-key retry replays
-        once; with two different concurrent keys, the second reads the updated
-        energy and is rejected. The client starts the dark transition only after
-        success, blocks input for five seconds, shows one short line, and uses
-        shorter fades—not a shorter rest—for reduced motion. Done when
-        `29 → 79`, `30 → 409`, unchanged world time, replay, concurrency,
-        rejection-without-fade, refresh and reconnect tests pass.
   - [ ] **ONB-01.7 — Legacy clock cleanup and release verification.** After
         every runtime consumer uses world clocks, add forward migration
         `033_remove_per_player_clock.sql` to drop only `player_life.clock_time`,
@@ -160,16 +75,10 @@ Finished tasks are removed to keep this board short. Git history and
       time running; they may capture player input. The approved design is
       `docs/specs/2026-10-21-game-menu-tutorial-design.md`, and the executable
       plan is `docs/plans/2026-10-21-game-menu-settings-tutorial.md`.
-  - [x] **T38.1 — Server preference contract and persistence.** Add validated,
-        authenticated storage for Coach, Voice Speed and Voice Pitch, including
-        atomic first-device initialization, bounds, ownership and RLS tests.
   - [ ] **T38.2 — Client preference synchronization.** Keep Sound device-local;
         load/save account preferences through NestJS with slider debounce,
         latest-value-wins, visible failure state and Retry. Local practice must
         make no preference API calls.
-  - [x] **T38.3 — Non-pausing game menu shell.** Extract the menu with English
-        Review, Movement Tutorial, Sign Out/Leave Local Practice, Return to Game
-        and Settings. Capture player input without pausing NPCs or game time.
   - [ ] **T38.4 — Separate Settings overlay.** Move full controls out of the
         game menu, preserve compact dialogue controls, add save/error feedback,
         and verify the layout at 320px, 375px and desktop width.
@@ -187,44 +96,6 @@ Finished tasks are removed to keep this board short. Git history and
       one slice per request and stop after its checks. Keep Town Street on its
       existing authored server schedules; do not change quests, rewards, store
       hours or server authority.
-  - [x] **T39.1 — Validated venue contract and country-local seed.** Replace the
-        current loose client configuration with one validated shared contract
-        for location, service/optional/ambient NPC IDs, time buckets, spawn
-        zones and exclusion zones. Reject unknown or duplicate IDs, conflicting
-        categories, invalid counts and unusable zones. Derive the deterministic
-        date and morning/daytime/evening bucket from the selected country's
-        game-local time, with one documented deterministic daytime fallback.
-        Done when focused tests prove identical inputs are stable, date or
-        bucket changes can change the roster, bounds hold, and every invalid
-        configuration fails with its location and field identified.
-  - [x] **T39.2 — Station roster, assets and receptionist patrol.** Keep Ruth
-        present as the existing receptionist identity and bundle her required
-        asset locally. Keep exactly three stable passenger identities with
-        matching name, portrait, sprite, voice and dialogue, selecting one or
-        two per bucket without rerolling on portal re-entry. Constrain Ruth's
-        patrol to the safe desk route and stop/resume it for interaction and
-        world pause. Done when identity, asset-path, selection, navigation,
-        arrival, directions, tutorial and patrol-boundary tests pass.
-  - [x] **T39.3 — Reusable café and clothes-store configuration.** Register the
-        current station café, Corner Cup and clothes shop through the common
-        venue registry. Keep required sellers/managers and current assistants as
-        bundled service NPCs; select customers from each venue's ambient pool
-        and customer-only zones. Closed stores remain inaccessible. A missing
-        optional ambient asset skips that NPC with a non-sensitive diagnostic,
-        while a missing required service definition or asset shows a
-        location-load error. Done when adding a fixture venue needs only NPC
-        definitions, zones and registry data—no selector changes—and focused
-        store, asset-failure and opening-hours tests pass.
-  - [x] **T39.4 — Safe spawning and boundary reconciliation.** Make actor
-        creation consume configured spawn and exclusion zones so ambient NPCs
-        never block portals, counters, desks, fitting areas or primary paths.
-        Reconcile actors only when the effective seed/configuration changes;
-        retain an active speaker across a bucket boundary and reconcile after
-        the conversation closes. World pause stops movement and resumes from the
-        current route position. Undersized pools return each valid NPC at most
-        once and emit a non-sensitive diagnostic. Done when focused Phaser tests
-        cover placement, exclusion, pause/resume, conversation deferral,
-        boundary changes and undersized pools.
   - [ ] **T39.5 — Regression, responsive QA and maintained docs.** Run focused
         game/shared tests, content validation, typecheck, lint, production game
         build and PWA checks. With the existing test account, inspect station,
@@ -244,44 +115,6 @@ Finished tasks are removed to keep this board short. Git history and
         owner approval. The player's ID-card gender is unrelated. Done when
         content validation passes, removing one gender makes it fail, and the
         owner approves the proposals.
-  - [x] **S2 — Voice pools and deterministic resolution.** Add one editable
-        voice-pool content file with Azure voices per gender and optional
-        `voiceOverride` values keyed by stable NPC ID. Resolve an override
-        first; otherwise use a stable hash of NPC ID within its gender pool.
-        Done when male/female selection, stability, same-gender variation,
-        gender changes, and override precedence have focused tests.
-  - [x] **S3 — Azure generation and emotion styles.** Add a server-only Azure
-        TTS adapter. Map the three NPC emotions to a supported Azure style and
-        use the default style when the selected voice lacks that style. Done
-        when SSML escaping, supported styles, default fallback, provider errors,
-        and generated audio metadata are tested without exposing the key.
-  - [x] **S4 — Private fixed-script audio cache.** Generate one canonical file
-        per cache key based on text, language, voice, style, format and TTS
-        version/settings—never map, NPC ID, speed or pitch. Store private audio
-        through the asset/storage boundary, keep only references and metadata in
-        PostgreSQL, and return short-lived signed URLs to authenticated players.
-        Done when shared lines reuse a file per voice, NPC-specific lines work,
-        changed generation input invalidates the key, and retries or concurrent
-        requests do not duplicate Azure calls/files.
-  - [x] **S5 — AI reply audio cache.** Generate persisted AI reply text on
-        demand, cache exact repeats for a configurable 30–3600 seconds, and
-        never persist the source text or personal/sensitive text. Remove expired
-        rows and objects. Done when exact repeats skip Azure, changed text does
-        not, expiry removes the private object, and authored script routing
-        still wins before AI fallback.
-  - [x] **S6 — Authenticated client playback integration.** Attach speech to
-        authenticated conversation responses without allowing arbitrary client
-        text synthesis. Cover shared, NPC-specific, opening, history and AI
-        replies; keep text readable when speech generation or signed URLs fail.
-        Done when the existing test account can hear each covered reply and no
-        private audio enters the service-worker cache.
-  - [x] **S7 — Client DSP and settings.** Use one shared Web Audio
-        `AudioContext` and `@soundtouchjs/audio-worklet` to change bounded speed
-        and pitch independently after download. Add Game Settings controls;
-        never create stored variants or include playback settings in cache keys.
-        Fall back gracefully when AudioWorklet setup or playback fails. Done
-        when focused tests cover persistence/bounds and browser playback proves
-        independent controls plus fallback.
   - [ ] **S8 — End-to-end mobile verification.** With the existing test account,
         verify audio quality, response time and CPU behavior on supported mobile
         browsers, plus fixed/AI reuse, emotion/style, signed-URL expiry and
@@ -342,92 +175,6 @@ Finished tasks are removed to keep this board short. Git history and
   under the menu button.
 
 ## NEXT
-
-- [ ] **NPC life system — implement only one numbered slice per request.** Do
-      not start the next slice automatically. All NPC facts must come from
-      validated content/database data; missing facts get a natural non-answer.
-      Server authority remains unchanged for quests, money, inventory, rewards,
-      mood, presence and relationships. Store workers stay professional and
-      customer-focused; social state never changes prices, stock, opening hours
-      or transaction validity. These tasks do not change sleep or energy.
-  - [x] **NPC-02 — Country-first onboarding: Sweden.** Add a validated country
-        catalog and forward-only database structure. Seed Sweden with ID
-        `country_sweden`, ISO `SE`, flag 🇸🇪 and IANA time zone
-        `Europe/Stockholm`. Players choose a country, not a city. Keep the city
-        hierarchy internal for later expansion and assign its starter city on
-        the server. UI and dialogue show Sweden and generic location names such
-        as Train Station and Town Street, never Maplewood. Done when shared
-        contracts, server persistence, onboarding UI, content validation,
-        migration checks and focused tests pass without exposing city choice.
-  - [x] **NPC-03 — Versioned NPC profile JSONB.** Add strict `profileVersion: 1`
-        content validation and `npcs.profile jsonb` through the next available
-        forward migration. Support only authored optional facts such as age,
-        hometown, family, hobbies, favourite food, likes/dislikes, conversation
-        topics, temperament and daily routine. Author distinct profiles in
-        `content/` rather than inferring or inventing facts. Done when
-        malformed/unknown fields fail validation, every NPC seeds a profile,
-        runtime reads the database value, and a missing fact cannot appear in a
-        response.
-  - [x] **NPC-04 — Data-driven mood catalog and base mood.** Add editable mood
-        rows for neutral, happy, hungry, stressed, tired, relaxed, sleepy, sad,
-        upset and angry; NPC mood references the catalog and defaults to
-        neutral. Resolve base mood from server-owned game time in the selected
-        country's IANA zone: morning happiness where temperament permits,
-        hunger/stress around 11:00–12:00, tiredness after 16:00, relaxation
-        after 19:00 and possible sleepiness around 21:00–22:00. Age may shift
-        hunger/energy/sleep timing but must never imply anger or friendliness.
-        Exceptional moods are deterministic per NPC/game date and limited to
-        authored rules. Done when boundary, age, temperament, rollover and DST
-        tests pass and no cron job is required.
-  - [x] **NPC-05 — Server-authoritative NPC presence schedules.** Add validated
-        weekly work/appearance slots to NPC profiles, including multiple shifts
-        and overnight windows. Resolve them from game-local time and country
-        time zone. Street NPCs without schedules are absent; store workers use
-        authored shifts constrained by venue hours, with venue hours as the
-        fallback only when their shift is missing. Return a presence allowlist
-        and next boundary to the client; hide and disable absent actors. Reject
-        a new conversation when an NPC is absent, but allow an already-open
-        conversation to finish. Done when server, Phaser interaction, refresh,
-        reconnect, boundary and failure-mode tests pass.
-  - [x] **NPC-06 — Per-player NPC relationships and reactions.** Add persistent
-        familiarity (0–100), affinity (-100–100), derived relationship stages,
-        and an expiring per-player reaction mood. Use deterministic, bounded
-        social signals for greetings, thanks, polite requests, apologies and
-        explicit insults; learner mistakes and ambiguous messages cause no
-        penalty. Save relationship changes in the same transaction as the
-        conversation turn and reuse the existing message idempotency key. Done
-        when caps, expiry, apology, concurrency and replay tests pass and store
-        behaviour remains commercially identical.
-  - [x] **NPC-07 — Database-backed natural everyday dialogue.** Cover name, age,
-        origin, family, job, workplace, hobbies, food, preferences, books,
-        music, art, pets, travel, school, local places, routines, current
-        activity, plans, wellbeing, weather, thanks, apologies, compliments and
-        farewells. Recognize natural English plus common learner forms such as
-        “What you name?”, “How old you?” and “Where you from?”. Render only
-        allowlisted values loaded from database context. Street NPCs may make
-        broad small talk; store NPCs answer briefly and redirect to service.
-        Preserve every quest/order intent, price and state transition. Done when
-        exhaustive table-driven cases and all seller/quest regression tests pass
-        without fabricated facts or hard-coded location names.
-  - [x] **NPC-08 — Adaptive response level and mood-aware delivery.** Default to
-        CEFR A2 when learner data is unavailable. Combine stored learner level
-        and observable input complexity, moving at most one CEFR band per turn.
-        Mood and relationship affect tone/length, never facts. AI prompts may
-        receive only validated allowlisted NPC facts, place, effective mood,
-        relationship stage and safe recent history; store prompts retain the
-        service-first rule. Speech styles use only provider-supported mappings
-        with a neutral fallback. Done when level bounds, prompt privacy,
-        missing-fact and voice-style tests pass.
-  - [x] **NPC-09 — Integration, documentation and release verification.** Merge
-        the completed slices carefully with the speech/audio work; resolve
-        forward-migration numbering without editing applied migrations. Update
-        `docs/GAME.md` and `docs/TECH.md` once with the durable country,
-        profile, mood, presence, relationship and dialogue contracts. Run
-        content validation, typecheck, lint, unit tests and build; run
-        integration tests only against the configured local Supabase and report
-        unavailable infrastructure honestly. Check relevant UI at 320, 375 and
-        1024 px. Done only when the full repository gates pass and no unrelated
-        changes are included.
 
 - [ ] **T36 — ID card quest (guided, step by step).** The only guided quest: the
       Goals list shows every step: (1) go to the tax office, (2) ask a staff

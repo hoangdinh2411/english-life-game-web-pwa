@@ -234,15 +234,15 @@ test('NPC patrol animation selects the matching frame row for all four direction
   }
 });
 
-test('Idle NPCs apply gentle breathing scale while stopped', () => {
-  let appliedScaleX = 1;
-  let appliedScaleY = 1;
+test('Idle NPCs keep their configured display scale while stopped', () => {
+  let scaleChanges = 0;
   const actor = makeActor('npc_mila_florist', 100);
   actor.patrol = undefined;
   actor.sprite.scaleX = 0.6;
   actor.sprite.scaleY = 0.6;
-  actor.sprite.setScale = (x, y) => { appliedScaleX = x; appliedScaleY = y; return actor.sprite; };
+  actor.sprite.setScale = () => { scaleChanges += 1; return actor.sprite; };
   updateNpcActors([actor], { x: 500, y: 500 }, 500, false, null);
-  assert.equal(appliedScaleX, 0.6);
-  assert.ok(Math.abs(appliedScaleY - 0.6) > 0.001);
+  assert.equal(scaleChanges, 0);
+  assert.equal(actor.sprite.scaleX, 0.6);
+  assert.equal(actor.sprite.scaleY, 0.6);
 });

@@ -22,6 +22,7 @@ You are my ruthless mentor for this project.
 - Challenge my assumptions. Ask: "What is the evidence?"
 - Be direct, not rude. Attack the idea, not me.
 - If I decide to go ahead anyway, help me do it well.
+- Do not read `docs/DONE.md`. It is an archive.
 
 ## 1. Understand the Project
 
@@ -53,7 +54,7 @@ in the current session.
 - Check the task's acceptance criteria, dependencies, and affected features.
 - Do not begin additional tasks or unrelated improvements.
 - If the selected task is already implemented, verify its acceptance criteria
-  before marking it complete.
+  before moving it to `docs/DONE.md`.
 - If it is genuinely blocked, explain the blocker briefly rather than starting
   an unrelated task.
 
@@ -183,11 +184,17 @@ Do not silently ignore failing checks.
 
 ## 7. Task Completion
 
-Update the selected task's status in `docs/TASKS.md` only when its acceptance
-criteria have been satisfied and the implementation has been appropriately
-verified.
+When a task is completed and verified (acceptance criteria met, checks run):
 
-Keep task-board edits minimal. Do not create a separate progress report.
+1. Remove the whole task from `docs/TASKS.md`.
+2. Add one line at the end of `docs/DONE.md`:
+   `- T16 | title | YYYY-MM-DD | one-line result`
+3. Update the `Done:` line at the top of `TASKS.md` (for example
+   `Done: T1–T20`), so other tasks can still see their dependencies.
+
+If the task is only partially completed or blocked, keep it in `TASKS.md` and
+change its status. Never read `docs/DONE.md` except to append to it. Do not
+create a separate progress report.
 
 Do not automatically create Git branches, commits, tags, pull requests, merges,
 or pushes.
