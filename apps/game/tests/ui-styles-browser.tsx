@@ -1,7 +1,7 @@
 // Manual Vite fixture: real reusable UI components, fictional state, no Auth/API calls.
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ActionButton, AvatarPreview, ChoiceCard, Heading, Screen } from '../src/components/onboarding-ui';
+import { ActionButton, Heading, Screen } from '../src/components/onboarding-ui';
 import { DialogueMessage } from '../src/gameplay/DialogueMessage';
 import { playerPortrait } from '../src/gameplay/portraits';
 import '../src/styles.css';
@@ -19,8 +19,7 @@ function StylingFixture() {
         <ActionButton label="Secondary action" secondary onClick={() => setSelected(false)} />
         <ActionButton label="Disabled action" disabled onClick={() => {}} />
       </form>
-      <ChoiceCard title="Preview avatar" subtitle="Select to verify the selected card state." selected={selected} onClick={() => setSelected(!selected)}><AvatarPreview color="#426f61" /></ChoiceCard>
-      <AvatarPreview color="#426f61" large />
+      <p role="status">Primary action {selected ? 'selected' : 'not selected'}.</p>
       <DialogueMessage name="Preview learner" portrait={playerPortrait} text="Fictional player message" player />
       <DialogueMessage name="Preview NPC" portrait={playerPortrait} text="Fictional NPC message" />
     </Screen>

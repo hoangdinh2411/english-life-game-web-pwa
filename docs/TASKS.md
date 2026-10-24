@@ -46,14 +46,14 @@ Finished tasks are removed to keep this board short. Git history and
 
 ## NOW
 
-- [ ] **ONB-01 — One-page country setup, shared country clocks and quick
-      rest.** Replace the multi-screen country/avatar/name flow with one short
-      first-run screen. A player chooses one of the 247 authored countries and
-      a valid character name; the server atomically assigns the country's
-      shared immutable clock world and the existing generic starter location.
-      Sleep becomes a five-second rest that restores energy without moving
-      world time. Implement only one numbered slice per request, keep each
-      slice green, and do not start the next slice automatically.
+- [ ] **ONB-01 — One-page country setup, shared country clocks and quick rest.**
+      Replace the multi-screen country/avatar/name flow with one short first-run
+      screen. A player chooses one of the 247 authored countries and a valid
+      character name; the server atomically assigns the country's shared
+      immutable clock world and the existing generic starter location. Sleep
+      becomes a five-second rest that restores energy without moving world time.
+      Implement only one numbered slice per request, keep each slice green, and
+      do not start the next slice automatically.
   - [x] **ONB-01.1 — Canonical country catalog and additive world schema.** Use
         `apps/game/assets/flags/countries.json` as the repository source of
         truth. Add a deterministic generator for a self-contained forward
@@ -75,10 +75,10 @@ Finished tasks are removed to keep this board short. Git history and
         player or world rows.
   - [x] **ONB-01.2 — Atomic and idempotent first-run API.** Change the request
         contract to `{ countryId, name }`; never accept world, clock, starter
-        location, energy or avatar values. Trim and NFC-normalize the name,
-        then allow 2–20 Unicode letters/marks with one space, ASCII apostrophe
-        or hyphen between parts. In one transaction lock the existing profile
-        row, validate the database country, find-or-create its world, create the
+        location, energy or avatar values. Trim and NFC-normalize the name, then
+        allow 2–20 Unicode letters/marks with one space, ASCII apostrophe or
+        hyphen between parts. In one transaction lock the existing profile row,
+        validate the database country, find-or-create its world, create the
         character with trusted starter city/location and `world_id`, grant the
         starting balance once, and use `avatar_traveler_01` as a server-only
         compatibility default. The same normalized payload returns the saved
@@ -107,43 +107,52 @@ Finished tasks are removed to keep this board short. Git history and
         Done when interpolation/rate, timer cleanup, lifecycle resync and zone
         formatting tests pass and the HUD, shops and NPC refreshes use the same
         snapshot contract.
-  - [ ] **ONB-01.5 — Accessible one-page country and name UI.** Keep only
-        `/new-game`: searchable, scrollable country results with bundled SVG
-        flags resolved from ISO via `import.meta.glob`, one name input and one
-        Continue action. Nothing is preselected. Country speech fills only the
-        search query and requires an explicit result selection; name speech
-        fills the name input and uses the same validation. Text remains usable
-        when speech is unavailable or denied. Clear a stale selection when the
-        edited query no longer represents it; retain form values on recoverable
-        errors; disable submission while invalid or pending. Remove obsolete
-        country/avatar/name/review routes, avatar options and their exclusive
-        UI/contracts, and include SVG assets in the PWA build. Done when
-        keyboard/screen-reader behavior, speech fallback, retry/reconnect,
-        routing and PWA tests pass and real renders at 320, 375 and 1024 px have
-        no horizontal overflow with Continue and the list reachable.
-  - [ ] **ONB-01.6 — Server-authoritative quick rest.** Keep the existing
+- [x] **ONB-01.5 — Accessible one-page country and name UI.** Keep only
+      `/new-game`: searchable, scrollable country results with bundled SVG flags
+      resolved from ISO via `import.meta.glob`, one name input and one Continue
+      action. Nothing is preselected. Country search and name entry use compact
+      keyboard/touch text controls without onboarding speech controls. Clear a
+      stale selection when the edited query no longer represents it; retain form
+      values on recoverable errors; disable submission while invalid or pending.
+      Remove obsolete country/avatar/name/review routes, avatar options and
+      their exclusive UI/contracts, and include SVG assets in the PWA build.
+      Done when keyboard/screen-reader behavior, retry/reconnect, routing and
+      PWA tests pass and real renders at 320, 375 and 1024 px have no horizontal
+      overflow with Continue and the list reachable.
+  - [x] **ONB-01.6 — Server-authoritative quick rest.** Keep the existing
         authenticated `/life/sleep` action and `player_actions` idempotency
         ledger, but never alter game time. After the existing row locks, read
         integer energy; allow only `0–29`, add exactly 50 points capped at 100,
         and reject `30+` with “You are not tired yet.” A same-key retry replays
         once; with two different concurrent keys, the second reads the updated
-        energy and is rejected. The client starts the dark transition only
-        after success, blocks input for five seconds, shows one short line, and
-        uses shorter fades—not a shorter rest—for reduced motion. Done when
+        energy and is rejected. The client starts the dark transition only after
+        success, blocks input for five seconds, shows one short line, and uses
+        shorter fades—not a shorter rest—for reduced motion. Done when
         `29 → 79`, `30 → 409`, unchanged world time, replay, concurrency,
         rejection-without-fade, refresh and reconnect tests pass.
   - [ ] **ONB-01.7 — Legacy clock cleanup and release verification.** After
         every runtime consumer uses world clocks, add forward migration
-        `033_remove_per_player_clock.sql` to drop only
-        `player_life.clock_time`, `clock_anchor` and `clock_rate`; remove
-        rebase/time-skip functions, stale fixtures and leftover references,
-        while preserving appearance and `player_actions`. Stop the old server
-        before this contract migration; if zero-downtime deployment is needed,
-        defer `033` to the next release. Update `docs/GAME.md` and
-        `docs/TECH.md` with the final durable behavior. Done when repository
-        search finds old clock names only in historical/contract migrations,
-        and content validation, lint, typecheck, unit tests, build, integration
-        tests and PWA checks pass.
+        `033_remove_per_player_clock.sql` to drop only `player_life.clock_time`,
+        `clock_anchor` and `clock_rate`; remove rebase/time-skip functions,
+        stale fixtures and leftover references, while preserving appearance and
+        `player_actions`. Stop the old server before this contract migration; if
+        zero-downtime deployment is needed, defer `033` to the next release.
+        Update `docs/GAME.md` and `docs/TECH.md` with the final durable
+        behavior. Done when repository search finds old clock names only in
+        historical/contract migrations, and content validation, lint, typecheck,
+        unit tests, build, integration tests and PWA checks pass.
+  - [ ] **ONB-01.8 — Immutable player character selection.** Implement the
+        approved `docs/specs/2026-10-24-player-gender-onboarding-design.md`:
+        keep one `/new-game` route but show country, image-only character
+        choice, and name as three consecutive steps. Create matching female/male
+        walking sheets and portraits, validate and transactionally save the
+        hidden gender value, return it with character state, and use it for
+        saved-game player rendering. Gender cannot be edited after onboarding.
+        Defer initial color customization and later color changes through
+        clothing-store/hair-salon NPC flows to a separate task; do not expose
+        appearance editing in the profile. Done when contract, persistence,
+        idempotency, asset-selection, interaction and 320/375/1024 px responsive
+        checks pass.
 
 - [ ] **T38 — Non-pausing game menu, synchronized Settings and movement
       tutorial.** Implement only one slice per request and stop after its
@@ -321,9 +330,9 @@ Finished tasks are removed to keep this board short. Git history and
 - **Approved ONB-01 replacement:** countries have shared immutable clock worlds
   running at 6× server elapsed time. Sleep becomes a five-second rest available
   below 30 energy; it adds 50 energy and never moves world time. Until ONB-01 is
-  complete, the current per-player eight-hour sleep remains legacy behavior,
-  not the target contract. Opening hours remain organizations 08:00–16:00,
-  stores 08:00–14:00 and workplaces 07:00–17:00 in country-local game time.
+  complete, the current per-player eight-hour sleep remains legacy behavior, not
+  the target contract. Opening hours remain organizations 08:00–16:00, stores
+  08:00–14:00 and workplaces 07:00–17:00 in country-local game time.
 - Appearance uses separate hair, shirt and trouser colors, saved with the
   character. The first shop catalog has blue/green/red/yellow shirts at $30
   each.

@@ -30,6 +30,7 @@ import { SettingsPanel } from "../features/game-menu/SettingsPanel";
 import { isStationSpeaker } from "../features/station/station-roster";
 import { useSession } from "../session/session-provider";
 import { useWorldClock } from "../features/world-clock/useWorldClock";
+import { countryLocationLabel } from "../features/location/country-presentation";
 
 const TUTORIAL_KEY = "movementTutorialSeen";
 
@@ -50,7 +51,9 @@ function markTutorialSeen() {
 }
 
 export default function StationScreen({
+  gender,
   playerName,
+  countryName,
   xp,
   coins,
   onSignOut,
@@ -61,7 +64,7 @@ export default function StationScreen({
   const [npcId, setNpcId] = useState<StationSpeaker | ShopNpcId | StreetNpcId | null>(null);
   const [tutorial, setTutorial] = useState(() => !hasSeenTutorial());
   const [stationReady, setStationReady] = useState(false);
-  const [location, setLocation] = useState("Sweden · Train Station");
+  const [location, setLocation] = useState(() => countryLocationLabel(countryName, "station"));
   const [menu, setMenu] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -86,7 +89,7 @@ export default function StationScreen({
   const worldClock = useWorldClock(runAuthenticated, !practice);
   const presence = useNpcPresence(activeMapId, !practice && Boolean(worldClock.snapshot), pwa.online,
     worldClock.clockRate, worldClock.revision);
-  const countryName = location.split(" · ")[0] ?? "Sweden";
+  const displayedCountryName = countryName?.trim() || "Not selected";
   const worldPaused =
     tutorial ||
     profileOpen ||
@@ -116,6 +119,8 @@ export default function StationScreen({
       aria-label={location}
     >
       <GameCanvas
+        gender={gender}
+        countryName={countryName}
         minimapVisible={!overlayOpen && !life?.sleepTransition}
         {...(life?.state ? { appearance: life.state.appearance } : {})}
         {...(arrival
@@ -151,8 +156,9 @@ export default function StationScreen({
         inert={Boolean(life?.sleepTransition)}
       >
         <PlayerInfoCard
+          gender={gender}
           playerName={playerName}
-          cityName={countryName}
+          cityName={displayedCountryName}
           coins={coins}
           onOpenProfile={() => setProfileOpen(true)}
           visible={!overlayOpen || profileOpen}
@@ -235,8 +241,9 @@ export default function StationScreen({
         />
       ) : null}
       {profileOpen ? <PlayerProfileDialogue
+        gender={gender}
         playerName={playerName}
-        cityName={countryName}
+        cityName={displayedCountryName}
         xp={xp}
         coins={coins}
         {...(life ? { life } : {})}
@@ -247,6 +254,7 @@ export default function StationScreen({
       {tutorial && stationReady ? (
         <TutorialDialogue
           playerName={playerName}
+          countryName={countryName}
           sound={sound}
           onClose={() => {
             markTutorialSeen();
@@ -256,14 +264,17 @@ export default function StationScreen({
       ) : null}
       {npcId && isStreetNpc(npcId) ? (
         <TownspersonConversation
+          gender={gender}
           key={npcId}
           npc={STREET_NPCS.find((npc) => npc.id === npcId)!}
           sound={sound}
+          countryName={countryName}
           onClose={() => setNpcId(null)}
           onRefresh={async () => { await life?.refresh(); await worldClock.refresh(); await presence.refresh(); }}
         />
       ) : npcId && isShopNpc(npcId) ? (
         <ShopConversation
+          gender={gender}
           key={npcId}
           npcId={npcId}
           sound={sound}
@@ -279,6 +290,7 @@ export default function StationScreen({
         </DialogueFrame>
       ) : npcId ? (
         <ConversationPanel
+          gender={gender}
           key={npcId}
           npcId={npcId}
           playerName={playerName}
@@ -345,11 +357,11 @@ export default function StationScreen({
       ) : null}
       {life?.sleepTransition ? (
         <div
-          className={`sleep-transition fixed inset-0 z-[1000] grid place-items-center bg-[#080d12] text-card [animation:sleep-darken_2s_ease-in-out_forwards] [&.waking]:[animation:sleep-wake_2s_ease-in-out_forwards] [@media(prefers-reduced-motion:reduce)]:[animation-duration:0.01ms] [@media(prefers-reduced-motion:reduce)]:[&.waking]:[animation-duration:0.01ms]  ${life.sleepTransition}`}
+          className={`sleep-transition fixed inset-0 z-[1000] grid place-items-center bg-[#080d12] text-card [animation:sleep-darken_750ms_ease-in-out_forwards] [&.resting]:opacity-100 [&.resting]:[animation:none] [&.waking]:[animation:sleep-wake_750ms_ease-in-out_forwards] [@media(prefers-reduced-motion:reduce)]:[animation-duration:100ms] [@media(prefers-reduced-motion:reduce)]:[&.waking]:[animation-duration:100ms] ${life.sleepTransition}`}
           role="status"
           aria-live="polite"
         >
-          <span>Sleeping…</span>
+          <span>Taking a quick rest…</span>
         </div>
       ) : null}
       {life?.error && !menu ? (

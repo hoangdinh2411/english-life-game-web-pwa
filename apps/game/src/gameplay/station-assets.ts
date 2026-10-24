@@ -1,5 +1,6 @@
 import station from '../../assets/locations/location_station_map_labeled.png';
 import player from '../../assets/runtime/player.png';
+import femalePlayer from '../../assets/runtime/player-female.png';
 import backpack from '../../assets/runtime/backpack.png';
 import suitcase from '../../assets/runtime/suitcase.png';
 import receptionist from '../../assets/runtime/receptionist.png';
@@ -17,6 +18,8 @@ function assetUrl(asset: unknown): string {
 export const stationBackground = assetUrl(station);
 export const stationAtlases = [
   { key: 'player', url: assetUrl(player), data: playerAtlas },
+  { key: 'player-male', url: assetUrl(player), data: playerAtlas },
+  { key: 'player-female', url: assetUrl(femalePlayer), data: playerAtlas },
   { key: 'backpack', url: assetUrl(backpack), data: backpackAtlas },
   { key: 'suitcase', url: assetUrl(suitcase), data: suitcaseAtlas },
   { key: 'receptionist', url: assetUrl(receptionist), data: receptionistAtlas },

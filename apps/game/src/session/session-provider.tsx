@@ -72,11 +72,12 @@ export function SessionProvider({ children }: PropsWithChildren) {
     return result;
   }, [manager]);
 
-  const startLife = useCallback(async () => {
+  const startLife = useCallback(async (submission?: OnboardingDraft) => {
     if (!token) throw new Error('Please sign in again.');
-    if (!draft.name || !draft.countryId || !draft.avatarId) throw new Error('Finish each step before starting your life.');
+    const character = submission ?? draft;
+    if (!character.name || !character.countryId || !character.gender) throw new Error('Complete all three setup steps.');
     try {
-      const request = { name: draft.name, countryId: draft.countryId };
+      const request = { name: character.name, countryId: character.countryId, gender: character.gender };
       const result = await manager.run((sessionToken) => api.createCharacter(sessionToken, request));
       setPlayer(result);
       return result;

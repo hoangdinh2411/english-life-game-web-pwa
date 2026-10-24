@@ -88,7 +88,7 @@ export class NpcPresenceService {
   }
 
   async assertCanStart(client: PoolClient, userId: string, npcId: string): Promise<void> {
-    const result = await this.context(client, userId, npcId);
+    const result = await this.context(client, npcId);
     const row = result.rows[0];
     if (!row) throw new ConflictException('NPC is not here right now');
     const clock = await this.worldClock.read(userId, client);
@@ -99,7 +99,7 @@ export class NpcPresenceService {
   }
 
   private async resolve(client: PoolClient, userId: string, mapId: string): Promise<NpcPresenceResponse> {
-    const result = await this.context(client, userId);
+    const result = await this.context(client);
     const first = result.rows[0];
     if (!first) throw new ServiceUnavailableException('NPC presence is unavailable.');
     const clock = await this.worldClock.read(userId, client);
@@ -111,8 +111,8 @@ export class NpcPresenceService {
       presentNpcIds: ids, nextChangeAt: next?.toISOString() ?? null });
   }
 
-  private async context(client: PoolClient, userId: string, npcId?: string) {
+  private async context(client: PoolClient, npcId?: string) {
     return client.query<PresenceRow>(`SELECT n.id,n.location_id,n.profile FROM public.npcs n
-      WHERE ($2::text IS NULL OR n.id=$2)`, [userId, npcId ?? null]);
+      WHERE ($1::text IS NULL OR n.id=$1)`, [npcId ?? null]);
   }
 }

@@ -24,6 +24,7 @@ export interface OverlayButtonProps {
   onClick: () => void;
 }
 export interface PlayerInfoCardProps {
+  gender?: import('@life-abroad/shared').PlayerGender | undefined;
   playerName: string;
   cityName: string;
   coins: number;
@@ -48,6 +49,7 @@ export interface DialogueMessageProps {
   replayDisabled?: boolean;
 }
 export interface ConversationPanelProps {
+  gender?: import('@life-abroad/shared').PlayerGender | undefined;
   npcId: StationSpeaker;
   playerName: string;
   sound: boolean;
@@ -56,6 +58,7 @@ export interface ConversationPanelProps {
 }
 export interface TutorialDialogueProps {
   playerName: string;
+  countryName?: string | undefined;
   sound: boolean;
   onClose: () => void;
 }
@@ -64,6 +67,7 @@ export interface QuestBoardProps {
   goals?: readonly ArrivalGoal[];
 }
 export interface StationScreenProps {
+  gender?: import('@life-abroad/shared').PlayerGender | undefined;
   life?: LifeControls;
   arrival?: {
     initialLocation: PlayerLocation;
@@ -83,6 +87,7 @@ export interface StationScreenProps {
     renderReceptionist: (sound: boolean, onClose: () => void) => ReactNode;
   };
   playerName: string;
+  countryName?: string | undefined;
   xp: number;
   coins: number;
   onSignOut: () => void;

@@ -222,8 +222,13 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   strict field validation happens before seeding and prompt construction.
   Migration `029` adds the editable mood catalog and persisted base mood;
   migration `030` adds private per-player relationships and idempotent social
-  events. These are unique forward migrations; applied migrations remain
-  immutable.
+  events. Migration `032` adds the canonical 247-country catalog and immutable
+  shared country worlds; `033` removes obsolete per-player clock columns; `034`
+  replaces legacy Sweden-specific presentation text while preserving country
+  records. These are unique forward migrations; applied migrations remain immutable.
+  Migration `035` adds the immutable, check-constrained character gender used
+  to resolve approved player walking and portrait assets; existing rows are
+  backfilled before the column becomes required.
   Canonical speech keys include only
   generation inputs, and callers receive 60-second signed URLs. AI audio uses
   `AI_SPEECH_CACHE_TTL_SECONDS` (30–3600, default 300) and rejects sensitive text.
@@ -256,16 +261,22 @@ limiter before deployment, and a reverse proxy shares its peer-IP bucket.
   url, bytes, npcId }] }`. Latest version per map/NPC logical key, resolved from
   PostgreSQL; no browser PostgREST access. Unavailable packs return 404.
 - `GET /health` → `{ status: "ok" }` (public).
-- `GET /onboarding/options` → `{ countries, avatars }` (protected, authored
+- `GET /onboarding/options` → `{ countries }` (protected, database-backed
   content). Countries expose `id`, `name`, ISO code, flag and IANA time zone;
   their starter-city mapping remains server-only.
-- `GET /me` → `{ user, character, stats }`; `character: null` before creation,
-  `stats` contains existing `xp`/`coins` even before a character exists.
-- `POST /characters` with `{ name, countryId }`; trims and NFC-normalizes a
+- `GET /me` → `{ user, character, stats }`; a created character includes authoritative
+  `countryId`, `countryName` and immutable `gender` for country-aware presentation
+  and approved player asset selection. It returns
+  `character: null` before creation and for an incomplete legacy row without a
+  valid country/starter city, causing the client to return to `/new-game`;
+  `stats` retains existing `xp`/`coins` in either case.
+- `POST /characters` with `{ name, countryId, gender }`; accepts only `female`
+  or `male`, trims and NFC-normalizes a
   2–20-character Unicode name, validates the database country, finds or creates
   its shared clock world, and atomically creates the character at the trusted
   starter location with the configured starting grant. An identical normalized
-  replay returns the saved profile; a different replay returns 409. The server
+  replay, including gender, returns the saved profile; a different replay
+  returns 409. The server
   stores `avatar_traveler_01` only as a temporary compatibility default.
 - `POST /players/location` with `{ mapId, placeId, x, y }`; saves the
   authenticated character's outdoor parent map, exact playable place and
@@ -369,11 +380,12 @@ shop companion scripts; the first coffee quest remains attached to Mia.
   `{ gameTimeUtc, timeZone, clockRate }`. Server decisions convert that instant through the country IANA zone.
   The client interpolates display time from `performance.now()` and resynchronizes on load, reconnect,
   visible-tab return and every 60 seconds; HUD, venue checks and NPC refreshes share that snapshot.
-  State initializes lazily for a character at 100 energy and 08:00 on game day 2000-01-01.
-  Its game clock advances at the configured rate (2× by default), including time
-  away from the app. The server persists game time, real-time anchor and rate;
-  changing the configured rate rebases the clock without a jump. Browser
-  wall-clock changes cannot mutate saved time.
+  Life state initializes lazily at 100 energy and retains only appearance in
+  `player_life`; action receipts remain in `player_actions`. Per-player clock
+  columns were removed by forward migration `033_remove_per_player_clock.sql`.
+  Every runtime time decision reads the character's selected-country world,
+  whose start and 6× rate are immutable. Browser wall-clock changes cannot
+  mutate saved time.
 - `mood_types` stores editable mood labels and dialogue guidance. NPC base mood
   references this catalog, defaults to `neutral`, and is recomputed on dialogue
   context reads from server-owned game time converted through the selected
@@ -390,14 +402,18 @@ shop companion scripts; the first coffee quest remains attached to Mia.
   social signals update this row inside the conversation-turn transaction; a
   locked row and `npc_relationship_events` keyed by the existing client message
   UUID provide concurrency safety, daily caps and replay idempotency.
-- Dialogue context loads the NPC's strict profile plus country, city and place
-  names from PostgreSQL. The renderer substitutes only an explicit token
+- Dialogue context loads the NPC's strict profile plus the authenticated
+  character's selected country and its trusted starter city, alongside the NPC
+  place name, from PostgreSQL. Scripted rendering and AI prompt context share
+  that selected-country authority; they never infer country from an NPC's
+  generic location. The renderer substitutes only an explicit token
   allowlist and routes missing values to authored fallback text. Deterministic
   everyday intents run after NPC and role scripts; seller and quest intents
   retain priority and authority.
 - Protected `GET /life/catalog` returns the seeded shop catalog.
 - Protected `GET /life/orders` returns the latest ten café orders for the signed-in player. Each order stores item names, quantities and unit prices as purchased, its total and timestamp.
-- `POST /life/sleep` takes `{ key: UUID }` and restores 100 energy without changing the shared world clock.
+- `POST /life/sleep` takes `{ key: UUID }`, accepts only 0–29 energy, and adds
+  exactly 50 energy capped at 100 without changing the shared world clock.
 - `POST /life/purchase` takes `{ key: UUID, itemIds: string[] }`: one item or one drink plus
   one food. Stores accept purchases only from 08:00 until 20:00. Prices come from PostgreSQL.
   Payment, café order history and consumption/wardrobe changes share a transaction. Clothes purchases are not included in café order history. Consumables create no inventory;

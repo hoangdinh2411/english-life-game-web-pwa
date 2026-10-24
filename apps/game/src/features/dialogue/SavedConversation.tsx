@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { DialogueMessage } from "../../gameplay/DialogueMessage";
 import { MessageComposer } from "../../gameplay/MessageComposer";
 import { GameButton } from "../../gameplay/GameButton";
-import { npcPortraits, playerPortrait } from "../../gameplay/portraits";
+import { npcPortraits, playerPortraitPresentation } from "../../gameplay/portraits";
+import type { PlayerGender } from "@life-abroad/shared";
 import type { ConversationSnapshot } from "./conversation-controller";
 import { useNarration } from "../../speech/use-narration";
 import { useSpeech } from "../../speech/use-speech";
@@ -21,6 +22,7 @@ export function SavedConversation({
   loadOlder,
   retry,
   displayNpc,
+  gender,
   completed = false,
   details,
   hint,
@@ -38,11 +40,13 @@ export function SavedConversation({
     portraitPosition: (text: string, thinking?: boolean) => string;
     portraitGrid?: { columns: number; rows: number };
   };
+  gender?: PlayerGender | undefined;
   completed?: boolean;
   details?: ReactNode;
   hint?: string;
   onClose?: () => void;
 }) {
+  const playerPortrait = playerPortraitPresentation(gender);
   const [text, setText] = useState(state.retryMessage?.text ?? "");
   const [hintOpen, setHintOpen] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
@@ -199,16 +203,18 @@ export function SavedConversation({
             player={message.sender === "player"}
             portrait={
               message.sender === "player"
-                ? playerPortrait
+                ? playerPortrait.portrait
                 : (displayNpc?.portrait ?? npcPortraits.npc_station_information)
             }
             portraitPosition={
-              message.sender === "npc"
+              message.sender === "player"
+                ? playerPortrait.portraitPosition
+                : message.sender === "npc"
                 ? displayNpc?.portraitPosition(message.text)
                 : undefined
             }
             portraitGrid={
-              message.sender === "npc" ? displayNpc?.portraitGrid : undefined
+              message.sender === "player" ? playerPortrait.portraitGrid : displayNpc?.portraitGrid
             }
             onReplay={() => voice.listen(message.text, message.speech?.url)}
             replayVisible={sound && voice.supported}
@@ -222,7 +228,9 @@ export function SavedConversation({
             name="You"
             text={state.retryMessage.text}
             player
-            portrait={playerPortrait}
+            portrait={playerPortrait.portrait}
+            portraitPosition={playerPortrait.portraitPosition}
+            portraitGrid={playerPortrait.portraitGrid}
           />
         ) : null}
         {state.streaming ? (

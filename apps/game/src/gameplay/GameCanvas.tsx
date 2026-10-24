@@ -8,6 +8,8 @@ import type {
 } from "../types/gameplay/world";
 import { syncNpcPresence } from "../features/npcs/npc-presence";
 export default function GameCanvas({
+  gender,
+  countryName,
   paused,
   worldPaused = paused,
   conversationNpcId = null,
@@ -110,6 +112,8 @@ export default function GameCanvas({
       const { createStationGame } = await import("./create-station-game");
       if (cancelled) return;
       instance = createStationGame(host, {
+        gender,
+        countryName,
         initialLocation,
         appearance: appearanceRef.current,
         practice: !serverExit,

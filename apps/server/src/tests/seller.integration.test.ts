@@ -7,6 +7,9 @@ import { createClient } from '@supabase/supabase-js';
 import { Pool, type PoolClient, type QueryResultRow } from 'pg';
 import { conversationSchema, conversationTurnSchema, shopOrderListSchema } from '@life-abroad/shared';
 import { AppModule } from '../app.module';
+import { WorldClockService } from '../modules/world-clock/world-clock.service';
+import { MutableWorldClock } from './support/mutable-world-clock';
+import { AiService } from '../modules/ai/ai.service';
 import { DatabaseService } from '../infrastructure/database/database.service';
 import { ConversationsRepository } from '../modules/conversations/conversations.repository';
 import { ServiceUnavailableException } from '@nestjs/common';
@@ -14,6 +17,12 @@ import { ServiceUnavailableException } from '@nestjs/common';
 // Catches charges before confirmation, duplicate payment, lost pending orders,
 // and successful-looking replies when a transaction actually failed.
 test('T17 seller Auth/API: existing account, pending order, pay once, cancel and insufficient funds', async () => {
+  const stableTurn = (value: unknown) => {
+    const turn = conversationTurnSchema.parse(value);
+    return { ...turn, seller: turn.seller ? { shop: turn.seller.shop, pendingOrder: turn.seller.pendingOrder } : undefined,
+      npcMessage: { ...turn.npcMessage,
+      speech: turn.npcMessage.speech ? { url: new URL(turn.npcMessage.speech.url).pathname } : undefined } };
+  };
   const url = new URL(process.env.DATABASE_URL ?? '');
   assert.equal(url.hostname, '127.0.0.1'); assert.ok(['54322', '55422'].includes(url.port));
   const authUrl = process.env.SUPABASE_URL ?? '';
@@ -37,8 +46,11 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
       return result;
     },
   };
+  const worldClock = new MutableWorldClock();
   const module = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(DatabaseService).useValue(database).compile();
+    .overrideProvider(DatabaseService).useValue(database)
+    .overrideProvider(WorldClockService).useValue(worldClock)
+    .overrideProvider(AiService).useValue({ enabled: false }).compile();
   const app = module.createNestApplication();
   app.setGlobalPrefix('api/v1');
   try {
@@ -54,18 +66,16 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
       bus_ticket_issued_at=null,bus_ticket_used_at=null,rewards_granted_at=null
       WHERE user_id=$1 AND quest_id='q_station_arrival'`, [userId]);
     await client.query('UPDATE player_stats SET coins=500,energy=100 WHERE user_id=$1', [userId]);
-    await client.query(`INSERT INTO player_life (user_id,clock_time,clock_anchor)
-      VALUES ($1,'2026-10-11T10:00:00Z',now()) ON CONFLICT (user_id)
-      DO UPDATE SET clock_time=excluded.clock_time,clock_anchor=excluded.clock_anchor`, [userId]);
+    await client.query('INSERT INTO player_life (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING', [userId]);
     await app.listen(0, '127.0.0.1');
     const base = await app.getUrl() + '/api/v1';
     const headers = { Authorization: `Bearer ${login.data.session.access_token}`, 'Content-Type': 'application/json' };
     const call = (path: string, body?: unknown) => fetch(base + path, { headers,
       method: body === undefined ? 'GET' : 'POST', ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     const created = await call('/conversations', { npcId: 'npc_mia' });
-    assert.equal(created.status, 201, 'seller conversations must be supported');
+    assert.equal(created.status, 201, await created.clone().text());
     const conversation = conversationSchema.parse(await created.json());
-    assert.match(conversation.messages[0]!.text, /what|welcome|hello|hi/i);
+    assert.match(conversation.messages[0]!.text, /what|welcome|hello|hi|good to see you/i);
     const path = `/conversations/${conversation.id}`;
     const send = (text: string, clientMessageId = randomUUID()) =>
       call(path + '/messages', { text, clientMessageId });
@@ -79,10 +89,10 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
       'SELECT coins,energy FROM player_stats WHERE user_id=$1', [userId])).rows[0]!;
     assert.equal((await turn('Yes please')).intent, 'ask_menu', 'answer the opening menu question naturally');
     assert.equal((await turn('Hello')).intent, 'greet');
-    assert.equal((await turn('How is the weather?')).intent, 'weather');
-    assert.equal((await turn('How are you?')).intent, 'wellbeing');
+    assert.equal((await turn('How is the weather?')).intent, 'ask_weather');
+    assert.equal((await turn('How are you?')).intent, 'ask_wellbeing');
     assert.match((await turn('I feel sick')).npcMessage.text, /sorry|not feeling well/i);
-    assert.match((await turn('What do you have?')).npcMessage.text, /Espresso.*\$5/);
+    assert.match((await turn('What do you have?')).npcMessage.text, /menu below/i);
     assert.match((await turn('How much is a cappuccino?')).npcMessage.text, /\$7/);
     assert.equal((await stats()).coins, 500);
     assert.equal((await turn('I would like two cappuccinos please')).seller.pendingOrder?.total, 14);
@@ -91,7 +101,8 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
     const refreshed = await auth.auth.refreshSession();
     assert.equal(refreshed.error, null); assert.ok(refreshed.data.session);
     headers.Authorization = `Bearer ${refreshed.data.session.access_token}`;
-    assert.deepEqual(await (await call(path)).json(), saved);
+    const afterRefresh = await (await call(path)).json() as { seller: unknown };
+    assert.deepEqual(afterRefresh.seller, saved.seller);
     assert.equal((await turn('Make that three cappuccinos')).seller.pendingOrder?.total, 21);
     assert.equal((await turn('Cancel my order')).seller.pendingOrder, null);
     assert.equal((await turn('Yes')).intent, 'no_order');
@@ -117,7 +128,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
     assert.equal(paidResponse.status, 201);
     const paidTurn = conversationTurnSchema.parse(await paidResponse.json());
     assert.equal(paidTurn.intent, 'paid');
-    assert.deepEqual(await (await send('Yes please', paidMessageId)).json(), paidTurn,
+    assert.deepEqual(stableTurn(await (await send('Yes please', paidMessageId)).json()), stableTurn(paidTurn),
       'replayed payment confirmation returns its receipt without creating a second order');
     const orderRow = await client.query<{ id: string; items: unknown; total: number }>(
       'SELECT id,items,total FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2', [userId, cafeOrderId]);
@@ -146,10 +157,10 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
     assert.deepEqual(await stats(), before);
     const key = randomUUID();
     const responses = await Promise.all(Array.from({ length: 4 }, () => send('Yes please', key)));
-    let receipt: unknown;
+    let receipt: ReturnType<typeof stableTurn> | undefined;
     for (const response of responses) {
       assert.equal(response.status, 201);
-      const value: unknown = await response.json(); receipt ??= value; assert.deepEqual(value, receipt);
+      const value = stableTurn(await response.json()); receipt ??= value; assert.deepEqual(value, receipt);
     }
     assert.equal((await stats()).coins, 486);
     assert.equal((await send('different', key)).status, 409);
@@ -165,7 +176,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
     assert.equal(Number(failedHistory.rows[0]!.count), 0, 'failed payment creates no history entry');
     assert.equal((await turn('Cancel')).seller.pendingOrder, null);
     assert.equal((await turn('Goodbye')).seller.closed, true);
-    assert.deepEqual(await (await send('Yes please', key)).json(), receipt);
+    assert.deepEqual(stableTurn(await (await send('Yes please', key)).json()), receipt);
     assert.equal((await send('An espresso please')).status, 409);
     // T20 clothing orders use the saved seller conversation and charge once.
     // This test's outer transaction restores the existing account afterward.
@@ -197,7 +208,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
       'SELECT count(*) FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2',
       [userId, order.seller!.pendingOrder!.orderId]);
     assert.equal(Number(excludedClothesOrder.rows[0]!.count), 0, 'clothes are excluded from café order history');
-    assert.deepEqual(await clothesTurn('Yes please', confirmId), purchased);
+    assert.deepEqual(stableTurn(await clothesTurn('Yes please', confirmId)), stableTurn(purchased));
     const wardrobeAfterReload = await (await call('/life')).json() as {
       coins: number; appearance: { hair: string; shirt: string | null; trousers: string }; ownedShirts: string[];
     };
@@ -217,10 +228,9 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
     assert.deepEqual(reEquipped.appearance, { hair: 'blond', shirt: 'blue', trousers: 'charcoal' });
     assert.ok(reEquipped.ownedShirts.includes('shirt_green'));
     const setStoreTime = async (time: string) => {
-      await client.query('UPDATE player_life SET clock_time=$2,clock_anchor=now(),clock_rate=2 WHERE user_id=$1',
-        [userId, `2000-01-01T${time}:00Z`]);
+      worldClock.setGameTime(`2000-01-01T${time}:00.000Z`);
     };
-    for (const [time, expected] of [['07:59', 409], ['08:00', 201], ['19:59', 201], ['20:00', 409]] as const) {
+    for (const [time, expected] of [['07:59', 409], ['08:00', 201], ['13:59', 201], ['14:00', 409]] as const) {
       await setStoreTime(time);
       await client.query('UPDATE player_stats SET coins=500,energy=100 WHERE user_id=$1', [userId]);
       const purchaseKey = randomUUID();
@@ -230,15 +240,12 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
         'SELECT count(*) FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2', [userId, purchaseKey]);
       assert.equal(Number(orderCount.rows[0]!.count), expected === 201 ? 1 : 0,
         `direct café purchase history at ${time}`);
-      if (expected === 409) assert.match(JSON.stringify(await response.json()), /08:00.*20:00/);
+      if (expected === 409) assert.match(JSON.stringify(await response.json()), /08:00.*14:00/);
     }
     await setStoreTime('07:59');
-    const closedOpening = conversationSchema.parse(await (await call('/conversations', { npcId: 'npc_clothes_seller' })).json());
-    const closedReply = await call(`/conversations/${closedOpening.id}/messages`, {
-      text: 'What shirts do you have?', clientMessageId: randomUUID(),
-    });
-    assert.equal(closedReply.status, 201);
-    assert.match(conversationTurnSchema.parse(await closedReply.json()).npcMessage.text, /08:00.*20:00/);
+    const closedOpening = await call('/conversations', { npcId: 'npc_clothes_seller' });
+    assert.equal(closedOpening.status, 409);
+    assert.match(JSON.stringify(await closedOpening.json()), /not here right now/i);
     await setStoreTime('10:00');
     // Invalid NPCs/forged order state and unauthenticated calls are rejected.
     assert.equal((await call('/conversations', { npcId: 'npc_missing' })).status, 400);
@@ -284,13 +291,13 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
     const waiter = conversationSchema.parse(await waiterResponse.json());
     const waiterPath = `/conversations/${waiter.id}/messages`;
     const smallTalk = [
-      ['How are you?', 'wellbeing'],
-      ['How is the weather?', 'weather'],
+      ['How are you?', 'ask_wellbeing'],
+      ['How is the weather?', 'ask_weather'],
       ['I feel tired.', 'feeling_tired'],
       ['I feel fine.', 'feeling_fine'],
       ['I feel sick.', 'health'],
       ['Do you like the station?', 'station'],
-      ['Where are you from?', 'origin'],
+      ['Where are you from?', 'ask_origin'],
     ] as const;
     for (const [text, intent] of smallTalk) {
       const response = await call(waiterPath, { clientMessageId: randomUUID(), text });

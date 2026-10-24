@@ -52,7 +52,7 @@ test('ONB-01.2 creates one character, grant and country world with idempotent co
       assert.equal(initial.status, 200);
       assert.equal(((await initial.json()) as { character: unknown }).character, null);
 
-      const valid = { name: '  A\u030Ase-Li  ', countryId: 'country_sweden' };
+      const valid = { name: '  A\u030Ase-Li  ', countryId: 'country_sweden', gender: 'female' };
       for (const invalid of [
         {}, { name: 'A', countryId: 'country_sweden' }, { name: 'Anne  Marie', countryId: 'country_sweden' },
         { name: 'Valid Name', countryId: 'country_missing' }, { ...valid, avatarId: 'avatar_other' },
@@ -61,27 +61,28 @@ test('ONB-01.2 creates one character, grant and country world with idempotent co
       ]) assert.equal((await call(invalid)).status, 400);
       assert.equal((await pool.query('SELECT * FROM characters WHERE user_id=$1', [userId])).rowCount, 0);
 
-      const responses = await Promise.all([call(valid), call({ name: 'Åse-Li', countryId: 'country_sweden' })]);
+      const responses = await Promise.all([call(valid), call({ name: 'Åse-Li', countryId: 'country_sweden', gender: 'female' })]);
       assert.deepEqual(responses.map(response => response.status), [201, 201]);
       const states = await Promise.all(responses.map(response => response.json()));
       assert.deepEqual(states[0], states[1]);
       assert.deepEqual(states[0], {
         user: { id: userId, email, displayName: 'Existing test player' },
         character: {
-          id: userId, userId, name: 'Åse-Li', cityId: 'city_maplewood', countryId: 'country_sweden',
+          id: userId, userId, name: 'Åse-Li', gender: 'female', cityId: 'city_maplewood', countryId: 'country_sweden', countryName: 'Sweden',
           avatarId: 'avatar_traveler_01', lastLocation: { mapId: 'loc_station', placeId: 'loc_station', x: 768, y: 370 },
         },
         stats: { xp: 0, coins: 500 }, inventory: [], questProgress: [],
       });
-      assert.equal((await call({ name: 'Åse Lo', countryId: 'country_sweden' })).status, 409);
-      assert.equal((await call({ name: ' Åse-Li ', countryId: 'country_sweden' })).status, 201);
+      assert.equal((await call({ name: 'Åse Lo', countryId: 'country_sweden', gender: 'female' })).status, 409);
+      assert.equal((await call({ name: ' Åse-Li ', countryId: 'country_sweden', gender: 'female' })).status, 201);
+      assert.equal((await call({ name: 'Åse-Li', countryId: 'country_sweden', gender: 'male' })).status, 409);
 
       const character = (await pool.query(`SELECT name,country_id,current_city_id,current_map_id,current_place_id,
-        world_id,outfit FROM characters WHERE user_id=$1`, [userId])).rows[0];
+        world_id,outfit,gender FROM characters WHERE user_id=$1`, [userId])).rows[0];
       assert.deepEqual(character, {
         name: 'Åse-Li', country_id: 'country_sweden', current_city_id: 'city_maplewood',
         current_map_id: 'loc_station', current_place_id: 'loc_station', world_id: character.world_id,
-        outfit: { avatarId: 'avatar_traveler_01' },
+        outfit: { avatarId: 'avatar_traveler_01' }, gender: 'female',
       });
       assert.ok(character.world_id);
       assert.equal((await pool.query(`SELECT count(*)::int AS count FROM worlds

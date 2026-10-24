@@ -16,6 +16,8 @@ import { MockProvider } from '../modules/ai/mock.provider';
 import { conversationNpcSchema } from '@life-abroad/shared';
 import { DialogueService } from '../modules/dialogue/dialogue.service';
 import { ChatStreamService, type ChatEvent } from '../modules/conversations/chat-stream.service';
+import { WorldClockService } from '../modules/world-clock/world-clock.service';
+import { MutableWorldClock } from './support/mutable-world-clock';
 
 test('T10c-T10e existing account: routing, safety, streaming and persistence (rollback only)', {
   skip: !process.env.T10_TEST_PASSWORD,
@@ -57,9 +59,11 @@ test('T10c-T10e existing account: routing, safety, streaming and persistence (ro
     },
   };
   let transactionId = 0;
+  const worldClock = new MutableWorldClock();
   const module = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(ConfigService).useValue(new ConfigService({ AI_ENABLED: 'true' }))
     .overrideProvider(DatabaseService).useValue(database)
+    .overrideProvider(WorldClockService).useValue(worldClock)
     .overrideProvider(AI_PROVIDER).useValue(provider).compile();
   try {
     await client.query('BEGIN');
@@ -87,7 +91,6 @@ test('T10c-T10e existing account: routing, safety, streaming and persistence (ro
     console.log(`Verified ${live ? 'Gemini' : 'mock'} NPC reply:`, generated);
     if (!live) {
       await client.query("UPDATE characters SET current_location_id='loc_station' WHERE user_id=$1", [userId]);
-      await client.query("UPDATE player_life SET clock_time='2026-10-15T10:00:00Z',clock_anchor=now() WHERE user_id=$1", [userId]);
       await client.query("UPDATE player_quests SET status='done',current_step_id=null WHERE user_id=$1", [userId]);
       const scriptedExamples = ['Hello', 'How is the weather?', 'How are you?', 'I want a coffee', 'how much is the tea?', 'coffe plz two', 'bus ticket'];
       for (const npcId of conversationNpcSchema.options) {

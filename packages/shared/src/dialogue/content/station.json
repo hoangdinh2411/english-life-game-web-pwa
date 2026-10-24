@@ -1,7 +1,7 @@
 {
   "greetings": {
-    "receptionist": "Welcome to Sweden! I’m the station receptionist. Say hello, and I can help you find your way.",
-    "backpack": "Hi! I just arrived too. Are you new to Sweden?",
+    "receptionist": "Welcome! I’m the station receptionist. Say hello, and I can help you find your way.",
+    "backpack": "Hi! I just arrived too. Are you new here?",
     "suitcase": "Hello! How was your journey?",
     "visitor": "Hi! Is this your first day in town too?"
   },
@@ -33,13 +33,13 @@
       "text": "Of course! What would you like help with instead?"
     },
     "goodbye": {
-      "text": "You’re welcome! Enjoy your new life in Sweden."
+      "text": "You’re welcome! Enjoy your new life here."
     },
     "passenger_directions": {
       "text": "The receptionist at the information kiosk can help you with that."
     },
     "passenger_chat": {
-      "text": "It’s nice to meet you! What would you like to do in Sweden?"
+      "text": "It’s nice to meet you! What would you like to do here?"
     },
     "confirmation": {
       "text": "Oh, {question}?",

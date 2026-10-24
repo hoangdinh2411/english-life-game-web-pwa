@@ -2,7 +2,7 @@
   "id": "city_maplewood",
   "isStarterCity": true,
   "name": "Starter City",
-  "description": "The internal starter city for Sweden.",
+  "description": "The internal starter city for new players.",
   "locations": [
     { "id": "loc_station", "name": "Train Station", "type": "station" },
     { "id": "loc_town_street", "name": "Town Street", "type": "street" },

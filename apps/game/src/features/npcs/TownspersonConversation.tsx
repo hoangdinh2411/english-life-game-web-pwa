@@ -5,14 +5,17 @@ import { loadArrival, loadOlderConversationMessages, openConversation, sendArriv
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
 import { SavedConversation } from '../dialogue/SavedConversation';
 import { createConversationController } from '../dialogue/conversation-controller';
-import type { StreetNpcContent } from '@life-abroad/shared';
+import type { PlayerGender, StreetNpcContent } from '@life-abroad/shared';
 import { conversationNpcSchema } from '@life-abroad/shared';
 import { streamChat } from '../dialogue/chat-stream';
 import { NPC_PORTRAIT_GRID, npcPortrait, npcPortraitPosition } from './npc-portraits';
+import { countryResidentHint } from '../location/country-presentation';
 
-export function TownspersonConversation({ npc, sound, onClose, onRefresh }: {
+export function TownspersonConversation({ gender, npc, sound, countryName, onClose, onRefresh }: {
+  gender?: PlayerGender | undefined;
   npc: StreetNpcContent;
   sound: boolean;
+  countryName?: string | undefined;
   onClose: () => void;
   onRefresh: () => Promise<void>;
 }) {
@@ -43,7 +46,7 @@ export function TownspersonConversation({ npc, sound, onClose, onRefresh }: {
     {!confirmationOnly ? <div className="dialogue-header">
       <div className="min-w-0"><h2>{npc.name}</h2><p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{npc.job}</p></div>
     </div> : null}
-    <SavedConversation state={state} sound={sound} online={online}
+    <SavedConversation gender={gender} state={state} sound={sound} online={online}
       send={controller.send} loadOlder={controller.loadOlder} retry={() => void controller.start()} onClose={onClose}
       displayNpc={{
         name: npc.name,
@@ -51,6 +54,6 @@ export function TownspersonConversation({ npc, sound, onClose, onRefresh }: {
         portraitPosition: npcPortraitPosition,
         portraitGrid: NPC_PORTRAIT_GRID,
       }}
-      hint="Try asking about the weather, hobbies, food or life in Sweden." />
+      hint={countryResidentHint(countryName)} />
   </DialogueFrame>;
 }

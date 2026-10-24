@@ -27,11 +27,9 @@ test('life rules restore approved energy and enforce exact opening boundaries', 
   }
 });
 
-test('changing clock speed rebases without a game-time jump', () => {
-  const before = { gameTime: new Date('2000-01-01T08:00:00Z'), realTime: new Date('2000-01-01T10:00:00Z'), rate: 2 };
-  const changedAt = new Date('2000-01-01T10:30:00Z');
-  const faster = life.rebaseGameClock(before, changedAt, 6);
-  assert.equal(faster.gameTime.toISOString(), '2000-01-01T09:00:00.000Z');
-  assert.equal(life.gameTimeAt(faster, changedAt).toISOString(), faster.gameTime.toISOString());
-  assert.equal(life.gameTimeAt(faster, new Date('2000-01-01T10:40:00Z')).toISOString(), '2000-01-01T10:00:00.000Z');
+test('quick rest is available only through 29 energy and adds exactly 50', () => {
+  assert.equal(life.canSleep(29), true);
+  assert.equal(life.canSleep(30), false);
+  assert.equal(life.quickRestEnergy(0), 50);
+  assert.equal(life.quickRestEnergy(29), 79);
 });

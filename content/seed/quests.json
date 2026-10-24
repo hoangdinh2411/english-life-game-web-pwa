@@ -1,6 +1,6 @@
 [
   {
-    "id": "q_station_arrival", "title": "Welcome to Sweden", "requiredLevel": "A1", "npcId": "npc_receptionist",
+    "id": "q_station_arrival", "title": "Welcome to your new home", "requiredLevel": "A1", "npcId": "npc_receptionist",
     "rewards": { "xp": 20, "coins": 5 },
     "steps": [
       { "id": "arrival_greet", "description": "Greet the station receptionist", "doneWhen": { "intent": "greet" } },

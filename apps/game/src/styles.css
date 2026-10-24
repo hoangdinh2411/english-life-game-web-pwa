@@ -112,7 +112,8 @@ body,
   }
   input:focus-visible,
   textarea:focus-visible {
-    outline: none;
+    outline: 3px solid var(--color-green);
+    outline-offset: 2px;
   }
   textarea {
     resize: none !important;

@@ -15,7 +15,7 @@ import { EconomyService } from '../economy/economy.service';
 
 interface PlayerRow {
   id: string; email: string; display_name: string;
-  name: string | null; current_city_id: string | null; country_id: string | null; outfit: unknown;
+  name: string | null; gender: 'female' | 'male' | null; current_city_id: string | null; country_id: string | null; country_name: string | null; outfit: unknown;
   current_map_id: string | null; current_place_id: string | null;
   current_position_x: number | null; current_position_y: number | null;
   xp: number | null; coins: number | null;
@@ -58,7 +58,7 @@ export class PlayersRepository {
       if (!country) throw new BadRequestException('Unknown country');
       const before = await this.getPlayer(userId, client);
       if (before.character) {
-        if (before.character.name !== request.name || before.character.countryId !== request.countryId) {
+        if (before.character.name !== request.name || before.character.countryId !== request.countryId || before.character.gender !== request.gender) {
           throw new ConflictException('A different character already exists');
         }
         return { ...before, character: before.character, inventory: [], questProgress: [] };
@@ -68,9 +68,15 @@ export class PlayersRepository {
       const worldId = world.rows[0]?.id;
       if (!worldId) throw new ServiceUnavailableException('Country world is unavailable');
       await client.query(`INSERT INTO public.characters
-        (user_id, name, outfit, country_id, world_id, current_city_id, current_map_id, current_place_id, current_position_x, current_position_y)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $7, 768, 370)`,
-        [userId, request.name, JSON.stringify({ avatarId: 'avatar_traveler_01' }), country.id, worldId,
+        (user_id, name, gender, outfit, country_id, world_id, current_city_id, current_map_id, current_place_id, current_position_x, current_position_y)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, 768, 370)
+        ON CONFLICT (user_id) DO UPDATE SET
+          name=excluded.name, gender=excluded.gender, outfit=excluded.outfit, country_id=excluded.country_id, world_id=excluded.world_id,
+          current_city_id=excluded.current_city_id, current_map_id=excluded.current_map_id,
+          current_place_id=excluded.current_place_id, current_position_x=excluded.current_position_x,
+          current_position_y=excluded.current_position_y
+        WHERE characters.country_id IS NULL OR characters.current_city_id IS NULL`,
+        [userId, request.name, request.gender, JSON.stringify({ avatarId: 'avatar_traveler_01' }), country.id, worldId,
           country.starter_city_id, country.starter_location_id]);
       await this.economy.grantStartingBalance(client, userId);
       const player = await this.getPlayer(userId, client);
@@ -135,20 +141,23 @@ export class PlayersRepository {
 
   async getPlayer(userId: string, client?: PoolClient): Promise<PlayerResponse> {
     const sql = `
-      SELECT p.id, u.email, p.display_name, c.name, c.current_city_id, c.country_id, c.current_map_id, c.current_place_id,
+      SELECT p.id, u.email, p.display_name, c.name, c.gender, c.current_city_id, c.country_id, co.name AS country_name,
+        c.current_map_id, c.current_place_id,
         c.current_position_x, c.current_position_y, c.outfit, s.xp, s.coins
       FROM public.profiles p JOIN auth.users u ON u.id = p.id
       LEFT JOIN public.characters c ON c.user_id = p.id
+      LEFT JOIN public.countries co ON co.id = c.country_id
       LEFT JOIN public.player_stats s ON s.user_id = p.id WHERE p.id = $1`;
     const result = client ? await client.query<PlayerRow>(sql, [userId]) : await this.database.query<PlayerRow>(sql, [userId]);
     const row = result.rows[0];
     if (!row || row.xp === null || row.coins === null) throw new ServiceUnavailableException('Player state is unavailable');
     const outfit = row.outfit;
     const avatarId = typeof outfit === 'object' && outfit !== null && 'avatarId' in outfit && typeof outfit.avatarId === 'string' ? outfit.avatarId : null;
-    if (row.name !== null && (!row.current_city_id || !row.country_id || !row.current_map_id || !row.current_place_id || row.current_position_x === null || row.current_position_y === null || !avatarId)) throw new ServiceUnavailableException('Character state is unavailable');
+    const needsOnboarding = row.name !== null && (!row.current_city_id || !row.country_id || !row.country_name);
+    if (row.name !== null && !needsOnboarding && (!row.current_map_id || !row.current_place_id || row.current_position_x === null || row.current_position_y === null || !avatarId)) throw new ServiceUnavailableException('Character state is unavailable');
     return {
       user: { id: row.id, email: row.email, displayName: row.display_name },
-      character: row.name === null ? null : { id: row.id, userId: row.id, name: row.name, cityId: row.current_city_id!, countryId: row.country_id!, avatarId: avatarId!,
+      character: row.name === null || needsOnboarding ? null : { id: row.id, userId: row.id, name: row.name, gender: row.gender!, cityId: row.current_city_id!, countryId: row.country_id!, countryName: row.country_name!, avatarId: avatarId!,
         lastLocation: { mapId: row.current_map_id as PlayerLocation['mapId'], placeId: row.current_place_id as PlayerLocation['placeId'],
           x: row.current_position_x!, y: row.current_position_y! } },
       stats: { xp: row.xp, coins: row.coins },

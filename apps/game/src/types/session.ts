@@ -1,5 +1,5 @@
 import type { OnboardingOptions, PlayerResponse, PlayerState } from '@life-abroad/shared';
-import type { OnboardingDraft } from './onboarding';
+import type { OnboardingDraft, OnboardingDraftChanges } from './onboarding';
 export interface StoredSession {
   token: string;
   refreshToken?: string;
@@ -31,6 +31,6 @@ export interface SessionValue {
   authenticate: (email: string, password: string, displayName?: string) => Promise<'signed-in' | 'confirmation-required'>;
   signOut: () => Promise<void>;
   refreshOptions: () => Promise<OnboardingOptions>;
-  updateDraft: (changes: Partial<OnboardingDraft>) => void;
-  startLife: () => Promise<PlayerState>;
+  updateDraft: (changes: OnboardingDraftChanges) => void;
+  startLife: (draft?: OnboardingDraft) => Promise<PlayerState>;
 }

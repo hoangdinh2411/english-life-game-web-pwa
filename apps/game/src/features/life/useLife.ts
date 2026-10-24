@@ -3,11 +3,13 @@ import type { LifeState, ShopItem } from '@life-abroad/shared';
 import type { SessionManager } from '../../types/session';
 import { loadCatalog, loadLife, performLifeAction, type LifeAction } from './life-api';
 import { isDefiniteRejection } from './life-clock';
+import { runQuickRestTransition, type QuickRestPhase } from './quick-rest-transition';
+import { refreshLifeOnConnection } from './life-sync';
 export function useLife(run: SessionManager['run'], online: boolean) {
   const [state, setState] = useState<LifeState | null>(null);
   const [catalog, setCatalog] = useState<ShopItem[]>([]);
   const [pending, setPending] = useState(false);
-  const [sleepTransition, setSleepTransition] = useState<'darkening' | 'waking' | null>(null);
+  const [sleepTransition, setSleepTransition] = useState<QuickRestPhase>(null);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState<LifeAction | null>(null);
   const mounted = useRef(false);
@@ -20,24 +22,30 @@ export function useLife(run: SessionManager['run'], online: boolean) {
   }, [run]);
   useEffect(() => {
     mounted.current = true;
-    void refresh();
-    void run(loadCatalog).then(result => { if (mounted.current) setCatalog(result); }).catch(() => { if (mounted.current) setError('Unable to load shop catalog. Reconnect and refresh.'); });
     return () => { mounted.current = false; };
-  }, [run, refresh]);
+  }, []);
+  useEffect(() => {
+    void refreshLifeOnConnection(online, refresh, async () => {
+      try { const result = await run(loadCatalog); if (mounted.current) setCatalog(result); }
+      catch { if (mounted.current) setError('Unable to load shop catalog. Reconnect and refresh.'); }
+    });
+  }, [online, refresh, run]);
   const act = async (action: LifeAction) => {
     if (busy.current || !online) return;
     busy.current = true; setPending(true); setError('');
     const sleeping = action.path === 'sleep';
-    const wait = () => new Promise<void>(resolve => window.setTimeout(resolve, 2000));
+    const wait = (milliseconds: number) => new Promise<void>(resolve => window.setTimeout(resolve, milliseconds));
     try {
-      if (sleeping) { setSleepTransition('darkening'); await wait(); }
-      if (!mounted.current) return;
-      await run(token => performLifeAction(token, action));
+      const perform = () => run(token => performLifeAction(token, action));
+      const result = sleeping
+        ? await runQuickRestTransition({ request: perform,
+            onPhase: phase => { if (mounted.current) setSleepTransition(phase); }, wait,
+            reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches })
+        : await perform();
+      if (mounted.current) setState(result);
       if (mounted.current) setRetry(null);
-      if (sleeping && mounted.current) { setSleepTransition('waking'); await wait(); }
       await refresh();
     } catch (failure) {
-      if (sleeping && mounted.current) { setSleepTransition('waking'); await wait(); }
       if (mounted.current) {
         setRetry(isDefiniteRejection(failure) ? null : action);
         setError(failure instanceof Error ? failure.message : 'The result is uncertain. Retry the same action to check it safely.');

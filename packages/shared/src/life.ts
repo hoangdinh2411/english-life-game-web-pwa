@@ -1,15 +1,8 @@
 import { z } from 'zod';
 
 export const GAME_TIME_RATE = 2;
-export interface SavedGameClock { gameTime: Date; realTime: Date; rate: number }
-export function gameTimeAt(clock: SavedGameClock, realNow: Date): Date {
-  const elapsed = Math.max(0, realNow.getTime() - clock.realTime.getTime());
-  return new Date(clock.gameTime.getTime() + elapsed * clock.rate);
-}
-export function rebaseGameClock(clock: SavedGameClock, realNow: Date, nextRate: number): SavedGameClock {
-  return { gameTime: gameTimeAt(clock, realNow), realTime: realNow, rate: nextRate };
-}
-export function canSleep(energy: number): boolean { return energy < 50; }
+export function canSleep(energy: number): boolean { return energy <= 29; }
+export function quickRestEnergy(energy: number): number { return Math.min(100, energy + 50); }
 export const SHIRT_COLORS = ['blue', 'green', 'red', 'yellow'] as const;
 export const appearanceSchema = z.object({
   hair: z.enum(['brown', 'black', 'blond', 'blue']),

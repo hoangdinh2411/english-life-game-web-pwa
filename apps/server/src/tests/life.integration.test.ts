@@ -7,6 +7,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Pool } from 'pg';
 import { lifeStateSchema, shopCatalogSchema } from '@life-abroad/shared';
 import { AppModule } from '../app.module';
+import { WorldClockService } from '../modules/world-clock/world-clock.service';
+import { MutableWorldClock } from './support/mutable-world-clock';
 
 test('life HTTP persists energy/time/outfit and atomically replays purchases, sleep and dialogue', async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
@@ -15,7 +17,9 @@ test('life HTTP persists energy/time/outfit and atomically replays purchases, sl
   const auth = createClient(process.env.SUPABASE_URL ?? '', process.env.SUPABASE_PUBLISHABLE_KEY ?? '', {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
+  const worldClock = new MutableWorldClock();
+  const module = await Test.createTestingModule({ imports: [AppModule] })
+    .overrideProvider(WorldClockService).useValue(worldClock).compile();
   const app = module.createNestApplication(); app.setGlobalPrefix('api/v1');
   let userId: string | undefined;
   try {
@@ -28,8 +32,8 @@ test('life HTTP persists energy/time/outfit and atomically replays purchases, sl
     const call = (path: string, body?: unknown) => fetch(base + path, { headers,
       method: body === undefined ? 'GET' : 'POST', ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     assert.equal((await call('/life')).status, 409);
-    const options = await (await call('/onboarding/options')).json() as { countries: { id: string }[]; avatars: { id: string }[] };
-    assert.equal((await call('/characters', { name: 'Life learner', countryId: options.countries[0]!.id })).status, 201);
+    const options = await (await call('/onboarding/options')).json() as { countries: { id: string }[] };
+    assert.equal((await call('/characters', { name: 'Life learner', countryId: options.countries[0]!.id, gender: 'male' })).status, 201);
     const getState = async () => {
       const response = await call('/life'); assert.equal(response.status, 200);
       return lifeStateSchema.parse(await response.json());
@@ -47,25 +51,25 @@ test('life HTTP persists energy/time/outfit and atomically replays purchases, sl
     assert.equal(receipt.energy, 80); assert.equal(receipt.coins, 493);
     assert.deepEqual(await (await call('/life/purchase', purchase)).json(), receipt);
     assert.equal((await call('/life/purchase', { ...purchase, itemIds: ['espresso'] })).status, 409);
-    for (const energy of [50, 100]) {
+    for (const energy of [30, 100]) {
       await database.query('UPDATE player_stats SET energy=$2 WHERE user_id=$1', [userId, energy]);
       const before = await getState();
       assert.equal((await call('/life/sleep', { key: randomUUID() })).status, 409);
       assert.equal((await getState()).energy, energy);
       assert.ok(Math.abs(Date.parse((await getState()).gameTime) - Date.parse(before.gameTime)) < 5000);
     }
-    await database.query('UPDATE player_stats SET energy=49 WHERE user_id=$1', [userId]);
+    await database.query('UPDATE player_stats SET energy=29 WHERE user_id=$1', [userId]);
     const clock = (await getState()).gameTime;
     const sleep = { key: randomUUID() };
     const sleeps = await Promise.all([call('/life/sleep', sleep), call('/life/sleep', sleep)]);
     const rested = lifeStateSchema.parse(await sleeps[0]!.json());
-    assert.deepEqual(await sleeps[1]!.json(), rested); assert.equal(rested.energy, 100);
-    assert.ok(Math.abs(Date.parse(rested.gameTime) - Date.parse(clock) - 8 * 3600000) < 5000);
+    assert.deepEqual(await sleeps[1]!.json(), rested); assert.equal(rested.energy, 79);
+    assert.ok(Math.abs(Date.parse(rested.gameTime) - Date.parse(clock)) < 5000);
     // Cached receipts remain replayable even if the shop has since closed.
-    await database.query("UPDATE player_life SET clock_time='2000-01-01T20:00:00Z',clock_anchor=now() WHERE user_id=$1", [userId]);
+    worldClock.setGameTime('2000-01-01T20:00:00.000Z');
     assert.equal((await call('/life/purchase', { key: randomUUID(), itemIds: ['espresso'] })).status, 409);
     assert.deepEqual(await (await call('/life/purchase', purchase)).json(), receipt);
-    await database.query("UPDATE player_life SET clock_time='2000-01-01T08:00:00Z',clock_anchor=now() WHERE user_id=$1", [userId]);
+    worldClock.setGameTime('2000-01-01T08:00:00.000Z');
     await database.query('UPDATE player_stats SET coins=5,energy=0 WHERE user_id=$1', [userId]);
     const competing = await Promise.all([call('/life/purchase', { key: randomUUID(), itemIds: ['espresso'] }),
       call('/life/purchase', { key: randomUUID(), itemIds: ['espresso'] })]);

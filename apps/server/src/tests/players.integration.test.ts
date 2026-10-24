@@ -52,9 +52,9 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
     assert.equal(before.user.id, userId);
     await database.query('UPDATE player_stats SET xp = 23, coins = 7 WHERE user_id = $1', [userId]);
     const optionsResponse = await call('/onboarding/options');
-    const options = await optionsResponse.json() as { countries: Array<{ id: string }> };
+    const options = await optionsResponse.json() as { countries: Array<{ id: string; name: string }> };
     assert.ok(options.countries[0]);
-    const request = { name: '  Replay Learner  ', countryId: options.countries[0].id };
+    const request = { name: '  Replay Learner  ', countryId: options.countries[0].id, gender: 'male' };
     for (const body of [null, {}, { ...request, xp: 999 }, { ...request, userId }, { ...request, name: ' ' },
       { ...request, name: 'a'.repeat(21) }, { ...request, countryId: 'country_unknown' }, { ...request, avatarId: 'avatar_unknown' }]) {
       assert.equal((await call('/characters', body)).status, 400);
@@ -77,7 +77,8 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
     const created = await responses[0]!.json();
     assert.deepEqual(created, {
       user: { id: userId, email, displayName: 'R4 learner' },
-      character: { id: userId, userId, name: 'Replay Learner', countryId: request.countryId,
+      character: { id: userId, userId, name: 'Replay Learner', gender: 'male', countryId: request.countryId,
+        countryName: options.countries.find(country => country.id === request.countryId)!.name,
         avatarId: 'avatar_traveler_01', cityId: 'city_maplewood',
         lastLocation: { mapId: 'loc_station', placeId: 'loc_station', x: 768, y: 370 } },
       stats: { xp: 23, coins: 507 }, inventory: [], questProgress: [],
@@ -165,7 +166,7 @@ test('T15 new character starts with $500 and reload retains it', async () => {
     await database.query('INSERT INTO auth.users (id,email,raw_user_meta_data) VALUES ($1,$2,$3)',
       [userId, `t15-${userId}@example.com`, {}]);
     const options = await module.get(OnboardingService).getOptions();
-    const request = { name: 'Wallet Learner', countryId: options.countries[0]!.id };
+    const request = { name: 'Wallet Learner', countryId: options.countries[0]!.id, gender: 'male' as const };
     const players = module.get(PlayersService);
     assert.deepEqual((await players.createCharacter(userId, request)).stats, { xp: 0, coins: 500 });
     assert.deepEqual((await players.getPlayer(userId)).stats, { xp: 0, coins: 500 });

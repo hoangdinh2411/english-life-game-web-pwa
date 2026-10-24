@@ -6,6 +6,7 @@ import { createServer } from 'vite';
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', ssr: { external: ['@life-abroad/shared'] } });
 try {
   const { isDefiniteRejection } = await server.ssrLoadModule('/src/features/life/life-clock.ts');
+  const { refreshLifeOnConnection } = await server.ssrLoadModule('/src/features/life/life-sync.ts');
   const { PlayerProfileDialogue } = await server.ssrLoadModule('/src/features/life/PlayerProfileDialogue.tsx');
   const { EnergyDisplay } = await server.ssrLoadModule('/src/features/life/EnergyDisplay.tsx');
   const { PlayerInfoCard } = await server.ssrLoadModule('/src/gameplay/PlayerInfoCard.tsx');
@@ -16,28 +17,37 @@ try {
     for (const error of [new Error('Network lost'), { status: 401 }, { status: 429 }, { status: 500 }]) assert.equal(isDefiniteRejection(error), false);
     for (const status of [400, 403, 404, 409, 422]) assert.equal(isDefiniteRejection({ status }), true);
   });
+  test('life state refreshes on initial connection and every reconnect, but not while offline', async () => {
+    let stateRefreshes = 0, catalogRefreshes = 0;
+    const refresh = () => { stateRefreshes++; return Promise.resolve(); };
+    const catalog = () => { catalogRefreshes++; return Promise.resolve(); };
+    await refreshLifeOnConnection(false, refresh, catalog);
+    await refreshLifeOnConnection(true, refresh, catalog);
+    await refreshLifeOnConnection(true, refresh, catalog);
+    assert.deepEqual([stateRefreshes, catalogRefreshes], [2, 2]);
+  });
   test('energy is labelled, readable without color, and explains empty/low energy', () => {
     for (const energy of [0, 20, 100]) {
       const html = renderToStaticMarkup(createElement(EnergyDisplay, { energy }));
       assert.match(html, /role="progressbar"/);
       assert.match(html, new RegExp(`aria-valuenow="${energy}"`));
       assert.match(html, new RegExp(`${energy}%`));
-      if (energy === 0) assert.match(html, /No energy.*Sleep or eat/);
+      if (energy === 0) assert.match(html, /No energy.*Rest or eat/);
       else if (energy === 20) assert.match(html, /Low energy/);
     }
     const loading = renderToStaticMarkup(createElement(EnergyDisplay));
     assert.match(loading, /Loading energy/);
     assert.doesNotMatch(loading, /aria-valuenow/);
   });
-  test('sleep icon permits 49% but blocks 50%, full energy and unavailable actions', () => {
-    for (const energy of [0, 49, 50, 100]) {
+  test('quick-rest icon permits 29% but blocks 30%, full energy and unavailable actions', () => {
+    for (const energy of [0, 29, 30, 100]) {
       const html = renderToStaticMarkup(createElement(EnergyDisplay, { energy, onSleep() {} }));
-      assert.match(html, new RegExp(`aria-disabled="${energy >= 50}"`));
-      assert.match(html, /Sleep to restore energy/);
+      assert.match(html, new RegExp(`aria-disabled="${energy >= 30}"`));
+      assert.match(html, /Quick rest/);
       assert.match(html, /role="tooltip"/);
       assert.match(html, /energy-battery/);
     }
-    assert.match(renderToStaticMarkup(createElement(EnergyDisplay, { energy: 49, onSleep() {}, sleepDisabled: true })), /aria-disabled="true"/);
+    assert.match(renderToStaticMarkup(createElement(EnergyDisplay, { energy: 29, onSleep() {}, sleepDisabled: true })), /aria-disabled="true"/);
   });
   test('player HUD card opens profile and keeps only a compact identity and clock', () => {
     const props = { playerName: 'Learner', cityName: 'Maplewood', coins: 500, onOpenProfile() {} };
@@ -48,6 +58,15 @@ try {
     assert.doesNotMatch(saved, /UTC/);
     assert.doesNotMatch(saved, /2×|times real time/);
     assert.match(saved, /12:00/);
+  });
+  // A saved female character must not fall back to the male HUD/profile portrait.
+  test('saved character gender selects a distinct portrait throughout the profile UI', () => {
+    const props = { playerName: 'Learner', cityName: 'Maplewood', coins: 500, onOpenProfile() {} };
+    const femaleHud = renderToStaticMarkup(createElement(PlayerInfoCard, { ...props, gender: 'female' }));
+    const maleHud = renderToStaticMarkup(createElement(PlayerInfoCard, { ...props, gender: 'male' }));
+    assert.notEqual(femaleHud, maleHud);
+    assert.match(femaleHud, /runtime\/player-female-portrait\.png/);
+    assert.match(maleHud, /runtime\/player-portrait\.png/);
   });
   test('player profile shows sourced character status without wardrobe or shop ordering', () => {
     const html = renderToStaticMarkup(createElement(PlayerProfileDialogue, {

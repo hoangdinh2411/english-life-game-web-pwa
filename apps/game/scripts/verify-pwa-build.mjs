@@ -33,11 +33,14 @@ assert.ok(urls.includes('index.html'));
 assert.ok(urls.includes('manifest.webmanifest'));
 let bytes = 0;
 for (const path of urls) {
-  assert.match(path, /^(?:index\.html|manifest\.webmanifest|icons\/[^/]+\.png|assets\/[^/]+\.(?:js|css|png|mp3))$/);
+  assert.match(path, /^(?:index\.html|manifest\.webmanifest|icons\/[^/]+\.png|assets\/[^/]+\.(?:js|css|png|svg|mp3))$/);
   bytes += (await stat(new URL(path, dist))).size;
 }
 assert.ok(urls.some((path) => /create-station-game.*\.js$/.test(path)));
 assert.ok(urls.some((path) => /location_station_map_labeled.*\.png$/.test(path)));
-assert.equal(urls.filter((path) => path.endsWith('.mp3')).length, 26);
-assert.equal(urls.filter((path) => /-portrait-.*\.png$/.test(path)).length, 4);
-console.log(`PASS: standalone manifest/icons, ${urls.length} unique public precache files (${(bytes / 1024 / 1024).toFixed(2)} MiB), Phaser/maps/portraits/26 audio clips; all exist.`);
+assert.equal(urls.filter((path) => path.endsWith('.mp3')).length, 20);
+assert.equal(urls.filter((path) => /-portrait-.*\.png$/.test(path)).length, 5);
+assert.ok(urls.some((path) => path.includes('player-female-portrait-') && path.endsWith('.png')));
+assert.ok(urls.some((path) => path.includes('player-female-') && !path.includes('portrait') && path.endsWith('.png')));
+assert.ok(urls.filter((path) => path.endsWith('.svg')).length >= 200);
+console.log(`PASS: standalone manifest/icons, ${urls.length} unique public precache files (${(bytes / 1024 / 1024).toFixed(2)} MiB), Phaser/maps/portraits/flags/20 country-neutral audio clips; all exist.`);

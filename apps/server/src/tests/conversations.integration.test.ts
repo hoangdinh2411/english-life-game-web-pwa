@@ -40,8 +40,8 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     assert.equal((await call('/conversations', { npcId: 'npc_receptionist' })).status, 409);
-    const options = await (await call('/onboarding/options')).json() as { countries: { id: string }[]; avatars: { id: string }[] };
-    assert.equal((await call('/characters', { name: 'T Seven Learner', countryId: options.countries[0]!.id })).status, 201);
+    const options = await (await call('/onboarding/options')).json() as { countries: { id: string }[] };
+    assert.equal((await call('/characters', { name: 'T Seven Learner', countryId: options.countries[0]!.id, gender: 'male' })).status, 201);
     assert.deepEqual((await (await call('/me')).json() as { stats: unknown }).stats, { xp: 0, coins: 500 });
     const created = await call('/conversations', { npcId: 'npc_receptionist' });
     assert.equal(created.status, 201);
@@ -117,7 +117,7 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     users.push(other.data.user.id);
     const ownToken = headers.Authorization;
     headers.Authorization = `Bearer ${other.data.session.access_token}`;
-    assert.equal((await call('/characters', { name: 'Other T Seven', countryId: options.countries[0]!.id })).status, 201);
+    assert.equal((await call('/characters', { name: 'Other T Seven', countryId: options.countries[0]!.id, gender: 'female' })).status, 201);
     assert.equal((await call(path)).status, 404);
     assert.equal((await send('Hello')).status, 404);
     headers.Authorization = ownToken;

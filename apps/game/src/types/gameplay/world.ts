@@ -1,5 +1,6 @@
 import type { Appearance, PlayerLocation } from "@life-abroad/shared";
 import type { MinimapSnapshot } from "../../features/minimap/model";
+import type { PlayerGender } from "@life-abroad/shared";
 export interface Point {
   x: number;
   y: number;
@@ -37,6 +38,8 @@ export interface NpcTalkPrompt extends Point {
   name: string;
 }
 export interface StationCallbacks {
+  gender?: PlayerGender | undefined;
+  countryName?: string | undefined;
   appearance?: Appearance | undefined;
   practice?: boolean;
   onProgress: (value: number) => void;
@@ -69,6 +72,8 @@ export interface StationGame {
   setPresentNpcIds: (ids: readonly string[]) => void;
 }
 export interface GameCanvasProps {
+  gender?: PlayerGender | undefined;
+  countryName?: string | undefined;
   minimapVisible?: boolean;
   appearance?: Appearance | undefined;
   initialLocation?: PlayerLocation;

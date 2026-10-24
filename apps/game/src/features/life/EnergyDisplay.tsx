@@ -63,10 +63,10 @@ export function EnergyDisplay({
   const value = shown ?? energy;
   const disabled = sleepDisabled || !canSleep(energy);
   const explanation = !canSleep(energy)
-    ? "Sleep to restore energy · Available below 50%"
+    ? "Quick rest · Available below 30% energy"
     : sleepDisabled
-      ? "Sleep to restore energy · Reconnect or finish the current action"
-      : "Sleep to restore energy · 8 game hours · Tap again to sleep";
+      ? "Quick rest · Reconnect or finish the current action"
+      : "Quick rest · Restores 50 energy · Tap again to rest";
 
   return (
     <div className={`energy-display [flex-basis:100%] w-full mt-1 pt-1.5 [border-top:1px_solid_#d7c49b] text-ink [font-family:inherit] ${energy <= 20 ? "energy-low [&_.energy-fill]:bg-[linear-gradient(90deg,_#e63946,_#f4a261)]" : ""}`}>
@@ -95,7 +95,7 @@ export function EnergyDisplay({
           <div className="sleep-control [@media(hover:hover)]:[&:hover_.sleep-tooltip]:block relative [margin-left:auto] [&:focus-within_.sleep-tooltip]:block">
             <button type="button"
               className="sleep-button flex cursor-pointer justify-center items-center w-11 h-11 p-0! [border:1px_solid_#52644f] rounded-[10px] bg-card text-ink [&[aria-disabled=true]]:text-muted [&[aria-disabled=true]]:[border-style:dashed] [&[aria-disabled=true]]:cursor-default"
-              aria-label="Sleep to restore energy"
+              aria-label="Quick rest to restore energy"
               aria-disabled={disabled}
               aria-describedby={tipId}
               onPointerDown={(event) => {
@@ -148,8 +148,8 @@ export function EnergyDisplay({
       {energy <= 20 ? (
         <span className="energy-warning block mt-0.5 text-[11px] font-bold text-[#843514]">
           {energy === 0
-            ? "No energy · Sleep or eat to chat"
-            : "Low energy · Eat or sleep"}
+            ? "No energy · Rest or eat to chat"
+            : "Low energy · Eat or rest"}
         </span>
       ) : null}
     </div>

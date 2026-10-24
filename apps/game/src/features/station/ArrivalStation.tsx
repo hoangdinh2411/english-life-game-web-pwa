@@ -96,7 +96,8 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
     <ActionButton label="Sign out" secondary onClick={onSignOut} />
   </Screen>;
   const view = arrivalPresentation(state.arrival);
-  return <StationScreen life={life} playerName={session.player?.character?.name ?? ''} xp={stats?.xp ?? 0} coins={life.state?.coins ?? stats?.coins ?? 0}
+  return <StationScreen life={life} playerName={session.player?.character?.name ?? ''} gender={session.player?.character?.gender}
+    countryName={session.player?.character?.countryName} xp={stats?.xp ?? 0} coins={life.state?.coins ?? stats?.coins ?? 0}
     onSignOut={() => { clearPendingPlayerLocation(session.player!.user.id, localStorage); onSignOut(); }}
     arrival={{ initialLocation, exitUnlocked: state.arrival.canEnterTownStreet, pending: state.pending,
       farewellConfirm: state.farewellStage === 'confirm',
@@ -118,7 +119,7 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
       onPlaceChange: (location) => {
         locationSync.current?.update(location);
       },
-      renderReceptionist: (sound, onClose) => <SavedConversation state={state} sound={sound} online={online} send={controller.send} loadOlder={controller.loadOlder} retry={() => void controller.start()} onClose={onClose}
+      renderReceptionist: (sound, onClose) => <SavedConversation gender={session.player?.character?.gender} state={state} sound={sound} online={online} send={controller.send} loadOlder={controller.loadOlder} retry={() => void controller.start()} onClose={onClose}
         completed={state.arrival?.status === 'done'} details={<>{state.arrival?.ticket.issued ? <TicketReceipt arrival={state.arrival} /> : null}<p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{view.next}</p></>} />,
     }} />;
 }

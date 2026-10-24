@@ -1,10 +1,6 @@
-import { Inject, Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { parseOnboardingOptions, type CountryOption, type OnboardingOptions } from '@life-abroad/shared';
 import { DatabaseService } from '../../infrastructure/database/database.service';
-
-export const ONBOARDING_SEED_DIRECTORY = 'ONBOARDING_SEED_DIRECTORY';
 
 interface CountryRow {
   id: string;
@@ -21,10 +17,7 @@ function isoFlag(isoCode: string): string {
 export class OnboardingService {
   private catalog: Promise<OnboardingOptions> | undefined;
 
-  constructor(
-    @Inject(ONBOARDING_SEED_DIRECTORY) private readonly directory: string,
-    private readonly database: DatabaseService,
-  ) {}
+  constructor(private readonly database: DatabaseService) {}
 
   async getOptions(): Promise<OnboardingOptions> {
     // Cache successful reads; failed loads can be retried after content is repaired.
@@ -36,12 +29,8 @@ export class OnboardingService {
   }
 
   private async loadCatalog(): Promise<OnboardingOptions> {
-    const [countryResult, avatarsJson] = await Promise.all([
-      this.database.query<CountryRow>(`SELECT id, name, iso_code, time_zone
-        FROM public.countries ORDER BY name, id`),
-      readFile(join(this.directory, 'avatars.json'), 'utf8'),
-    ]);
-    const avatars: unknown = JSON.parse(avatarsJson);
+    const countryResult = await this.database.query<CountryRow>(`SELECT id, name, iso_code, time_zone
+      FROM public.countries ORDER BY name, id`);
     const countries: CountryOption[] = countryResult.rows.map(row => ({
       id: row.id,
       name: row.name,
@@ -49,8 +38,6 @@ export class OnboardingService {
       flag: isoFlag(row.iso_code),
       timeZone: row.time_zone,
     }));
-    const options = parseOnboardingOptions({ countries, avatars });
-    if (options.countries.length === 0 || options.avatars.length === 0) throw new Error('Empty onboarding catalog');
-    return options;
+    return parseOnboardingOptions({ countries });
   }
 }

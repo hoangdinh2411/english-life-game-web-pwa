@@ -23,7 +23,7 @@ export default defineConfig({
       ],
     },
     injectManifest: {
-      globPatterns: ['index.html', 'assets/**/*.{js,css,png,mp3}', 'icons/*.png', 'manifest.webmanifest'],
+      globPatterns: ['index.html', 'assets/**/*.{js,css,png,svg,mp3}', 'icons/*.png', 'manifest.webmanifest'],
       maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
     },
   })],

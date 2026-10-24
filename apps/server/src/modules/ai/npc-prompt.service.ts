@@ -50,8 +50,9 @@ export class NpcPromptService {
       l.name AS place,l.type AS place_type,ci.name AS city,co.name AS country,p.english_level AS player_level,
       p.display_name AS private_display_name,c.name AS private_character_name
       FROM public.npcs n JOIN public.roles r ON r.id=n.role_id JOIN public.locations l ON l.id=n.location_id
-      JOIN public.cities ci ON ci.id=l.city_id JOIN public.countries co ON co.id=ci.country_id
-      JOIN public.profiles p ON p.id=$1 JOIN public.characters c ON c.user_id=p.id WHERE n.id=$2`, [userId, npcId]);
+      JOIN public.cities ci ON ci.id=l.city_id
+      JOIN public.profiles p ON p.id=$1 JOIN public.characters c ON c.user_id=p.id
+      JOIN public.countries co ON co.id=c.country_id WHERE n.id=$2`, [userId, npcId]);
     const row = result.rows[0];
     if (!row) throw new ServiceUnavailableException('NPC prompt context is unavailable.');
     const names = [row.private_display_name, row.private_character_name, userId];

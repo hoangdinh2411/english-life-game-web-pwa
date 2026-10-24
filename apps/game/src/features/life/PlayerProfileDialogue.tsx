@@ -2,7 +2,8 @@ import { EnergyDisplay } from './EnergyDisplay';
 import type { LifeControls } from './useLife';
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
 import { GameButton } from '../../gameplay/GameButton';
-import { playerPortrait } from '../../gameplay/portraits';
+import { PlayerPortrait } from '../appearance/PlayerPortrait';
+import type { PlayerGender } from '@life-abroad/shared';
 
 function Stat({ label, value }: { label: string; value: string }) {
   return <div className="min-w-0 rounded-[10px] bg-[#f0e6d1] [border:1px_solid_#8b806c] p-2.5">
@@ -12,6 +13,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 export function PlayerProfileDialogue({
+  gender,
   playerName,
   cityName,
   xp,
@@ -21,6 +23,7 @@ export function PlayerProfileDialogue({
   practice,
   onClose,
 }: {
+  gender?: PlayerGender | undefined;
   playerName: string;
   cityName: string;
   xp: number;
@@ -39,7 +42,7 @@ export function PlayerProfileDialogue({
       <GameButton label="Close" ariaLabel="Close profile" onClick={onClose} />
     </div>
     <div className="flex min-w-0 items-center gap-3 rounded-[14px] bg-[#e5eddf] p-3 [@media(max-width:479px)]:p-2">
-      <img src={playerPortrait} alt={`${playerName}'s avatar`} width="68" height="68" className="h-[68px] w-[68px] shrink-0 rounded-[14px] [border:2px_solid_#8b806c] bg-[#f3e4c2]" />
+      <PlayerPortrait gender={gender} label={`${playerName}'s avatar`} className="size-[68px] rounded-[14px] [border:2px_solid_#8b806c]" />
       <div className="min-w-0">
         <h3 className="[overflow-wrap:anywhere] text-[18px] font-extrabold leading-tight text-[#263630]">{playerName}</h3>
         <p className="mt-1 text-[14px] text-[#52644f]">{cityName}</p>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
-import { CAFE_SELLER_NPC_IDS, type CoffeeQuestState } from '@life-abroad/shared';
+import { CAFE_SELLER_NPC_IDS, type CoffeeQuestState, type PlayerGender } from '@life-abroad/shared';
 import { useSession } from '../../session/session-provider';
 import { usePwa } from '../../pwa/PwaProvider';
 import { loadArrival, loadOlderConversationMessages, openConversation, sendArrivalMessage } from '../../api/client';
@@ -13,8 +13,8 @@ import { sellerPanelVisibility } from './seller-panel-visibility';
 import { streamChat } from '../dialogue/chat-stream';
 import { NPC_PORTRAIT_GRID, npcPortrait, npcPortraitPosition } from '../npcs/npc-portraits';
 
-export function ShopConversation({ npcId, sound, onClose, onRefresh }: {
-  npcId: ShopNpcId; sound: boolean; onClose: () => void; onRefresh: () => Promise<void>;
+export function ShopConversation({ gender, npcId, sound, onClose, onRefresh }: {
+  gender?: PlayerGender | undefined; npcId: ShopNpcId; sound: boolean; onClose: () => void; onRefresh: () => Promise<void>;
 }) {
   const { runAuthenticated: run, refreshPlayer } = useSession();
   const { online } = usePwa();
@@ -68,7 +68,7 @@ export function ShopConversation({ npcId, sound, onClose, onRefresh }: {
   return <>
     <DialogueFrame soundControl={!confirmationOnly} confirmationOnly={confirmationOnly}>
       {!confirmationOnly ? <div className="dialogue-header"><h2>{npc.name}</h2></div> : null}
-      <SavedConversation state={state} sound={sound} online={online} send={send} loadOlder={controller.loadOlder}
+      <SavedConversation gender={gender} state={state} sound={sound} online={online} send={send} loadOlder={controller.loadOlder}
         onClose={onClose}
         details={details}
         retry={() => void controller.start()} displayNpc={{

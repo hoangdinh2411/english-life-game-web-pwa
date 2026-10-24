@@ -29,6 +29,25 @@ test('R4 /me returns signup stats before character creation', async () => {
   } finally { await app.close(); }
 });
 
+test('incomplete legacy characters return to onboarding instead of receiving a default country', async () => {
+  const module = await Test.createTestingModule({ imports: [AppModule] })
+    .overrideProvider(SupabaseTokenVerifier).useValue({ verify: async () => '11111111-1111-4111-8111-111111111111' })
+    .overrideProvider(DatabaseService).useValue({ query: async () => ({ rows: [{
+      id: '11111111-1111-4111-8111-111111111111', email: 'learner@example.com', display_name: 'Learner',
+      name: 'Legacy Learner', current_city_id: null, country_id: null, country_name: null, outfit: {},
+      current_map_id: null, current_place_id: null, current_position_x: null, current_position_y: null,
+      xp: 23, coins: 7,
+    }] }) }).compile();
+  const app = module.createNestApplication();
+  app.setGlobalPrefix('api/v1');
+  try {
+    await app.listen(0, '127.0.0.1');
+    const response = await fetch(await app.getUrl() + '/api/v1/me', { headers: { Authorization: 'Bearer fixture' } });
+    assert.equal(response.status, 200);
+    assert.equal(((await response.json()) as { character: unknown }).character, null);
+  } finally { await app.close(); }
+});
+
 // Missing guards would disclose player data or permit unauthenticated creation.
 test('R4 player routes reject missing and invalid bearer tokens', async () => {
   const module = await Test.createTestingModule({ imports: [AppModule] })

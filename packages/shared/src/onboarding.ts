@@ -13,20 +13,16 @@ export interface CountryCatalogEntry extends CountryOption {
   starterCityId: string;
 }
 
-export interface AvatarOption {
-  id: string;
-  label: string;
-  outfitColor: string;
-}
-
 export interface OnboardingOptions {
   countries: CountryOption[];
-  avatars: AvatarOption[];
 }
+
+export type PlayerGender = 'female' | 'male';
 
 export interface CreateCharacterRequest {
   name: string;
   countryId: string;
+  gender: PlayerGender;
 }
 
 export interface Character {
@@ -35,6 +31,8 @@ export interface Character {
   name: string;
   cityId: string;
   countryId: string;
+  countryName: string;
+  gender: PlayerGender;
   avatarId: string;
   lastLocation: PlayerLocation;
 }
@@ -56,8 +54,8 @@ export interface PlayerResponse {
 export function parseCreateCharacterRequest(value: unknown): CreateCharacterRequest {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('Invalid character request');
   const request = value as Record<string, unknown>;
-  if (Object.keys(request).some((key) => !['name', 'countryId'].includes(key))) throw new Error('Unexpected character request field');
-  const { countryId } = request;
+  if (Object.keys(request).some((key) => !['name', 'countryId', 'gender'].includes(key))) throw new Error('Unexpected character request field');
+  const { countryId, gender } = request;
   if (typeof request.name !== 'string') throw new Error('Invalid character name');
   const name = request.name.trim().normalize('NFC');
   const length = [...name].length;
@@ -65,7 +63,8 @@ export function parseCreateCharacterRequest(value: unknown): CreateCharacterRequ
     throw new Error('Invalid character name');
   }
   if (typeof countryId !== 'string' || !/^country_[a-z0-9_]+$/.test(countryId)) throw new Error('Invalid country id');
-  return { name, countryId };
+  if (gender !== 'female' && gender !== 'male') throw new Error('Invalid player gender');
+  return { name, countryId, gender };
 }
 
 function parseCountry(value: unknown, includeStarterCity: boolean): CountryOption | CountryCatalogEntry {
@@ -95,13 +94,10 @@ export function parseCountryCatalog(value: unknown): CountryCatalogEntry[] {
 export function parseOnboardingOptions(value: unknown): OnboardingOptions {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('Invalid onboarding catalog');
   const options = value as Record<string, unknown>;
-  if (!Array.isArray(options.countries) || !Array.isArray(options.avatars)) throw new Error('Invalid onboarding catalog');
+  if (Object.keys(options).some(key => key !== 'countries')) throw new Error('Unexpected onboarding catalog field');
+  if (!Array.isArray(options.countries) || options.countries.length === 0) throw new Error('Invalid onboarding catalog');
   const countries = options.countries.map(item => parseCountry(item, false) as CountryOption);
-  const avatars: AvatarOption[] = options.avatars.map((item) => {
-    if (typeof item !== 'object' || item === null || typeof item.id !== 'string' || typeof item.label !== 'string' || typeof item.outfitColor !== 'string') throw new Error('Invalid avatar catalog entry');
-    return { id: item.id, label: item.label, outfitColor: item.outfitColor };
-  });
-  if (new Set(countries.map(({ id }) => id)).size !== countries.length || new Set(avatars.map(({ id }) => id)).size !== avatars.length) throw new Error('Duplicate onboarding catalog id');
-  return { countries, avatars };
+  if (new Set(countries.map(({ id }) => id)).size !== countries.length) throw new Error('Duplicate onboarding catalog id');
+  return { countries };
 }
 export const createCharacterSchema = schemaFromParser(parseCreateCharacterRequest);

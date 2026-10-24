@@ -6,7 +6,7 @@ import { STATION_NPCS } from './station-navigation';
 import { DialogueFrame } from './DialogueFrame';
 import { GameButton } from './GameButton';
 import { DialogueMessage } from './DialogueMessage';
-import { npcPortraits, playerPortrait } from './portraits';
+import { npcPortraits, playerPortraitPresentation } from './portraits';
 import { useStationConversation } from './use-station-conversation';
 import { thinkingSpeaker } from './conversation-history';
 import { useNarration } from '../speech/use-narration';
@@ -14,7 +14,7 @@ import { npcVoice } from '../speech/npc-voice';
 import { MessageComposer } from './MessageComposer';
 import { shouldUseTypingFallback, useNpcMessageReveal } from '../features/dialogue/use-npc-message-reveal';
 import { stationNpc } from '../features/station/station-roster';
-export default function ConversationPanel({ npcId, playerName, sound, onClose, onDirections }: ConversationPanelProps) {
+export default function ConversationPanel({ gender, npcId, playerName, sound, onClose, onDirections }: ConversationPanelProps) {
   const history = useRef<HTMLDivElement>(null);
   const [text, setText] = useState('');
   const [finalizing, setFinalizing] = useState(false);
@@ -35,6 +35,7 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
   const npcName = STATION_NPCS.find((npc) => npc.id === npcId)?.name ?? 'Receptionist';
   const npcDefinition = stationNpc(npcId);
   const thinking = thinkingSpeaker(speech.listening, conversation.pending);
+  const playerPortrait = playerPortraitPresentation(gender);
   const send = async () => {
     if (sending.current || conversation.pending) return;
     sending.current = true;
@@ -59,16 +60,16 @@ export default function ConversationPanel({ npcId, playerName, sound, onClose, o
     <div ref={history} className="conversation-history h-[min(220px,_28dvh)] min-h-16 max-h-[min(220px,_28dvh)] flex-1 overflow-y-auto overscroll-contain pr-1 [@media(max-height:480px)]:h-[120px] [@media(max-height:480px)]:max-h-[120px]" role="log" aria-label="Conversation history" aria-live="polite">
       {conversation.messages.map((message) => {
         const displayText = message.speaker === 'player' ? formatPlayerMessage(message.text) : message.text;
-        return <DialogueMessage key={message.id} name={message.speaker === 'player' ? playerName : npcName} portrait={message.speaker === 'player' ? playerPortrait : npcPortraits[npcId]}
-          portraitPosition={message.speaker === 'npc' ? npcDefinition.portraitPosition : undefined}
-          portraitGrid={message.speaker === 'npc' ? npcDefinition.portraitGrid : undefined}
+        return <DialogueMessage key={message.id} name={message.speaker === 'player' ? playerName : npcName} portrait={message.speaker === 'player' ? playerPortrait.portrait : npcPortraits[npcId]}
+          portraitPosition={message.speaker === 'player' ? playerPortrait.portraitPosition : npcDefinition.portraitPosition}
+          portraitGrid={message.speaker === 'player' ? playerPortrait.portraitGrid : npcDefinition.portraitGrid}
           text={reveal?.messageId === message.id ? reveal.visibleText : displayText} fullText={displayText}
           revealing={reveal?.messageId === message.id && reveal.revealing}
           player={message.speaker === 'player'} onReplay={() => voice.listen(displayText)} replayVisible={sound && voice.supported} replayDisabled={!sound || !voice.supported || speech.listening || conversation.pending} />;
       })}
-      {thinking ? <DialogueMessage name={thinking === 'player' ? playerName : npcName} portrait={thinking === 'player' ? playerPortrait : npcPortraits[npcId]}
-        portraitPosition={thinking === 'npc' ? npcDefinition.portraitPosition : undefined}
-        portraitGrid={thinking === 'npc' ? npcDefinition.portraitGrid : undefined}
+      {thinking ? <DialogueMessage name={thinking === 'player' ? playerName : npcName} portrait={thinking === 'player' ? playerPortrait.portrait : npcPortraits[npcId]}
+        portraitPosition={thinking === 'player' ? playerPortrait.portraitPosition : npcDefinition.portraitPosition}
+        portraitGrid={thinking === 'player' ? playerPortrait.portraitGrid : npcDefinition.portraitGrid}
         player={thinking === 'player'} thinking text="Thinking…" replayVisible={false} /> : null}
       {speech.interim ? <p>{speech.interim}</p> : null}
     </div>

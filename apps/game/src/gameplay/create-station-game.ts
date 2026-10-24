@@ -17,12 +17,14 @@ import { mapLocationFromPlayerLocation, playerLocationFromMapLocation } from '..
 import { activeNpcIds, ambientNpcSpawnPoints, countryLocalSeedInput } from '../features/npcs/controlled-presence';
 import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES, venueNpcConfig } from '../features/shops/venue-npc-config';
 import { bundledServiceAtlases, bundledServiceTexture } from '../features/shops/service-npc-assets';
-const LOCATION_NAMES: Record<MapLocation, string> = { station: 'Sweden · Train Station', cafe: 'Sweden · Café', corner_cafe: 'Sweden · Corner Cup Café', clothes: 'Sweden · Clothes Shop', street: 'Sweden · Town Street' };
+import { countryLocationLabel } from '../features/location/country-presentation';
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
   let activeLocation: MapLocation = callbacks.initialLocation ? mapLocationFromPlayerLocation(callbacks.initialLocation) : 'station';
   let destroyed = false;
   let appearance = callbacks.practice ? undefined : callbacks.appearance;
+  const savedPlayerTexture = callbacks.practice ? 'player' : `player-${callbacks.gender ?? 'male'}`;
+  const savedPlayerScale = 2;
   let refreshAppearance: (() => void) | undefined;
   let readMinimap: () => MinimapSnapshot | null = () => null;
   let currentPack: MapPack | null = null;
@@ -159,8 +161,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       controlledPresenceSignature = controlled.signature;
       const resources = currentPack ? preparePack(this, currentPack, bundledServiceTexture, unavailableAmbientNpcIds) : null;
       if (activeLocation === 'station' && (!this.textures.exists('station') || stationAtlases.some((atlas) => !this.textures.exists(atlas.key)))) return;
-      this.playerTexture = resources?.player ?? 'player';
-      this.walkPrefix = resources?.walkPrefix ?? 'walk';
+      this.playerTexture = callbacks.practice ? (resources?.player ?? 'player') : savedPlayerTexture;
+      this.walkPrefix = callbacks.practice ? (resources?.walkPrefix ?? 'walk') : `${savedPlayerTexture}-walk`;
       this.sourcePlayerTexture = this.playerTexture;
       this.sourceWalkPrefix = this.walkPrefix;
       packAnimations = resources?.animationKeys ?? [];
@@ -175,7 +177,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (activeLocation === 'street') background.setScale(STREET_MAP_SCALE);
       this.marker = this.add.circle(0, 0, 16, 0xf6df9e, 0.5).setStrokeStyle(3, 0x426f61).setVisible(false);
       // Station animation frames stay bundled; destination definitions come from Storage.
-      if (!currentPack) for (let row = 0; row < 4; row++) {
+      if (!currentPack || !callbacks.practice) for (let row = 0; row < 4; row++) {
         const key = `${this.walkPrefix}-${row}`;
         if (!this.anims.exists(key)) this.anims.create({ key, frames: Array.from({ length: 4 }, (_, column) => ({ key: this.playerTexture, frame: currentPack ? row * 4 + column : `${row}-${column}` })), frameRate: 7, repeat: -1 });
       }
@@ -266,7 +268,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         fontFamily: 'sans-serif', fontSize: '32px', fontStyle: 'bold', color: '#fff7e8',
         backgroundColor: '#315749', padding: { x: 18, y: 8 },
       }).setOrigin(0.5).setDepth(1500);
-      this.player = this.add.sprite(position.x, position.y, this.playerTexture, currentPack ? 0 : '0-0').setOrigin(0.5, 1).setScale(2);
+      this.player = this.add.sprite(position.x, position.y, this.playerTexture, callbacks.practice && currentPack ? 0 : '0-0').setOrigin(0.5, 1).setScale(callbacks.practice ? 2 : savedPlayerScale);
       this.keys = this.input.keyboard?.createCursorKeys();
       if (this.input.keyboard) {
         // Do not capture browser input: the text composer must retain normal typing.
@@ -305,7 +307,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const minimapLocation = activeLocation;
       readMinimap = () => this.worldReady && !this.transitionPending && (minimapImage instanceof HTMLImageElement || minimapImage instanceof HTMLCanvasElement) ? {
         mapId: minimapLocation,
-        name: LOCATION_NAMES[minimapLocation],
+        name: countryLocationLabel(callbacks.countryName, minimapLocation),
         ...mapSize,
         image: minimapImage,
         player: { ...position },
@@ -316,7 +318,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       resizeLabels();
       this.scale.on('resize', resizeLabels);
       this.events.once('shutdown', () => this.scale.off('resize', resizeLabels));
-      callbacks.onLocationChange(LOCATION_NAMES[activeLocation]);
+      callbacks.onLocationChange(countryLocationLabel(callbacks.countryName, activeLocation));
       callbacks.onMapChange?.(mapIds[activeLocation]);
       saveLocation();
       this.worldReady = true;
@@ -387,7 +389,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         position = portal ? { x: portal.x + (portal.id === 'cafe' ? 70 : portal.id === 'clothes' ? -70 : 0), y: portal.id === 'street' ? 850 : 750 } : { x: 768, y: 370 };
       } else if (location === 'street') position = streetSpawnPoint(streetArrival);
       else position = { x: 768, y: 860 };
-      callbacks.onLocationChange(LOCATION_NAMES[location]);
+      callbacks.onLocationChange(countryLocationLabel(callbacks.countryName, location));
       this.worldReady = false;
       this.scene.restart();
     }

@@ -39,7 +39,7 @@ test('NPC-05 fails closed for unscheduled street NPCs and constrains store fallb
 
 test('NPC-05 next boundary follows country-local DST and weekday rollover', () => {
   const profile = scheduled([{ days: ['sun'], start: '03:00', end: '04:00', locationId: 'loc_town_street' }]);
-  const row = { ...street(profile), clock_time: new Date(), clock_anchor: new Date(), clock_rate: 2, time_zone: 'Europe/Stockholm' };
+  const row = street(profile);
   const spring = nextPresenceChange([row], 'loc_town_street', new Date('2026-03-29T00:30:00Z'), 'Europe/Stockholm');
   assert.equal(spring?.toISOString(), '2026-03-29T01:00:00.000Z');
   const rollover = nextPresenceChange([row], 'loc_town_street', new Date('2026-03-28T22:30:00Z'), 'Europe/Stockholm');
@@ -51,8 +51,6 @@ test('NPC-05 conversation-start guard rejects absent NPCs and malformed profiles
   let profile: unknown = { profileVersion: 1 };
   t.mock.method(client, 'query', async () => ({ rows: [{
     id: 'npc_mila_florist', location_id: 'loc_town_street', profile,
-    clock_time: new Date('2026-06-01T08:00:00Z'), clock_anchor: new Date(), clock_rate: 1,
-    time_zone: 'Europe/Stockholm',
   }] }));
   const worldClock = { read: async () => ({ gameTimeUtc: new Date('2026-06-01T08:00:00Z'), timeZone: 'Europe/Stockholm' }) };
   const service = new NpcPresenceService({} as never, worldClock as never);

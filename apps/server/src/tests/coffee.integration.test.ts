@@ -15,6 +15,8 @@ import { ConversationsService } from '../modules/conversations/conversations.ser
 import { ConversationsRepository } from '../modules/conversations/conversations.repository';
 import { QuestsService } from '../modules/quests/quests.service';
 import { CoffeeQuestService } from '../modules/quests/coffee-quest.service';
+import { WorldClockService } from '../modules/world-clock/world-clock.service';
+import { MutableWorldClock } from './support/mutable-world-clock';
 
 test('T18 existing account: prerequisite, drink-only ordered progress, atomic reward, replay, cancellation and persistence', async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
@@ -34,7 +36,10 @@ test('T18 existing account: prerequisite, drink-only ordered progress, atomic re
       }); queue = result.catch(() => undefined); return result;
     },
   };
-  const module = await Test.createTestingModule({ imports: [AppModule] }).overrideProvider(DatabaseService).useValue(database).compile();
+  const worldClock = new MutableWorldClock();
+  const module = await Test.createTestingModule({ imports: [AppModule] })
+    .overrideProvider(DatabaseService).useValue(database)
+    .overrideProvider(WorldClockService).useValue(worldClock).compile();
   // No HTTP listener or project server is started; all service operations use the real DB and roll back.
   try {
     await client.query('BEGIN');
@@ -48,7 +53,6 @@ test('T18 existing account: prerequisite, drink-only ordered progress, atomic re
     await client.query("DELETE FROM wallet_ledger WHERE user_id=$1 AND reference IN ('q_order_coffee','q_station_arrival')",[userId]);
     await client.query("UPDATE characters SET current_location_id='loc_station' WHERE user_id=$1",[userId]);
     await client.query('UPDATE player_stats SET coins=500,xp=0,energy=100 WHERE user_id=$1',[userId]);
-    await client.query("UPDATE player_life SET clock_time='2026-10-12T10:00:00Z',clock_anchor=now() WHERE user_id=$1",[userId]);
     const conversations = module.get(ConversationsService), quests = module.get(QuestsService), coffee = module.get(CoffeeQuestService);
     const stats = async () => (await client.query<{coins:number;xp:number;energy:number}>('SELECT coins,xp,energy FROM player_stats WHERE user_id=$1',[userId])).rows[0]!;
     assert.equal((await coffee.get(userId)).available, false);

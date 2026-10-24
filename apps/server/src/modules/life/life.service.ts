@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { appearanceSchema, canSleep, isVenueOpenAtLocalMinute, restoredEnergy, shopOrderListSchema, venueHoursLabel, type CustomizeRequest, type LifeState, type PurchaseRequest, type Shop, type ShopItem, type VenueKind } from '@life-abroad/shared';
+import { appearanceSchema, canSleep, isVenueOpenAtLocalMinute, quickRestEnergy, restoredEnergy, shopOrderListSchema, venueHoursLabel, type CustomizeRequest, type LifeState, type PurchaseRequest, type Shop, type ShopItem, type VenueKind } from '@life-abroad/shared';
 import { PoolClient, type QueryResultRow } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { EconomyService } from '../economy/economy.service';
@@ -63,8 +63,9 @@ export class LifeService {
 
   sleep(userId: string, key: string): Promise<LifeState> {
     return this.action(userId, key, 'sleep', {}, async (client, state) => {
-      if (!canSleep(state.energy)) throw new ConflictException('Sleep is available below 50% energy');
-      await client.query('UPDATE player_stats SET energy=100,last_energy_update=now() WHERE user_id=$1', [userId]);
+      if (!canSleep(state.energy)) throw new ConflictException('You are not tired yet.');
+      await client.query('UPDATE player_stats SET energy=$2,last_energy_update=now() WHERE user_id=$1',
+        [userId, quickRestEnergy(state.energy)]);
     });
   }
 

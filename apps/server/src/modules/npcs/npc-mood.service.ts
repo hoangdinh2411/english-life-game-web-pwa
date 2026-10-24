@@ -68,7 +68,7 @@ export class NpcMoodService {
 
   async resolve(client: PoolClient, userId: string, npcId: string): Promise<NpcMoodContext> {
     const result = await client.query<MoodContextRow>(`SELECT n.profile,n.current_mood_id
-      FROM public.npcs n WHERE n.id=$2`, [userId, npcId]);
+      FROM public.npcs n WHERE n.id=$1`, [npcId]);
     const row = result.rows[0];
     if (!row) throw new ServiceUnavailableException('NPC mood context is unavailable.');
     const clock = await this.worldClock.read(userId, client);

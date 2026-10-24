@@ -52,8 +52,6 @@ test('NPC-04 runtime reads server clock/country/profile and lazily persists a ch
     queries.push(sql);
     if (sql.includes('FROM public.npcs')) return { rows: [{
       profile: { profileVersion: 1, moodRules: { morningHappy: true } }, current_mood_id: 'neutral',
-      clock_time: new Date('2026-06-01T06:00:00Z'), clock_anchor: new Date(), clock_rate: 2,
-      time_zone: 'Europe/Stockholm',
     }] };
     if (sql.startsWith('SELECT id,label')) return { rows: [{ id: 'happy', label: 'Happy', guidance: 'Sound upbeat.' }] };
     return { rows: [] };

@@ -1,6 +1,6 @@
 import type { RouteState } from '../types/navigation';
 
-const routes = new Set(['/sign-in', '/new-game', '/new-game/country', '/new-game/avatar', '/new-game/name', '/new-game/review', '/home']);
+const routes = new Set(['/sign-in', '/new-game', '/home']);
 
 // Public practice requires neither a token nor a cached player profile.
 export function resolveRoute(path: string, { token, hasCharacter, online }: RouteState): string {
