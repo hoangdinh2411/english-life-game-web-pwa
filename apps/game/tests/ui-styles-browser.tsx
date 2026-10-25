@@ -14,7 +14,7 @@ function StylingFixture() {
       <form className="flex flex-col gap-4" onSubmit={event => event.preventDefault()}>
         <label>Email<input type="email" defaultValue="preview@example.com" /></label>
         <label>Invalid name<input aria-invalid="true" defaultValue="Preview" aria-describedby="preview-error" /></label>
-        <p id="preview-error" role="alert" className="text-[#a43f34] text-[15px] leading-[1.4]">Preview error state</p>
+        <p id="preview-error" role="alert" className="text-[var(--color-danger)] text-[15px] leading-[1.4]">Preview error state</p>
         <ActionButton label="Primary action" onClick={() => setSelected(true)} />
         <ActionButton label="Secondary action" secondary onClick={() => setSelected(false)} />
         <ActionButton label="Disabled action" disabled onClick={() => {}} />

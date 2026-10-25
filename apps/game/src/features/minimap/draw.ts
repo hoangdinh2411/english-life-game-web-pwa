@@ -1,4 +1,5 @@
 import { projectPoint, type MinimapSnapshot } from './model';
+import { UI_COLORS } from '../../styles/colors';
 
 export function drawMinimap(canvas: HTMLCanvasElement, snapshot: MinimapSnapshot): void {
   const context = canvas.getContext('2d');
@@ -19,7 +20,7 @@ export function drawMinimap(canvas: HTMLCanvasElement, snapshot: MinimapSnapshot
     return { x: Math.max(5, Math.min(box.width - 5, raw.x)), y: Math.max(5, Math.min(box.height - 5, raw.y)) };
   };
   const dot = (point: { x: number; y: number }, colour: string, radius: number) => {
-    context.fillStyle = colour; context.strokeStyle = '#fff8e7'; context.lineWidth = 1.5;
+    context.fillStyle = colour; context.strokeStyle = UI_COLORS.creamText; context.lineWidth = 1.5;
     context.beginPath(); context.arc(point.x, point.y, radius, 0, Math.PI * 2);
     context.fill(); context.stroke();
   };
@@ -28,23 +29,23 @@ export function drawMinimap(canvas: HTMLCanvasElement, snapshot: MinimapSnapshot
     const width = Math.min(context.measureText(text).width, Math.max(1, 2 * Math.min(point.x - 2, box.width - point.x - 2)));
     const y = Math.max(fontSize + (bold ? 3 : 2), point.y - (bold ? fontSize + 14 : 8));
     context.textAlign = 'center'; context.lineWidth = 3;
-    context.strokeStyle = '#fff8e7'; context.fillStyle = '#263630';
+    context.strokeStyle = UI_COLORS.creamText; context.fillStyle = UI_COLORS.ink;
     context.strokeText(text, point.x, y, width);
     context.fillText(text, point.x, y, width);
   };
   // Every name stays directly above its marker, with no boxes or leader lines.
-  for (const portal of snapshot.portals) dot(pointFor(portal), '#315749', 4);
-  for (const npc of snapshot.npcs) dot(pointFor(npc), '#572c76', 3);
+  for (const portal of snapshot.portals) dot(pointFor(portal), UI_COLORS.greenStrong, 4);
+  for (const npc of snapshot.npcs) dot(pointFor(npc), UI_COLORS.mapNpc, 3);
   for (const portal of snapshot.portals) label(pointFor(portal), portal.label, true);
   for (const npc of snapshot.npcs) {
     const point = pointFor(npc);
     label(point, npc.name, false);
     if (npc.objective) {
       context.font = 'bold 16px sans-serif'; context.textAlign = 'center'; context.lineWidth = 3;
-      context.strokeStyle = '#263630'; context.fillStyle = '#ffe08a';
+      context.strokeStyle = UI_COLORS.ink; context.fillStyle = UI_COLORS.gold;
       const y = Math.max(16, point.y - fontSize - 12);
       context.strokeText('!', point.x, y); context.fillText('!', point.x, y);
     }
   }
-  dot(pointFor(snapshot.player), '#005fc4', 5);
+  dot(pointFor(snapshot.player), UI_COLORS.mapPlayer, 5);
 }

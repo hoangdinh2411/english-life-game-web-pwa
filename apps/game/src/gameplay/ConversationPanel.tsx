@@ -73,10 +73,10 @@ export default function ConversationPanel({ gender, npcId, playerName, sound, on
         player={thinking === 'player'} thinking text="Thinking…" replayVisible={false} /> : null}
       {speech.interim ? <p>{speech.interim}</p> : null}
     </div>
-    <p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{conversation.exchange.hint}</p>
+    <p className="dialogue-hint text-[var(--color-hint)] text-[14px] leading-[1.4]">{conversation.exchange.hint}</p>
     <MessageComposer text={text} onChange={setText} onSend={() => void send()} voiceSupported={speech.supported} listening={speech.listening} pending={conversation.pending || finalizing} onRecord={() => { if (speech.listening) void speech.finish(); else { voice.stop(); speech.start(); } }} onCancelRecording={() => { speech.stop(); setText(''); }} />
     {finalizing || speech.listening ? <p className="hint text-muted text-[13px] leading-[1.4]">{finalizing ? 'Finishing recording…' : 'Recording… Tap Send to finish, or Stop to review.'}</p> : null}
-    {speech.error ? <p role="alert" className="error text-[#a43f34] text-[15px] leading-[1.4]">{speech.error}</p> : null}
+    {speech.error ? <p role="alert" className="error text-[var(--color-danger)] text-[15px] leading-[1.4]">{speech.error}</p> : null}
     {voice.error ? <p role="status" className="hint text-muted text-[13px] leading-[1.4]">{voice.error}</p> : null}
   </DialogueFrame>;
 }

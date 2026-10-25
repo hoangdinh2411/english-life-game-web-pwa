@@ -9,7 +9,7 @@ export function Settings({ compact = false }: { compact?: boolean }) {
     {!compact ? <h3 className="font-bold">Settings</h3> : null}
     <button type="button" role="switch" aria-label="Sound" aria-checked={sound}
         onClick={() => set('sound', !sound)}
-        className={`min-h-11 rounded-xl border-2 border-[#315749] bg-[#fff8e9] px-3 text-[#263630] ${compact && !expanded ? 'min-w-11 p-1' : 'flex items-center justify-between gap-3'}`}>
+        className={`min-h-11 rounded-xl border-2 border-[var(--color-green-strong)] bg-[var(--color-dialogue)] px-3 text-[var(--color-ink)] ${compact && !expanded ? 'min-w-11 p-1' : 'flex items-center justify-between gap-3'}`}>
         {compact && !expanded ? <span aria-hidden="true">{sound ? '🔊' : '🔇'}</span> : <><span>Sound</span><span className="font-bold">{sound ? 'On' : 'Off'}</span></>}
       </button>
     {(!compact || expanded) ? <div className="grid gap-2">
@@ -19,6 +19,6 @@ export function Settings({ compact = false }: { compact?: boolean }) {
           value={speechRate} onChange={event => set('speechRate', Number(event.currentTarget.value))} />
       </label>
     </div> : null}
-    {compact ? <button type="button" aria-label="Dialogue settings" aria-expanded={expanded} onClick={() => setExpanded(value => !value)} className="min-h-11 min-w-11 rounded-xl border-2 border-[#315749] bg-dialogue text-ink"><span aria-hidden="true">⚙</span></button> : null}
+    {compact ? <button type="button" aria-label="Dialogue settings" aria-expanded={expanded} onClick={() => setExpanded(value => !value)} className="min-h-11 min-w-11 rounded-xl border-2 border-[var(--color-green-strong)] bg-dialogue text-ink"><span aria-hidden="true">⚙</span></button> : null}
   </section>;
 }

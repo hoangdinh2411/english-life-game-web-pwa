@@ -20,14 +20,14 @@ export function DialogueMessage({
 
   return (
     <div
-      className={`dialogue-message flex flex-col gap-1 [padding:6px_0] [&_img]:shrink-0 [&_img]:rounded-[12px] [&_img]:bg-[#e5d8ba] ${player ? "player items-end [&_.message-bubble]:bg-[#e5eddf]" : "items-start"}`}
+      className={`dialogue-message flex flex-col gap-1 [padding:6px_0] [&_img]:shrink-0 [&_img]:rounded-[12px] [&_img]:bg-[var(--color-portrait-placeholder)] ${player ? "player items-end [&_.message-bubble]:bg-[var(--color-success-surface-alt)]" : "items-start"}`}
     >
       <div className={`dialogue-message-row flex flex-1 gap-2 ${player ? "flex-row-reverse" : ""}`}>
         {portraitPosition ? (
           <span
             role="img"
             aria-label={`${name} avatar`}
-            className="w-12 h-12 shrink-0 rounded-xl bg-[#e5d8ba]"
+            className="w-12 h-12 shrink-0 rounded-xl bg-[var(--color-portrait-placeholder)]"
             style={{
               backgroundImage: `url(${portrait})`,
               backgroundSize: `${portraitGrid?.columns ?? 3}00% ${portraitGrid?.rows ?? 2}00%`,
@@ -42,7 +42,7 @@ export function DialogueMessage({
             height="48"
           />
         )}
-        <div className="message-bubble min-w-0  flex-1 bg-[#f0e6d1] rounded-md p-2 [&_strong]:text-[#42634f] [&_strong]:text-[13px] [&_p]:mt-1 [&_p]:text-[16px] [&_p]:leading-[1.45] [&_p]:whitespace-pre-wrap [&_p]:[overflow-wrap:anywhere]">
+        <div className="message-bubble min-w-0  flex-1 bg-[var(--color-cream-muted)] rounded-md p-2 [&_strong]:text-[var(--color-message-strong)] [&_strong]:text-[13px] [&_p]:mt-1 [&_p]:text-[16px] [&_p]:leading-[1.45] [&_p]:whitespace-pre-wrap [&_p]:[overflow-wrap:anywhere]">
           <strong>{name}</strong>
           <p className="flex items-center gap-1">
             {thinking ? (
@@ -69,7 +69,7 @@ export function DialogueMessage({
             {showReplay ? (
               <button
                 type="button"
-                className="speaker-control-slot grid size-11 shrink-0 place-items-center rounded-md border-0 bg-transparent text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315749]"
+                className="speaker-control-slot grid size-11 shrink-0 place-items-center rounded-md border-0 bg-transparent text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-green-strong)]"
                 aria-label={`Replay message from ${name}`}
                 disabled={replayDisabled}
                 onClick={onReplay}
@@ -90,7 +90,7 @@ export function DialogueMessage({
       {revealing && !player ? (
         <span
           aria-hidden="true"
-          className="ml-14 block text-[11px] italic leading-none text-[#6b756b]"
+          className="ml-14 block text-[11px] italic leading-none text-[var(--color-speaker-muted)]"
         >
           Typing…
         </span>

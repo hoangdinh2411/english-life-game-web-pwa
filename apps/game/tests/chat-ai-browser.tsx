@@ -19,7 +19,7 @@ function Fixture() {
     : view === 'limit' ? { ...saved, error: 'Free chat is available again tomorrow. Try a prepared conversation for now.' } : saved;
   return <main className="min-h-dvh bg-paper p-2"><nav aria-label="Preview states" className="mb-2 flex flex-wrap gap-2">
     {(['stream','limit','offline','saved'] as const).map(item => <button className="game-button" key={item} onClick={() => setView(item)}>{item}</button>)}
-  </nav><section className="mx-auto max-w-[720px] rounded-[18px] border-2 border-[#aa8b57] bg-dialogue p-3">
+  </nav><section className="mx-auto max-w-[720px] rounded-[18px] border-2 border-[var(--color-gold-border)] bg-dialogue p-3">
     <h1 className="text-[18px] font-extrabold">Fictional conversation preview</h1>
     <SavedConversation state={state} sound={false} online={view !== 'offline'} send={async () => false} retry={() => {}}
       displayNpc={{ name: 'Lina', portrait, portraitPosition: () => '0% 0%', portraitGrid: { columns: 3, rows: 1 } }} />

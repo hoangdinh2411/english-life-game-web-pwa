@@ -20,7 +20,7 @@ interface Props {
   onBounds: (bounds: MinimapBounds | null) => void;
 }
 const buttonStyle =
-  "min-h-11 min-w-11 rounded-lg border-2 border-[#315749] bg-[#fff8e7] px-2 text-[13px] font-bold text-[#263630] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005fc4]";
+  "min-h-11 min-w-11 rounded-lg border-2 border-[var(--color-green-strong)] bg-[var(--color-cream-text)] px-2 text-[13px] font-bold text-[var(--color-ink)] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-map-player)]";
 
 function initialMode(): MinimapMode {
   try {
@@ -161,11 +161,11 @@ export function Minimap({ visible, read, onBounds }: Props) {
       {open ? (
         <div
           id="minimap-content"
-          className="mt-1 min-h-0 overflow-y-auto rounded-lg bg-amber-100  text-[12px] leading-normal text-[#263630]"
+          className="mt-1 min-h-0 overflow-y-auto rounded-lg bg-[var(--color-gold)] text-[12px] leading-normal text-[var(--color-ink)]"
         >
           {snapshot ? (
             <>
-              <h2 className="p-2 text-right text-[12px] font-bold leading-snug [text-shadow:0_1px_2px_#fff8e7,0_-1px_2px_#fff8e7,1px_0_2px_#fff8e7,-1px_0_2px_#fff8e7] lg:text-[14px]">
+              <h2 className="p-2 text-right text-[12px] font-bold leading-snug [text-shadow:0_1px_2px_var(--color-cream-text),0_-1px_2px_var(--color-cream-text),1px_0_2px_var(--color-cream-text),-1px_0_2px_var(--color-cream-text)] lg:text-[14px]">
                 {snapshot.name}
               </h2>
               <canvas

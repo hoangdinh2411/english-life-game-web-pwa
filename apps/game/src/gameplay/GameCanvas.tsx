@@ -114,7 +114,7 @@ export default function GameCanvas({
     let instance: StationGame | null = null;
     const host = document.createElement("div");
     host.className =
-      "phaser-host w-full h-full overflow-hidden bg-[#241f19] touch-none";
+      "phaser-host w-full h-full overflow-hidden bg-[var(--color-dark-surface)] touch-none";
     parent.current?.append(host);
     setReady(false);
     setError("");
@@ -251,7 +251,7 @@ export default function GameCanvas({
       />
       <div
         ref={parent}
-        className="canvas-parent absolute inset-0 w-full h-full overflow-hidden bg-[#241f19] touch-none"
+        className="canvas-parent absolute inset-0 w-full h-full overflow-hidden bg-[var(--color-dark-surface)] touch-none"
         role="img"
         aria-label={`${locationLabel}. Tap the path to walk, or use arrow keys or WASD. An exclamation mark shows an NPC with an active or new goal. Approach a nearby NPC to talk.`}
       />
@@ -273,7 +273,7 @@ export default function GameCanvas({
       {ready && !error && talkPrompt && !paused ? (
         <button
           type="button"
-          className="talk-control absolute z-10 cursor-pointer rounded-sm border-0 bg-[#315749] p-0 text-[12px] font-bold leading-tight text-[#fff8e7] lg:bg-transparent hover:bg-[#244236] lg:hover:bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe08a]"
+          className="talk-control absolute z-10 cursor-pointer rounded-sm border-0 bg-[var(--color-green-strong)] p-0 text-[12px] font-bold leading-tight text-[var(--color-cream-text)] lg:bg-transparent hover:bg-[var(--color-green-deep)] lg:hover:bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)]"
           style={{
             left: talkPosition?.x,
             top: talkPosition?.y,
@@ -283,7 +283,7 @@ export default function GameCanvas({
           aria-keyshortcuts="E"
           onClick={() => game.current?.talk()}
         >
-          <span className="inline-flex p-1.5  rounded lg:items-center lg:bg-[#315749]">
+          <span className="inline-flex p-1.5  rounded lg:items-center lg:bg-[var(--color-green-strong)]">
             Talk
           </span>
         </button>

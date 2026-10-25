@@ -35,8 +35,8 @@ function SessionRoutes() {
     const screens: Record<string, React.ReactNode> = { '/sign-in': <SignIn />, '/new-game': <NewGame />, '/home': <Home /> };
     content = screens[route];
   }
-  return <div className="app-shell h-dvh flex flex-col overflow-hidden"><PwaStatus playing={playing} />
-    {practice ? <div className="practice-status shrink-0 flex items-center gap-2 flex-wrap [padding:4px_max(12px,_env(safe-area-inset-left))] bg-[#e5eddd] text-[12px] leading-[1.4] bg-[#fff0c9] [&_button]:bg-transparent [&_button]:[border:1px_solid_#8b806c] [&_button]:rounded-[8px] [&_button]:text-ink [&_button]:[padding:4px_10px]">Local practice · No saved progress or rewards. <button type="button" onClick={() => router.replace('/sign-in')}>Back to sign in</button></div> : null}
+  return <div className="h-dvh flex flex-col overflow-hidden"><PwaStatus playing={playing} />
+    {practice ? <div className="practice-status shrink-0 flex items-center gap-2 flex-wrap [padding:4px_max(12px,_env(safe-area-inset-left))] bg-[var(--color-practice-surface)] text-[12px] leading-[1.4] [&_button]:bg-transparent [&_button]:[border:1px_solid_var(--color-border)] [&_button]:rounded-[8px] [&_button]:text-ink [&_button]:[padding:4px_10px]">Local practice · No saved progress or rewards. <button type="button" onClick={() => router.replace('/sign-in')}>Back to sign in</button></div> : null}
     <Suspense fallback={<Screen><p role="status">Loading the game…</p></Screen>}>{content}</Suspense>
   </div>;
 }

@@ -100,7 +100,7 @@ export function OnboardingForm({ countries: availableCountries, loadError, onRet
           {countries.length ? countries.map((country, index) => <button id={`${listId}-${country.id}`} key={country.id} type="button" role="option"
             ref={element => { if (element) optionRefs.current.set(country.id, element); else optionRefs.current.delete(country.id); }}
             aria-selected={selected?.id === country.id} onClick={() => chooseCountry(country)}
-            className={`flex min-h-12 w-full items-center gap-2.5 rounded-xl px-3 py-1.5 text-left text-ink hover:bg-[#edf3e9] focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-green ${activeIndex === index ? 'bg-[#edf3e9]' : ''} ${selected?.id === country.id ? 'bg-[#e5eddd] font-extrabold' : ''}`}>
+            className={`flex min-h-12 w-full items-center gap-2.5 rounded-xl px-3 py-1.5 text-left text-ink hover:bg-[var(--color-success-soft)] focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-green ${activeIndex === index ? 'bg-[var(--color-success-soft)]' : ''} ${selected?.id === country.id ? 'bg-[var(--color-success-surface)] font-extrabold' : ''}`}>
             {resolveCountryFlag(country.isoCode) ? <img src={resolveCountryFlag(country.isoCode)} alt="" className="h-6 w-9 shrink-0 rounded object-cover shadow-sm" /> : <span aria-hidden="true" className="w-9 text-center text-xl">{country.flag}</span>}
             <span className="min-w-0 flex-1"><span className="block truncate">{country.name}</span><span className="text-sm font-normal text-muted">{country.isoCode}</span></span>
             {selected?.id === country.id ? <span aria-hidden="true" className="text-green">✓</span> : null}
@@ -115,7 +115,7 @@ export function OnboardingForm({ countries: availableCountries, loadError, onRet
           const selectedOption = gender === option;
           return <button key={option} type="button" aria-label={`Choose character ${index + 1}`} aria-pressed={selectedOption}
             onClick={() => setGender(option)}
-            className={`relative flex min-h-[180px] items-center justify-center overflow-hidden rounded-2xl border-2 bg-card p-3 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-green ${selectedOption ? 'border-green bg-[#e5eddd]' : 'border-border'}`}>
+            className={`relative flex min-h-[180px] items-center justify-center overflow-hidden rounded-2xl border-2 bg-card p-3 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-green ${selectedOption ? 'border-green bg-[var(--color-success-surface)]' : 'border-border'}`}>
             <span className="relative block aspect-square w-full max-w-[140px] overflow-hidden" aria-hidden="true">
               <span className="absolute inset-0 scale-[1.55] bg-contain bg-left bg-no-repeat"
                 style={{ backgroundImage: `url(${assets.portrait})`, backgroundSize: `${assets.portraitColumns * 100}% 100%` }} />
@@ -130,12 +130,12 @@ export function OnboardingForm({ countries: availableCountries, loadError, onRet
         <input id="character-name" value={name} autoCapitalize="words" autoComplete="name" maxLength={20}
           aria-describedby="name-help" aria-invalid={Boolean(nameError)} placeholder="Enter your name"
           onChange={event => setName(event.target.value)} onBlur={() => setTouchedName(true)} />
-        <p id="name-help" role={nameError ? 'alert' : undefined} className={`text-sm ${nameError ? 'text-[#a43f34]' : 'text-muted'}`}>
+        <p id="name-help" role={nameError ? 'alert' : undefined} className={`text-sm ${nameError ? 'text-[var(--color-danger)]' : 'text-muted'}`}>
           {nameError ?? 'Use 2–20 letters. Spaces, apostrophes, and hyphens are welcome.'}
         </p>
       </section> : null}
 
-      {message || loadError ? <div className="flex flex-col gap-2" role="alert"><p className="text-sm text-[#a43f34]">{message || loadError}</p>
+      {message || loadError ? <div className="flex flex-col gap-2" role="alert"><p className="text-sm text-[var(--color-danger)]">{message || loadError}</p>
         {!availableCountries ? <button type="button" className="min-h-11 self-start rounded-xl border-2 border-border bg-card px-4 font-bold" onClick={() => void onRetry()}>Try again</button> : null}
       </div> : null}
       <div className="grid grid-cols-2 gap-3">

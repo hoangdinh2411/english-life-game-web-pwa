@@ -120,6 +120,6 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
         locationSync.current?.update(location);
       },
       renderReceptionist: (sound, onClose) => <SavedConversation gender={session.player?.character?.gender} state={state} sound={sound} online={online} send={controller.send} loadOlder={controller.loadOlder} retry={() => void controller.start()} onClose={onClose}
-        completed={state.arrival?.status === 'done'} details={<>{state.arrival?.ticket.issued ? <TicketReceipt arrival={state.arrival} /> : null}<p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{view.next}</p></>} />,
+        completed={state.arrival?.status === 'done'} details={<>{state.arrival?.ticket.issued ? <TicketReceipt arrival={state.arrival} /> : null}<p className="dialogue-hint text-[var(--color-hint)] text-[14px] leading-[1.4]">{view.next}</p></>} />,
     }} />;
 }

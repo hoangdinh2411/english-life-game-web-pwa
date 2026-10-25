@@ -256,7 +256,7 @@ export function SavedConversation({
       {hint ? (
         <div className="flex items-center gap-2">
           <span
-            className="grid size-6 shrink-0 place-items-center rounded-full border border-[#78917f] bg-[#e5eddf] text-[14px] cursor-pointer hover:bg- font-extrabold text-[#315749] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315749]"
+            className="grid size-6 shrink-0 place-items-center rounded-full border border-[var(--color-muted-border)] bg-[var(--color-success-surface-alt)] text-[14px] cursor-pointer hover:bg- font-extrabold text-[var(--color-green-strong)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-green-strong)]"
             aria-label={
               hintOpen ? "Hide conversation hint" : "Show conversation hint"
             }
@@ -269,7 +269,7 @@ export function SavedConversation({
           {hintOpen ? (
             <p
               id="conversation-hint"
-              className="dialogue-hint min-w-0 rounded-xl bg-[#e5eddf] p-1 text-[#52644f] text-[14px] leading-[1.4]"
+              className="dialogue-hint min-w-0 rounded-xl bg-[var(--color-success-surface-alt)] p-1 text-[var(--color-hint)] text-[14px] leading-[1.4]"
             >
               {hint}
             </p>
@@ -286,7 +286,7 @@ export function SavedConversation({
       {!online ? (
         <p
           role="alert"
-          className="error text-[#a43f34] text-[15px] leading-[1.4]"
+          className="error text-[var(--color-danger)] text-[15px] leading-[1.4]"
         >
           You’re offline. Reconnect to send replies or use your ticket. Your
           draft stays here; nothing is queued.
@@ -298,7 +298,7 @@ export function SavedConversation({
       {state.error ? (
         <p
           role="alert"
-          className="error text-[#a43f34] text-[15px] leading-[1.4]"
+          className="error text-[var(--color-danger)] text-[15px] leading-[1.4]"
         >
           {state.error}
         </p>
@@ -345,7 +345,7 @@ export function SavedConversation({
       {speech.error ? (
         <p
           role="alert"
-          className="error text-[#a43f34] text-[15px] leading-[1.4]"
+          className="error text-[var(--color-danger)] text-[15px] leading-[1.4]"
         >
           {speech.error}
         </p>

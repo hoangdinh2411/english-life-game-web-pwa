@@ -61,7 +61,7 @@ export function DialogueFrame({
       aria-modal="true"
       aria-label={ariaLabel}
       tabIndex={-1}
-      className="dialogue-frame absolute z-[2] [bottom:max(8px,_env(safe-area-inset-bottom))] [left:50%] [transform:translateX(-50%)] w-[min(720px,_calc(100%_-_16px))] max-h-[calc(100%_-_64px)] bg-dialogue [border:2px_solid_#aa8b57] rounded-[18px] p-[18px] [box-shadow:0_6px_16px_#0004] flex flex-col min-h-0 overflow-hidden [@media(max-width:699px)]:p-3 [@media(max-height:480px)]:max-h-[calc(100%_-_16px)]"
+      className="absolute z-[2] [bottom:max(8px,_env(safe-area-inset-bottom))] [left:50%] [transform:translateX(-50%)] w-[min(720px,_calc(100%_-_16px))] max-h-[calc(100%_-_64px)] bg-dialogue [border:2px_solid_var(--color-gold-border)] rounded-[18px] p-[18px] [box-shadow:0_6px_16px_var(--color-shadow)] flex flex-col min-h-0 overflow-hidden [@media(max-width:699px)]:p-3 [@media(max-height:480px)]:max-h-[calc(100%_-_16px)]"
     >
       <div className="dialogue-content flex flex-1 flex-col gap-2.5 min-h-0 overflow-hidden">
         {soundControl && !confirmationOnly ? <Settings compact /> : null}

@@ -44,7 +44,7 @@ export function TownspersonConversation({ gender, npc, sound, countryName, onClo
   const confirmationOnly = state.farewellStage === 'confirm';
   return <DialogueFrame soundControl={!confirmationOnly} confirmationOnly={confirmationOnly}>
     {!confirmationOnly ? <div className="dialogue-header">
-      <div className="min-w-0"><h2>{npc.name}</h2><p className="dialogue-hint text-[#52644f] text-[14px] leading-[1.4]">{npc.job}</p></div>
+      <div className="min-w-0"><h2>{npc.name}</h2><p className="dialogue-hint text-[var(--color-hint)] text-[14px] leading-[1.4]">{npc.job}</p></div>
     </div> : null}
     <SavedConversation gender={gender} state={state} sound={sound} online={online}
       send={controller.send} loadOlder={controller.loadOlder} retry={() => void controller.start()} onClose={onClose}

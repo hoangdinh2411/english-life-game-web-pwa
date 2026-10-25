@@ -18,6 +18,7 @@ import { activeNpcIds, ambientNpcSpawnPoints, countryLocalSeedInput } from '../f
 import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES, venueNpcConfig } from '../features/shops/venue-npc-config';
 import { bundledServiceAtlases, bundledServiceTexture } from '../features/shops/service-npc-assets';
 import { countryLocationLabel } from '../features/location/country-presentation';
+import { UI_COLORS } from '../styles/colors';
 import { playerAssets, playerWalkFrame } from '../features/appearance/player-assets';
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
@@ -213,7 +214,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const npc = { id: definition.id, name: definition.name, texture: actor.texture, x: actorPosition.x, y: actorPosition.y };
         npcs.push(npc);
         const labelText = definition.name;
-        const label = this.add.text(npc.x, npc.y - 112, labelText, { fontFamily: 'sans-serif', fontSize: '24px', color: '#263630', backgroundColor: '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
+        const label = this.add.text(npc.x, npc.y - 112, labelText, { fontFamily: 'sans-serif', fontSize: '24px', color: UI_COLORS.ink, backgroundColor: UI_COLORS.creamTextSoft, padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
         label.setVisible(!lazyStreetArt && isPresent(definition.id));
         this.labels.push(label);
         const npcWalk = `${actor.texture}:${actor.frame}-walk`;
@@ -268,7 +269,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         });
         const name = npc.name;
         const needsTalk = npcNeedsTalk(npc.id);
-        const label = this.add.text(npc.x, npc.y - 108, needsTalk ? `! ${name}` : name, { fontFamily: 'sans-serif', fontSize: '24px', fontStyle: needsTalk ? 'bold' : 'normal', color: '#263630', backgroundColor: needsTalk ? '#ffe08a' : '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
+        const label = this.add.text(npc.x, npc.y - 108, needsTalk ? `! ${name}` : name, { fontFamily: 'sans-serif', fontSize: '24px', fontStyle: needsTalk ? 'bold' : 'normal', color: UI_COLORS.ink, backgroundColor: needsTalk ? UI_COLORS.gold : UI_COLORS.creamTextSoft, padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
         this.labels.push(label);
         this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, shadow, label, elapsed: 0, idleFrame: '0-0', walkPrefix: `${npc.texture}-walk`, labelOffset: 108,
           ...(npc.patrol ? { patrol: npc.patrol } : {}), clip: movePlayer });
@@ -277,8 +278,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         this.addPortalRing(portal, activeLocation !== 'street' && portal.id !== 'corner_cafe');
       }
       if (activeLocation === 'corner_cafe') this.add.text(768, 147, 'CORNER CUP', {
-        fontFamily: 'sans-serif', fontSize: '32px', fontStyle: 'bold', color: '#fff7e8',
-        backgroundColor: '#315749', padding: { x: 18, y: 8 },
+        fontFamily: 'sans-serif', fontSize: '32px', fontStyle: 'bold', color: UI_COLORS.creamTextBright,
+        backgroundColor: UI_COLORS.greenStrong, padding: { x: 18, y: 8 },
       }).setOrigin(0.5).setDepth(1500);
       this.player = this.add.sprite(position.x, position.y, this.playerTexture, callbacks.practice && currentPack ? 0 : '0-0').setOrigin(0.5, 1).setScale(callbacks.practice ? 2 : savedPlayerScale);
       this.keys = this.input.keyboard?.createCursorKeys();
@@ -359,7 +360,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     private addPortalRing(portal: StationPortal, showLabel = true) {
       const halo = this.add.circle(portal.x, portal.y, 34, 0x73dfa0, 0.3).setStrokeStyle(4, 0x9cffbd, 0.85).setDepth(5);
       this.add.circle(portal.x, portal.y, 22, 0xc3ffd5, 0.14).setStrokeStyle(2, 0xd3ffe0, 0.75).setDepth(5);
-      if (showLabel) this.add.text(portal.x, portal.y - 64, portal.label, { fontFamily: 'sans-serif', fontSize: '22px', fontStyle: 'bold', color: '#263630', backgroundColor: '#fff6df', padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
+      if (showLabel) this.add.text(portal.x, portal.y - 64, portal.label, { fontFamily: 'sans-serif', fontSize: '22px', fontStyle: 'bold', color: UI_COLORS.ink, backgroundColor: UI_COLORS.creamTextSoft, padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
       this.tweens.add({ targets: halo, scale: 1.2, alpha: 0.72, duration: 750, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
     private portalsForLocation(): StationPortal[] {
@@ -624,7 +625,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       }
     }
   }
-  const game = new P.Game({ type: P.AUTO, parent, width: parent.clientWidth, height: parent.clientHeight, backgroundColor: '#e4cda9', scene: StationScene,
+  const game = new P.Game({ type: P.AUTO, parent, width: parent.clientWidth, height: parent.clientHeight, backgroundColor: UI_COLORS.worldBackground, scene: StationScene,
     scale: { mode: P.Scale.RESIZE, autoCenter: P.Scale.CENTER_BOTH }, render: { pixelArt: false }, loader: { timeout: 15000 } });
   return { destroy: () => { destroyed = true; packRequest?.abort(); game.destroy(true); }, pause: (value, pauseWorld = value, talkingNpc = null) => { paused = value; worldPaused = pauseWorld; conversationNpcId = talkingNpc; refreshPresence?.(); }, unlockExit: (value) => { exitUnlocked = value; }, talk,
     setPresentNpcIds: (ids) => { presentNpcIds = new Set(ids); refreshPresence?.(); },

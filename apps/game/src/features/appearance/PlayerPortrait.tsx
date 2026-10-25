@@ -15,7 +15,7 @@ export function PlayerPortrait({
     role={label ? 'img' : undefined}
     aria-label={label}
     aria-hidden={label ? undefined : true}
-    className={`shrink-0 bg-[#f3e4c2] bg-no-repeat ${className}`}
+    className={`shrink-0 bg-[var(--color-portrait)] bg-no-repeat ${className}`}
     style={{
       backgroundImage: `url(${presentation.portrait})`,
       backgroundPosition: presentation.portraitPosition ?? 'center',

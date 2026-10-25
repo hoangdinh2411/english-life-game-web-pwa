@@ -115,7 +115,7 @@ export default function StationScreen({
   const notice = goalNotice(practiceGoals);
   return (
     <main
-      className="station-screen flex-1 min-h-0 relative bg-[#241f19] overflow-hidden"
+      className="flex-1 min-h-0 relative bg-[var(--color-dark-surface)] overflow-hidden"
       aria-label={location}
     >
       <GameCanvas
@@ -185,11 +185,11 @@ export default function StationScreen({
       </div>
       {showGoals ? (
         <div className="goals-control absolute [bottom:max(24px,_env(safe-area-inset-bottom))] left-3 flex flex-col items-start gap-1 [@media(max-width:479px)]:[&_.game-button]:[padding:8px_12px] [@media(max-width:479px)]:[&_.game-button]:text-[14px]">
-          <button type="button" onClick={() => setGoals(true)} aria-label={arrival ? `Open saved arrival goals, ${arrival.goalsLabel}` : 'Open goals'} className="flex min-h-11 items-center gap-1.5 rounded-xl border-0 bg-[#315749] px-3 py-1 text-[13px] font-bold text-[#fff8e7] lg:hidden">
-            Goals <span className="rounded-md bg-[#ffe08a] px-1.5 py-1 text-[10px] text-ink">{arrival?.goalsLabel ?? (notice.fresh ? `${notice.fresh} new` : notice.active ? `${notice.active} active` : 'Your quests')}</span>
+          <button type="button" onClick={() => setGoals(true)} aria-label={arrival ? `Open saved arrival goals, ${arrival.goalsLabel}` : 'Open goals'} className="flex min-h-11 items-center gap-1.5 rounded-xl border-0 bg-[var(--color-green-strong)] px-3 py-1 text-[13px] font-bold text-[var(--color-cream-text)] lg:hidden">
+            Goals <span className="rounded-md bg-[var(--color-gold)] px-1.5 py-1 text-[10px] text-ink">{arrival?.goalsLabel ?? (notice.fresh ? `${notice.fresh} new` : notice.active ? `${notice.active} active` : 'Your quests')}</span>
           </button>
           <div className="hidden lg:flex flex-col items-start gap-1">
-          <span className="goal-notice bg-[#ffe08a] rounded-[8px] [padding:4px_8px] text-[12px] font-bold">
+          <span className="goal-notice bg-[var(--color-gold)] rounded-[8px] [padding:4px_8px] text-[12px] font-bold">
             {arrival?.goalsLabel ??
               (notice.fresh
                 ? `${notice.fresh} new quest${notice.fresh > 1 ? "s" : ""}`
@@ -308,7 +308,7 @@ export default function StationScreen({
       ) : null}
       {arrival?.pending && !npcId ? (
         <p
-          className="practice-status shrink-0 flex items-center gap-2 flex-wrap [padding:4px_max(12px,_env(safe-area-inset-left))] bg-[#e5eddd] text-[12px] leading-[1.4] bg-[#fff0c9] [&_button]:bg-transparent [&_button]:[border:1px_solid_#8b806c] [&_button]:rounded-[8px] [&_button]:text-ink [&_button]:[padding:4px_10px]"
+          className="practice-status shrink-0 flex items-center gap-2 flex-wrap [padding:4px_max(12px,_env(safe-area-inset-left))] bg-[var(--color-practice-surface)] text-[12px] leading-[1.4] [&_button]:bg-transparent [&_button]:[border:1px_solid_var(--color-border)] [&_button]:rounded-[8px] [&_button]:text-ink [&_button]:[padding:4px_10px]"
           role="status"
         >
           Checking your saved game…
@@ -357,7 +357,7 @@ export default function StationScreen({
       ) : null}
       {life?.sleepTransition ? (
         <div
-          className={`sleep-transition fixed inset-0 z-[1000] grid place-items-center bg-[#080d12] text-card [animation:sleep-darken_750ms_ease-in-out_forwards] [&.resting]:opacity-100 [&.resting]:[animation:none] [&.waking]:[animation:sleep-wake_750ms_ease-in-out_forwards] [@media(prefers-reduced-motion:reduce)]:[animation-duration:100ms] [@media(prefers-reduced-motion:reduce)]:[&.waking]:[animation-duration:100ms] ${life.sleepTransition}`}
+          className={`sleep-transition fixed inset-0 z-[1000] grid place-items-center bg-[var(--color-sleep-overlay)] text-card [animation:sleep-darken_750ms_ease-in-out_forwards] [&.resting]:opacity-100 [&.resting]:[animation:none] [&.waking]:[animation:sleep-wake_750ms_ease-in-out_forwards] [@media(prefers-reduced-motion:reduce)]:[animation-duration:100ms] [@media(prefers-reduced-motion:reduce)]:[&.waking]:[animation-duration:100ms] ${life.sleepTransition}`}
           role="status"
           aria-live="polite"
         >
@@ -366,7 +366,7 @@ export default function StationScreen({
       ) : null}
       {life?.error && !menu ? (
         <div
-          className="life-hud-error absolute bottom-20 left-2 right-2 p-2 bg-card text-[#843514] z-[20]"
+          className="life-hud-error absolute bottom-20 left-2 right-2 p-2 bg-card text-[var(--color-warning)] z-[20]"
           role="alert"
         >
           {life.error}

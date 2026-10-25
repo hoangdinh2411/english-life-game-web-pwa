@@ -44,7 +44,7 @@ export function ShopMenuPanel({ refreshKey = 0, showMenu = false, showOrders = f
     <h4 className="mb-1 mt-0 text-xs font-semibold">{label}</h4>
     <ul aria-label={`${label} items`} className="m-0 grid min-w-0 grid-cols-1 gap-1.5 p-0 [list-style:none] [@media(min-width:360px)]:grid-cols-2 [@media(min-width:700px)]:grid-cols-3">
       {items.map(item => <li key={item.id}>
-        <article aria-label={`${item.name}, $${item.price}`} className="flex min-h-[72px] min-w-0 items-center gap-2 rounded-lg border border-[#dac9a4] bg-white/80 p-1.5">
+        <article aria-label={`${item.name}, $${item.price}`} className="flex min-h-[72px] min-w-0 items-center gap-2 rounded-lg border border-[var(--color-menu-border)] bg-card/80 p-1.5">
           <img src={item.image ?? placeholderImage} alt={`${item.name} illustration`} loading="lazy" width="52" height="52"
             className="h-[52px] w-[52px] shrink-0 rounded-md object-cover"
             onError={event => {
@@ -62,13 +62,13 @@ export function ShopMenuPanel({ refreshKey = 0, showMenu = false, showOrders = f
     </ul>
   </section> : null;
   if (!showMenu && !showOrders) return null;
-  return <section aria-label="Café menu and recent orders" className="shop-menu-panel min-w-0 rounded-xl bg-[#fff7e8] p-2.5 text-[#384d3c]">
+  return <section aria-label="Café menu and recent orders" className="shop-menu-panel min-w-0 rounded-xl bg-[var(--color-shop-surface)] p-2.5 text-[var(--color-shop-text)]">
     {showMenu ? <>
       <h3 className="m-0 mb-1 text-sm font-bold">Café menu</h3>
       {catalogLoading ? <p role="status" className="m-0 text-xs">Loading menu…</p> : null}
       {catalogError ? <div role="alert" className="flex flex-wrap items-center gap-2 text-xs">
         <span>{catalogError}</span>
-        <button type="button" className="min-h-11 rounded-lg border border-[#aa8b57] px-3 font-semibold" onClick={() => void refreshCatalog()}>Retry menu</button>
+        <button type="button" className="min-h-11 rounded-lg border border-[var(--color-gold-border)] px-3 font-semibold" onClick={() => void refreshCatalog()}>Retry menu</button>
       </div> : null}
       {!catalogLoading && !catalogError && !cafeItems.length ? <p className="m-0 text-xs">The café menu is not available yet.</p> : null}
       {cafeItems.length ? <div className="max-h-48 min-w-0 overflow-auto">
@@ -78,11 +78,11 @@ export function ShopMenuPanel({ refreshKey = 0, showMenu = false, showOrders = f
     </> : null}
 
     {showOrders ? <>
-      <h3 className={`mb-1 text-sm font-bold ${showMenu ? 'mt-2 border-t border-[#dac9a4] pt-2' : 'm-0'}`}>Recent orders</h3>
+      <h3 className={`mb-1 text-sm font-bold ${showMenu ? 'mt-2 border-t border-[var(--color-menu-border)] pt-2' : 'm-0'}`}>Recent orders</h3>
       {ordersLoading ? <p role="status" className="m-0 text-xs">Loading your orders…</p> : null}
       {ordersError ? <div role="alert" className="flex flex-wrap items-center gap-2 text-xs">
         <span>{ordersError}</span>
-        <button type="button" className="min-h-11 rounded-lg border border-[#aa8b57] px-3 font-semibold" onClick={() => void refreshOrders()}>Retry orders</button>
+        <button type="button" className="min-h-11 rounded-lg border border-[var(--color-gold-border)] px-3 font-semibold" onClick={() => void refreshOrders()}>Retry orders</button>
       </div> : null}
       {!ordersLoading && !ordersError && !orders.length ? <p className="m-0 text-xs">No café orders yet.</p> : null}
       {orders.length ? <ol aria-label="Your recent café orders" className="m-0 flex max-h-20 flex-col gap-1 overflow-auto p-0 text-xs [list-style:none]">

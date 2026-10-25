@@ -28,7 +28,7 @@ export default function SignInScreen() {
       {creating ? <label>What should we call you?<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="name" required disabled={busy} /></label> : null}
       <label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoCapitalize="none" autoComplete="email" required disabled={busy} /></label>
       <label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={creating ? 'new-password' : 'current-password'} required disabled={busy} /></label>
-      {message ? <p role="alert" className="error text-[#a43f34] text-[15px] leading-[1.4]">{message}</p> : null}
+      {message ? <p role="alert" className="error text-[var(--color-danger)] text-[15px] leading-[1.4]">{message}</p> : null}
       {!online ? <p role="status">Connect to sign in or create an account. You can still try local practice.</p> : null}
       <button type="submit" className="action-button min-h-[54px] text-white text-[17px] font-extrabold [border:2px_solid_transparent] rounded-[16px] [padding:12px_24px] bg-green [&.secondary]:bg-transparent [&.secondary]:border-border [&.secondary]:text-ink" disabled={busy || !session.ready || !online}>{busy ? 'Please wait…' : creating ? 'Create account' : 'Sign in'}</button>
     </form>

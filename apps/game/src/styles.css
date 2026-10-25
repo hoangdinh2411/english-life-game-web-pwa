@@ -13,6 +13,50 @@
   --color-green: #426f61;
   --color-border: #8b806c;
   --color-dialogue: #fff8e9;
+  --color-danger: #a43f34;
+  --color-success-surface: #e5eddd;
+  --color-success-surface-alt: #e5eddf;
+  --color-success-soft: #edf3e9;
+  --color-disabled-surface: #e5e7df;
+  --color-cream-muted: #f0e6d1;
+  --color-cream-text: #fff8e7;
+  --color-cream-text-bright: #fff7e8;
+  --color-cream-text-soft: #fff6df;
+  --color-cream-text-pure: #fffdf6;
+  --color-practice-surface: #fff0c9;
+  --color-message-strong: #42634f;
+  --color-locked: #817a6d;
+  --color-gold: #ffe08a;
+  --color-gold-border: #aa8b57;
+  --color-dark-surface: #241f19;
+  --color-sleep-overlay: #080d12;
+  --color-warning: #843514;
+  --color-hint: #52644f;
+  --color-green-strong: #315749;
+  --color-green-deep: #244236;
+  --color-portrait: #f3e4c2;
+  --color-portrait-placeholder: #e5d8ba;
+  --color-speaker-muted: #6b756b;
+  --color-energy-divider: #d7c49b;
+  --color-energy-track: #e6dfd5;
+  --color-energy-border: #a68a68;
+  --color-energy-fill-start: #52b788;
+  --color-energy-fill-end: #74c69d;
+  --color-energy-low-start: #e63946;
+  --color-energy-low-end: #f4a261;
+  --color-icon-muted: #72786e;
+  --color-menu-border: #dac9a4;
+  --color-shop-surface: #fff7e8;
+  --color-shop-text: #384d3c;
+  --color-ticket-border: #9baa7d;
+  --color-muted-border: #78917f;
+  --color-overlay-border: #9b8c70;
+  --color-map-npc: #572c76;
+  --color-map-player: #005fc4;
+  --color-world-background: #e4cda9;
+  --color-shadow: rgb(0 0 0 / 0.27);
+  --color-dialogue-overlay: rgb(255 248 233 / 0.94);
+  --color-dialogue-overlay-strong: rgb(255 248 233 / 0.97);
 }
 body {
   overflow: hidden;
@@ -21,39 +65,33 @@ body {
 }
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
-#root::-webkit-scrollbar,
-.app-shell::-webkit-scrollbar,
-.station-screen::-webkit-scrollbar,
-.dialogue-frame::-webkit-scrollbar {
+#root::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
 }
 html,
 body,
-#root,
-.app-shell,
-.station-screen,
-.dialogue-frame {
+#root {
   overflow: hidden;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
 .conversation-history {
   scrollbar-width: thin !important;
-  scrollbar-color: #8b806c #f0e6d1 !important;
+  scrollbar-color: var(--color-border) var(--color-cream-muted) !important;
 }
 .conversation-history::-webkit-scrollbar {
   display: block !important;
   width: 10px !important;
 }
 .conversation-history::-webkit-scrollbar-track {
-  background: #f0e6d1;
+  background: var(--color-cream-muted);
   border-radius: 8px;
 }
 .conversation-history::-webkit-scrollbar-thumb {
-  background: #8b806c;
-  border: 2px solid #f0e6d1;
+  background: var(--color-border);
+  border: 2px solid var(--color-cream-muted);
   border-radius: 8px;
 }
 /* Preserve browser form defaults; importing Preflight would change existing controls. */
@@ -84,7 +122,7 @@ body,
     @apply [filter:brightness(0.9)];
   }
   :focus-visible {
-    @apply [outline:3px_solid_#426f61] outline-offset-[3px];
+    @apply [outline:3px_solid_var(--color-green)] outline-offset-[3px];
   }
   h1,
   h2,
@@ -108,7 +146,7 @@ body,
     @apply w-full min-w-0 min-h-[54px] [border:2px_solid_var(--color-border)] rounded-[14px] bg-card text-ink text-[17px] font-normal [padding:12px_15px];
   }
   input[aria-invalid="true"] {
-    @apply border-[#a43f34];
+    @apply border-danger;
   }
   input:focus-visible,
   textarea:focus-visible {

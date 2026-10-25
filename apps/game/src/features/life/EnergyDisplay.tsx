@@ -55,7 +55,7 @@ export function EnergyDisplay({
 
   if (energy === undefined)
     return (
-      <div className="energy-display [flex-basis:100%] w-full mt-1 pt-1.5 [border-top:1px_solid_#d7c49b] text-ink [font-family:inherit]">
+      <div className="energy-display [flex-basis:100%] w-full mt-1 pt-1.5 [border-top:1px_solid_var(--color-energy-divider)] text-ink [font-family:inherit]">
         <span role="status">Loading energy…</span>
       </div>
     );
@@ -69,7 +69,7 @@ export function EnergyDisplay({
       : "Quick rest · Restores 50 energy · Tap again to rest";
 
   return (
-    <div className={`energy-display [flex-basis:100%] w-full mt-1 pt-1.5 [border-top:1px_solid_#d7c49b] text-ink [font-family:inherit] ${energy <= 20 ? "energy-low [&_.energy-fill]:bg-[linear-gradient(90deg,_#e63946,_#f4a261)]" : ""}`}>
+    <div className={`energy-display [flex-basis:100%] w-full mt-1 pt-1.5 [border-top:1px_solid_var(--color-energy-divider)] text-ink [font-family:inherit] ${energy <= 20 ? "energy-low [&_.energy-fill]:bg-[linear-gradient(90deg,_var(--color-energy-low-start),_var(--color-energy-low-end))]" : ""}`}>
       <div
         className="energy-top-row mb-[3px] flex justify-between text-[11px] font-bold"
       >
@@ -78,7 +78,7 @@ export function EnergyDisplay({
 
       <div className="energy-row flex items-center gap-2 min-w-0">
         <div
-          className="energy-battery relative grow h-3.5 bg-[#e6dfd5] [border:1.5px_solid_#a68a68] rounded-[7px] overflow-hidden flex items-center p-px [&_strong]:hidden"
+          className="energy-battery relative grow h-3.5 bg-[var(--color-energy-track)] [border:1.5px_solid_var(--color-energy-border)] rounded-[7px] overflow-hidden flex items-center p-px [&_strong]:hidden"
           role="progressbar"
           aria-label="Energy"
           aria-valuemin={0}
@@ -86,7 +86,7 @@ export function EnergyDisplay({
           aria-valuenow={value}
         >
           <div
-            className="energy-fill h-full bg-[linear-gradient(90deg,_#52b788,_#74c69d)] rounded-[5px] [transition:width_0.3s_ease]"
+            className="energy-fill h-full bg-[linear-gradient(90deg,_var(--color-energy-fill-start),_var(--color-energy-fill-end))] rounded-[5px] [transition:width_0.3s_ease]"
             style={{ width: `${value}%` }}
           />
         </div>
@@ -94,7 +94,7 @@ export function EnergyDisplay({
         {onSleep ? (
           <div className="sleep-control [@media(hover:hover)]:[&:hover_.sleep-tooltip]:block relative [margin-left:auto] [&:focus-within_.sleep-tooltip]:block">
             <button type="button"
-              className="sleep-button flex cursor-pointer justify-center items-center w-11 h-11 p-0! [border:1px_solid_#52644f] rounded-[10px] bg-card text-ink [&[aria-disabled=true]]:text-muted [&[aria-disabled=true]]:[border-style:dashed] [&[aria-disabled=true]]:cursor-default"
+              className="sleep-button flex cursor-pointer justify-center items-center w-11 h-11 p-0! [border:1px_solid_var(--color-hint)] rounded-[10px] bg-card text-ink [&[aria-disabled=true]]:text-muted [&[aria-disabled=true]]:[border-style:dashed] [&[aria-disabled=true]]:cursor-default"
               aria-label="Quick rest to restore energy"
               aria-disabled={disabled}
               aria-describedby={tipId}
@@ -146,7 +146,7 @@ export function EnergyDisplay({
       </div>
 
       {energy <= 20 ? (
-        <span className="energy-warning block mt-0.5 text-[11px] font-bold text-[#843514]">
+        <span className="energy-warning block mt-0.5 text-[11px] font-bold text-[var(--color-warning)]">
           {energy === 0
             ? "No energy · Rest or eat to chat"
             : "Low energy · Eat or rest"}
