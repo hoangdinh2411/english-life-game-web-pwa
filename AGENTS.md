@@ -37,6 +37,14 @@ Vite + React + TypeScript + Phaser 4 + PWA, **not** Expo/React Native/WebView.
   module**. Keep components/services small and focused; extract shared code only
   after real reuse. `docs/TECH.md` shows placement; app-specific rules live in
   each app's `AGENTS.md`. Migrate old folders only when a task needs it.
+- Use the shared semantic color palette for all UI work. In React/Tailwind,
+  use the named theme utilities or `var(--color-...)` tokens; do not add
+  hard-coded color literals such as `text-[#52644f]`, `bg-[#...]`, or
+  `border-[#...]` in components. For Phaser, canvas, PWA metadata, and other
+  non-CSS consumers, use `apps/game/src/styles/colors.ts`. Add a new semantic
+  token there and in `src/styles.css` when a genuinely new role is needed.
+  Literal color values are allowed only in those token definition files or
+  when required by external data/asset formats.
 - Keep general game rules/contracts in `packages/shared` when reusable, outside
   Phaser scenes. AI providers/keys, when implemented, stay behind a server-only
   interface and are mocked in tests.
