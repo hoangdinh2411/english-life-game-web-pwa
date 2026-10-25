@@ -28,6 +28,12 @@ optional later, not a required development service today.
   component layout, responsive rules and states in JSX rather than adding
   named CSS selectors. Existing semantic class markers support state/descendant
   variants and UI inspection; their visual styles are Tailwind utilities.
+- UI colors are semantic tokens, not component literals. React/Tailwind code
+  must use named theme utilities or `var(--color-...)`; do not add hex/rgb
+  values directly to JSX class names. Phaser, canvas, and PWA configuration
+  must use `apps/game/src/styles/colors.ts`. When a new visual role is needed,
+  add the role to both token maps and reuse it; keep raw color values confined
+  to those definitions unless an external format requires them.
 - Preflight is deliberately omitted to preserve existing browser form defaults.
   The theme and utilities are imported separately; existing global defaults
   use `@layer base` and `@apply`. Preserve 44px controls, focus outlines,

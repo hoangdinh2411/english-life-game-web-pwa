@@ -199,9 +199,9 @@ export default function StationScreen({
           onOpenProfile={() => setProfileOpen(true)}
           visible={!overlayOpen || profileOpen}
         />
-        <aside className="flex  items-center gap-1.5 rounded-md bg-dialogue border-2 border-border p-1 text-left  shadow-[0_2px_6px_#0004]  absolute top-0 left-1/2 -translate-x-1/2">
+        <aside className="absolute top-0 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-md border-2 border-border bg-dialogue p-1 text-left shadow-[0_2px_6px_var(--color-shadow)]">
           <span
-            className="shrink-0 text-xs tabular-nums text-[#263630]"
+            className="shrink-0 text-xs tabular-nums text-ink"
             aria-label={`Game time ${timeLabel}`}
           >
             ◷ {timeLabel}

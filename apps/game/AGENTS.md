@@ -9,6 +9,13 @@ Follow `../../AGENTS.md`. Read `../../docs/TECH.md` only as needed.
   Tailwind imports/theme tokens, shared element defaults and animation
   keyframes; see `docs/TECH.md` for conventions. Preserve existing
   responsive/focus behavior.
+- Reuse semantic color tokens instead of hard-coding colors in components.
+  Prefer named utilities such as `text-ink`, `bg-paper`, and `border-border`,
+  or `var(--color-...)` for arbitrary values. Never add literals such as
+  `text-[#52644f]`, `bg-[#...]`, or `border-[#...]` to React markup. For
+  Phaser/canvas/PWA configuration, import `UI_COLORS` from
+  `src/styles/colors.ts`; keep literal values only in the shared token
+  definitions.
 - **Feature-first for new work:** put each cohesive user-facing capability under
   `src/features/<feature>/` (e.g. `station`, `dialogue`, `quests`,
   `onboarding`). Add `components/`, `hooks/`, `api/`, `game/`, or `model/`
