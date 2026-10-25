@@ -225,9 +225,13 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
 `content/`; don't hide it in TypeScript components or controllers.
 
 ## Trust and data boundaries
-- Client-only audio preferences live under `life-abroad.preferences` in
-  device `localStorage` (`src/features/hud`). Invalid/blocked storage falls back
-  to defaults/in-memory state; no account data or tokens are stored with them.
+- Sound mute/volume remains device-local under `life-abroad.sound`; the legacy
+  `life-abroad.preferences` value is read only as a migration fallback.
+  Signed-in coach, speech-rate and pitch preferences use the NestJS-owned
+  `/players/preferences` contract and `player_preferences` table. Local practice
+  keeps those controls in memory and never calls that account endpoint.
+  Invalid or blocked storage falls back safely; no account data or tokens are
+  stored with device sound settings.
 - Browser calls **Supabase SDK only for authentication** (`apps/game/src/api/supabase-auth.ts`).
   Tokens and expiry persist in `localStorage` for PWA reopen; one-time
   `sessionStorage` migration; both stores clear on sign-out. Never place
@@ -473,8 +477,11 @@ shop companion scripts; the first coffee quest remains attached to Mia.
   after closing time. Tables deny direct `anon`/`authenticated` access.
 - Each new server conversation message consumes one energy point in the same transaction;
   replay consumes none. Zero energy returns 409 with sleep/food guidance. Local practice is free.
-- React's game menu provides purchases, sleep and appearance; the HUD reads saved energy/time.
-  Offline writes are disabled, and uncertain writes offer the same replay key for retry.
+- React's signed-in menu and its Settings, English Review and movement tutorial
+  overlays capture player input without pausing NPC updates or the shared game
+  clock. World-blocking dialogue, loading, sleep and offline states retain their
+  existing pause behavior. Offline writes are disabled, and uncertain writes
+  offer the same replay key for retry.
   Scene-owned derived textures preserve original animation frames and skin, and are released
   on transitions/teardown. The portrait remains the original artwork.
 

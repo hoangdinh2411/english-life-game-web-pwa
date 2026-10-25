@@ -196,8 +196,10 @@ If the task is only partially completed or blocked, keep it in `TASKS.md` and
 change its status. Never read `docs/DONE.md` except to append to it. Do not
 create a separate progress report.
 
-Do not automatically create Git branches, commits, tags, pull requests, merges,
-or pushes.
+Before changing files for a new task, automatically create and switch to a
+suitably named Git branch; never implement directly on `dev` or `main`. Do not
+automatically create commits, tags, pull requests, merges, or pushes. The user
+owns merging completed work.
 
 Do not delete unrelated files or perform destructive database operations without
 explicit authorization.
@@ -213,6 +215,14 @@ Report results concisely using this format:
 **Files:** Important files or modules changed.
 
 **Verification:** Checks run and their results.
+
+**User testing checklist:** Separate **Client** browser/UI checks from
+**Backend/API** checks. For each applicable test, give its **Precondition**,
+exact **Input/Action** and observable **Expected output**. Omit only fields that
+genuinely do not apply, and use **Not applicable** when the task does not affect
+one side. Identify checks already run by the AI separately from checks remaining
+for the user. Run complex backend verification directly when it is impractical
+through the client and safe automated, API or integration tooling is available.
 
 **Status:** Completed / Partially completed / Blocked.
 

@@ -106,12 +106,15 @@ English is a tool to accomplish a task, not a multiple-choice test.
   quest. It works without an account and gives **no XP, coins, ticket ownership
   or saved progress**.
 - Signed-in players open their character profile by selecting the player card in
-  the game HUD. The profile shows saved XP, wallet and energy; the pause menu
-  contains only game controls. Café orders stay in seller conversations. Below
-  1024px the card is compact, Goals includes its status badge, and the single
-  menu button opens audio Settings saved on this device. Dialogue Settings
-  remain reachable during conversations; full profile details include
-  appearance. The normal desktop HUD keeps its existing layout. Quick rest is
+  the game HUD. The profile shows saved XP, wallet and energy. The non-pausing
+  game menu opens English Review, the five-page movement tutorial, sign-out,
+  return-to-game and Settings; these utility overlays capture player input while
+  NPC movement and game time continue. The tutorial appears once on the first
+  ready signed-in world and can be replayed from page 1 through the menu. Café
+  orders stay in seller conversations. Below 1024px the card is compact, Goals
+  includes its status badge, and the normal desktop HUD keeps its existing
+  layout. Dialogue Settings remain reachable during conversations; full profile
+  details include appearance. Quick rest is
   available at 0–29% energy, restores 50 points capped at 100, never changes
   game time, and blocks play for five seconds after server success. Reduced
   motion shortens only the fades. Energy, wallet and appearance are saved on the

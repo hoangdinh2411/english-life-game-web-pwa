@@ -40,3 +40,9 @@ Follow `../../AGENTS.md`. Read `../../docs/TECH.md` only as needed.
 - Tests normally live in `src/tests`. Verify changed server logic with focused
   tests; run real local integration checks when persistence/auth behavior changes
   and infrastructure is available. A skipped integration check is **not** proof.
+- Do not push complex backend verification onto browser testing. When practical,
+  verify it directly with automated tests, API requests or integration checks,
+  especially for authorization, validation, transactions, idempotency and
+  persisted state. In the final checklist, state the endpoint/method,
+  precondition, exact input, expected status/body and expected persisted state;
+  clearly distinguish checks the AI ran from checks remaining for the user.
