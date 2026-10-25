@@ -18,7 +18,7 @@ import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID } from '@life-abroad/shared';
 test('T5 ordered arrival, persisted entitlement, concurrent retries, atomic reward and permissions', async () => {
   const url = new URL(process.env.TEST_SUPABASE_DATABASE_URL ?? process.env.DATABASE_URL ?? '');
   assert.ok(['127.0.0.1', 'localhost'].includes(url.hostname));
-  assert.equal(url.port, '55422');
+  assert.equal(url.port, '54322');
   assert.equal(url.pathname, '/postgres');
   const admin = new Pool({ connectionString: url.toString() });
   const name = 't5_test_' + randomUUID().replaceAll('-', '');
@@ -52,7 +52,14 @@ test('T5 ordered arrival, persisted entitlement, concurrent retries, atomic rewa
       await clean.query('INSERT INTO auth.users (id,email,raw_user_meta_data) VALUES ($1,$2,$3)', [id, id + '@example.invalid', {}]);
     }
     await assert.rejects(quests.getArrival(otherUserId), ConflictException);
-    await clean.query('INSERT INTO characters (user_id,name,current_city_id) VALUES ($1,$2,$3)', [userId, 'T5 learner', 'city_maplewood']);
+    const country = (await clean.query<{ id: string }>('SELECT id FROM countries ORDER BY id LIMIT 1')).rows[0]!;
+    const world = (await clean.query<{ id: string }>(`INSERT INTO worlds (country_id) VALUES ($1)
+      ON CONFLICT (country_id) DO UPDATE SET country_id=excluded.country_id RETURNING id`, [country.id])).rows[0]!;
+    await clean.query(`INSERT INTO characters
+      (user_id,name,gender,outfit,country_id,world_id,current_city_id,current_map_id,current_place_id,current_position_x,current_position_y)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+    [userId, 'T5 learner', 'male', { avatarId: 'avatar_traveler_01' }, country.id, world.id,
+      'city_maplewood', 'loc_station', 'loc_station', 768, 370]);
     await clean.query('UPDATE player_stats SET xp=23,coins=7 WHERE user_id=$1', [userId]);
     const initial = await quests.getArrival(userId);
     assert.equal(initial.status, 'not_started');

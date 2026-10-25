@@ -8,6 +8,7 @@ import type { OnboardingDraft } from '../types/onboarding';
 import type { SessionValue } from '../types/session';
 import { clearSessionToken, readStoredSession, writeStoredSession } from './storage';
 import { createSessionManager } from './session-manager';
+import { disablePreferenceSynchronization, synchronizePreferences } from '../features/hud/usePreferences';
 
 const SessionContext = createContext<SessionValue | null>(null);
 
@@ -21,6 +22,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const [playerLoading, setPlayerLoading] = useState(false);
   const manager = useMemo(() => createSessionManager({ refresh: refreshSession, persist: writeStoredSession,
     clear: clearSessionToken, onChange: (session) => setToken(session?.token ?? null) }), []);
+
+  useEffect(() => {
+    if (token) synchronizePreferences(manager.run);
+    else disablePreferenceSynchronization();
+  }, [manager, token]);
 
   const refreshPlayer = useCallback(async (background = false) => {
     if (!background) { setPlayerError(''); setPlayerLoading(true); }

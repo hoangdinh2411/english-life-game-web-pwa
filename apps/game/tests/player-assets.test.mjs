@@ -8,7 +8,7 @@ function pngSize(bytes) {
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 }
 
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', ssr: { external: ['@life-abroad/shared'] } });
+const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { external: ['@life-abroad/shared'] } });
 try {
   const { playerAssets, playerWalkFrame } = await server.ssrLoadModule('/src/features/appearance/player-assets.ts');
   const { savedPlayerAtlas } = await server.ssrLoadModule('/src/gameplay/station-assets.ts');

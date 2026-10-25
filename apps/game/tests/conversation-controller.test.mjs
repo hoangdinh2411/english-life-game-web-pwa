@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createServer } from 'vite';
 
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
+const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' });
 
 try {
   const { createConversationController, revealStreamChunk } = await server.ssrLoadModule('/src/features/dialogue/conversation-controller.ts');

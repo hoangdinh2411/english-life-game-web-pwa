@@ -20,7 +20,7 @@ import { MutableWorldClock } from './support/mutable-world-clock';
 
 test('T18 existing account: prerequisite, drink-only ordered progress, atomic reward, replay, cancellation and persistence', async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
-  assert.equal(url.hostname, '127.0.0.1'); assert.ok(['54322','55422'].includes(url.port));
+  assert.equal(url.hostname, '127.0.0.1'); assert.equal(url.port, '54322');
   const pool = new Pool({ connectionString: url.href });
   const client = await pool.connect();
   const auth = createClient(process.env.SUPABASE_URL ?? '', process.env.SUPABASE_PUBLISHABLE_KEY ?? '',

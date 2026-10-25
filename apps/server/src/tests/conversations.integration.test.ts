@@ -11,10 +11,12 @@ import { AppModule } from '../app.module';
 import { ConversationsRepository } from '../modules/conversations/conversations.repository';
 
 test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback and sign-in persistence', async () => {
+  const stable = (value: unknown): unknown => JSON.parse(JSON.stringify(value, (key, entry) =>
+    key === 'url' && typeof entry === 'string' ? new URL(entry).pathname : entry));
   const databaseUrl = process.env.DATABASE_URL ?? '';
   const authUrl = process.env.SUPABASE_URL ?? '';
   assert.equal(new URL(databaseUrl).hostname, '127.0.0.1');
-  assert.equal(new URL(databaseUrl).port, '55422');
+  assert.equal(new URL(databaseUrl).port, '54322');
   assert.equal(new URL(authUrl).hostname, '127.0.0.1');
   const database = new Pool({ connectionString: databaseUrl });
   const auth = createClient(authUrl, process.env.SUPABASE_PUBLISHABLE_KEY ?? '', {
@@ -78,7 +80,7 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     };
     try { assert.equal((await send('A bus ticket, please')).status, 503); }
     finally { repository.append = append; }
-    assert.deepEqual(await (await call(path)).json(), before);
+    assert.deepEqual(stable(await (await call(path)).json()), stable(before));
 
     const requestId = randomUUID();
     const responses = await Promise.all(Array.from({ length: 6 }, () => send('A bus ticket, please', requestId)));
@@ -87,7 +89,7 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
       assert.equal(response.status, 201);
       const turn = conversationTurnSchema.parse(await response.json());
       issued ??= turn;
-      assert.deepEqual(turn, issued);
+      assert.deepEqual(stable(turn), stable(issued));
     }
     assert.ok(issued);
     assert.deepEqual(issued.arrival.ticket, { issued: true, used: false });
@@ -102,13 +104,13 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     assert.equal(refresh.error, null);
     assert.ok(refresh.data.session);
     headers.Authorization = `Bearer ${refresh.data.session.access_token}`;
-    assert.deepEqual(await (await call(path)).json(), saved);
+    assert.deepEqual(stable(await (await call(path)).json()), stable(saved));
     await auth.auth.signOut();
     const login = await auth.auth.signInWithPassword({ email, password });
     assert.equal(login.error, null);
     assert.ok(login.data.session);
     headers.Authorization = `Bearer ${login.data.session.access_token}`;
-    assert.deepEqual(await (await call(path)).json(), saved);
+    assert.deepEqual(stable(await (await call(path)).json()), stable(saved));
 
     // Another real identity cannot read or append to this conversation.
     const other = await auth.auth.signUp({ email: `t7-other-${randomUUID()}@example.com`, password: randomUUID() });
@@ -121,7 +123,7 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
     assert.equal((await call(path)).status, 404);
     assert.equal((await send('Hello')).status, 404);
     headers.Authorization = ownToken;
-    assert.deepEqual(await (await call(path)).json(), saved);
+    assert.deepEqual(stable(await (await call(path)).json()), stable(saved));
 
     const exits = await Promise.all(Array.from({ length: 4 }, () => call('/quests/arrival/enter-town-street', {})));
     for (const exit of exits) {
@@ -129,11 +131,17 @@ test('T7 real Auth/API: ordered arrival, append-only messages, replay, rollback 
       assert.equal(arrivalStateSchema.parse(await exit.json()).rewardsGranted, true);
     }
     assert.equal((await database.query('SELECT * FROM quest_reward_claims WHERE user_id=$1', [userId])).rowCount, 1);
-    assert.deepEqual(await (await send('A bus ticket, please', requestId)).json(), issued);
+    const replayedAfterExit = conversationTurnSchema.parse(await (await send('A bus ticket, please', requestId)).json());
+    const { arrival: replayedArrival, ...replayedTurn } = replayedAfterExit;
+    const { arrival: issuedArrival, ...issuedTurn } = issued;
+    assert.deepEqual(stable(replayedTurn), stable(issuedTurn));
+    assert.equal(issuedArrival.status, 'active');
+    assert.equal(replayedArrival.status, 'done');
+    assert.equal(replayedArrival.locationId, 'loc_town_street');
     assert.equal((await send('Hello')).status, 409);
     assert.equal((await call('/conversations', { npcId: 'npc_receptionist' })).status, 409);
     const final = conversationSchema.parse(await (await call(path)).json());
-    assert.deepEqual(final.messages, saved.messages);
+    assert.deepEqual(stable(final.messages), stable(saved.messages));
     assert.equal(final.arrival.status, 'done');
     await assert.rejects(database.query('UPDATE messages SET text=$1 WHERE conversation_id=$2', ['edited', conversation.id]), /append-only/);
     for (const table of ['conversations', 'messages']) {

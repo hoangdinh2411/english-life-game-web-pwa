@@ -2,7 +2,7 @@ import { usePreferences } from './usePreferences';
 import { useId, useState } from 'react';
 
 export function Settings({ compact = false }: { compact?: boolean }) {
-  const { sound, speechRate, set } = usePreferences();
+  const { sound, speechRate, status, set, retry } = usePreferences();
   const [expanded, setExpanded] = useState(false);
   const id = useId();
   return <section aria-label="Settings" className={compact ? 'flex flex-wrap justify-end gap-2 lg:hidden' : 'flex flex-col gap-2'}>
@@ -18,6 +18,13 @@ export function Settings({ compact = false }: { compact?: boolean }) {
         <input id={`${id}-speech-rate`} className="h-11" type="range" min="0.75" max="1.5" step="0.05"
           value={speechRate} onChange={event => set('speechRate', Number(event.currentTarget.value))} />
       </label>
+      {status === 'loading' || status === 'saving' ? <p role="status" className="text-sm text-muted">
+        {status === 'loading' ? 'Loading account settings…' : 'Saving account settings…'}
+      </p> : null}
+      {status === 'error' ? <div role="alert" className="grid gap-2 text-sm text-danger">
+        <span>Settings are not synchronized.</span>
+        <button type="button" onClick={() => void retry()} className="min-h-11 rounded-xl border-2 border-border bg-paper px-3 font-bold text-ink">Retry</button>
+      </div> : null}
     </div> : null}
     {compact ? <button type="button" aria-label="Dialogue settings" aria-expanded={expanded} onClick={() => setExpanded(value => !value)} className="min-h-11 min-w-11 rounded-xl border-2 border-[var(--color-green-strong)] bg-dialogue text-ink"><span aria-hidden="true">⚙</span></button> : null}
   </section>;

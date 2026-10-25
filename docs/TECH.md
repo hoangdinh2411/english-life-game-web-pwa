@@ -580,10 +580,8 @@ to the phone, not the computer.
   `node --import ./scripts/load-env.mjs --test dist/tests/ai.integration.test.js`.
   It uses the mock by default; set `T10_LIVE_TEST=true` to require a real Gemini
   reply with the configured key/model. Neither mode starts an HTTP server.
-  The T17 seller test reuses an existing account (`T17_TEST_EMAIL`, default
-  `test@gmail.com`; required `T17_TEST_PASSWORD`) and rolls back all game-data
-  changes. To run only it without older tests that create temporary accounts,
-  build the server, then run from `apps/server`:
+  The T17 seller test creates and removes its own local Auth account and rolls
+  back all game-data changes. To run only it, build the server, then run from `apps/server`:
   `node --import ./scripts/load-env.mjs --test dist/tests/seller.integration.test.js`.
 - `pnpm preview:game`: preview **production** PWA on :8082 (stop `pnpm dev`
   first; they share a port). `pnpm check:pwa`: validates built worker/manifest;

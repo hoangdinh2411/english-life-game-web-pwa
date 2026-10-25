@@ -24,7 +24,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
       speech: turn.npcMessage.speech ? { url: new URL(turn.npcMessage.speech.url).pathname } : undefined } };
   };
   const url = new URL(process.env.DATABASE_URL ?? '');
-  assert.equal(url.hostname, '127.0.0.1'); assert.ok(['54322', '55422'].includes(url.port));
+  assert.equal(url.hostname, '127.0.0.1'); assert.equal(url.port, '54322');
   const authUrl = process.env.SUPABASE_URL ?? '';
   assert.equal(new URL(authUrl).hostname, '127.0.0.1');
   const pool = new Pool({ connectionString: url.toString() });
@@ -53,25 +53,30 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
     .overrideProvider(AiService).useValue({ enabled: false }).compile();
   const app = module.createNestApplication();
   app.setGlobalPrefix('api/v1');
+  let userId: string | undefined;
   try {
     await client.query('BEGIN');
-    const login = await auth.auth.signInWithPassword({
-      email: process.env.T17_TEST_EMAIL ?? 'test@gmail.com',
-      password: process.env.T17_TEST_PASSWORD ?? '',
+    const signup = await auth.auth.signUp({
+      email: `t17-${randomUUID()}@example.com`,
+      password: randomUUID(),
     });
-    assert.equal(login.error, null); assert.ok(login.data.session);
-    const userId = login.data.session.user.id;
+    assert.equal(signup.error, null); assert.ok(signup.data.session); assert.ok(signup.data.user);
+    userId = signup.data.user.id;
+    await app.listen(0, '127.0.0.1');
+    const base = await app.getUrl() + '/api/v1';
+    const headers = { Authorization: `Bearer ${signup.data.session.access_token}`, 'Content-Type': 'application/json' };
+    const call = (path: string, body?: unknown) => fetch(base + path, { headers,
+      method: body === undefined ? 'GET' : 'POST', ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+    const options = await (await call('/onboarding/options')).json() as { countries: { id: string }[] };
+    assert.equal((await call('/characters', {
+      name: 'T Seventeen Learner', countryId: options.countries[0]!.id, gender: 'male',
+    })).status, 201);
     // T17 isolates shop payment from the later café quest reward; all changes roll back.
     await client.query(`UPDATE player_quests SET status='not_started',current_step_id='arrival_greet',
       bus_ticket_issued_at=null,bus_ticket_used_at=null,rewards_granted_at=null
       WHERE user_id=$1 AND quest_id='q_station_arrival'`, [userId]);
     await client.query('UPDATE player_stats SET coins=500,energy=100 WHERE user_id=$1', [userId]);
     await client.query('INSERT INTO player_life (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING', [userId]);
-    await app.listen(0, '127.0.0.1');
-    const base = await app.getUrl() + '/api/v1';
-    const headers = { Authorization: `Bearer ${login.data.session.access_token}`, 'Content-Type': 'application/json' };
-    const call = (path: string, body?: unknown) => fetch(base + path, { headers,
-      method: body === undefined ? 'GET' : 'POST', ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     const created = await call('/conversations', { npcId: 'npc_mia' });
     assert.equal(created.status, 201, await created.clone().text());
     const conversation = conversationSchema.parse(await created.json());
@@ -236,7 +241,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
       const purchaseKey = randomUUID();
       const response = await call('/life/purchase', { key: purchaseKey, itemIds: ['espresso'] });
       assert.equal(response.status, expected, `store purchase at ${time}`);
-      const orderCount = await client.query<{ count: string }>(
+      const orderCount: { rows: Array<{ count: string }> } = await client.query<{ count: string }>(
         'SELECT count(*) FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2', [userId, purchaseKey]);
       assert.equal(Number(orderCount.rows[0]!.count), expected === 201 ? 1 : 0,
         `direct café purchase history at ${time}`);
@@ -266,7 +271,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
       assert.match(answered.npcMessage.text, /receptionist/i);
       assert.equal((await stats()).energy, before.energy - 1);
       assert.equal((await stats()).coins, before.coins);
-      assert.deepEqual(await (await call(messagePath, body)).json(), answered);
+      assert.deepEqual(stableTurn(await (await call(messagePath, body)).json()), stableTurn(answered));
       assert.equal((await stats()).energy, before.energy - 1);
       const saved = conversationSchema.parse(await (await call(`/conversations/${opened.id}`)).json());
       assert.equal(saved.npcId, npcId); assert.equal(saved.messages.length, 3);
@@ -327,6 +332,8 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
     assert.equal(conversationTurnSchema.parse(await stationReply.json()).misunderstood, true);
   } finally {
     await app.close(); await auth.auth.signOut({ scope: 'local' });
-    await client.query('ROLLBACK'); client.release(); await pool.end();
+    await client.query('ROLLBACK');
+    if (userId) await client.query('DELETE FROM auth.users WHERE id=$1', [userId]);
+    client.release(); await pool.end();
   }
 });

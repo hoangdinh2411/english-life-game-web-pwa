@@ -16,7 +16,7 @@ test('shared controller uses authoritative coffee completion returned by the mes
   assert.deepEqual(controller.getSnapshot().conversation.coffeeQuest,done);
 });
 
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
+const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' });
 try {
   const {CoffeeQuestToast,shouldShowCoffeeQuestToast}=await server.ssrLoadModule('/src/features/shops/CoffeeQuest.tsx');
   test('coffee quest completion appears as a toast without showing quest hints', () => {

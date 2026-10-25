@@ -13,7 +13,7 @@ import type { WorldClockReading } from '../modules/world-clock/world-clock.servi
 
 test('quick rest enforces 0–29, preserves world time, replays once and serializes different keys', async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
-  assert.equal(url.hostname, '127.0.0.1'); assert.ok(['54322', '55422'].includes(url.port));
+  assert.equal(url.hostname, '127.0.0.1'); assert.equal(url.port, '54322');
   const pool = new Pool({ connectionString: url.toString() });
   const database = new DatabaseService({ get: () => url.toString() } as never);
   const repository = new LifeRepository();

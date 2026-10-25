@@ -25,8 +25,8 @@ export class ConversationsService {
 
   async create(userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<Conversation> {
     const conversation = await this.conversations.transaction(async client => {
-      await this.presence.assertCanStart(client, userId, npcId);
       const arrival = await this.quests.getArrival(userId, client);
+      await this.presence.assertCanStart(client, userId, npcId);
       if (isCafeSeller(npcId) || npcId === 'npc_clothes_seller') {
         const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
         const baseContext = await this.conversations.context(client, userId, npcId);

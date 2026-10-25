@@ -1,11 +1,13 @@
 export interface Preferences {
   sound: boolean;
+  coachEnabled: boolean;
   speechRate: number;
   speechPitch: number;
 }
 type DeviceStorage = Pick<Storage, 'getItem' | 'setItem'>;
-const key = 'life-abroad.preferences';
-export const defaultPreferences: Preferences = { sound: true, speechRate: 1, speechPitch: 1 };
+const legacyKey = 'life-abroad.preferences';
+const soundKey = 'life-abroad.sound';
+export const defaultPreferences: Preferences = { sound: true, coachEnabled: false, speechRate: 1, speechPitch: 1 };
 
 const bounds = {
   speechRate: { min: 0.75, max: 1.5 },
@@ -20,13 +22,18 @@ function bounded(value: unknown, setting: keyof typeof bounds): number {
 export function createPreferences(storage?: DeviceStorage) {
   let state = defaultPreferences;
   try {
-    const saved: unknown = JSON.parse(storage?.getItem(key) ?? 'null');
+    const saved: unknown = JSON.parse(storage?.getItem(legacyKey) ?? 'null');
+    const savedSound: unknown = JSON.parse(storage?.getItem(soundKey) ?? 'null');
     if (typeof saved === 'object' && saved !== null) {
       state = {
-        sound: 'sound' in saved && typeof saved.sound === 'boolean' ? saved.sound : true,
+        sound: typeof savedSound === 'boolean' ? savedSound
+          : 'sound' in saved && typeof saved.sound === 'boolean' ? saved.sound : true,
+        coachEnabled: 'coachEnabled' in saved && typeof saved.coachEnabled === 'boolean' ? saved.coachEnabled : false,
         speechRate: bounded('speechRate' in saved ? saved.speechRate : undefined, 'speechRate'),
         speechPitch: bounded('speechPitch' in saved ? saved.speechPitch : undefined, 'speechPitch'),
       };
+    } else if (typeof savedSound === 'boolean') {
+      state = { ...defaultPreferences, sound: savedSound };
     }
   } catch { /* Storage can be blocked; device settings still work in memory. */ }
   const listeners = new Set<() => void>();
@@ -38,7 +45,9 @@ export function createPreferences(storage?: DeviceStorage) {
         ? bounded(value, setting)
         : value;
       state = { ...state, [setting]: nextValue };
-      try { storage?.setItem(key, JSON.stringify(state)); } catch { /* Retain the in-memory preference. */ }
+      if (setting === 'sound') {
+        try { storage?.setItem(soundKey, JSON.stringify(nextValue)); } catch { /* Retain the in-memory preference. */ }
+      }
       listeners.forEach(listener => listener());
     },
   };

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', ssr: { external: ['@life-abroad/shared'] } });
+const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { external: ['@life-abroad/shared'] } });
 try {
   const { isDefiniteRejection } = await server.ssrLoadModule('/src/features/life/life-clock.ts');
   const { refreshLifeOnConnection } = await server.ssrLoadModule('/src/features/life/life-sync.ts');

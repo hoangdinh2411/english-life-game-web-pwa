@@ -25,3 +25,4 @@
 - S5 | AI reply audio cache | 2026-10-24 | Added short-lived privacy-safe AI speech caching and cleanup.
 - S6 | Authenticated client playback integration | 2026-10-24 | Added authenticated dialogue playback with readable failure fallback.
 - S7 | Client DSP and settings | 2026-10-24 | Added bounded independent speed/pitch playback and graceful fallback.
+- T38.2 | Client preference synchronization | 2026-10-25 | Synchronized account learning preferences with debounced race-safe saves, visible retry, and device-local Sound.

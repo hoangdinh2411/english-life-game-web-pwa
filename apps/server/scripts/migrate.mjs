@@ -22,8 +22,8 @@ try {
       let authCount;
       if (name === '003_server_reset.sql') {
         const target = new URL(databaseUrl);
-        if (target.hostname !== '127.0.0.1' || target.port !== '55422' || target.pathname !== '/postgres') {
-          throw new Error('Server reset is restricted to local Supabase at 127.0.0.1:55422/postgres');
+        if (target.hostname !== '127.0.0.1' || target.port !== '54322' || target.pathname !== '/postgres') {
+          throw new Error('Server reset is restricted to local Supabase at 127.0.0.1:54322/postgres');
         }
         await client.query('LOCK TABLE auth.users IN SHARE MODE');
         authCount = (await client.query('SELECT count(*)::int AS count FROM auth.users')).rows[0].count;

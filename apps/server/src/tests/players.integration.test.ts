@@ -19,7 +19,7 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
   const databaseUrl = process.env.DATABASE_URL ?? '';
   const authUrl = process.env.SUPABASE_URL ?? '';
   assert.equal(new URL(databaseUrl).hostname, '127.0.0.1');
-  assert.equal(new URL(databaseUrl).port, '55422');
+  assert.equal(new URL(databaseUrl).port, '54322');
   assert.equal(new URL(authUrl).hostname, '127.0.0.1');
   const database = new Pool({ connectionString: databaseUrl });
   const auth = createClient(authUrl, process.env.SUPABASE_PUBLISHABLE_KEY ?? '', {
@@ -158,7 +158,7 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
 test('T15 new character starts with $500 and reload retains it', async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
   assert.equal(url.hostname, '127.0.0.1');
-  assert.equal(url.port, '55422');
+  assert.equal(url.port, '54322');
   const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const database = new Pool({ connectionString: process.env.DATABASE_URL });
   const userId = randomUUID();

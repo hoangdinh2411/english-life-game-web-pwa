@@ -4,10 +4,12 @@ import test from "node:test";
 import { spawnSync } from "node:child_process";
 import { resolve, join } from "node:path";
 import { readdir, readFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
+import { createHash, randomInt } from "node:crypto";
 import { Test } from "@nestjs/testing";
+import { createClient } from "@supabase/supabase-js";
 import { AppModule } from "../app.module";
 import { mapPackSchema } from "@life-abroad/shared";
+import { DatabaseService } from "../infrastructure/database/database.service";
 
 async function sourceFiles(directory: string): Promise<Record<string, string>> {
   const entries = await readdir(directory, { withFileTypes: true }).catch(
@@ -43,6 +45,11 @@ test("T14 generated files remain in the local asset folder after upload, and imm
   }).compile();
   const app = module.createNestApplication();
   app.setGlobalPrefix("api/v1");
+  const database = module.get(DatabaseService);
+  const uploadVersion = randomInt(1_000_000_000, 2_000_000_000);
+  const storage = createClient(target.toString(), key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  }).storage.from("game-assets");
   try {
     await app.listen(0, "127.0.0.1");
     const base = `${await app.getUrl()}/api/v1`;
@@ -57,7 +64,7 @@ test("T14 generated files remain in the local asset folder after upload, and imm
             "--target",
             "local",
             "loc_town_street",
-            "2",
+            String(uploadVersion),
           ],
           {
             env: { ...process.env, CONTENT_API_URL: base },
@@ -65,21 +72,24 @@ test("T14 generated files remain in the local asset folder after upload, and imm
           },
         );
         let output = "";
+        let errorOutput = "";
         child.stdout.on("data", (data: Buffer) => {
           output += data.toString();
         });
-        child.stderr.on("data", () => {}); // Do not print credentials or provider diagnostics.
+        child.stderr.on("data", (data: Buffer) => {
+          errorOutput += data.toString();
+        });
         child.on("error", reject);
         child.on("exit", (code) =>
           code === 0
             ? resolveRun(output)
-            : reject(new Error(`Upload script exited ${code}`)),
+            : reject(new Error(`Upload script exited ${code}: ${errorOutput.replaceAll(key, "[redacted]").trim()}`)),
         );
       });
     const assetDirectory = resolve("../../local-assets/maps/loc_town_street");
     const sourceBefore = await sourceFiles(join(assetDirectory, "source"));
-    const first: unknown = JSON.parse(await invoke());
-    const second: unknown = JSON.parse(await invoke());
+    const first = JSON.parse(await invoke()) as { assets: Array<{ path: string }> };
+    const second = JSON.parse(await invoke()) as { assets: Array<{ path: string }> };
     assert.deepEqual(
       first,
       second,
@@ -99,7 +109,9 @@ test("T14 generated files remain in the local asset folder after upload, and imm
     const response = await fetch(`${base}/content/maps/loc_town_street`);
     assert.equal(response.status, 200);
     const pack = mapPackSchema.parse(await response.json());
-    assert.equal(pack.assets.length, 3);
+    for (const uploaded of first.assets) {
+      assert.ok(pack.assets.some((asset) => asset.url.includes(uploaded.path)));
+    }
     for (const asset of pack.assets) {
       assert.ok(asset.url.includes("/storage/v1/object/public/game-assets/"));
       const file = await fetch(asset.url);
@@ -136,6 +148,17 @@ test("T14 generated files remain in the local asset folder after upload, and imm
     );
     assert.equal(permission.status, 0);
   } finally {
+    const uploaded = await database.query<{ path: string }>(
+      "SELECT path FROM assets WHERE map_id=$1 AND version=$2",
+      ["loc_town_street", uploadVersion],
+    );
+    if (uploaded.rows.length) {
+      await storage.remove(uploaded.rows.map((row) => row.path));
+      await database.query("DELETE FROM assets WHERE map_id=$1 AND version=$2", [
+        "loc_town_street",
+        uploadVersion,
+      ]);
+    }
     await app.close();
   }
 });

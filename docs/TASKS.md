@@ -3,7 +3,7 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
-Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1, T38.3; T39.1–T39.4; S2–S7.
+Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.3; T39.1–T39.4; S2–S7.
 
 ## How to work
 
@@ -66,10 +66,6 @@ database: localhost:54323
       time running; they may capture player input. The approved design is
       `docs/specs/2026-10-21-game-menu-tutorial-design.md`, and the executable
       plan is `docs/plans/2026-10-21-game-menu-settings-tutorial.md`.
-  - [ ] **T38.2 — Client preference synchronization.** Keep Sound device-local;
-        load/save account preferences through NestJS with slider debounce,
-        latest-value-wins, visible failure state and Retry. Local practice must
-        make no preference API calls.
   - [ ] **T38.4 — Separate Settings overlay.** Move full controls out of the
         game menu, preserve compact dialogue controls, add save/error feedback,
         and verify the layout at 320px, 375px and desktop width.

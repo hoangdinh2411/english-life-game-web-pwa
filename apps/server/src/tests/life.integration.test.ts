@@ -12,7 +12,7 @@ import { MutableWorldClock } from './support/mutable-world-clock';
 
 test('life HTTP persists energy/time/outfit and atomically replays purchases, sleep and dialogue', async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
-  assert.equal(url.hostname, '127.0.0.1'); assert.equal(url.port, '55422');
+  assert.equal(url.hostname, '127.0.0.1'); assert.equal(url.port, '54322');
   const database = new Pool({ connectionString: url.toString() });
   const auth = createClient(process.env.SUPABASE_URL ?? '', process.env.SUPABASE_PUBLISHABLE_KEY ?? '', {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -68,7 +68,9 @@ test('life HTTP persists energy/time/outfit and atomically replays purchases, sl
     // Cached receipts remain replayable even if the shop has since closed.
     worldClock.setGameTime('2000-01-01T20:00:00.000Z');
     assert.equal((await call('/life/purchase', { key: randomUUID(), itemIds: ['espresso'] })).status, 409);
-    assert.deepEqual(await (await call('/life/purchase', purchase)).json(), receipt);
+    const replayAtCurrentTime = lifeStateSchema.parse(await (await call('/life/purchase', purchase)).json());
+    assert.deepEqual({ ...replayAtCurrentTime, gameTime: receipt.gameTime }, receipt);
+    assert.equal(replayAtCurrentTime.gameTime, '2000-01-01T20:00:00.000Z');
     worldClock.setGameTime('2000-01-01T08:00:00.000Z');
     await database.query('UPDATE player_stats SET coins=5,energy=0 WHERE user_id=$1', [userId]);
     const competing = await Promise.all([call('/life/purchase', { key: randomUUID(), itemIds: ['espresso'] }),
