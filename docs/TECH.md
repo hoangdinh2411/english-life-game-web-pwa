@@ -509,6 +509,10 @@ Mia.
   offer the same replay key for retry. Scene-owned derived textures preserve
   original animation frames and skin, and are released on transitions/teardown.
   The portrait remains the original artwork.
+- `GET /tutorial/speech/:pageId` accepts only the five shared tutorial page IDs,
+  requires authentication, and returns a short-lived URL for cached Azure Neural
+  audio generated from server-trusted tutorial copy. The client never sends free
+  text or Azure credentials. Signed-out local practice makes no speech request.
 
 ## Destination assets (T14 experiment)
 

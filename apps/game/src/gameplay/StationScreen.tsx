@@ -39,6 +39,7 @@ import useGameClock from "../hooks/use-game-clock";
 import { formatWorldTime } from "../features/world-clock/world-clock";
 import { MovementTutorial } from "../features/tutorial/MovementTutorial";
 import { movementTutorialSeen, tutorialReturnSurface, type TutorialSource } from "../features/tutorial/tutorial-state";
+import { loadTutorialSpeech } from "../api/client";
 
 export default function StationScreen({
   gender,
@@ -84,6 +85,11 @@ export default function StationScreen({
   const [exitReminder, setExitReminder] = useState(false);
   const pwa = usePwa();
   const { runAuthenticated } = useSession();
+  const loadTutorialSpeechAudio = useCallback(
+    (pageId: Parameters<typeof loadTutorialSpeech>[1]) =>
+      runAuthenticated(token => loadTutorialSpeech(token, pageId)),
+    [runAuthenticated],
+  );
   const worldClock = useWorldClock(runAuthenticated, !practice);
   const presence = useNpcPresence(
     activeMapId,
@@ -294,6 +300,7 @@ export default function StationScreen({
           playerName={playerName}
           sound={sound}
           source={tutorialSource}
+          {...(!practice ? { loadSpeech: loadTutorialSpeechAudio } : {})}
           onClose={() => {
             const returnToMenu = tutorialReturnSurface(tutorialSource) === "menu";
             setTutorialSource(null);

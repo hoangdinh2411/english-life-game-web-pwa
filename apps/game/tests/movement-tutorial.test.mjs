@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 
 let tutorialPages = [];
+let tutorialNarrationText;
 let completeMovementTutorial;
 let movementTutorialSeen;
 let tutorialKeyboardAction;
@@ -12,7 +13,7 @@ let tutorialPageAfter;
 let tutorialPrimaryLabel;
 let tutorialReturnSurface;
 try {
-  ({ tutorialPages } = await import('../src/features/tutorial/tutorial-pages.ts'));
+  ({ tutorialNarrationText, tutorialPages } = await import('../src/features/tutorial/tutorial-pages.ts'));
   ({ completeMovementTutorial, movementTutorialSeen, tutorialKeyboardAction, tutorialPageAfter, tutorialPrimaryLabel, tutorialReturnSurface }
     = await import('../src/features/tutorial/tutorial-state.ts'));
 } catch {
@@ -32,6 +33,17 @@ test('tutorial content has the approved five-page order and concise copy', () =>
     assert.ok(page.description.split(/[.!?]+/).filter(Boolean).length <= 2);
     assert.ok(page.illustrationAlt.length > 0);
   }
+});
+
+test('tutorial narration reads the visible page copy', () => {
+  assert.equal(
+    tutorialNarrationText(tutorialPages[0]),
+    `Move Around. ${tutorialPages[0].description}`,
+  );
+  assert.equal(
+    tutorialNarrationText(tutorialPages[1]),
+    `Talk and Interact. ${tutorialPages[1].description}`,
+  );
 });
 
 test('page state clamps Back and Next and names the final action', () => {
@@ -88,6 +100,7 @@ try {
     assert.doesNotMatch(html, />Back</);
     assert.match(html, /role="img"/);
     assert.match(html, /tutorial-scenes\.png/);
+    assert.doesNotMatch(html, /Settings controls|Dialogue settings|role="switch"/);
   });
 } finally {
   await server.close();

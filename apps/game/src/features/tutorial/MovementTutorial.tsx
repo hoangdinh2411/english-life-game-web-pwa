@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
 import { GameButton } from '../../gameplay/GameButton';
-import { tutorialPages } from './tutorial-pages';
+import { useNarration } from '../../speech/use-narration';
+import { tutorialNarrationText, tutorialPages } from './tutorial-pages';
+import type { MovementTutorialPageId, TutorialSpeechResponse } from '@life-abroad/shared';
 import {
   completeMovementTutorial,
   isTutorialFormControl,
@@ -15,6 +17,7 @@ export interface MovementTutorialProps {
   playerName: string;
   sound: boolean;
   source: TutorialSource;
+  loadSpeech?: (pageId: MovementTutorialPageId) => Promise<TutorialSpeechResponse>;
   onClose: () => void;
 }
 
@@ -23,10 +26,22 @@ function deviceStorage(): Storage | undefined {
   catch { return undefined; }
 }
 
-export function MovementTutorial({ playerName, source, onClose }: MovementTutorialProps) {
+export function MovementTutorial({ playerName, sound, source, loadSpeech, onClose }: MovementTutorialProps) {
   const [pageIndex, setPageIndex] = useState(0);
-  const page = tutorialPages[pageIndex] ?? tutorialPages[0];
+  const [speech, setSpeech] = useState<{ pageId: MovementTutorialPageId; url: string } | null>(null);
+  const page = tutorialPages[pageIndex] ?? tutorialPages[0]!;
   const finalPage = pageIndex === tutorialPages.length - 1;
+  const audioUrl = speech?.pageId === page.id ? speech.url : undefined;
+  useNarration(tutorialNarrationText(page), sound && Boolean(audioUrl), page.id, 'female', undefined, true, audioUrl, false);
+
+  useEffect(() => {
+    if (!sound || !loadSpeech) return;
+    let cancelled = false;
+    void loadSpeech(page.id).then(result => {
+      if (!cancelled) setSpeech({ pageId: page.id, url: result.url });
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [loadSpeech, page.id, sound]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -45,7 +60,7 @@ export function MovementTutorial({ playerName, source, onClose }: MovementTutori
     onClose();
   };
 
-  return <DialogueFrame ariaLabel={source === 'menu' ? 'Movement tutorial from game menu' : 'Movement tutorial'} soundControl>
+  return <DialogueFrame ariaLabel={source === 'menu' ? 'Movement tutorial from game menu' : 'Movement tutorial'}>
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
