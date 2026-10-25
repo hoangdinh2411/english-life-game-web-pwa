@@ -24,6 +24,13 @@ export function shouldUseTypingFallback(sound: boolean, narrationReady: boolean,
   return !sound || !narrationReady || narrationError.length > 0;
 }
 
+export function shouldAutomaticallyRevealNpcMessage(
+  messageId: string | number,
+  streamedMessageId: string | number | null | undefined,
+): boolean {
+  return messageId !== streamedMessageId;
+}
+
 export function preserveCompletedReveal(messageId: string | number, progress: number,
   completedMessageId: string | number | null): { progress: number; completedMessageId: string | number | null } {
   if (completedMessageId === messageId) return { progress: 1, completedMessageId };

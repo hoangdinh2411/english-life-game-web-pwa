@@ -33,10 +33,6 @@ export type StoreLocation = Extract<
   MapLocation,
   "cafe" | "corner_cafe" | "clothes"
 >;
-export interface NpcTalkPrompt extends Point {
-  npcId: string;
-  name: string;
-}
 export interface StationCallbacks {
   gender?: PlayerGender | undefined;
   countryName?: string | undefined;
@@ -46,7 +42,6 @@ export interface StationCallbacks {
   initialLocation?: PlayerLocation;
   onEnterStreet?: () => Promise<boolean>;
   onNearby: (id: string | null) => void;
-  onTalkPrompt?: (prompt: NpcTalkPrompt | null) => void;
   onTalk: (id: string) => void;
   onReady: () => void;
   onLocationChange: (location: string) => void;

@@ -162,13 +162,18 @@ test('Four authored residents stay at their anchors while the remaining resident
 
   const makeActor = (id, x) => {
     const sprite = {
+      displayHeight: 96,
       setPosition() { return this; }, setDepth() { return this; },
       anims: { stop() {} }, setFrame() {}, play() {},
     };
     return {
       npc: { id, name: id, texture: 'test', x, y: 100 },
       anchor: { x, y: 100 }, sprite,
-      label: { setPosition() {} }, elapsed: 0, labelOffset: 105, idleFrame: 'idle',
+      label: {
+        setPosition() { return this; }, setText() { return this; }, setColor() { return this; },
+        setScale() { return this; }, setAlpha() { return this; }, setVisible() { return this; },
+      },
+      elapsed: 0, idleFrame: 'idle',
       patrol: { points: [{ x, y: 100 }, { x: x + 300, y: 100 }], startWaypoint: 0 },
     };
   };

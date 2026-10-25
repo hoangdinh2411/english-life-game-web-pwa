@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { npcPose, patrolPose, advanceNpc } from '../src/features/npcs/npc-motion.ts';
 import { canWalk, movePlayer, STATION_NPCS } from '../src/gameplay/station-navigation.ts';
 import { stationNpc } from '../src/features/station/station-roster.ts';
+import * as npcActors from '../src/features/npcs/npc-actors.ts';
+
+const { setNpcActorVisibility, updateNpcActors } = npcActors;
 
 // Checks every station route against the real walkable area, including obstacles.
 test('station patrols remain walkable and the receptionist stays near the desk', () => {
@@ -61,4 +64,91 @@ test('Ruth stops on her desk patrol for interaction and world pause, then resume
   advanceNpc(ruth.id, state, ruth, far, 50, false, null, movePlayer, ruth.patrol);
   assert.equal(state.elapsed, moving.elapsed + 50);
   assert.ok(Math.hypot(state.x - moving.x, state.y - moving.y) < 3);
+});
+
+test('a nearby NPC replaces its name with a conversation-ready indicator', () => {
+  const label = {
+    text: 'Mia',
+    visible: true,
+    y: 0,
+    scale: 1,
+    setPosition(_x, y) { this.y = y; return this; },
+    setText(value) { this.text = value; return this; },
+    setColor() { return this; },
+    setScale(value) { this.scale = value; return this; },
+    setAlpha() { return this; },
+    setVisible(value) { this.visible = value; return this; },
+  };
+  const sprite = {
+    visible: true,
+    displayHeight: 96,
+    anims: { stop() {} },
+    setPosition() { return this; },
+    setDepth() { return this; },
+    setFrame() { return this; },
+    play() { return this; },
+    setVisible(value) { this.visible = value; return this; },
+  };
+  const dots = Array.from({ length: 3 }, () => ({
+    text: '●',
+    visible: false,
+    y: 0,
+    setPosition(_x, y) { this.y = y; return this; },
+    setVisible(value) { this.visible = value; return this; },
+  }));
+  const actor = {
+    npc: { id: 'npc_mia', name: 'Mia', texture: 'mia', x: 800, y: 500 },
+    anchor: { x: 800, y: 500 },
+    sprite,
+    label,
+    indicatorDots: dots,
+    elapsed: 0,
+    idleFrame: '0-0',
+  };
+
+  updateNpcActors([actor], { x: 800, y: 500 }, 16, false);
+
+  assert.equal(label.visible, false);
+  assert.deepEqual(dots.map(dot => dot.visible), [true, true, true]);
+  assert.equal(new Set(dots.map(dot => dot.y)).size, 3, 'the three fixed dots bob with staggered phases');
+  assert.ok(dots.every(dot => dot.y >= 410 && dot.y <= 425), 'the indicator clears the head without floating too far above it');
+  assert.equal(label.scale, 1, 'the bob animation does not resize the indicator');
+
+  setNpcActorVisibility(actor, true);
+
+  assert.equal(label.visible, false, 'a visibility refresh does not reveal the name over the indicator');
+  assert.deepEqual(dots.map(dot => dot.visible), [true, true, true]);
+
+  updateNpcActors([actor], { x: 800, y: 500 }, 280, false);
+
+  assert.deepEqual(dots.map(dot => dot.text), ['●', '●', '●']);
+
+  const beforeConversationWave = dots.map(dot => dot.y);
+  updateNpcActors([actor], { x: 800, y: 500 }, 160, true, 'npc_mia');
+
+  assert.equal(label.visible, false, 'the active conversation keeps the NPC name hidden');
+  assert.deepEqual(dots.map(dot => dot.visible), [true, true, true]);
+  assert.notDeepEqual(dots.map(dot => dot.y), beforeConversationWave, 'the wave continues while the conversation pauses the world');
+
+  updateNpcActors([actor], { x: 0, y: 0 }, 16, false);
+
+  assert.equal(label.text, 'Mia');
+});
+
+test('NPC nameplates use compact responsive sizes on mobile and tablet', () => {
+  assert.equal(typeof npcActors.npcNameplateScreenSizes, 'function');
+  assert.deepEqual(npcActors.npcNameplateScreenSizes(375), { name: 13, dots: 16 });
+  assert.deepEqual(npcActors.npcNameplateScreenSizes(768), { name: 15, dots: 18 });
+  assert.deepEqual(npcActors.npcNameplateScreenSizes(1280), { name: 17, dots: 20 });
+});
+
+test('resizing nameplates uses cheap transforms instead of rebuilding text textures', () => {
+  assert.equal(typeof npcActors.scaleNpcNameplates, 'function');
+  const name = { scale: 0, setScale(value) { this.scale = value; return this; } };
+  const dot = { scale: 0, setScale(value) { this.scale = value; return this; } };
+
+  npcActors.scaleNpcNameplates([name], [dot], 375, 0.5);
+
+  assert.equal(name.scale, 13 / 0.5 / 24);
+  assert.equal(dot.scale, 16 / 0.5 / 28);
 });

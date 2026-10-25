@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { preserveCompletedReveal, textAtProgress, selectAutomaticReveal, shouldUseTypingFallback } from '../src/features/dialogue/use-npc-message-reveal.ts';
+import { preserveCompletedReveal, textAtProgress, selectAutomaticReveal, shouldAutomaticallyRevealNpcMessage, shouldUseTypingFallback } from '../src/features/dialogue/use-npc-message-reveal.ts';
 import { DialogueMessage } from '../src/gameplay/DialogueMessage.tsx';
 
 test('restored history stays complete and only a newly observed NPC message is selected', () => {
@@ -26,6 +26,11 @@ test('missing narration uses typing instead of leaving a new NPC message blank',
   assert.equal(shouldUseTypingFallback(true, false, ''), true);
   assert.equal(shouldUseTypingFallback(true, true, ''), false);
   assert.equal(shouldUseTypingFallback(true, true, 'Playback failed'), true);
+});
+
+test('a scripted reply already shown by streaming is not revealed a second time', () => {
+  assert.equal(shouldAutomaticallyRevealNpcMessage('farewell-message', 'farewell-message'), false);
+  assert.equal(shouldAutomaticallyRevealNpcMessage('next-message', 'farewell-message'), true);
 });
 
 test('audio playback progress is the text reveal source at every speech speed', () => {

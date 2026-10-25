@@ -9,15 +9,9 @@ import {
 import { observeMinimap } from "./polling";
 import { drawMinimap } from "./draw";
 
-export interface MinimapBounds {
-  left: number;
-  right: number;
-  bottom: number;
-}
 interface Props {
   visible: boolean;
   read: () => MinimapSnapshot | null;
-  onBounds: (bounds: MinimapBounds | null) => void;
 }
 const buttonStyle =
   "min-h-11 min-w-11 rounded-lg border-2 border-[var(--color-green-strong)] bg-[var(--color-cream-text)] px-2 text-[13px] font-bold text-[var(--color-ink)] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-map-player)]";
@@ -33,13 +27,12 @@ function initialMode(): MinimapMode {
   }
 }
 
-export function Minimap({ visible, read, onBounds }: Props) {
+export function Minimap({ visible, read }: Props) {
   const [mode, setMode] = useState(initialMode);
   const [snapshot, setSnapshot] = useState<MinimapSnapshot | null>(null);
   const root = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const button = useRef<HTMLButtonElement>(null);
-  const publishedBounds = useRef<MinimapBounds | null>(null);
   const [width, setWidth] = useState(300);
   const open = mode === "visible";
   const choose = useCallback((value: MinimapMode) => {
@@ -51,17 +44,8 @@ export function Minimap({ visible, read, onBounds }: Props) {
     }
   }, []);
   useEffect(() => {
-    const publishBounds = (next: MinimapBounds | null) => {
-      const previous = publishedBounds.current;
-      if (previous === next || previous && next && previous.left === next.left && previous.right === next.right && previous.bottom === next.bottom) return;
-      publishedBounds.current = next;
-      onBounds(next);
-    };
     const element = root.current;
-    if (!visible || !element) {
-      publishBounds(null);
-      return;
-    }
+    if (!visible || !element) return;
     const parent = element.parentElement;
     const measure = () => {
       if (parent) {
@@ -78,11 +62,6 @@ export function Minimap({ visible, read, onBounds }: Props) {
           ),
         );
       }
-      publishBounds({
-        left: element.offsetLeft,
-        right: element.offsetLeft + element.offsetWidth,
-        bottom: element.offsetTop + element.offsetHeight,
-      });
     };
     const observer = new ResizeObserver(measure);
     observer.observe(element);
@@ -92,9 +71,8 @@ export function Minimap({ visible, read, onBounds }: Props) {
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", measure);
-      publishBounds(null);
     };
-  }, [visible, mode, onBounds, snapshot?.width, snapshot?.height]);
+  }, [visible, mode, snapshot?.width, snapshot?.height]);
   useEffect(() => {
     if (!visible || !open) {
       setSnapshot(null);

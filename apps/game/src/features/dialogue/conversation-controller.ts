@@ -17,6 +17,7 @@ export interface ConversationSnapshot {
   retryMessage: SendMessageRequest | null;
   streaming: boolean;
   streamedReply: string;
+  streamedMessageId?: string | null;
   announcement: string;
   farewellStage?: ConversationTurn['farewellStage'];
   historyLoading: boolean;
@@ -38,7 +39,7 @@ export async function revealStreamChunk(text: string, emit: (piece: string) => v
 // Private state lives only in memory. All mutations come from authenticated API responses.
 export function createConversationController(api: ConversationApi) {
   let state: ConversationSnapshot = { arrival: null, conversation: null, pending: false, error: '', retryMessage: null,
-    streaming: false, streamedReply: '', announcement: '', farewellStage: undefined, historyLoading: false };
+    streaming: false, streamedReply: '', streamedMessageId: null, announcement: '', farewellStage: undefined, historyLoading: false };
   let epoch = 0;
   let disposed = false;
   let retry: SendMessageRequest | null = null;
@@ -116,7 +117,7 @@ export function createConversationController(api: ConversationApi) {
         try {
           if (api.stream) {
             streamCancellation = new AbortController();
-            update({ streaming: true, streamedReply: '', announcement: '' });
+            update({ streaming: true, streamedReply: '', streamedMessageId: null, announcement: '' });
             let revealQueue = Promise.resolve();
             turn = await api.stream(conversation.id, conversation.npcId, body,
               chunk => { revealQueue = revealQueue.then(() => revealStreamChunk(chunk,
@@ -139,7 +140,8 @@ export function createConversationController(api: ConversationApi) {
         const coffeeQuest = turn.coffeeQuest;
         return { conversation: { ...conversation, messages, arrival, ...(seller ? { seller } : {}),
           ...(coffeeQuest ? { coffeeQuest } : {}) }, arrival, retryMessage: null,
-          farewellStage: turn.farewellStage };
+          farewellStage: turn.farewellStage, streaming: false, streamedReply: '',
+          streamedMessageId: api.stream ? turn.npcMessage.id : null };
       }).finally(() => {
         streamCancellation = null;
         if (!disposed) update({ streaming: false, streamedReply: '',

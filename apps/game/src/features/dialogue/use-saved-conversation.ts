@@ -4,6 +4,7 @@ import { npcVoice } from "../../speech/npc-voice";
 import { useSpeech } from "../../speech/use-speech";
 import type { ConversationSnapshot } from "./conversation-controller";
 import {
+  shouldAutomaticallyRevealNpcMessage,
   shouldUseTypingFallback,
   useNpcMessageReveal,
 } from "./use-npc-message-reveal";
@@ -58,7 +59,12 @@ export function useSavedConversation({
       ? {
           id: latestMessage.id,
           text: latestMessage.text,
-          npc: latestMessage.sender === "npc",
+          npc:
+            latestMessage.sender === "npc" &&
+            shouldAutomaticallyRevealNpcMessage(
+              latestMessage.id,
+              state.streamedMessageId,
+            ),
         }
       : null,
     voice.playback,
