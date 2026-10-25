@@ -9,7 +9,7 @@ import { authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, mo
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
 import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
-import { updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
+import { npcNameplateOffset, scaleNpcNameplates, setNpcActorVisibility, updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
 import type { MinimapSnapshot } from '../features/minimap/model';
 import { effectiveNpcIds, npcIsVisible } from '../features/npcs/npc-presence';
@@ -87,6 +87,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     private keys: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
     private walkingKeys: Record<string, Phaser.Input.Keyboard.Key> = {};
     private labels: Phaser.GameObjects.Text[] = [];
+    private indicatorDots: Phaser.GameObjects.Text[] = [];
     private npcActors: NpcActor[] = [];
     private npcArtQueue = new Map<string, { image: MapAsset; atlas: MapAsset }>();
     private npcArtLoading = false;
@@ -141,12 +142,6 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         }
         for (const atlas of bundledServiceAtlases) this.textures.remove(atlas.key);
       });
-      const updateTalkPrompt = () => this.updateTalkPrompt();
-      this.game.events.on('postrender', updateTalkPrompt);
-      this.events.once('shutdown', () => {
-        this.game.events.off('postrender', updateTalkPrompt);
-        callbacks.onTalkPrompt?.(null);
-      });
       if (activeLocation === 'station') this.createWorld();
       else {
         packRequest = new AbortController();
@@ -178,6 +173,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       packAnimations = resources?.animationKeys ?? [];
       this.transitionPending = false;
       this.labels = [];
+      this.indicatorDots = [];
       this.npcActors = [];
       const stationSpawns = activeLocation === 'station' ? ambientNpcSpawnPoints(
         venueNpcConfig('station'), VENUE_SPAWN_ZONES, VENUE_EXCLUSION_ZONES, STATION_NPCS.map(npc => npc.id),
@@ -214,7 +210,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const npc = { id: definition.id, name: definition.name, texture: actor.texture, x: actorPosition.x, y: actorPosition.y };
         npcs.push(npc);
         const labelText = definition.name;
-        const label = this.add.text(npc.x, npc.y - 112, labelText, { fontFamily: 'sans-serif', fontSize: '24px', color: UI_COLORS.ink, backgroundColor: UI_COLORS.creamTextSoft, padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
+        const label = this.add.text(npc.x, npc.y - npcNameplateOffset(sprite.displayHeight), labelText, { fontFamily: 'sans-serif', fontSize: '24px', fontStyle: 'bold', color: UI_COLORS.creamTextPure, stroke: UI_COLORS.greenDeep, strokeThickness: 4, padding: { x: 3, y: 1 } }).setOrigin(0.5, 1).setDepth(1500);
         label.setVisible(!lazyStreetArt && isPresent(definition.id));
         this.labels.push(label);
         const npcWalk = `${actor.texture}:${actor.frame}-walk`;
@@ -229,9 +225,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           down: `${actor.frame}-0-0`, left: `${actor.frame}-1-0`,
           right: `${actor.frame}-2-0`, up: `${actor.frame}-3-0`,
         } : undefined;
-        this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, label, elapsed: 0,
+        const indicatorDots = this.createTypingIndicator(npc.x, npc.y - npcNameplateOffset(sprite.displayHeight));
+        this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, label, indicatorDots, nameLabel: labelText, elapsed: 0,
           idleFrame: textureReady ? actor.frame : '__BASE', ...(idleFrames ? { idleFrames } : {}), ...(textureReady ? { walkPrefix: npcWalk } : {}),
-          ...(lazyStreetArt ? { artTextureKey: actor.texture, artFrame: actor.frame } : {}), labelOffset: 105,
+          ...(lazyStreetArt ? { artTextureKey: actor.texture, artFrame: actor.frame } : {}),
           ...(authoredRoute && streetDefinition && !streetDefinition.stationary ? { patrol: { points: authoredRoute.points.map(scaleStreetPoint), startWaypoint: streetDefinition.startWaypoint } } : {}),
           clip: (anchor, offset) => moveInShop(activeLocation, anchor, offset) });
         sprite.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
@@ -269,9 +266,11 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         });
         const name = npc.name;
         const needsTalk = npcNeedsTalk(npc.id);
-        const label = this.add.text(npc.x, npc.y - 108, needsTalk ? `! ${name}` : name, { fontFamily: 'sans-serif', fontSize: '24px', fontStyle: needsTalk ? 'bold' : 'normal', color: UI_COLORS.ink, backgroundColor: needsTalk ? UI_COLORS.gold : UI_COLORS.creamTextSoft, padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
+        const nameLabel = needsTalk ? `! ${name}` : name;
+        const label = this.add.text(npc.x, npc.y - npcNameplateOffset(sprite.displayHeight), nameLabel, { fontFamily: 'sans-serif', fontSize: '24px', fontStyle: 'bold', color: UI_COLORS.creamTextPure, stroke: UI_COLORS.greenDeep, strokeThickness: 4, padding: { x: 3, y: 1 } }).setOrigin(0.5, 1).setDepth(1500);
         this.labels.push(label);
-        this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, shadow, label, elapsed: 0, idleFrame: '0-0', walkPrefix: `${npc.texture}-walk`, labelOffset: 108,
+        const indicatorDots = this.createTypingIndicator(npc.x, npc.y - npcNameplateOffset(sprite.displayHeight));
+        this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, shadow, label, indicatorDots, nameLabel, elapsed: 0, idleFrame: '0-0', walkPrefix: `${npc.texture}-walk`,
           ...(npc.patrol ? { patrol: npc.patrol } : {}), clip: movePlayer });
       }
       for (const portal of this.portalsForLocation()) {
@@ -310,10 +309,18 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           }
         } else if (canWalk(target)) { route = findPath(position, target); destination = route.shift() ?? null; selectedNpc = null; this.marker.setPosition(target.x, target.y).setVisible(true); }
       });
-      const resizeLabels = () => {
+      const applyResponsiveLayout = () => {
         const zoom = Math.max(this.scale.width / 1536, this.scale.height / 1024);
         this.cameras.main.setZoom(zoom);
-        for (const label of this.labels) label.setFontSize(Math.round(13 / zoom));
+        scaleNpcNameplates(this.labels, this.indicatorDots, this.scale.width, zoom);
+      };
+      let resizeFrame: number | null = null;
+      const resizeLabels = () => {
+        if (resizeFrame !== null) return;
+        resizeFrame = requestAnimationFrame(() => {
+          resizeFrame = null;
+          applyResponsiveLayout();
+        });
       };
       const mapSize = activeLocation === 'street' ? STREET_MAP_SIZE : { width: 1536, height: 1024 };
       const minimapImage = background.texture.getSourceImage();
@@ -324,13 +331,16 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         ...mapSize,
         image: minimapImage,
         player: { ...position },
-        npcs: this.npcActors.filter(actor => isPresent(actor.npc.id)).map(actor => ({ id: actor.npc.id, name: actor.npc.name, x: actor.npc.x, y: actor.npc.y, objective: actor.label.text.startsWith('!') })),
+        npcs: this.npcActors.filter(actor => isPresent(actor.npc.id)).map(actor => ({ id: actor.npc.id, name: actor.npc.name, x: actor.npc.x, y: actor.npc.y, objective: actor.nameLabel?.startsWith('!') ?? false })),
         portals: this.portalsForLocation().map(portal => ({ ...portal })),
       } : null;
       this.cameras.main.setBounds(0, 0, mapSize.width, mapSize.height).startFollow(this.player, false, 0.12, 0.12);
-      resizeLabels();
+      applyResponsiveLayout();
       this.scale.on('resize', resizeLabels);
-      this.events.once('shutdown', () => this.scale.off('resize', resizeLabels));
+      this.events.once('shutdown', () => {
+        this.scale.off('resize', resizeLabels);
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+      });
       callbacks.onLocationChange(countryLocationLabel(callbacks.countryName, activeLocation));
       callbacks.onMapChange?.(mapIds[activeLocation]);
       saveLocation();
@@ -338,30 +348,19 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.applyPresence();
       callbacks.onReady();
     }
-    private updateTalkPrompt() {
-      if (!callbacks.onTalkPrompt) return;
-      const npc = this.worldReady && !paused && !authorizing ? nearestNpc(position, npcs) : null;
-      const actor = npc && this.npcActors.find(candidate => candidate.npc.id === npc.id);
-      if (!actor || !actor.sprite.visible || !actor.label.visible) {
-        callbacks.onTalkPrompt(null);
-        return;
-      }
-      const camera = this.cameras.main;
-      const top = actor.label.getTopCenter();
-      const x = Math.round((top.x - camera.worldView.x) * camera.zoom + camera.x);
-      const y = Math.round((top.y - camera.worldView.y) * camera.zoom + camera.y - 6);
-      // Keep the full touch target inside the canvas, above the name label.
-      if (x < 30 || x > this.scale.width - 30 || y < 44 || y > this.scale.height) {
-        callbacks.onTalkPrompt(null);
-        return;
-      }
-      callbacks.onTalkPrompt({ npcId: actor.npc.id, name: actor.npc.name, x, y });
-    }
     private addPortalRing(portal: StationPortal, showLabel = true) {
       const halo = this.add.circle(portal.x, portal.y, 34, 0x73dfa0, 0.3).setStrokeStyle(4, 0x9cffbd, 0.85).setDepth(5);
       this.add.circle(portal.x, portal.y, 22, 0xc3ffd5, 0.14).setStrokeStyle(2, 0xd3ffe0, 0.75).setDepth(5);
       if (showLabel) this.add.text(portal.x, portal.y - 64, portal.label, { fontFamily: 'sans-serif', fontSize: '22px', fontStyle: 'bold', color: UI_COLORS.ink, backgroundColor: UI_COLORS.creamTextSoft, padding: { x: 8, y: 5 } }).setOrigin(0.5, 1).setDepth(1500);
       this.tweens.add({ targets: halo, scale: 1.2, alpha: 0.72, duration: 750, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    private createTypingIndicator(x: number, y: number): Phaser.GameObjects.Text[] {
+      const dots = Array.from({ length: 3 }, (_, index) => this.add.text(x + (index - 1) * 11, y, '●', {
+        fontFamily: 'sans-serif', fontSize: '28px', fontStyle: 'bold', color: UI_COLORS.gold,
+        stroke: UI_COLORS.greenDeep, strokeThickness: 3,
+      }).setOrigin(0.5, 1).setDepth(1500).setVisible(false));
+      this.indicatorDots.push(...dots);
+      return dots;
     }
     private portalsForLocation(): StationPortal[] {
       if (activeLocation === 'station') return STATION_PORTALS;
@@ -412,9 +411,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         if (!actor.artTextureKey || !actor.artFrame) continue;
         const inView = this.cameras.main.worldView.contains(actor.npc.x, actor.npc.y);
         const visible = isPresent(actor.npc.id) && inView && actor.walkPrefix !== undefined;
-        actor.sprite.setVisible(visible);
-        actor.shadow?.setVisible(visible);
-        actor.label.setVisible(visible);
+        setNpcActorVisibility(actor, visible);
         if (!inView) continue;
         const retryAt = this.npcArtRetryAt.get(actor.artTextureKey) ?? 0;
         if (retryAt > Date.now()) continue;
@@ -430,11 +427,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       for (const actor of this.npcActors) {
         const visible = isPresent(actor.npc.id) && (activeLocation !== 'street' ||
           this.cameras.main.worldView.contains(actor.npc.x, actor.npc.y) && actor.walkPrefix !== undefined);
-        actor.sprite.setVisible(visible);
-        actor.label.setVisible(visible);
+        setNpcActorVisibility(actor, visible);
       }
       if (selectedNpc && !isPresent(selectedNpc)) { selectedNpc = null; destinationMapTarget = null; route = []; }
-      if (nearby && !isPresent(nearby)) { nearby = null; callbacks.onNearby(null); callbacks.onTalkPrompt?.(null); }
+      if (nearby && !isPresent(nearby)) { nearby = null; callbacks.onNearby(null); }
       if (activeLocation === 'street') this.ensureVisibleStreetNpcArt();
     }
     private queueStreetNpcArt(textureKey: string) {

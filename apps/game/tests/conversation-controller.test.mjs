@@ -88,6 +88,31 @@ try {
     assert.equal(await controller.send('Yes, movies sometimes'), true);
     assert.equal(controller.getSnapshot().announcement, 'Reply complete.');
   });
+
+  test('a completed streamed NPC reply never overlaps its temporary streaming bubble', async () => {
+    const arrival = { questId: 'q_station_arrival', status: 'done', currentStepId: null,
+      ticket: { issued: true, used: true }, canEnterTownStreet: true, locationId: 'loc_town_street', rewardsGranted: true };
+    const conversation = { id: globalThis.crypto.randomUUID(), npcId: 'npc_raj_pharmacist', messages: [], arrival };
+    const npcMessage = { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'Before you go, will you come back tomorrow?', createdAt: new Date().toISOString() };
+    const controller = createConversationController({ load: async () => arrival, start: async () => conversation,
+      send: async () => { throw new Error('Non-streaming API must not be used'); },
+      stream: async (_id, _npcId, body, onToken) => {
+        onToken(npcMessage.text);
+        return { playerMessage: { id: globalThis.crypto.randomUUID(), sender: 'player', text: body.text, createdAt: new Date().toISOString() },
+          npcMessage, intent: null, misunderstood: false, arrival, ai: true };
+      } });
+    await controller.start();
+    const snapshots = [];
+    const unsubscribe = controller.subscribe(() => snapshots.push(controller.getSnapshot()));
+
+    assert.equal(await controller.send('Hi'), true);
+    unsubscribe();
+
+    assert.equal(snapshots.some(snapshot => snapshot.streaming
+      && snapshot.conversation?.messages.some(message => message.id === npcMessage.id)), false);
+    assert.equal(controller.getSnapshot().streamedMessageId, npcMessage.id,
+      'the committed reply records that its text was already revealed by the stream');
+  });
 } finally {
   await server.close();
 }

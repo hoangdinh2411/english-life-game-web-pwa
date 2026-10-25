@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Minimap, type MinimapBounds } from "../features/minimap/Minimap";
+import { Minimap } from "../features/minimap/Minimap";
 import { GameButton } from "./GameButton";
-import type {
-  GameCanvasProps,
-  NpcTalkPrompt,
-  StationGame,
-} from "../types/gameplay/world";
+import type { GameCanvasProps, StationGame } from "../types/gameplay/world";
 import { syncNpcPresence } from "../features/npcs/npc-presence";
 
 const DEFAULT_INITIAL_LOCATION = {
@@ -86,10 +82,6 @@ export default function GameCanvas({
   useEffect(() => {
     game.current?.setAppearance(appearance);
   }, [appearance]);
-  const [talkPrompt, setTalkPrompt] = useState<NpcTalkPrompt | null>(null);
-  const [minimapBounds, setMinimapBounds] = useState<MinimapBounds | null>(
-    null,
-  );
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [locationLabel, setLocationLabel] = useState(
@@ -100,15 +92,6 @@ export default function GameCanvas({
   const [attempt, setAttempt] = useState(0);
   const [progress, setProgress] = useState(0);
   const serverExit = Boolean(onEnterStreet);
-  const talkCovered =
-    talkPrompt &&
-    minimapBounds &&
-    talkPrompt.x + 30 >= minimapBounds.left &&
-    talkPrompt.x - 30 <= minimapBounds.right &&
-    talkPrompt.y - 44 <= minimapBounds.bottom;
-  const talkPosition = talkCovered
-    ? { x: minimapBounds.right - 30, y: minimapBounds.bottom + 50 }
-    : talkPrompt;
   useEffect(() => {
     let cancelled = false;
     let instance: StationGame | null = null;
@@ -118,7 +101,6 @@ export default function GameCanvas({
     parent.current?.append(host);
     setReady(false);
     setError("");
-    setTalkPrompt(null);
     callbacks.current.onReadyChange(false);
     const start = async () => {
       const { createStationGame } = await import("./create-station-game");
@@ -153,16 +135,6 @@ export default function GameCanvas({
             }
           : {}),
         onNearby: () => {},
-        onTalkPrompt: (prompt) => {
-          if (!cancelled)
-            setTalkPrompt((previous) =>
-              previous?.npcId === prompt?.npcId &&
-              previous?.x === prompt?.x &&
-              previous?.y === prompt?.y
-                ? previous
-                : prompt,
-            );
-        },
         onTalk: (id) => {
           if (!cancelled) callbacks.current.onTalk(id);
         },
@@ -175,7 +147,6 @@ export default function GameCanvas({
         onLocationChange: (location) => {
           if (!cancelled) {
             setLocationLabel(location);
-            setTalkPrompt(null);
             setReady(false);
             callbacks.current.onReadyChange(false);
             callbacks.current.onLocationChange(location);
@@ -247,7 +218,6 @@ export default function GameCanvas({
       <Minimap
         visible={minimapVisible && ready && !error}
         read={readMinimap}
-        onBounds={setMinimapBounds}
       />
       <div
         ref={parent}
@@ -269,24 +239,6 @@ export default function GameCanvas({
             <p role="status">Loading map… {Math.round(progress * 100)}%</p>
           )}
         </div>
-      ) : null}
-      {ready && !error && talkPrompt && !paused ? (
-        <button
-          type="button"
-          className="talk-control absolute z-10 cursor-pointer rounded-sm border-0 bg-[var(--color-green-strong)] p-0 text-[12px] font-bold leading-tight text-[var(--color-cream-text)] lg:bg-transparent hover:bg-[var(--color-green-deep)] lg:hover:bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)]"
-          style={{
-            left: talkPosition?.x,
-            top: talkPosition?.y,
-            transform: "translate(-50%, -100%)",
-          }}
-          aria-label={`Talk to ${talkPrompt.name}`}
-          aria-keyshortcuts="E"
-          onClick={() => game.current?.talk()}
-        >
-          <span className="inline-flex p-1.5  rounded lg:items-center lg:bg-[var(--color-green-strong)]">
-            Talk
-          </span>
-        </button>
       ) : null}
     </div>
   );
