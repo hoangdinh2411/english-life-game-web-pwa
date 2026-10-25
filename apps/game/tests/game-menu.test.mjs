@@ -63,17 +63,20 @@ try {
     assert.match(html, />Settings</);
   });
 
-  test('opening the menu captures player input without pausing the simulated world', () => {
+  test('utility overlays capture player input without pausing the simulated world', () => {
     assert.equal(typeof gameMenuCanvasState, 'function');
-    assert.deepEqual(gameMenuCanvasState({ menuOpen: true, worldBlockerOpen: false }), {
-      playerInputPaused: true,
-      worldPaused: false,
-    });
-    assert.deepEqual(gameMenuCanvasState({ menuOpen: false, worldBlockerOpen: false }), {
+    for (const overlay of ['menu', 'settings', 'English Review', 'Movement Tutorial']) {
+      assert.deepEqual(
+        gameMenuCanvasState({ inputOverlayOpen: true, worldBlockerOpen: false }),
+        { playerInputPaused: true, worldPaused: false },
+        `${overlay} should leave the world running`,
+      );
+    }
+    assert.deepEqual(gameMenuCanvasState({ inputOverlayOpen: false, worldBlockerOpen: false }), {
       playerInputPaused: false,
       worldPaused: false,
     });
-    assert.deepEqual(gameMenuCanvasState({ menuOpen: true, worldBlockerOpen: true }), {
+    assert.deepEqual(gameMenuCanvasState({ inputOverlayOpen: true, worldBlockerOpen: true }), {
       playerInputPaused: true,
       worldPaused: true,
     });

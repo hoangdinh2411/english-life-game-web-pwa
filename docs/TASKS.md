@@ -13,10 +13,18 @@ Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.5; T39.1–T39
   client features go under `src/features/<feature>`; new server capabilities go
   in NestJS `src/modules/<domain>`. Migrate legacy folders only when needed by
   the task; don't do a standalone folder reshuffle or create empty layers.
-- Don't create branches/commits, planning documents, reports, progress logs or
-  new agent sessions automatically. Add necessary source/tests/migrations.
+- Create and switch to a suitably named task branch before changing files; never
+  implement directly on `dev` or `main`. Don't create commits, planning
+  documents, reports, progress logs or new agent sessions automatically. Add
+  necessary source/tests/migrations. The user owns merging completed work.
 - Mark a task done here **only after verification**. Reply with a short summary,
-  checks and blockers; do not start the following task automatically.
+  checks, blockers and a user-testing checklist split into **Client** and
+  **Backend/API**. Each applicable test states its **Precondition**, exact
+  **Input/Action** and observable **Expected output**; use **Not applicable**
+  when one side is unaffected. The AI directly runs complex backend checks that
+  are impractical through the client when safe tooling and required
+  infrastructure are available, and identifies any remaining manual checks. Do
+  not start the following task automatically.
 - Keep this board short: when a task is done, collapse it into one line under
   DONE. Git keeps the history.
 

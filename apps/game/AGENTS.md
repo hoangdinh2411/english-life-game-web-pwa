@@ -42,10 +42,10 @@ Follow `../../AGENTS.md`. Read `../../docs/TECH.md` only as needed.
   not API/Auth responses, tokens or private state. No offline reward queue.
 - Keep browser speech optional; typing always works. PWA updates activate only
   after user confirmation, at onboarding or the paused game menu.
-- For changed UI, check affected flows at 320px and 375px plus a wider viewport:
-  overflow, keyboard focus, errors, readable layout and 44px touch targets. When
-  Phaser changes, check resize, teardown/remount and background pause. State
-  real Android/iOS installation and offline behavior as **untested** unless
-  actually checked on devices.
+- For changed UI, give the user a focused browser checklist covering 320px and
+  375px plus a wider viewport: overflow, keyboard focus, errors, readable layout
+  and 44px touch targets. For Phaser changes, include resize, teardown/remount
+  and background pause. The user performs browser and device verification; state
+  those checks as **not run** unless the user reports results.
 - Prefer targeted UI/tests; use a production build and `pnpm check:pwa` for
   changes involving service workers, assets, manifest or offline behavior.

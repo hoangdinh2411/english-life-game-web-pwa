@@ -102,7 +102,7 @@ export default function StationScreen({
   const inputOnlyOverlayOpen = menu || settingsOpen || reviewOpen || tutorialSource !== null;
   const overlayOpen = npcId !== null || worldPaused || inputOnlyOverlayOpen;
   const canvasPause = gameMenuCanvasState({
-    menuOpen: inputOnlyOverlayOpen,
+    inputOverlayOpen: inputOnlyOverlayOpen,
     worldBlockerOpen:
       !stationReady ||
       worldPaused ||

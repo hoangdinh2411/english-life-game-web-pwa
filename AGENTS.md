@@ -55,21 +55,42 @@ Vite + React + TypeScript + Phaser 4 + PWA, **not** Expo/React Native/WebView.
 
 ## Work loop
 
-1. **Scope:** inspect the relevant implementation; reuse code and existing
+1. **Branch:** before changing files for a new task, create and switch to a
+   suitably named branch. Never implement a task directly on `dev` or `main`.
+   The user owns merging completed work into those branches.
+2. **Scope:** inspect the relevant implementation; reuse code and existing
    files.
-2. **Change:** make the smallest coherent change. Add files only when needed for
+3. **Discuss:** resolve material product or architecture decisions with the user
+   before implementation. Do not block clear, low-risk tasks on unnecessary
+   confirmation.
+4. **Change:** make the smallest coherent change. Add files only when needed for
    working code, tests, migrations or required assets. **Do not generate plans,
    progress logs, reports or extra documentation by default.**
-3. **Verify:** run focused checks for the affected area; run broader typecheck,
-   lint, tests, content validation or build when the change warrants them. Never
-   claim unrun or skipped tests passed. UI/device claims need real evidence.
-4. **Reply briefly:** what changed, checks with pass/fail/not run, blockers.
-   Don't repeat this template mechanically or write a separate report file.
+5. **Verify:** run focused checks for the affected area and TypeScript checks;
+   run broader lint, tests, content validation or build when the change warrants
+   them. Never claim unrun or skipped tests passed. The user owns browser and
+   physical-device verification; do not claim those checks were performed.
+   When backend behavior is complex or impractical to verify through the client,
+   the AI should verify it directly with safe automated, API or integration
+   checks when the required infrastructure is available. Report exactly what was
+   exercised and leave only genuinely manual checks to the user.
+6. **Reply briefly:** what changed, checks with pass/fail/not run, blockers, and
+   a focused user-testing checklist split into **Client** and **Backend/API**.
+   For every applicable test, state its **Precondition**, exact **Input/Action**
+   and observable **Expected output**; omit only fields that genuinely do not
+   apply. Write **Not applicable** when the task does not affect one side.
+   Client items cover relevant browser/UI flows; backend items cover relevant
+   API responses, authorization, validation and persisted state. Mark backend
+   cases already verified by the AI as such; don't ask the user to repeat them
+   through the client unless an end-to-end observation is still valuable. Don't
+   repeat the rest of this template mechanically or write a separate report
+   file.
 
-Don't automatically create branches, commit, push, merge, reset databases, or
-start the next task. Don't enforce a new Codex session per task. Update one of
-the three maintained docs **only** if a durable behavior, interface, decision or
-priority actually changed; don't duplicate details across documents.
+Create a task branch automatically, but don't automatically commit, push, merge,
+reset databases, or start the next task. Don't enforce a new Codex session per
+task. Update one of the three maintained docs **only** if a durable behavior,
+interface, decision or priority actually changed; don't duplicate details across
+documents.
 
 ## Root commands (run from repo root)
 
