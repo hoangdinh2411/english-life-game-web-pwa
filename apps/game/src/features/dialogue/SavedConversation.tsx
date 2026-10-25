@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { DialogueMessage } from "../../gameplay/DialogueMessage";
 import { MessageComposer } from "../../gameplay/MessageComposer";
@@ -6,13 +5,7 @@ import { GameButton } from "../../gameplay/GameButton";
 import { npcPortraits, playerPortraitPresentation } from "../../gameplay/portraits";
 import type { PlayerGender } from "@life-abroad/shared";
 import type { ConversationSnapshot } from "./conversation-controller";
-import { useNarration } from "../../speech/use-narration";
-import { useSpeech } from "../../speech/use-speech";
-import { npcVoice } from "../../speech/npc-voice";
-import {
-  shouldUseTypingFallback,
-  useNpcMessageReveal,
-} from "./use-npc-message-reveal";
+import { useSavedConversation } from "./use-saved-conversation";
 
 export function SavedConversation({
   state,
@@ -47,91 +40,30 @@ export function SavedConversation({
   onClose?: () => void;
 }) {
   const playerPortrait = playerPortraitPresentation(gender);
-  const [text, setText] = useState(state.retryMessage?.text ?? "");
-  const [hintOpen, setHintOpen] = useState(false);
-  const [finalizing, setFinalizing] = useState(false);
-  const [dismissEndPrompt, setDismissEndPrompt] = useState(false);
-  const sending = useRef(false);
-  const history = useRef<HTMLDivElement>(null);
-  const previousScrollHeight = useRef<number | null>(null);
-  const speech = useSpeech(setText);
-  const blocked =
-    state.pending ||
-    finalizing ||
-    !online ||
-    completed ||
-    Boolean(state.conversation?.seller?.closed) ||
-    !state.conversation;
-  const lastNpc = state.conversation?.messages.findLast(
-    (message) => message.sender === "npc",
-  );
-  const voice = useNarration(
-    lastNpc?.text ?? "",
-    sound && !state.pending && !speech.listening,
-    lastNpc?.id ?? "",
-    npcVoice[state.conversation?.npcId ?? "npc_station_information"],
-    state.conversation?.npcId,
-    Boolean(lastNpc?.ai),
-    lastNpc?.speech?.url,
-  );
-  const latestMessage = state.conversation?.messages.at(-1);
-  const reveal = useNpcMessageReveal(
-    latestMessage
-      ? {
-          id: latestMessage.id,
-          text: latestMessage.text,
-          npc: latestMessage.sender === "npc",
-        }
-      : null,
-    voice.playback,
-    shouldUseTypingFallback(sound, voice.ready, voice.error),
-  );
-  const narrationPending = Boolean(
-    sound &&
-    voice.ready &&
-    !voice.error &&
-    lastNpc &&
-    (voice.playback.revision !== lastNpc.id || voice.playback.progress < 1),
-  );
-  const showEndPrompt =
-    state.farewellStage === "confirm" &&
-    latestMessage?.sender === "npc" &&
-    !state.pending &&
-    !state.streaming &&
-    !reveal?.revealing &&
-    !voice.speaking &&
-    !narrationPending &&
-    !dismissEndPrompt;
-  useEffect(() => {
-    const element = history.current;
-    if (!element) return;
-    if (previousScrollHeight.current !== null) {
-      element.scrollTop = element.scrollHeight - previousScrollHeight.current;
-      previousScrollHeight.current = null;
-      return;
-    }
-    element.scrollTop = element.scrollHeight;
-  }, [state.conversation?.messages]);
-  const submit = async (original = false) => {
-    if (sending.current || blocked) return;
-    sending.current = true;
-    try {
-      let reply: string | null = original
-        ? (state.retryMessage?.text ?? text)
-        : text;
-      if (speech.listening) {
-        setFinalizing(true);
-        reply = await speech.finish();
-      }
-      if (reply !== null && (await send(reply))) {
-        setText("");
-        setDismissEndPrompt(false);
-      }
-    } finally {
-      sending.current = false;
-      setFinalizing(false);
-    }
-  };
+  const {
+    blocked,
+    cancelRecording,
+    history,
+    hintOpen,
+    onHistoryScroll,
+    reveal,
+    setDismissEndPrompt,
+    setHintOpen,
+    setText,
+    showEndPrompt,
+    speech,
+    submit,
+    text,
+    toggleRecording,
+    voice,
+  } = useSavedConversation({
+    state,
+    sound,
+    online,
+    completed,
+    send,
+    ...(loadOlder ? { loadOlder } : {}),
+  });
   if (showEndPrompt) {
     return (
       <div
@@ -159,21 +91,7 @@ export function SavedConversation({
         role="log"
         aria-label="Conversation history"
         aria-live="polite"
-        onScroll={(event) => {
-          const element = event.currentTarget;
-          const cursor = state.conversation?.historyCursor;
-          if (
-            element.scrollTop > 8 ||
-            !cursor?.hasMore ||
-            !loadOlder ||
-            state.historyLoading
-          )
-            return;
-          previousScrollHeight.current = element.scrollHeight;
-          void loadOlder().then((loaded) => {
-            if (!loaded) previousScrollHeight.current = null;
-          });
-        }}
+        onScroll={onHistoryScroll}
       >
         {state.historyLoading ? (
           <p
@@ -324,17 +242,8 @@ export function SavedConversation({
         pending={blocked}
         voiceSupported={speech.supported}
         listening={speech.listening}
-        onRecord={() => {
-          if (speech.listening) void speech.finish();
-          else {
-            voice.stop();
-            speech.start();
-          }
-        }}
-        onCancelRecording={() => {
-          speech.stop();
-          setText("");
-        }}
+        onRecord={toggleRecording}
+        onCancelRecording={cancelRecording}
       />
       {speech.listening ? (
         <p className="hint text-muted text-[13px] leading-[1.4]">

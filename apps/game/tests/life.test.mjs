@@ -49,15 +49,15 @@ try {
     }
     assert.match(renderToStaticMarkup(createElement(EnergyDisplay, { energy: 29, onSleep() {}, sleepDisabled: true })), /aria-disabled="true"/);
   });
-  test('player HUD card opens profile and keeps only a compact identity and clock', () => {
+  test('player HUD card opens profile and keeps only a compact identity and balance', () => {
     const props = { playerName: 'Learner', cityName: 'Maplewood', coins: 500, onOpenProfile() {} };
-    const saved = renderToStaticMarkup(createElement(PlayerInfoCard, { ...props, savedTime: new Date(state.gameTime), timeZone: 'Europe/Stockholm' }));
+    const saved = renderToStaticMarkup(createElement(PlayerInfoCard, props));
     assert.match(saved, /aria-label="Open Learner&#x27;s profile"/);
     assert.match(saved, /Maplewood · \$500/);
     assert.doesNotMatch(saved, /aria-valuenow|Experience|XP/);
     assert.doesNotMatch(saved, /UTC/);
     assert.doesNotMatch(saved, /2×|times real time/);
-    assert.match(saved, /12:00/);
+    assert.doesNotMatch(saved, /12:00/);
   });
   // A saved female character must not fall back to the male HUD/profile portrait.
   test('saved character gender selects a distinct portrait throughout the profile UI', () => {

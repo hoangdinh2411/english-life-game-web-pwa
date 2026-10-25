@@ -74,6 +74,37 @@ shared with the server belong in `packages/shared`, not Phaser scenes. The
 not in a separate sweeping refactor. Do not confuse React local practice state
 with the server-owned ticket and rewards.
 
+### Code ownership rules
+
+Apply these rules to every changed file. They are ownership rules, not quotas:
+
+- A file has one primary responsibility. Split it when it coordinates unrelated
+  features, mixes rendering with substantial state/effects, or makes unrelated
+  dependencies change together. File length alone is not a reason to split.
+- React components render and compose UI. Keep short, component-specific state
+  locally; extract a custom hook when state, effects and event workflows form a
+  behavior that can be named and tested independently. Do not extract hooks only
+  to remove `useState` or `useEffect` from a component.
+- Co-locate feature UI, hooks, models, API adapters and Phaser code under the
+  owning `features/<feature>/` directory. Use `components/`, `hooks/`, `model/`,
+  `api/` or `game/` only after the feature needs that extra level. `.ts` and
+  `.tsx` files may live together; JSX usage determines the extension.
+- Keep imports flowing `app → features → shared`. A feature may use another
+  feature's explicit public contract, but must not import its private component,
+  hook or repository internals. Move genuinely reused UI or behavior to
+  `shared/` only after a second real consumer exists.
+- Keep React-to-Phaser adapters narrow. React owns DOM UI and lifecycle; Phaser
+  owns world rendering and input. Quest, economy and progression decisions must
+  not be embedded in scenes.
+- On the server, controllers translate validated HTTP input/output, services own
+  domain decisions and orchestration, and repositories own SQL. Split a service
+  when it accumulates independent decision pipelines or depends on many domains;
+  preserve transactions and call other domains through exported services.
+- Refactor one ownership boundary at a time. Preserve public interfaces and add
+  or run focused characterization tests before relying on a structural move.
+  Do not combine a behavior change with a structural refactor unless the task
+  explicitly requires both.
+
 ### Adding a venue's NPC roster
 
 NPC walking artwork follows one source contract for every map: a 4×4 RGBA PNG

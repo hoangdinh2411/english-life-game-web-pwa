@@ -13,8 +13,13 @@ import { ChatController } from './chat.controller';
 import { ChatStreamService } from './chat-stream.service';
 import { SpeechModule } from '../speech/speech.module';
 import { NpcsModule } from '../npcs/npcs.module';
+import { ConversationReplyService } from './conversation-reply.service';
+import { ConversationReplyEnrichmentService } from './conversation-reply-enrichment.service';
+import { ConversationScriptedReplyService } from './conversation-scripted-reply.service';
 
 @Module({ imports: [DatabaseModule, AuthModule, DialogueModule, QuestsModule, LifeModule, AiModule, SpeechModule, NpcsModule],
   controllers: [ConversationsController, ChatController],
-  providers: [ConversationsRepository, ConversationsService, SellerService, ChatStreamService], exports: [ConversationsService] })
+  providers: [ConversationsRepository, ConversationsService, ConversationReplyService,
+    ConversationScriptedReplyService, ConversationReplyEnrichmentService, SellerService, ChatStreamService],
+  exports: [ConversationsService] })
 export class ConversationsModule {}
