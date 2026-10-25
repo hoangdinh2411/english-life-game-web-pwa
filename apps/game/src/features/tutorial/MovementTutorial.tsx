@@ -55,7 +55,16 @@ export function MovementTutorial({ playerName, source, onClose }: MovementTutori
         <GameButton label="Skip" onClick={complete} />
       </div>
       {pageIndex === 0 ? <p className="text-sm font-bold">Welcome, {playerName}.</p> : null}
-      <p className="max-w-[60ch] text-[15px] leading-6 text-ink">{page.description}</p>
+      <div className="grid min-h-0 items-center gap-3 sm:grid-cols-[auto_1fr]">
+        <div role="img" aria-label={page.illustrationAlt}
+          className="mx-auto aspect-square h-[clamp(112px,22vh,180px)] shrink-0 bg-no-repeat"
+          style={{
+            backgroundImage: "url('/images/tutorial/tutorial-scenes.png')",
+            backgroundPosition: `${pageIndex * 25}% center`,
+            backgroundSize: '500% auto',
+          }} />
+        <p className="max-w-[60ch] text-[15px] leading-6 text-ink">{page.description}</p>
+      </div>
       <div className="mt-auto flex flex-wrap justify-end gap-2">
         {pageIndex > 0 ? <GameButton label="Back" onClick={() => setPageIndex(current => tutorialPageAfter(current, 'previous'))} /> : null}
         <GameButton label={tutorialPrimaryLabel(pageIndex)} onClick={finalPage

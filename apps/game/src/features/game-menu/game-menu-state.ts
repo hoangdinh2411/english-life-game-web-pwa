@@ -1,5 +1,5 @@
 export interface GameMenuCanvasStateInput {
-  menuOpen: boolean;
+  inputOverlayOpen: boolean;
   worldBlockerOpen: boolean;
 }
 
@@ -9,11 +9,11 @@ export interface GameMenuCanvasState {
 }
 
 export function gameMenuCanvasState({
-  menuOpen,
+  inputOverlayOpen,
   worldBlockerOpen,
 }: GameMenuCanvasStateInput): GameMenuCanvasState {
   return {
-    playerInputPaused: menuOpen || worldBlockerOpen,
+    playerInputPaused: inputOverlayOpen || worldBlockerOpen,
     worldPaused: worldBlockerOpen,
   };
 }

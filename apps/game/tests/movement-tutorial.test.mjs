@@ -28,7 +28,10 @@ test('tutorial content has the approved five-page order and concise copy', () =>
     'Use the Game Menu',
   ]);
   assert.equal(tutorialPages.length, 5);
-  for (const page of tutorialPages) assert.ok(page.description.split(/[.!?]+/).filter(Boolean).length <= 2);
+  for (const page of tutorialPages) {
+    assert.ok(page.description.split(/[.!?]+/).filter(Boolean).length <= 2);
+    assert.ok(page.illustrationAlt.length > 0);
+  }
 });
 
 test('page state clamps Back and Next and names the final action', () => {
@@ -83,6 +86,8 @@ try {
     assert.match(html, />Skip</);
     assert.match(html, />Next</);
     assert.doesNotMatch(html, />Back</);
+    assert.match(html, /role="img"/);
+    assert.match(html, /tutorial-scenes\.png/);
   });
 } finally {
   await server.close();
