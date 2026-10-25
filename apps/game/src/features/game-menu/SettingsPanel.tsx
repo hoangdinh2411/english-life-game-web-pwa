@@ -4,19 +4,21 @@ import { Settings } from "../hud/Settings";
 
 interface SettingsPanelProps {
   practice: boolean;
-  onClose: () => void;
+  onBack: () => void;
 }
 
-export function SettingsPanel({ practice, onClose }: SettingsPanelProps) {
+export function SettingsPanel({ practice, onBack }: SettingsPanelProps) {
   return (
-    <DialogueFrame ariaLabel="Settings" onClose={onClose}>
+    <DialogueFrame ariaLabel="Settings" onClose={onBack}>
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-[18px] font-extrabold">Settings</h2>
-          <GameButton label="Close Settings" onClick={onClose} />
+          <GameButton label="Back to Game Menu" onClick={onBack} />
         </div>
-        {practice ? <p role="status" className="text-sm text-muted">Saved on this device for local practice.</p> : null}
-        <Settings />
+        <p className="text-sm text-muted">{practice
+          ? 'These settings apply only to this local practice session. Sound remains saved on this device.'
+          : 'Sound stays on this device. Coach and voice settings follow your account.'}</p>
+        <Settings practice={practice} />
       </div>
     </DialogueFrame>
   );

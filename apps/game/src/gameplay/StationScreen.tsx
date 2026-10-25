@@ -430,7 +430,10 @@ export default function StationScreen({
       {settingsOpen ? (
         <SettingsPanel
           practice={practice}
-          onClose={() => setSettingsOpen(false)}
+          onBack={() => {
+            setSettingsOpen(false);
+            setMenu(true);
+          }}
         />
       ) : null}
       {reviewOpen ? (
