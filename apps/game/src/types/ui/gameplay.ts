@@ -1,14 +1,14 @@
-import type { PlayerLocation, StationSpeaker } from '@life-abroad/shared';
-import type { ReactNode } from 'react';
-import type { ArrivalGoal } from '../gameplay/goals';
-import type { LifeControls } from '../../features/life/useLife';
+import type { PlayerLocation, StationSpeaker } from "@life-abroad/shared";
+import type { ReactNode } from "react";
+import type { ArrivalGoal } from "../gameplay/goals";
+import type { LifeControls } from "../../features/life/useLife";
 export interface ComposerIconProps {
-  kind: 'microphone' | 'send' | 'stop';
+  kind: "microphone" | "send" | "stop";
   color: string;
 }
 export interface ComposerActionProps {
   label: string;
-  kind: 'microphone' | 'send' | 'stop';
+  kind: "microphone" | "send" | "stop";
   disabled: boolean;
   onClick: () => void;
 }
@@ -24,14 +24,12 @@ export interface OverlayButtonProps {
   onClick: () => void;
 }
 export interface PlayerInfoCardProps {
-  gender?: import('@life-abroad/shared').PlayerGender | undefined;
+  gender?: import("@life-abroad/shared").PlayerGender | undefined;
   playerName: string;
   cityName: string;
   coins: number;
   visible?: boolean;
-  timeZone?: string;
-  savedTime?: Date | null;
-  clockRate?: number;
+
   onOpenProfile: () => void;
 }
 export interface DialogueMessageProps {
@@ -49,7 +47,7 @@ export interface DialogueMessageProps {
   replayDisabled?: boolean;
 }
 export interface ConversationPanelProps {
-  gender?: import('@life-abroad/shared').PlayerGender | undefined;
+  gender?: import("@life-abroad/shared").PlayerGender | undefined;
   npcId: StationSpeaker;
   playerName: string;
   sound: boolean;
@@ -67,7 +65,7 @@ export interface QuestBoardProps {
   goals?: readonly ArrivalGoal[];
 }
 export interface StationScreenProps {
-  gender?: import('@life-abroad/shared').PlayerGender | undefined;
+  gender?: import("@life-abroad/shared").PlayerGender | undefined;
   life?: LifeControls;
   arrival?: {
     initialLocation: PlayerLocation;

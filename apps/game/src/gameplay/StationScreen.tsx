@@ -1,6 +1,6 @@
 import type { StationScreenProps } from "../types/ui/gameplay";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { StationSpeaker } from "@life-abroad/shared";
+import { GAME_TIME_RATE, type StationSpeaker } from "@life-abroad/shared";
 import GameCanvas from "./GameCanvas";
 import ConversationPanel from "./ConversationPanel";
 import { DialogueFrame } from "./DialogueFrame";
@@ -35,6 +35,8 @@ import { isStationSpeaker } from "../features/station/station-roster";
 import { useSession } from "../session/session-provider";
 import { useWorldClock } from "../features/world-clock/useWorldClock";
 import { countryLocationLabel } from "../features/location/country-presentation";
+import useGameClock from "../hooks/use-game-clock";
+import { formatWorldTime } from "../features/world-clock/world-clock";
 
 const TUTORIAL_KEY = "movementTutorialSeen";
 
@@ -133,6 +135,18 @@ export default function StationScreen({
   });
   const practiceGoals = practiceArrivalGoals(practiceDirectionsAsked);
   const notice = goalNotice(practiceGoals);
+  const rate = worldClock.clockRate ?? GAME_TIME_RATE;
+  const practiceTime = useGameClock(rate);
+  const gameTime = worldClock.time ?? practiceTime;
+  const resolvedTimeZone =
+    worldClock.timeZone ??
+    (worldClock.time !== undefined
+      ? "UTC"
+      : Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const timeLabel =
+    worldClock.time === null
+      ? "Syncing…"
+      : formatWorldTime(gameTime, resolvedTimeZone);
   return (
     <main
       className="flex-1 min-h-0 relative bg-[var(--color-dark-surface)] overflow-hidden"
@@ -184,17 +198,15 @@ export default function StationScreen({
           coins={coins}
           onOpenProfile={() => setProfileOpen(true)}
           visible={!overlayOpen || profileOpen}
-          {...(!practice
-            ? {
-                savedTime: worldClock.time,
-                clockRate: worldClock.clockRate,
-                ...(worldClock.timeZone
-                  ? { timeZone: worldClock.timeZone }
-                  : {}),
-              }
-            : {})}
         />
-
+        <aside className="flex  items-center gap-1.5 rounded-md bg-dialogue border-2 border-border p-1 text-left  shadow-[0_2px_6px_#0004]  absolute top-0 left-1/2 -translate-x-1/2">
+          <span
+            className="shrink-0 text-xs tabular-nums text-[#263630]"
+            aria-label={`Game time ${timeLabel}`}
+          >
+            ◷ {timeLabel}
+          </span>
+        </aside>
         <div className="station-tools [grid-column:2] [grid-row:1] [justify-self:end] flex gap-2 pointer-events-auto [@media(max-width:479px)]:gap-1">
           <div className="hidden lg:block">
             <OverlayButton
