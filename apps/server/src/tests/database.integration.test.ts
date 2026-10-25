@@ -95,7 +95,11 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
       assert.equal((await clean.query('SELECT * FROM quests')).rowCount, content.quests.length);
       assert.equal((await clean.query('SELECT * FROM quest_steps')).rowCount, content.quests.reduce((count, quest) => count + quest.steps.length, 0));
       assert.deepEqual((await clean.query('SELECT rewards FROM quests WHERE id=$1', ['q_order_coffee'])).rows[0].rewards, { xp: 20, coins: 5 });
-      assert.deepEqual((await clean.query<ShopItem>('SELECT id,name,kind,price,shop,color FROM shop_items ORDER BY id')).rows.map(({ color, ...item }) => ({ ...item, ...(color ? { color } : {}) })),
+      assert.deepEqual((await clean.query<ShopItem>('SELECT id,name,kind,price,shop,color,image FROM shop_items ORDER BY id')).rows.map(({ color, image, ...item }) => ({
+        ...item,
+        ...(color ? { color } : {}),
+        ...(image ? { image } : {}),
+      })),
         [...content.shops].sort((a, b) => a.id.localeCompare(b.id)));
       // Prices here are isolated fixtures, never the owner-authored live catalog.
       const fixtureItems: ShopItem[] = [
@@ -159,18 +163,22 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
       assert.equal((await engine.reply(receptionist, 'unrelated words')).intent, null);
     } finally { if (!seedClosed) await seedDatabase.onApplicationShutdown(); }
     const userId = randomUUID();
-    const cityId = 'r2_fixture_' + randomUUID();
     await assert.rejects(database.transaction(async client => {
       await client.query('INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES ($1, $2, $3)',
         [userId, userId + '@example.invalid', { display_name: 'R2 fixture' }]);
       assert.equal((await client.query('SELECT english_level FROM profiles WHERE id = $1', [userId])).rows[0].english_level, null);
       const stats = await client.query('SELECT energy, last_energy_update, coins, xp FROM player_stats WHERE user_id = $1', [userId]);
       assert.deepEqual(stats.rows[0], { energy: null, last_energy_update: null, coins: 0, xp: 0 });
-      await client.query('INSERT INTO cities (id, name) VALUES ($1, $2)', [cityId, 'Test fixture']);
-      await client.query('INSERT INTO characters (user_id, name, current_city_id) VALUES ($1, $2, $3)', [userId, 'R2 character', cityId]);
+      await client.query(`INSERT INTO characters
+        (user_id,name,gender,country_id,world_id,current_city_id,current_map_id,current_place_id,current_position_x,current_position_y)
+        SELECT $1,$2,'male','country_sweden',id,'city_maplewood','loc_station','loc_station',768,370
+        FROM worlds WHERE country_id='country_sweden'`, [userId, 'R2 character']);
       assert.equal((await client.query('SELECT name FROM characters WHERE user_id = $1', [userId])).rows[0].name, 'R2 character');
       await client.query('SAVEPOINT duplicate_check');
-      await assert.rejects(client.query('INSERT INTO characters (user_id, name) VALUES ($1, $2)', [userId, 'Duplicate']), { code: '23505' });
+      await assert.rejects(client.query(`INSERT INTO characters
+        (user_id,name,gender,country_id,world_id,current_city_id,current_map_id,current_place_id,current_position_x,current_position_y)
+        SELECT $1,$2,'male','country_sweden',id,'city_maplewood','loc_station','loc_station',768,370
+        FROM worlds WHERE country_id='country_sweden'`, [userId, 'Duplicate']), { code: '23505' });
       await client.query('ROLLBACK TO SAVEPOINT duplicate_check');
       await client.query('SAVEPOINT stats_check');
       await assert.rejects(client.query('UPDATE player_stats SET coins = -1 WHERE user_id = $1', [userId]), { code: '23514' });

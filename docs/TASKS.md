@@ -3,7 +3,7 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
-Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6; T38.1, T38.3; T39.1–T39.4; S2–S7.
+Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1, T38.3; T39.1–T39.4; S2–S7.
 
 ## How to work
 
@@ -59,18 +59,6 @@ database: localhost:54323
         behavior. Done when repository search finds old clock names only in
         historical/contract migrations, and content validation, lint, typecheck,
         unit tests, build, integration tests and PWA checks pass.
-  - [ ] **ONB-01.8 — Immutable player character selection.** Implement the
-        approved `docs/specs/2026-10-24-player-gender-onboarding-design.md`:
-        keep one `/new-game` route but show country, image-only character
-        choice, and name as three consecutive steps. Create matching female/male
-        walking sheets and portraits, validate and transactionally save the
-        hidden gender value, return it with character state, and use it for
-        saved-game player rendering. Gender cannot be edited after onboarding.
-        Defer initial color customization and later color changes through
-        clothing-store/hair-salon NPC flows to a separate task; do not expose
-        appearance editing in the profile. Done when contract, persistence,
-        idempotency, asset-selection, interaction and 320/375/1024 px responsive
-        checks pass.
 
 - [ ] **T38 — Non-pausing game menu, synchronized Settings and movement
       tutorial.** Implement only one slice per request and stop after its

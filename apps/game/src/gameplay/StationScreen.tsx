@@ -20,7 +20,11 @@ import { ShopConversation } from "../features/shops/ShopConversation";
 import { isShopNpc, type ShopNpcId } from "../features/shops/shop-npcs";
 import { StoreClosedDialogue } from "../features/shops/StoreClosedDialogue";
 import type { StoreLocation } from "../types/gameplay/world";
-import { isStreetNpc, STREET_NPCS, type StreetNpcId } from "../features/npcs/street-npcs";
+import {
+  isStreetNpc,
+  STREET_NPCS,
+  type StreetNpcId,
+} from "../features/npcs/street-npcs";
 import { TownspersonConversation } from "../features/npcs/TownspersonConversation";
 import { usePreferences } from "../features/hud/usePreferences";
 import { useNpcPresence } from "../features/npcs/use-npc-presence";
@@ -61,24 +65,35 @@ export default function StationScreen({
   arrival,
   life,
 }: StationScreenProps) {
-  const [npcId, setNpcId] = useState<StationSpeaker | ShopNpcId | StreetNpcId | null>(null);
+  const [npcId, setNpcId] = useState<
+    StationSpeaker | ShopNpcId | StreetNpcId | null
+  >(null);
   const [tutorial, setTutorial] = useState(() => !hasSeenTutorial());
   const [stationReady, setStationReady] = useState(false);
-  const [location, setLocation] = useState(() => countryLocationLabel(countryName, "station"));
+  const [location, setLocation] = useState(() =>
+    countryLocationLabel(countryName, "station"),
+  );
   const [menu, setMenu] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [closedStore, setClosedStore] = useState<StoreLocation | null>(null);
-  const [activeMapId, setActiveMapId] = useState<string>(arrival?.initialLocation.placeId ?? "loc_station");
+  const [activeMapId, setActiveMapId] = useState<string>(
+    arrival?.initialLocation.placeId ?? "loc_station",
+  );
   const [goals, setGoals] = useState(false);
   const { sound, set: setPreference } = usePreferences();
   const menuWasOpen = useRef(false);
   const closeMenu = useCallback(() => setMenu(false), []);
   useEffect(() => {
-    if (menu) { menuWasOpen.current = true; return; }
+    if (menu) {
+      menuWasOpen.current = true;
+      return;
+    }
     if (menuWasOpen.current) {
       menuWasOpen.current = false;
-      document.querySelector<HTMLButtonElement>('button[aria-label="Menu"]')?.focus();
+      document
+        .querySelector<HTMLButtonElement>('button[aria-label="Menu"]')
+        ?.focus();
     }
   }, [menu]);
   const [exitUnlocked, setExitUnlocked] = useState(false);
@@ -87,8 +102,13 @@ export default function StationScreen({
   const pwa = usePwa();
   const { runAuthenticated } = useSession();
   const worldClock = useWorldClock(runAuthenticated, !practice);
-  const presence = useNpcPresence(activeMapId, !practice && Boolean(worldClock.snapshot), pwa.online,
-    worldClock.clockRate, worldClock.revision);
+  const presence = useNpcPresence(
+    activeMapId,
+    !practice && Boolean(worldClock.snapshot),
+    pwa.online,
+    worldClock.clockRate,
+    worldClock.revision,
+  );
   const displayedCountryName = countryName?.trim() || "Not selected";
   const worldPaused =
     tutorial ||
@@ -136,11 +156,13 @@ export default function StationScreen({
         onLocationChange={setLocation}
         onMapChange={setActiveMapId}
         presentNpcIds={presence.presentNpcIds}
-        {...(!practice && life ? {
-          getGameTime: () => worldClock.time,
-          getTimeZone: () => worldClock.timeZone,
-          onStoreClosed: (store) => setClosedStore(store),
-        } : {})}
+        {...(!practice && life
+          ? {
+              getGameTime: () => worldClock.time,
+              getTimeZone: () => worldClock.timeZone,
+              onStoreClosed: (store) => setClosedStore(store),
+            }
+          : {})}
         conversationNpcId={npcId}
         worldPaused={canvasPause.worldPaused}
         paused={canvasPause.playerInputPaused || npcId !== null}
@@ -162,56 +184,93 @@ export default function StationScreen({
           coins={coins}
           onOpenProfile={() => setProfileOpen(true)}
           visible={!overlayOpen || profileOpen}
-          {...(!practice ? { savedTime: worldClock.time, clockRate: worldClock.clockRate,
-            ...(worldClock.timeZone ? { timeZone: worldClock.timeZone } : {}) } : {})}
+          {...(!practice
+            ? {
+                savedTime: worldClock.time,
+                clockRate: worldClock.clockRate,
+                ...(worldClock.timeZone
+                  ? { timeZone: worldClock.timeZone }
+                  : {}),
+              }
+            : {})}
         />
+
         <div className="station-tools [grid-column:2] [grid-row:1] [justify-self:end] flex gap-2 pointer-events-auto [@media(max-width:479px)]:gap-1">
-          <div className="hidden lg:block"><OverlayButton
-            label={sound ? "Sound on" : "Sound off"}
-            icon={sound ? "🔊" : "🔇"}
-            onClick={() => setPreference('sound', !sound)}
-          /></div>
-          {!overlayOpen || menu ? (
-            <span className={menu ? 'relative lg:hidden' : 'relative'}>
+          <div className="hidden lg:block">
             <OverlayButton
-              label="Menu"
-              icon="≡"
-              onClick={() => { if (menu) closeMenu(); else setMenu(true); }}
+              label={sound ? "Sound on" : "Sound off"}
+              icon={sound ? "🔊" : "🔇"}
+              onClick={() => setPreference("sound", !sound)}
             />
-            {!sound ? <span aria-hidden="true" className="pointer-events-none absolute -bottom-0.5 -right-0.5 rounded-full bg-dialogue text-[10px] lg:hidden">🔇</span> : null}
+          </div>
+          {!overlayOpen || menu ? (
+            <span className={menu ? "relative lg:hidden" : "relative"}>
+              <OverlayButton
+                label="Menu"
+                icon="≡"
+                onClick={() => {
+                  if (menu) closeMenu();
+                  else setMenu(true);
+                }}
+              />
+              {!sound ? (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -bottom-0.5 -right-0.5 rounded-full bg-dialogue text-[10px] lg:hidden"
+                >
+                  🔇
+                </span>
+              ) : null}
             </span>
           ) : null}
         </div>
       </div>
       {showGoals ? (
         <div className="goals-control absolute [bottom:max(24px,_env(safe-area-inset-bottom))] left-3 flex flex-col items-start gap-1 [@media(max-width:479px)]:[&_.game-button]:[padding:8px_12px] [@media(max-width:479px)]:[&_.game-button]:text-[14px]">
-          <button type="button" onClick={() => setGoals(true)} aria-label={arrival ? `Open saved arrival goals, ${arrival.goalsLabel}` : 'Open goals'} className="flex min-h-11 items-center gap-1.5 rounded-xl border-0 bg-[#315749] px-3 py-1 text-[13px] font-bold text-[#fff8e7] lg:hidden">
-            Goals <span className="rounded-md bg-[#ffe08a] px-1.5 py-1 text-[10px] text-ink">{arrival?.goalsLabel ?? (notice.fresh ? `${notice.fresh} new` : notice.active ? `${notice.active} active` : 'Your quests')}</span>
+          <button
+            type="button"
+            onClick={() => setGoals(true)}
+            aria-label={
+              arrival
+                ? `Open saved arrival goals, ${arrival.goalsLabel}`
+                : "Open goals"
+            }
+            className="flex min-h-11 items-center gap-1.5 rounded-xl border-0 bg-[#315749] px-3 py-1 text-[13px] font-bold text-[#fff8e7] lg:hidden"
+          >
+            Goals{" "}
+            <span className="rounded-md bg-[#ffe08a] px-1.5 py-1 text-[10px] text-ink">
+              {arrival?.goalsLabel ??
+                (notice.fresh
+                  ? `${notice.fresh} new`
+                  : notice.active
+                    ? `${notice.active} active`
+                    : "Your quests")}
+            </span>
           </button>
           <div className="hidden lg:flex flex-col items-start gap-1">
-          <span className="goal-notice bg-[#ffe08a] rounded-[8px] [padding:4px_8px] text-[12px] font-bold">
-            {arrival?.goalsLabel ??
-              (notice.fresh
-                ? `${notice.fresh} new quest${notice.fresh > 1 ? "s" : ""}`
-                : notice.active
-                  ? `${notice.active} active quest${notice.active > 1 ? "s" : ""}`
-                  : "Your quests")}
-          </span>
-          <GameButton
-            label={
-              arrival
-                ? "Goals"
-                : notice.active || notice.fresh
-                  ? "! Goals"
-                  : "Goals"
-            }
-            ariaLabel={
-              arrival
-                ? "Open saved arrival goals"
-                : `Open goals, ${notice.active} active quests, ${notice.fresh} new quests`
-            }
-            onClick={() => setGoals(true)}
-          />
+            <span className="goal-notice bg-[#ffe08a] rounded-[8px] [padding:4px_8px] text-[12px] font-bold">
+              {arrival?.goalsLabel ??
+                (notice.fresh
+                  ? `${notice.fresh} new quest${notice.fresh > 1 ? "s" : ""}`
+                  : notice.active
+                    ? `${notice.active} active quest${notice.active > 1 ? "s" : ""}`
+                    : "Your quests")}
+            </span>
+            <GameButton
+              label={
+                arrival
+                  ? "Goals"
+                  : notice.active || notice.fresh
+                    ? "! Goals"
+                    : "Goals"
+              }
+              ariaLabel={
+                arrival
+                  ? "Open saved arrival goals"
+                  : `Open goals, ${notice.active} active quests, ${notice.fresh} new quests`
+              }
+              onClick={() => setGoals(true)}
+            />
           </div>
         </div>
       ) : null}
@@ -232,7 +291,9 @@ export default function StationScreen({
           )}
         </DialogueFrame>
       ) : null}
-      {!npcId && !tutorial && !goals && closedStore === null ? arrival?.statusPanel : null}
+      {!npcId && !tutorial && !goals && closedStore === null
+        ? arrival?.statusPanel
+        : null}
       {closedStore ? (
         <StoreClosedDialogue
           location={closedStore}
@@ -240,17 +301,19 @@ export default function StationScreen({
           onReturn={() => setClosedStore(null)}
         />
       ) : null}
-      {profileOpen ? <PlayerProfileDialogue
-        gender={gender}
-        playerName={playerName}
-        cityName={displayedCountryName}
-        xp={xp}
-        coins={coins}
-        {...(life ? { life } : {})}
-        online={arrival?.online ?? pwa.online}
-        practice={practice}
-        onClose={() => setProfileOpen(false)}
-      /> : null}
+      {profileOpen ? (
+        <PlayerProfileDialogue
+          gender={gender}
+          playerName={playerName}
+          cityName={displayedCountryName}
+          xp={xp}
+          coins={coins}
+          {...(life ? { life } : {})}
+          online={arrival?.online ?? pwa.online}
+          practice={practice}
+          onClose={() => setProfileOpen(false)}
+        />
+      ) : null}
       {tutorial && stationReady ? (
         <TutorialDialogue
           playerName={playerName}
@@ -270,7 +333,11 @@ export default function StationScreen({
           sound={sound}
           countryName={countryName}
           onClose={() => setNpcId(null)}
-          onRefresh={async () => { await life?.refresh(); await worldClock.refresh(); await presence.refresh(); }}
+          onRefresh={async () => {
+            await life?.refresh();
+            await worldClock.refresh();
+            await presence.refresh();
+          }}
         />
       ) : npcId && isShopNpc(npcId) ? (
         <ShopConversation
@@ -279,13 +346,22 @@ export default function StationScreen({
           npcId={npcId}
           sound={sound}
           onClose={() => setNpcId(null)}
-          onRefresh={async () => { await life?.refresh(); await worldClock.refresh(); await presence.refresh(); }}
+          onRefresh={async () => {
+            await life?.refresh();
+            await worldClock.refresh();
+            await presence.refresh();
+          }}
         />
       ) : npcId === "npc_station_information" && arrival ? (
-        <DialogueFrame soundControl={!arrival.farewellConfirm} confirmationOnly={arrival.farewellConfirm}>
-          {!arrival.farewellConfirm ? <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0">
-            <h2>Ruth</h2>
-          </div> : null}
+        <DialogueFrame
+          soundControl={!arrival.farewellConfirm}
+          confirmationOnly={arrival.farewellConfirm}
+        >
+          {!arrival.farewellConfirm ? (
+            <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0">
+              <h2>Ruth</h2>
+            </div>
+          ) : null}
           {arrival.renderReceptionist(sound, () => setNpcId(null))}
         </DialogueFrame>
       ) : npcId ? (
@@ -342,10 +418,16 @@ export default function StationScreen({
       ) : null}
       {menu ? (
         <GameMenu
-          onOpenTutorial={() => { setMenu(false); setTutorial(true); }}
+          onOpenTutorial={() => {
+            setMenu(false);
+            setTutorial(true);
+          }}
           onSignOut={onSignOut}
           onReturnToGame={closeMenu}
-          onOpenSettings={() => { setMenu(false); setSettingsOpen(true); }}
+          onOpenSettings={() => {
+            setMenu(false);
+            setSettingsOpen(true);
+          }}
           {...(pwa.updateReady ? { onUpdate: () => void pwa.update() } : {})}
         />
       ) : null}
