@@ -54,12 +54,6 @@ export interface ConversationPanelProps {
   onClose: () => void;
   onDirections?: (received: boolean) => void;
 }
-export interface TutorialDialogueProps {
-  playerName: string;
-  countryName?: string | undefined;
-  sound: boolean;
-  onClose: () => void;
-}
 export interface QuestBoardProps {
   inPanel?: boolean;
   goals?: readonly ArrivalGoal[];

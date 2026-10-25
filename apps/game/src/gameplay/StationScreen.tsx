@@ -5,7 +5,6 @@ import GameCanvas from "./GameCanvas";
 import ConversationPanel from "./ConversationPanel";
 import { DialogueFrame } from "./DialogueFrame";
 import { GameButton } from "./GameButton";
-import { TutorialDialogue } from "./TutorialDialogue";
 import { OverlayButton } from "./OverlayButton";
 import { PlayerInfoCard } from "./PlayerInfoCard";
 import { QuestBoard } from "./QuestBoard";
@@ -38,24 +37,8 @@ import { useWorldClock } from "../features/world-clock/useWorldClock";
 import { countryLocationLabel } from "../features/location/country-presentation";
 import useGameClock from "../hooks/use-game-clock";
 import { formatWorldTime } from "../features/world-clock/world-clock";
-
-const TUTORIAL_KEY = "movementTutorialSeen";
-
-function hasSeenTutorial() {
-  try {
-    return localStorage.getItem(TUTORIAL_KEY) === "1";
-  } catch {
-    return false; // localStorage can fail (for example, private mode)
-  }
-}
-
-function markTutorialSeen() {
-  try {
-    localStorage.setItem(TUTORIAL_KEY, "1");
-  } catch {
-    /* ignore */
-  }
-}
+import { MovementTutorial } from "../features/tutorial/MovementTutorial";
+import { movementTutorialSeen, tutorialReturnSurface, type TutorialSource } from "../features/tutorial/tutorial-state";
 
 export default function StationScreen({
   gender,
@@ -71,7 +54,9 @@ export default function StationScreen({
   const [npcId, setNpcId] = useState<
     StationSpeaker | ShopNpcId | StreetNpcId | null
   >(null);
-  const [tutorial, setTutorial] = useState(() => !hasSeenTutorial());
+  const [tutorialSource, setTutorialSource] = useState<TutorialSource | null>(() =>
+    movementTutorialSeen() ? null : "first-run",
+  );
   const [stationReady, setStationReady] = useState(false);
   const [location, setLocation] = useState(() =>
     countryLocationLabel(countryName, "station"),
@@ -109,13 +94,12 @@ export default function StationScreen({
   );
   const displayedCountryName = countryName?.trim() || "Not selected";
   const worldPaused =
-    tutorial ||
     profileOpen ||
     closedStore !== null ||
     goals ||
     exitReminder ||
     Boolean(arrival?.pending || arrival?.error);
-  const inputOnlyOverlayOpen = menu || settingsOpen || reviewOpen;
+  const inputOnlyOverlayOpen = menu || settingsOpen || reviewOpen || tutorialSource !== null;
   const overlayOpen = npcId !== null || worldPaused || inputOnlyOverlayOpen;
   const canvasPause = gameMenuCanvasState({
     menuOpen: inputOnlyOverlayOpen,
@@ -282,7 +266,7 @@ export default function StationScreen({
           )}
         </DialogueFrame>
       ) : null}
-      {!npcId && !tutorial && !goals && closedStore === null
+      {!npcId && tutorialSource === null && !goals && closedStore === null
         ? arrival?.statusPanel
         : null}
       {closedStore ? (
@@ -305,14 +289,15 @@ export default function StationScreen({
           onClose={() => setProfileOpen(false)}
         />
       ) : null}
-      {tutorial && stationReady ? (
-        <TutorialDialogue
+      {tutorialSource && stationReady ? (
+        <MovementTutorial
           playerName={playerName}
-          countryName={countryName}
           sound={sound}
+          source={tutorialSource}
           onClose={() => {
-            markTutorialSeen();
-            setTutorial(false);
+            const returnToMenu = tutorialReturnSurface(tutorialSource) === "menu";
+            setTutorialSource(null);
+            if (returnToMenu) setMenu(true);
           }}
         />
       ) : null}
@@ -416,7 +401,7 @@ export default function StationScreen({
           }}
           onOpenTutorial={() => {
             setMenu(false);
-            setTutorial(true);
+            setTutorialSource("menu");
           }}
           onSignOut={onSignOut}
           onReturnToGame={closeMenu}
