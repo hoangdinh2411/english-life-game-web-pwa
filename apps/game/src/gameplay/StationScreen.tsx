@@ -1,5 +1,5 @@
 import type { StationScreenProps } from "../types/ui/gameplay";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { GAME_TIME_RATE, type StationSpeaker } from "@life-abroad/shared";
 import GameCanvas from "./GameCanvas";
 import ConversationPanel from "./ConversationPanel";
@@ -31,6 +31,7 @@ import { useNpcPresence } from "../features/npcs/use-npc-presence";
 import { GameMenu } from "../features/game-menu/GameMenu";
 import { gameMenuCanvasState } from "../features/game-menu/game-menu-state";
 import { SettingsPanel } from "../features/game-menu/SettingsPanel";
+import { EnglishReviewPanel } from "../features/game-menu/EnglishReviewPanel";
 import { isStationSpeaker } from "../features/station/station-roster";
 import { useSession } from "../session/session-provider";
 import { useWorldClock } from "../features/world-clock/useWorldClock";
@@ -77,6 +78,7 @@ export default function StationScreen({
   );
   const [menu, setMenu] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [closedStore, setClosedStore] = useState<StoreLocation | null>(null);
   const [activeMapId, setActiveMapId] = useState<string>(
@@ -84,20 +86,14 @@ export default function StationScreen({
   );
   const [goals, setGoals] = useState(false);
   const { sound, set: setPreference } = usePreferences();
-  const menuWasOpen = useRef(false);
-  const closeMenu = useCallback(() => setMenu(false), []);
-  useEffect(() => {
-    if (menu) {
-      menuWasOpen.current = true;
-      return;
-    }
-    if (menuWasOpen.current) {
-      menuWasOpen.current = false;
+  const closeMenu = useCallback(() => {
+    setMenu(false);
+    requestAnimationFrame(() => {
       document
         .querySelector<HTMLButtonElement>('button[aria-label="Menu"]')
         ?.focus();
-    }
-  }, [menu]);
+    });
+  }, []);
   const [exitUnlocked, setExitUnlocked] = useState(false);
   const [practiceDirectionsAsked, setPracticeDirectionsAsked] = useState(false);
   const [exitReminder, setExitReminder] = useState(false);
@@ -119,7 +115,7 @@ export default function StationScreen({
     goals ||
     exitReminder ||
     Boolean(arrival?.pending || arrival?.error);
-  const inputOnlyOverlayOpen = menu || settingsOpen;
+  const inputOnlyOverlayOpen = menu || settingsOpen || reviewOpen;
   const overlayOpen = npcId !== null || worldPaused || inputOnlyOverlayOpen;
   const canvasPause = gameMenuCanvasState({
     menuOpen: inputOnlyOverlayOpen,
@@ -413,6 +409,11 @@ export default function StationScreen({
       ) : null}
       {menu ? (
         <GameMenu
+          practice={practice}
+          onOpenReview={() => {
+            setMenu(false);
+            setReviewOpen(true);
+          }}
           onOpenTutorial={() => {
             setMenu(false);
             setTutorial(true);
@@ -430,6 +431,14 @@ export default function StationScreen({
         <SettingsPanel
           practice={practice}
           onClose={() => setSettingsOpen(false)}
+        />
+      ) : null}
+      {reviewOpen ? (
+        <EnglishReviewPanel
+          onClose={() => {
+            setReviewOpen(false);
+            setMenu(true);
+          }}
         />
       ) : null}
       {life?.sleepTransition ? (
