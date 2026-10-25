@@ -1,5 +1,5 @@
-import type { CreateCharacterRequest, NpcPresenceResponse, OnboardingOptions, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState } from '@life-abroad/shared';
-import { parseOnboardingOptions, arrivalStateSchema, conversationHistoryPageSchema, conversationSchema, conversationTurnSchema, npcPresenceResponseSchema, playerPreferencesReadSchema, playerPreferencesSchema, ARRIVAL_NPC_ID, type Conversation, type ConversationHistoryPage, type SendMessageRequest } from '@life-abroad/shared';
+import type { CreateCharacterRequest, MovementTutorialPageId, NpcPresenceResponse, OnboardingOptions, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState, TutorialSpeechResponse } from '@life-abroad/shared';
+import { parseOnboardingOptions, arrivalStateSchema, conversationHistoryPageSchema, conversationSchema, conversationTurnSchema, npcPresenceResponseSchema, playerPreferencesReadSchema, playerPreferencesSchema, tutorialSpeechResponseSchema, ARRIVAL_NPC_ID, type Conversation, type ConversationHistoryPage, type SendMessageRequest } from '@life-abroad/shared';
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
 
@@ -37,6 +37,8 @@ export const initializePlayerPreferences = async (token: string, body: PlayerPre
   playerPreferencesSchema.parse(await request('players/preferences/initialize', body, token));
 export const updatePlayerPreferences = async (token: string, body: PlayerPreferencesUpdate): Promise<PlayerPreferences> =>
   playerPreferencesSchema.parse(await request('players/preferences', body, token));
+export const loadTutorialSpeech = async (token: string, pageId: MovementTutorialPageId): Promise<TutorialSpeechResponse> =>
+  tutorialSpeechResponseSchema.parse(await request(`tutorial/speech/${encodeURIComponent(pageId)}`, undefined, token));
 
 export const loadArrival = async (token: string) => arrivalStateSchema.parse(await request('quests/arrival', undefined, token));
 export const enterTownStreet = async (token: string) => arrivalStateSchema.parse(await request('quests/arrival/enter-town-street', {}, token));

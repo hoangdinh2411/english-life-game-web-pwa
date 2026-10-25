@@ -11,7 +11,7 @@ function findClip(text: string, gender: VoiceGender, catalog: StationAudioCatalo
   return catalog.find((clip) => clip.text === text && clip.gender === gender)?.asset ?? null;
 }
 export function useNarration(text: string, enabled: boolean, revision: string | number = text, gender: VoiceGender = 'male', npcId?: string, browserOnly = false,
-  privateAsset?: string) {
+  privateAsset?: string, browserFallback = true) {
   const street = !browserOnly && (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId ?? '');
   const currentText = useRef(text); currentText.current = text;
   const [speaking, setSpeaking] = useState(false);
@@ -23,7 +23,7 @@ export function useNarration(text: string, enabled: boolean, revision: string | 
   const audioCatalogRef = useRef(audioCatalog);
   audioCatalogRef.current = audioCatalog;
   const lastRevision = useRef<string | number | null>(null);
-  const browserVoice = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  const browserVoice = browserFallback && typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
   const supported = typeof Audio !== 'undefined' && (Boolean(privateAsset) || audioCatalog !== null);
   const narrationReady = Boolean(privateAsset) || audioCatalog !== null && (Boolean(findClip(text, gender, audioCatalog)) || !street && voicesReady);
   const narrator = useMemo(() => {

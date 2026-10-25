@@ -26,6 +26,15 @@ export class SpeechProfileService {
       format: AZURE_SPEECH_FORMAT, ttsVersion: AZURE_SPEECH_VERSION, settings: {} };
   }
 
+  async tutorialIdentity(): Promise<AiSpeechIdentity> {
+    const pools = await this.voicePools();
+    const voice = pools.voices.female[0];
+    if (!voice) throw new ServiceUnavailableException('Tutorial speech profile is unavailable.');
+    const supported = pools.styleSupport[voice] ?? [];
+    return { language: AZURE_SPEECH_LANGUAGE, voice, style: resolveAzureStyle('neutral', supported),
+      format: AZURE_SPEECH_FORMAT, ttsVersion: AZURE_SPEECH_VERSION, settings: {} };
+  }
+
   private voicePools(): Promise<ReturnType<typeof voicePoolsSchema.parse>> {
     this.pools ??= readFile(resolve(__dirname, '../../../../../content/voice-pools.json'), 'utf8')
       .then(value => voicePoolsSchema.parse(JSON.parse(value) as unknown))
