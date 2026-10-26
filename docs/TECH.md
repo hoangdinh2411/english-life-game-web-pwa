@@ -380,6 +380,11 @@ shares its peer-IP bucket.
   in the background to update XP without closing the dialogue.
 - `GET /conversations/:id`: returns the owner's ordered messages and current
   arrival state. Another owner's ID returns 404; all routes require Auth.
+- Tax-office registration uses the same conversation routes. One private
+  `id_card_applications` row per player keeps the five validated text answers
+  and current question across conversations; either clerk resumes it. The row
+  is removed on cancellation and remains separate from the future issued card
+  and browser-only photo flow.
 - `POST /conversations/:id/messages` with `{ clientMessageId: <UUID>, text }`:
   trimmed text of 1–2000 characters. Returns
   `{ playerMessage, npcMessage, intent, misunderstood, arrival }`; messages

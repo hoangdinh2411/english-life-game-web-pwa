@@ -12,6 +12,7 @@ import { ConversationSpeechService } from '../speech/conversation-speech.service
 import { NpcPresenceService } from '../npcs/npc-presence.service';
 import { openingMessageId, transientOpening } from './conversation-policy';
 import { ConversationReplyService, type ConversationStream } from './conversation-reply.service';
+import { IdCardApplicationService } from './id-card-application.service';
 
 const isCafeSeller = (npcId: string): boolean => (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
 
@@ -21,7 +22,7 @@ export class ConversationsService {
     private readonly dialogue: DialogueService, private readonly quests: QuestsService, private readonly life: LifeService,
     private readonly seller: SellerService, private readonly coffee: CoffeeQuestService,
     private readonly replies: ConversationReplyService, private readonly speech: ConversationSpeechService,
-    private readonly presence: NpcPresenceService) {}
+    private readonly presence: NpcPresenceService, private readonly idCardApplications: IdCardApplicationService) {}
 
   async create(userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<Conversation> {
     const conversation = await this.conversations.transaction(async client => {
@@ -48,8 +49,11 @@ export class ConversationsService {
             : 'shop_start';
         const id = await this.conversations.create(client, userId, npcId, openingVariation);
         const context = { ...baseContext, variationIndex: openingVariation };
-        const opening = await this.dialogue.node(context, openingNode);
-        const greeting = transientOpening(id, opening.text);
+        const resumedApplication = (TAX_OFFICE_NPC_IDS as readonly string[]).includes(npcId)
+          ? await this.idCardApplications.opening(client, userId)
+          : null;
+        const opening = resumedApplication ?? (await this.dialogue.node(context, openingNode)).text;
+        const greeting = transientOpening(id, opening);
         return { id, npcId: conversationNpcSchema.parse(npcId), messages: [greeting], arrival,
           ...(npcId === 'npc_cafe_waiter' ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
       }

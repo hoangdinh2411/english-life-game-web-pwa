@@ -16,10 +16,13 @@ import { NpcsModule } from '../npcs/npcs.module';
 import { ConversationReplyService } from './conversation-reply.service';
 import { ConversationReplyEnrichmentService } from './conversation-reply-enrichment.service';
 import { ConversationScriptedReplyService } from './conversation-scripted-reply.service';
+import { IdCardApplicationContentService } from './id-card-application-content.service';
+import { IdCardApplicationService } from './id-card-application.service';
 
 @Module({ imports: [DatabaseModule, AuthModule, DialogueModule, QuestsModule, LifeModule, AiModule, SpeechModule, NpcsModule],
   controllers: [ConversationsController, ChatController],
   providers: [ConversationsRepository, ConversationsService, ConversationReplyService,
-    ConversationScriptedReplyService, ConversationReplyEnrichmentService, SellerService, ChatStreamService],
+    ConversationScriptedReplyService, ConversationReplyEnrichmentService, SellerService, ChatStreamService,
+    IdCardApplicationContentService, IdCardApplicationService],
   exports: [ConversationsService] })
 export class ConversationsModule {}

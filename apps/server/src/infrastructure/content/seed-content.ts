@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { dialogueSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, townSeedSchema, voicePoolsSchema } from '@life-abroad/shared';
+import { dialogueSchema, idCardApplicationContentSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, townSeedSchema, voicePoolsSchema } from '@life-abroad/shared';
 
 async function json(path: string): Promise<unknown> {
   try { return JSON.parse(await readFile(path, 'utf8')) as unknown; }
@@ -20,6 +20,7 @@ export async function loadSeedContent(root: string) {
   const quests = questCatalogSchema.parse(await json(join(root, 'seed/quests.json')));
   const shops = shopCatalogSchema.parse(await json(join(root, 'seed/shops.json')));
   const voicePools = voicePoolsSchema.parse(await json(join(root, 'voice-pools.json')));
+  idCardApplicationContentSchema.parse(await json(join(root, 'id-card/application.json')));
   const dialogues = [];
   for (const file of (await readdir(join(root, 'dialogue'), { recursive: true })).filter(file => file.endsWith('.json')).sort()) {
     dialogues.push(dialogueSchema.parse(await json(join(root, 'dialogue', file))));

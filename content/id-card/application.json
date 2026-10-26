@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "registrationPhrases": [
+    "register an id card",
+    "register id card",
+    "get an id card",
+    "apply for an id card",
+    "i need an id card",
+    "don't have an id card",
+    "do not have an id card",
+    "have no id card",
+    "no id card yet",
+    "without an id card",
+    "new id card"
+  ],
+  "cancellationPhrases": [
+    "cancel my application",
+    "cancel the application",
+    "stop my application",
+    "stop the application"
+  ],
+  "addressNullPhrases": [
+    "i don't have one yet",
+    "i do not have one yet",
+    "later",
+    "i'll update it later",
+    "i will update it later",
+    "not now",
+    "skip"
+  ],
+  "prompts": {
+    "name": "Let’s start your application. What is your full name?",
+    "dateOfBirth": "What is your date of birth? Please use YYYY-MM-DD.",
+    "address": "What is your address? You can say ‘skip’ if you do not have one yet.",
+    "gender": "What is your gender: male or female?",
+    "origin": "Where do you come from?",
+    "photo": "Thank you. Now I need a photo for your application.",
+    "review": "I will read your application back, including the photo. Is this correct?",
+    "correction": "Which answer would you like to fix: name, date of birth, address, gender, or where you come from?"
+  },
+  "reviewTemplate": "Here is your application. Name: {name}. Date of birth: {dateOfBirth}. Address: {address}. Gender: {gender}. Where you come from: {origin}. Photo: {photo}. Is this correct?",
+  "retries": {
+    "name": "Please give a name between 1 and 60 characters.",
+    "dateOfBirth": "Please give a real date in YYYY-MM-DD format, from 1900 through today.",
+    "address": "Please give an address between 1 and 120 characters, or say ‘skip’.",
+    "gender": "Please answer male or female.",
+    "origin": "Please say where you come from in 1 to 60 characters.",
+    "correction": "Please choose name, date of birth, address, gender, or where you come from."
+  },
+  "cancelled": "Your ID card application has been cancelled."
+}
