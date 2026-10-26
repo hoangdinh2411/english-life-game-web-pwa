@@ -3,7 +3,7 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
-Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.5; T39.1–T39.4; S2–S7.
+Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.5; T39.1–T39.5; S2–S7.
 
 ## How to work
 
@@ -78,13 +78,13 @@ database: localhost:54323
         illustrations, run responsive and behavioral checks, prove continuous
         NPC/time behavior, run repository gates and update maintained docs.
 
-- [ ] **T39 — Complete controlled NPC presence for stations and stores.** Finish
+- [x] **T39 — Complete controlled NPC presence for stations and stores.** Finish
       the partially implemented behavior in
       `docs/specs/2026-10-21-controlled-npc-presence-design.md`. Implement only
       one slice per request and stop after its checks. Keep Town Street on its
       existing authored server schedules; do not change quests, rewards, store
       hours or server authority.
-  - [ ] **T39.5 — Regression, responsive QA and maintained docs.** Run focused
+  - [x] **T39.5 — Regression, responsive QA and maintained docs.** Run focused
         game/shared tests, content validation, typecheck, lint, production game
         build and PWA checks. With the existing test account, inspect station,
         both café interiors and the clothes shop at 320px, 375px and desktop;
