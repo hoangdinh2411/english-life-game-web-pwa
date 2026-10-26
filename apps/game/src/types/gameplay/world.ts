@@ -55,6 +55,7 @@ export interface StationCallbacks {
   onExitBlocked: () => void;
 }
 export interface StationGame {
+  enforceVenueHours: () => void;
   readMinimap: () => MinimapSnapshot | null;
   setAppearance: (appearance: Appearance | undefined) => void;
   destroy: () => void;

@@ -33,7 +33,7 @@ test('shop NPC voices match their authored identities', () => {
 test('closed store hours block shop interiors but never block the street', async () => {
   const navigation = await import('../src/features/shops/shop-navigation.ts');
   assert.equal(typeof navigation.canEnterLocation, 'function');
-  const { canEnterLocation } = navigation;
+  const { canEnterLocation, closedVenueExit } = navigation;
   const at = (hour, minute) => new Date(Date.UTC(2026, 9, 13, hour, minute));
   assert.equal(canEnterLocation('cafe', at(7, 59), 'UTC'), false);
   assert.equal(canEnterLocation('corner_cafe', at(8, 0), 'UTC'), true);
@@ -46,6 +46,11 @@ test('closed store hours block shop interiors but never block the street', async
   assert.equal(canEnterLocation('tax_office', at(8, 0), 'UTC'), true);
   assert.equal(canEnterLocation('tax_office', at(15, 59), 'UTC'), true);
   assert.equal(canEnterLocation('tax_office', at(16, 0), 'UTC'), false);
+  assert.deepEqual(closedVenueExit('cafe'), { closedLocation: 'cafe', location: 'station', streetArrival: 'station' });
+  assert.deepEqual(closedVenueExit('clothes'), { closedLocation: 'clothes', location: 'station', streetArrival: 'station' });
+  assert.deepEqual(closedVenueExit('corner_cafe'), { closedLocation: 'corner_cafe', location: 'street', streetArrival: 'corner_cafe' });
+  assert.deepEqual(closedVenueExit('tax_office'), { closedLocation: 'tax_office', location: 'street', streetArrival: 'tax_office' });
+  assert.equal(closedVenueExit('street'), null);
   assert.equal(canEnterLocation('street', null, null), true);
 });
 

@@ -110,6 +110,26 @@ test('Town Street allows its street entrances but blocks buildings, trees, water
   }
 });
 
+test('Town Street keeps the visible side streets, intersections and paved corners walkable', () => {
+  for (const point of [
+    { x: 320, y: 370 }, { x: 320, y: 440 }, { x: 320, y: 610 }, { x: 360, y: 700 },
+    { x: 1215, y: 370 }, { x: 1215, y: 440 }, { x: 1215, y: 610 }, { x: 1215, y: 700 },
+    { x: 690, y: 420 }, { x: 846, y: 420 }, { x: 680, y: 600 }, { x: 856, y: 600 },
+    { x: 40, y: 370 }, { x: 1490, y: 370 }, { x: 40, y: 620 }, { x: 1490, y: 620 },
+  ]) {
+    assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint(point)), true,
+      `visible paved route should be walkable at ${point.x},${point.y}`);
+  }
+  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 645, y: 405 })), true,
+    'the paved north-east Corner Cup turn should not require walking past the corner');
+  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 620, y: 405 })), false,
+    'opening the Corner Cup turn must not make its roof walkable');
+  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 1010, y: 335 })), true,
+    'the visible Police entrance path should be approachable without overshooting it');
+  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 950, y: 335 })), false,
+    'opening the Police entrance must not make its planted frontage walkable');
+});
+
 test('Town Street blocks street furniture, planted beds, and storefront patio objects', () => {
   // These samples target visible map art; broad walkable rectangles must not let the player enter it.
   for (const obstruction of [

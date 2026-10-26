@@ -55,6 +55,8 @@ export class ConversationsService {
         const opening = resumedApplication ?? (await this.dialogue.node(context, openingNode)).text;
         const greeting = transientOpening(id, opening);
         return { id, npcId: conversationNpcSchema.parse(npcId), messages: [greeting], arrival,
+          ...((TAX_OFFICE_NPC_IDS as readonly string[]).includes(npcId)
+            ? { idCardApplication: await this.idCardApplications.summary(client, userId) } : {}),
           ...(npcId === 'npc_cafe_waiter' ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
       }
       if (arrival.locationId !== STATION_LOCATION_ID) throw new ConflictException('Visit the station receptionist first');
@@ -75,6 +77,8 @@ export class ConversationsService {
       const row = await this.conversations.load(client, userId, id);
       return { id, npcId: conversationNpcSchema.parse(row.npc_id),
         arrival, messages: await this.conversations.messages(client, id),
+        ...((TAX_OFFICE_NPC_IDS as readonly string[]).includes(row.npc_id)
+          ? { idCardApplication: await this.idCardApplications.summary(client, userId) } : {}),
         ...(isCafeSeller(row.npc_id) || row.npc_id === 'npc_clothes_seller' ? { seller: sellerState(row) } : {}),
         ...([SELLER_NPC_ID,'npc_cafe_waiter'].includes(row.npc_id) ? { coffeeQuest: await this.coffee.get(userId, client) } : {}) };
     });

@@ -1,4 +1,4 @@
-import type { Bounds, MapLocation, Point } from '../../types/gameplay/world';
+import type { Bounds, ClosedVenueLocation, MapLocation, Point } from '../../types/gameplay/world';
 import { isVenueOpenAtLocalMinute, type VenueKind } from '@life-abroad/shared';
 import { localWorldMinutes } from '../world-clock/world-clock';
 
@@ -13,6 +13,16 @@ export function canEnterLocation(location: MapLocation, gameTime: Date | null, t
   const venueKind = locationVenueKinds[location];
   return venueKind === undefined || (gameTime !== null && timeZone !== null &&
     isVenueOpenAtLocalMinute(venueKind, localWorldMinutes(gameTime, timeZone)));
+}
+
+export function closedVenueExit(location: MapLocation): {
+  closedLocation: ClosedVenueLocation;
+  location: 'station' | 'street';
+  streetArrival: 'station' | 'corner_cafe' | 'tax_office';
+} | null {
+  if (location === 'cafe' || location === 'clothes') return { closedLocation: location, location: 'station', streetArrival: 'station' };
+  if (location === 'corner_cafe' || location === 'tax_office') return { closedLocation: location, location: 'street', streetArrival: location };
+  return null;
 }
 
 // Feet coordinates, measured against the authored 1536×1024 interiors.

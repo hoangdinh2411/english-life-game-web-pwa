@@ -8,7 +8,7 @@ import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../features/ass
 import { authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetArrivalForLocation, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
-import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
+import { canEnterLocation, closedVenueExit, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
 import { npcNameplateOffset, scaleNpcNameplates, setNpcActorVisibility, updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
 import type { MinimapSnapshot } from '../features/minimap/model';
@@ -65,6 +65,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let nearby: string | null = null;
   let npcs = STATION_NPCS.map((npc) => ({ ...npc }));
   let refreshPresence: (() => void) | undefined;
+  let enforceVenueHours: (() => void) | undefined;
   const controlledPresence = () => {
     if (activeLocation === 'street') return { ids: new Set<string>(), signature: 'street' };
     const gameTime = callbacks.getGameTime?.() ?? null;
@@ -113,6 +114,15 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.events.once('shutdown', () => this.load.off('loaderror', onLoadError));
     }
     create() {
+      enforceVenueHours = () => {
+        const exit = closedVenueExit(activeLocation);
+        const gameTime = callbacks.getGameTime?.() ?? null;
+        const timeZone = callbacks.getTimeZone?.() ?? null;
+        if (!exit || this.transitionPending || canEnterLocation(activeLocation, gameTime, timeZone)) return;
+        this.previousLocation = exit.closedLocation;
+        callbacks.onVenueClosed?.(exit.closedLocation);
+        this.enterLocation(exit.location, exit.streetArrival);
+      };
       refreshAppearance = () => { if (this.worldReady) this.applyAppearance(); };
       refreshPresence = () => {
         if (!this.worldReady) return;
@@ -126,6 +136,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         readMinimap = () => null;
         refreshAppearance = undefined;
         refreshPresence = undefined;
+        enforceVenueHours = undefined;
         this.npcArtQueue.clear();
         this.npcArtRetryAt.clear();
         this.npcArtLoading = false;
@@ -355,6 +366,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       callbacks.onMapChange?.(mapIds[activeLocation]);
       saveLocation();
       this.worldReady = true;
+      queueMicrotask(() => enforceVenueHours?.());
       this.applyPresence();
       callbacks.onReady();
     }
@@ -635,6 +647,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   const game = new P.Game({ type: P.AUTO, parent, width: parent.clientWidth, height: parent.clientHeight, backgroundColor: UI_COLORS.worldBackground, scene: StationScene,
     scale: { mode: P.Scale.RESIZE, autoCenter: P.Scale.CENTER_BOTH }, render: { pixelArt: false }, loader: { timeout: 15000 } });
   return { destroy: () => { destroyed = true; packRequest?.abort(); game.destroy(true); }, pause: (value, pauseWorld = value, talkingNpc = null) => { paused = value; worldPaused = pauseWorld; conversationNpcId = talkingNpc; refreshPresence?.(); }, unlockExit: (value) => { exitUnlocked = value; }, talk,
+    enforceVenueHours: () => enforceVenueHours?.(),
     setPresentNpcIds: (ids) => { presentNpcIds = new Set(ids); refreshPresence?.(); },
     readMinimap: () => destroyed ? null : readMinimap(),
     setAppearance: (value) => { if (callbacks.practice) return; appearance = value; refreshAppearance?.(); } };

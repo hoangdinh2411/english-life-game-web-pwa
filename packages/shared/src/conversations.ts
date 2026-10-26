@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ARRIVAL_NPC_ID, arrivalStateSchema, coffeeQuestStateSchema } from './quests';
 import { moodIdSchema } from './content';
+import { idCardApplicationSummarySchema } from './id-card';
 
 export const SELLER_NPC_ID = 'npc_mia';
 export const CAFE_SELLER_NPC_IDS = ['npc_mia', 'npc_corner_cup_seller'] as const;
@@ -58,6 +59,8 @@ export const turnMetadataSchema = z.object({
   ai: z.literal(true).optional(),
   relationship: npcRelationshipSchema.optional(),
   effectiveMood: moodIdSchema.optional(),
+  idCardApplication: idCardApplicationSummarySchema.optional(),
+  idCardSubmit: z.literal(true).optional(),
 }).strict();
 export const conversationTurnSchema = turnMetadataSchema.extend({
   playerMessage: conversationMessageSchema, npcMessage: conversationMessageSchema,
@@ -68,6 +71,7 @@ export const conversationSchema = z.object({
   historyCursor: z.object({ npcId: conversationNpcSchema, beforeMessageId: z.string().uuid().nullable(), hasMore: z.boolean() }).strict().optional(),
   seller: sellerStateSchema.optional(),
   coffeeQuest: coffeeQuestStateSchema.optional(),
+  idCardApplication: idCardApplicationSummarySchema.optional(),
 }).strict();
 export const conversationHistoryPageSchema = z.object({
   messages: z.array(conversationMessageSchema), hasMore: z.boolean(), beforeMessageId: z.string().uuid().nullable(),

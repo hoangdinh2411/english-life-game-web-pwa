@@ -17,10 +17,11 @@ import { ShopsModule } from './modules/shops/shops.module';
 import { AiModule } from './modules/ai/ai.module';
 import { NpcsModule } from './modules/npcs/npcs.module';
 import { WorldClockModule } from './modules/world-clock/world-clock.module';
+import { IdCardModule } from './modules/id-card/id-card.module';
 
 // Register your business modules here as you implement them.
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env.supabase.local', '.env', '../../.env'] }), HealthModule, AuthModule, DatabaseModule, OnboardingModule, PlayersModule, DialogueModule, QuestsModule, ConversationsModule, ContentModule, ShopsModule, LifeModule, AiModule, NpcsModule, WorldClockModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env.supabase.local', '.env', '../../.env'] }), HealthModule, AuthModule, DatabaseModule, OnboardingModule, PlayersModule, DialogueModule, QuestsModule, ConversationsModule, ContentModule, ShopsModule, LifeModule, AiModule, NpcsModule, WorldClockModule, IdCardModule],
   providers: [{ provide: APP_FILTER, useClass: ApiErrorFilter }, { provide: APP_GUARD, useClass: RateLimitGuard }],
 })
 export class AppModule {}

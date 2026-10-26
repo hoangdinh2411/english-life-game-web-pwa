@@ -72,12 +72,15 @@ export function clampStreetPosition(point: Point): Point {
 // These walkable areas and building footprints follow the replaced 1536×1024
 // expanded map: the station approach, plaza, three cross streets and riverwalk.
 const streetRoads: Bounds[] = [
-  { left: 714, right: 822, top: 150, bottom: 965 }, // Full paved width between the central promenade's curbs
-  { left: 375, right: 630, top: 374, bottom: 385 }, // Clear sidewalk below Tax Office steps
-  { left: 930, right: 1160, top: 374, bottom: 385 }, // Clear sidewalk below Police steps, before the planted beds
+  { left: 675, right: 860, top: 105, bottom: 965 }, // Central promenade, including both paved edges around the fountain
+  { left: 285, right: 375, top: 300, bottom: 650 }, // West side street beside the civic buildings and shops
+  { left: 345, right: 385, top: 650, bottom: 900 }, // Paved passage between the Bank and Hospital
+  { left: 1160, right: 1275, top: 300, bottom: 650 }, // East side street beside the civic buildings and shops
+  { left: 1210, right: 1275, top: 650, bottom: 900 }, // Paved passage beside the Stationery Shop
+  { left: 0, right: 1536, top: 350, bottom: 405 }, // Upper cross street below the civic buildings
   { left: 500, right: 1036, top: 300, bottom: 610 }, // Paved plaza and paths around the fountain
-  { left: 0, right: 1536, top: 600, bottom: 650 }, // Road in front of the shops
-  { left: 0, right: 1536, top: 855, bottom: 900 }, // Road in front of southern buildings
+  { left: 0, right: 1536, top: 580, bottom: 660 }, // Middle cross street and storefront pavement
+  { left: 0, right: 1536, top: 840, bottom: 900 }, // Southern cross street above the landscaped riverwalk
 ];
 const streetObstacles: Bounds[] = [
   // Station and civic-building footprints, including their front steps.
@@ -85,7 +88,9 @@ const streetObstacles: Bounds[] = [
   { left: 826, right: 1536, top: 0, bottom: 245 }, // East station wing and platform
   { left: 0, right: 300, top: 0, bottom: 320 }, // Library and steps
   { left: 350, right: 660, top: 0, bottom: 350 }, // Tax Office and steps
-  { left: 875, right: 1210, top: 0, bottom: 350 }, // Police station and steps
+  { left: 875, right: 1210, top: 0, bottom: 320 }, // Police station building
+  { left: 875, right: 985, top: 320, bottom: 350 }, // Police west frontage and planting
+  { left: 1075, right: 1210, top: 320, bottom: 350 }, // Police east frontage and planting
   { left: 1260, right: 1536, top: 0, bottom: 320 }, // Workplace and steps
   { left: 711, right: 825, top: 389, bottom: 490 }, // Fountain basin and surrounding flower pots
   { left: 610, right: 680, top: 292, bottom: 365 }, // North-west plaza planters
@@ -93,12 +98,13 @@ const streetObstacles: Bounds[] = [
   { left: 510, right: 555, top: 475, bottom: 540 }, // South-west plaza planter
   { left: 980, right: 1026, top: 475, bottom: 540 }, // South-east plaza planter
   { left: 0, right: 285, top: 390, bottom: 575 }, // Clothes shop, including its roof
-  { left: 355, right: 660, top: 390, bottom: 590 }, // Corner Cup Cafe roof, facade and steps
-  { left: 880, right: 1240, top: 390, bottom: 590 }, // Restaurant roof and steps
+  { left: 355, right: 630, top: 390, bottom: 430 }, // Corner Cup upper roof, leaving its paved north-east turning corner open
+  { left: 355, right: 660, top: 430, bottom: 590 }, // Corner Cup lower roof, facade and steps
+  { left: 880, right: 1210, top: 390, bottom: 590 }, // Restaurant roof and steps
   { left: 1270, right: 1536, top: 390, bottom: 590 }, // Supermarket roof and steps
-  { left: 55, right: 410, top: 650, bottom: 850 }, // Bank and steps
+  { left: 55, right: 345, top: 650, bottom: 850 }, // Bank and steps
   { left: 425, right: 680, top: 650, bottom: 850 }, // Hospital and steps stop west of the central promenade
-  { left: 875, right: 1260, top: 650, bottom: 850 }, // Stationery Shop and steps
+  { left: 875, right: 1210, top: 650, bottom: 850 }, // Stationery Shop and steps
   // Fixed street furniture, planters, trees, and shop patio items.
   { left: 565, right: 625, top: 440, bottom: 505 }, // Plaza bench and planting
   { left: 910, right: 970, top: 440, bottom: 505 }, // Plaza bench and planting

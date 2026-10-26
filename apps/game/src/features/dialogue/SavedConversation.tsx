@@ -20,6 +20,8 @@ export function SavedConversation({
   details,
   hint,
   onClose,
+  actions,
+  composerHidden = false,
 }: {
   state: ConversationSnapshot;
   sound: boolean;
@@ -38,6 +40,8 @@ export function SavedConversation({
   details?: ReactNode;
   hint?: string;
   onClose?: () => void;
+  actions?: ReactNode;
+  composerHidden?: boolean;
 }) {
   const playerPortrait = playerPortraitPresentation(gender);
   const {
@@ -171,6 +175,7 @@ export function SavedConversation({
         ) : null}
       </div>
       {details}
+      {actions}
       {hint ? (
         <div className="flex items-center gap-2">
           <span
@@ -235,7 +240,7 @@ export function SavedConversation({
           onClick={retry}
         />
       ) : null}
-      <MessageComposer
+      {!composerHidden ? <MessageComposer
         text={text}
         onChange={setText}
         onSend={() => void submit()}
@@ -244,7 +249,7 @@ export function SavedConversation({
         listening={speech.listening}
         onRecord={toggleRecording}
         onCancelRecording={cancelRecording}
-      />
+      /> : null}
       {speech.listening ? (
         <p className="hint text-muted text-[13px] leading-[1.4]">
           Recording… Stop to review, or Send to finish.

@@ -27,3 +27,26 @@ export const idCardApplicationContentSchema = z.object({
 export type IdCardApplicationField = z.infer<typeof idCardApplicationFieldSchema>;
 export type IdCardApplicationContent = z.infer<typeof idCardApplicationContentSchema>;
 
+export const idCardApplicationSummarySchema = z.object({
+  step: z.enum(['photo', 'review']),
+  name: z.string().min(1).max(60),
+  dateOfBirth: z.string().date(),
+  address: z.string().min(1).max(120).nullable(),
+  gender: z.enum(['male', 'female']),
+  origin: z.string().min(1).max(60),
+}).strict();
+
+export const issueIdCardBodySchema = z.object({
+  conversationId: z.string().uuid(),
+  idempotencyKey: z.string().uuid(),
+}).strict();
+
+export const idCardIssueResponseSchema = z.object({
+  issued: z.literal(true),
+  photoUrl: z.string().url().nullable(),
+}).strict();
+
+export type IdCardApplicationSummary = z.infer<typeof idCardApplicationSummarySchema>;
+export type IssueIdCardBody = z.infer<typeof issueIdCardBodySchema>;
+export type IdCardIssueResponse = z.infer<typeof idCardIssueResponseSchema>;
+
