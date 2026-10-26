@@ -180,13 +180,15 @@ database: localhost:54323
       Three emotion portraits each. Opening hours from the shared check
       (organizations 08:00–16:00); a closed office says its hours. Check: the
       player can walk in and chat with both staff.
-  - [ ] **b. Services Q&A.**
-      When asked what they can help with, staff list their services: **register
-      an ID card** (works now), **re-issue an ID card** and **renew an ID card**
-      (information only for now: a scripted, owner-approved answer; the real
-      flows come later). They also say the card is valid for 10 years. The
-      service list is content, so more services can be added later without code.
-      Check: each question gets the right scripted answer; AI never answers
+  - [x] **b. Services Q&A.**
+      Staff open with “Hello! How can I help you?” and wait for the player to
+      ask. When asked what they can help with, staff list their services: **register
+      an ID card** (works now) and **update ID card information** at the tax
+      office. Cards cannot be lost or damaged in the game, never expire and
+      remain valid permanently, so they do not need re-issue or renewal flows.
+      The service list is content, so more services can be added later without
+      code. A player who says they do not have an ID card is routed to
+      registration. Check: each question gets the right scripted answer; AI never answers
       service questions. - [ ] **c. Application conversation.** The staff member
       asks five questions, one at a time: **name**, **date of birth**,
       **address**, **gender**, and **where you come from**. Then the photo (step
@@ -257,32 +259,30 @@ database: localhost:54323
       One card per player: a replayed confirm returns the same card and creates
       nothing. Check: format, parity, hyphen display, uniqueness under forced
       collisions, two simultaneous applications with the same birth date and
-      gender get different numbers. - [ ] **f. Storage, API and validity.**
+      gender get different numbers. - [ ] **f. Storage, API and updates.**
       Table `player_id_card` (one row per user: `number` unique, `fullName`,
       `birthDate`, `address` nullable, `gender`, `origin`, `photoPath` nullable,
-      `issuedAt`, `expiresAt`, `updatedAt`). The card is valid for **10 game
-      years** from issue, measured with the saved game clock (inspect it: if the
-      clock has no calendar year, use total elapsed game time, 3,650 game days).
-      After that its status is `expired` and it must be redone.
-      `GET /me/id-card` returns the card with its `status` and a signed photo
-      URL. Server functions for later quests: `hasValidIdCard(userId)` (false
-      when expired), `hasAddress(userId)`, and
+      `issuedAt`, `updatedAt`). The card remains valid permanently. `GET
+      /me/id-card` returns the card and a signed photo URL. Updating card
+      information is allowed only through the Tax Office conversation flow.
+      Server functions for later quests: `hasIdCard(userId)`, `hasAddress(userId)`, and
       `setIdCardAddress(userId, address | null)` for the future "rent a flat"
-      quest. An expired card makes the staff say it has expired and must be
-      redone (the redo flow comes later). Tests use an injectable clock. Check:
-      ownership; plain-text storage; `<script>` stays text; the card is valid
-      one game-day before the 10-year limit and expired at it; `hasValidIdCard`
-      follows. - [ ] **g. ID card icon and info panel.** A small ID card icon
+      quest. Check: ownership; plain-text storage; `<script>` stays text; the
+      card remains valid as the game clock advances; direct client attempts to
+      update it outside the Tax Office flow are rejected. - [ ] **g. ID card icon and info panel.** A small ID card icon
       sits on the compact profile card, shown only once the player has a card.
       Tapping it opens a panel with the photo (or the character picture), the
       number as `YYYYMMDD-XXXX`, name, date of birth, gender, origin, the
-      address or "Not set", the issue date, "Valid until", and a status (Valid
-      or Expired). Read-only. The icon is a 44px target; if it cannot fit on the
+      address or "Not set", the issue date and the status "Valid permanently".
+      Read-only. An `!` information icon on the card shows “Go to the Tax Office
+      to update your information.” on hover and keyboard focus. The ID card icon
+      is a 44px target; if it cannot fit on the
       card at 320 px without making the card wider than half the screen, put it
       in the first row of the profile section opened from the card. Plain-text
       rendering, a text alternative for the photo, keyboard and screen-reader
       use. Check: hidden before the card, shown after; the panel persists after
-      reload and shows Expired when the clock is moved forward; no overlap at
+      reload, remains valid when the clock is moved forward, and exposes the
+      update hint to pointer and keyboard users; no overlap at
       320, 375 and 1024 px. - [ ] **h. Quest wiring.** The quest completes when
       the card is issued; the reward (if any) is given once; progress survives
       reload and sign-in; the NPC of the current step gets the yellow `!` tag
@@ -425,10 +425,8 @@ database: localhost:54323
 - ID card (T36): which digit carries the gender parity (default: the last
   digit); gender options beyond male and female (none for now, as specified);
   the quest reward (default none); the two staff names; the text for the
-  re-issue and renew answers; whether the photo is required or optional (default
-  optional, with the character picture as the fallback); whether the number
-  stays the same when the card is redone (default same); and that the 10 years
-  are measured on the game clock.
+  whether the photo is required or optional (default
+  optional, with the character picture as the fallback).
 - Is AI free chat in the MVP, or after the first playtest?
 - Does an AI chat message cost 1 energy, like a normal NPC message?
 - AI chat audience and provider: adults 18+ only (paid tier), or a provider that

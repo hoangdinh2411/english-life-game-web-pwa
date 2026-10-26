@@ -114,13 +114,14 @@ export function createConversationController(api: ConversationApi) {
       update({ retryMessage: body });
       return run(async () => {
         let turn: ConversationTurn;
+        let receivedStreamText = false;
         try {
           if (api.stream) {
             streamCancellation = new AbortController();
             update({ streaming: true, streamedReply: '', streamedMessageId: null, announcement: '' });
             let revealQueue = Promise.resolve();
             turn = await api.stream(conversation.id, conversation.npcId, body,
-              chunk => { revealQueue = revealQueue.then(() => revealStreamChunk(chunk,
+              chunk => { receivedStreamText = true; revealQueue = revealQueue.then(() => revealStreamChunk(chunk,
                 piece => update({ streamedReply: state.streamedReply + piece }), streamCancellation?.signal)); },
               streamCancellation.signal);
             await revealQueue;
@@ -141,7 +142,7 @@ export function createConversationController(api: ConversationApi) {
         return { conversation: { ...conversation, messages, arrival, ...(seller ? { seller } : {}),
           ...(coffeeQuest ? { coffeeQuest } : {}) }, arrival, retryMessage: null,
           farewellStage: turn.farewellStage, streaming: false, streamedReply: '',
-          streamedMessageId: api.stream ? turn.npcMessage.id : null };
+          streamedMessageId: receivedStreamText ? turn.npcMessage.id : null };
       }).finally(() => {
         streamCancellation = null;
         if (!disposed) update({ streaming: false, streamedReply: '',

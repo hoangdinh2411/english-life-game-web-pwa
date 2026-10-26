@@ -107,6 +107,11 @@ test('T10c all NPCs use AI after scripts while pending gameplay and replay bypas
     arrival = { locationId: 'loc_station' };
     replay = false; understood = true;
     assert.equal((await send()).npcMessage.text, 'Scripted reply');
+    const scriptedChunks: string[] = [];
+    await service.sendStreaming('existing-user', randomUUID(), npcId, {
+      text: 'Tax office services', clientMessageId: randomUUID(),
+    }, async chunk => { scriptedChunks.push(chunk); }, new AbortController().signal);
+    assert.deepEqual(scriptedChunks, [], 'scripted text must wait for its speech-ready saved turn');
     understood = false;
     for (const id of ['npc_receptionist', 'npc_cafe_waiter', 'npc_mia']) {
       npcId = id;
