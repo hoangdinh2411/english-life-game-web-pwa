@@ -3,7 +3,11 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
-Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.6; T39.1–T39.4; S2–S7.
+<<<<<<< HEAD Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.5;
+T39.1–T39.5; S2–S7. ======= Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8;
+T38.1–T38.6; T39.1–T39.4; S2–S7.
+
+> > > > > > > 4741034a0f8abc1bef9a706f720afde5a34972e3
 
 ## How to work
 
@@ -68,13 +72,23 @@ database: localhost:54323
         historical/contract migrations, and content validation, lint, typecheck,
         unit tests, build, integration tests and PWA checks pass.
 
-- [ ] **T39 — Complete controlled NPC presence for stations and stores.** Finish
+- [ ] **T38 — Non-pausing game menu, synchronized Settings and movement
+      tutorial.** Implement only one slice per request and stop after its
+      checks. The menu and all utility overlays must leave NPC movement and game
+      time running; they may capture player input. The approved design is
+      `docs/specs/2026-10-21-game-menu-tutorial-design.md`, and the executable
+      plan is `docs/plans/2026-10-21-game-menu-settings-tutorial.md`.
+  - [ ] **T38.6 — Tutorial art and final verification.** Add compact game-style
+        illustrations, run responsive and behavioral checks, prove continuous
+        NPC/time behavior, run repository gates and update maintained docs.
+
+- [x] **T39 — Complete controlled NPC presence for stations and stores.** Finish
       the partially implemented behavior in
       `docs/specs/2026-10-21-controlled-npc-presence-design.md`. Implement only
       one slice per request and stop after its checks. Keep Town Street on its
       existing authored server schedules; do not change quests, rewards, store
       hours or server authority.
-  - [ ] **T39.5 — Regression, responsive QA and maintained docs.** Run focused
+  - [x] **T39.5 — Regression, responsive QA and maintained docs.** Run focused
         game/shared tests, content validation, typecheck, lint, production game
         build and PWA checks. With the existing test account, inspect station,
         both café interiors and the clothes shop at 320px, 375px and desktop;
@@ -371,12 +385,12 @@ database: localhost:54323
         only missing trusted fixed-speech entries, including all five tutorial
         pages, through the existing server-side Azure provider and private
         `speech-audio` cache. Cache identity must include exact text, voice,
-        style, format, TTS version and settings; existing valid audio performs no
-        Azure call. Reject arbitrary client text, keep AI/user-specific speech
-        out of prewarm, bound concurrency, and report generation/upload failures
-        without secrets. Tests prove missing-only generation, idempotent reruns,
-        cache-version invalidation, signed-URL independence and safe partial
-        failure.
+        style, format, TTS version and settings; existing valid audio performs
+        no Azure call. Reject arbitrary client text, keep AI/user-specific
+        speech out of prewarm, bound concurrency, and report generation/upload
+        failures without secrets. Tests prove missing-only generation,
+        idempotent reruns, cache-version invalidation, signed-URL independence
+        and safe partial failure.
   - [ ] **OPS-01.4 — Deployment gate and production smoke check.** Add the
         sequence `content:validate` → build → reconcile `--apply` → reconcile
         `--check` → authenticated production smoke checks. The deploy fails if a
@@ -386,14 +400,15 @@ database: localhost:54323
         never load production secrets from local env files. Document rollback as
         deploying the previous manifest/code version; do not delete newer
         immutable objects automatically.
-  - [ ] **OPS-01.5 — Production proof and maintained docs.** Against the approved
-        production project, run check mode before apply, apply missing assets,
-        rerun check mode and the smoke suite, then confirm a second apply creates
-        and uploads nothing. Record only non-secret counts and failing logical
-        keys. Update `docs/TECH.md` with required environment variables,
-        permissions, bucket/migration prerequisites, commands, failure meanings
-        and the station offline/PWA decision. Mark OPS-01 complete only after the
-        production run passes; do not treat mocked tests as production proof.
+  - [ ] **OPS-01.5 — Production proof and maintained docs.** Against the
+        approved production project, run check mode before apply, apply missing
+        assets, rerun check mode and the smoke suite, then confirm a second
+        apply creates and uploads nothing. Record only non-secret counts and
+        failing logical keys. Update `docs/TECH.md` with required environment
+        variables, permissions, bucket/migration prerequisites, commands,
+        failure meanings and the station offline/PWA decision. Mark OPS-01
+        complete only after the production run passes; do not treat mocked tests
+        as production proof.
 - **Production AI provider:** after the audience decision, compare providers
   with the evaluation set (quality, speed, price), check EU and under-18 terms
   and the data processing terms, add the provider class, and add the privacy
