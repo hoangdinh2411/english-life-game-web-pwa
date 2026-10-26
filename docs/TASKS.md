@@ -3,7 +3,11 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
-Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.5; T39.1–T39.5; S2–S7.
+<<<<<<< HEAD Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.5;
+T39.1–T39.5; S2–S7. ======= Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8;
+T38.1–T38.6; T39.1–T39.4; S2–S7.
+
+> > > > > > > 4741034a0f8abc1bef9a706f720afde5a34972e3
 
 ## How to work
 
@@ -349,10 +353,62 @@ database: localhost:54323
       librarian, the full flow, icon and edit panel, no overlap, no horizontal
       scroll. Done when a to g are ticked and the AI evaluation shows no CV text
       in any prompt.
-- Production asset publishing: upload versioned map, NPC and Koko audio assets
-  from the local archive to production Supabase Storage, update pack references,
-  and decide the station offline/PWA cache behavior before removing bundled
-  files.
+- [ ] **OPS-01 — Production asset reconciliation and deploy prewarm.** Build a
+      manifest-driven deployment gate after P1 Hosted Supabase. The command must
+      compare required assets with production metadata and private/public
+      Storage without exposing service credentials. Read-only check is the
+      default; creation/upload requires explicit `--apply`. Never generate map,
+      portrait or sprite artwork during deploy, never overwrite a different
+      checksum under the same version, and never delete unexpected assets.
+      Implement only one slice per request.
+  - [ ] **OPS-01.1 — Canonical manifest and read-only reconciliation.** Define a
+        typed manifest for required map backgrounds, portraits, spritesheets,
+        atlases, fixed NPC audio and the five tutorial narration pages. Add
+        `pnpm assets:reconcile -- --target production --check` to validate local
+        sources/checksums, query production through server-owned interfaces and
+        report `valid`, `missing`, `stale` or `invalid` per logical key. Exit 0
+        only when every required asset is valid; exit 1 for missing/stale/
+        invalid assets; configuration or network failure must be distinguishable
+        and fail closed. Tests cover duplicate keys, changed checksum without a
+        version bump, malformed atlas/frame contracts, unavailable production
+        configuration and zero mutation in check mode.
+  - [ ] **OPS-01.2 — Reviewed static-asset upload.** Add explicit `--apply` for
+        missing versioned maps, portraits, spritesheets and atlases sourced only
+        from the reviewed local archive. Reuse the existing content asset API,
+        production URL/key safeguards and immutable version rules. Identical
+        retries reuse the existing object; partial failure reports every failed
+        key and leaves successful immutable uploads intact. Do not generate art,
+        overwrite mismatched bytes, rewrite unrelated pack references or remove
+        bundled station/PWA assets. Verify with mocked Storage/API tests and a
+        non-production fixture reconciliation.
+  - [ ] **OPS-01.3 — Azure fixed-audio prewarm.** Extend `--apply` to synthesize
+        only missing trusted fixed-speech entries, including all five tutorial
+        pages, through the existing server-side Azure provider and private
+        `speech-audio` cache. Cache identity must include exact text, voice,
+        style, format, TTS version and settings; existing valid audio performs
+        no Azure call. Reject arbitrary client text, keep AI/user-specific
+        speech out of prewarm, bound concurrency, and report generation/upload
+        failures without secrets. Tests prove missing-only generation,
+        idempotent reruns, cache-version invalidation, signed-URL independence
+        and safe partial failure.
+  - [ ] **OPS-01.4 — Deployment gate and production smoke check.** Add the
+        sequence `content:validate` → build → reconcile `--apply` → reconcile
+        `--check` → authenticated production smoke checks. The deploy fails if a
+        required asset remains missing/invalid or any tutorial audio cannot be
+        downloaded with the expected MIME type and non-zero bytes. Require HTTPS
+        production endpoints and deployment-injected Azure/Supabase secrets;
+        never load production secrets from local env files. Document rollback as
+        deploying the previous manifest/code version; do not delete newer
+        immutable objects automatically.
+  - [ ] **OPS-01.5 — Production proof and maintained docs.** Against the
+        approved production project, run check mode before apply, apply missing
+        assets, rerun check mode and the smoke suite, then confirm a second
+        apply creates and uploads nothing. Record only non-secret counts and
+        failing logical keys. Update `docs/TECH.md` with required environment
+        variables, permissions, bucket/migration prerequisites, commands,
+        failure meanings and the station offline/PWA decision. Mark OPS-01
+        complete only after the production run passes; do not treat mocked tests
+        as production proof.
 - **Production AI provider:** after the audience decision, compare providers
   with the evaluation set (quality, speed, price), check EU and under-18 terms
   and the data processing terms, add the provider class, and add the privacy

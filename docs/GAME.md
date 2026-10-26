@@ -110,7 +110,9 @@ English is a tool to accomplish a task, not a multiple-choice test.
   game menu opens English Review, the five-page movement tutorial, sign-out,
   return-to-game and Settings; these utility overlays capture player input while
   NPC movement and game time continue. The tutorial appears once on the first
-  ready signed-in world and can be replayed from page 1 through the menu. Café
+  ready signed-in world and can be replayed from page 1 through the menu. Its
+  pages play cached Azure Neural narration when Sound is enabled; local practice
+  remains text-only and offline. Café
   orders stay in seller conversations. Below 1024px the card is compact, Goals
   includes its status badge, and the normal desktop HUD keeps its existing
   layout. Dialogue Settings remain reachable during conversations; full profile
