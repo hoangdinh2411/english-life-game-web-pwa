@@ -13,7 +13,7 @@ async function bootstrap(): Promise<void> {
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
-  app.enableCors({ origin: "*" });
+  app.enableCors({ origin: origins });
   app.enableShutdownHooks();
   await app.listen(
     Number(config.get<string>("PORT") ?? 3000),
