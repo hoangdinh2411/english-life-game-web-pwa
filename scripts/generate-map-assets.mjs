@@ -73,8 +73,8 @@ async function mapAssets(mapId) {
     assets.push({ name: 'actors.json', type: 'json', mime: 'application/json', data: JSON.stringify({ actors }) });
   } else {
     const actors = mapId === 'loc_tax_office' ? [
-      { npcId: 'npc_tax_clerk_marcus', x: 560, y: 405 },
-      { npcId: 'npc_tax_clerk_nadia', x: 980, y: 405 },
+      { npcId: 'npc_tax_clerk_marcus', x: 770, y: 500 },
+      { npcId: 'npc_tax_clerk_nadia', x: 920, y: 760 },
     ] : mapId === 'loc_corner_cafe' ? [
       { npcId: 'npc_corner_cup_seller', x: 800, y: 390 },
       { npcId: 'npc_corner_cup_assistant', x: 1000, y: 460 },

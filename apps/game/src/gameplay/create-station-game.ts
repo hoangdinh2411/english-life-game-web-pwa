@@ -5,7 +5,7 @@ import type { MapAsset, MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../features/assets/phaser-pack';
-import { authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
+import { authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetArrivalForLocation, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
 import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
@@ -88,6 +88,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     private keys: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
     private walkingKeys: Record<string, Phaser.Input.Keyboard.Key> = {};
     private labels: Phaser.GameObjects.Text[] = [];
+    private sublabels: Phaser.GameObjects.Text[] = [];
     private indicatorDots: Phaser.GameObjects.Text[] = [];
     private npcActors: NpcActor[] = [];
     private npcArtQueue = new Map<string, { image: MapAsset; atlas: MapAsset }>();
@@ -174,6 +175,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       packAnimations = resources?.animationKeys ?? [];
       this.transitionPending = false;
       this.labels = [];
+      this.sublabels = [];
       this.indicatorDots = [];
       this.npcActors = [];
       const stationSpawns = activeLocation === 'station' ? ambientNpcSpawnPoints(
@@ -211,12 +213,16 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           .setOrigin(0.5, 1).setScale(actor.scale).setDepth(actorPosition.y).setVisible(!lazyStreetArt && isPresent(definition.id));
         const npc = { id: definition.id, name: definition.name, texture: actor.texture, x: actorPosition.x, y: actorPosition.y };
         npcs.push(npc);
-        const labelText = TAX_OFFICE_STAFF.some(staff => staff.id === definition.id)
-          ? `${definition.name} · Tax Office Staff`
-          : definition.name;
+        const taxOfficeStaff = TAX_OFFICE_STAFF.some(staff => staff.id === definition.id);
+        const labelText = definition.name;
         const label = this.add.text(npc.x, npc.y - npcNameplateOffset(sprite.displayHeight), labelText, { fontFamily: 'sans-serif', fontSize: '24px', fontStyle: 'bold', color: UI_COLORS.creamTextPure, stroke: UI_COLORS.greenDeep, strokeThickness: 4, padding: { x: 3, y: 1 } }).setOrigin(0.5, 1).setDepth(1500);
         label.setVisible(!lazyStreetArt && isPresent(definition.id));
         this.labels.push(label);
+        const sublabel = taxOfficeStaff ? this.add.text(npc.x, npc.y - npcNameplateOffset(sprite.displayHeight) - 28, 'Staff', {
+          fontFamily: 'sans-serif', fontSize: '16px', color: UI_COLORS.creamTextPure,
+          stroke: UI_COLORS.greenDeep, strokeThickness: 3, padding: { x: 2, y: 1 },
+        }).setOrigin(0.5, 1).setDepth(1500).setVisible(!lazyStreetArt && isPresent(definition.id)) : undefined;
+        if (sublabel) this.sublabels.push(sublabel);
         const npcWalk = `${actor.texture}:${actor.frame}-walk`;
         if (textureReady) {
           for (let row = 0; row < 4; row++) {
@@ -230,7 +236,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           right: `${actor.frame}-2-0`, up: `${actor.frame}-3-0`,
         } : undefined;
         const indicatorDots = this.createTypingIndicator(npc.x, npc.y - npcNameplateOffset(sprite.displayHeight));
-        this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, label, indicatorDots, nameLabel: labelText, elapsed: 0,
+        this.npcActors.push({ npc, anchor: { x: npc.x, y: npc.y }, sprite, label, ...(sublabel ? { sublabel } : {}), indicatorDots, nameLabel: labelText, elapsed: 0,
           idleFrame: textureReady ? actor.frame : '__BASE', ...(idleFrames ? { idleFrames } : {}), ...(textureReady ? { walkPrefix: npcWalk } : {}),
           ...(lazyStreetArt ? { artTextureKey: actor.texture, artFrame: actor.frame } : {}),
           ...(authoredRoute && streetDefinition && !streetDefinition.stationary ? { patrol: { points: authoredRoute.points.map(scaleStreetPoint), startWaypoint: streetDefinition.startWaypoint } } : {}),
@@ -316,7 +322,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const applyResponsiveLayout = () => {
         const zoom = Math.max(this.scale.width / 1536, this.scale.height / 1024);
         this.cameras.main.setZoom(zoom);
-        scaleNpcNameplates(this.labels, this.indicatorDots, this.scale.width, zoom);
+        scaleNpcNameplates(this.labels, this.indicatorDots, this.scale.width, zoom, this.sublabels);
       };
       let resizeFrame: number | null = null;
       const resizeLabels = () => {
@@ -377,7 +383,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (callbacks.getGameTime && !canEnterLocation(location, callbacks.getGameTime(), callbacks.getTimeZone?.() ?? null)) {
         const portal = portalAt(position, this.portalsForLocation());
         if (portal) position = activeLocation === 'street'
-          ? streetSpawnPoint('corner_cafe')
+          ? streetSpawnPoint(streetArrivalForLocation(location))
           : stationStoreReturnPoint(portal);
         destinationMapTarget = null;
         route = [];
@@ -557,7 +563,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const portal = portalAt(position, this.portalsForLocation());
       if (portal) {
         if (portal.id === 'station' || portal.id === 'corner_cafe' || portal.id === 'tax_office') this.previousLocation = activeLocation;
-        const arrival = activeLocation === 'corner_cafe' ? 'corner_cafe' : activeLocation === 'tax_office' ? 'tax_office' : 'station';
+        const arrival = streetArrivalForLocation(activeLocation);
         this.enterLocation(portal.id as MapLocation, arrival);
         return;
       }

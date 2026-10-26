@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { SHOP_NPCS, SERVICE_NPC_IDS, isShopNpc, isServiceNpc } from '../src/features/shops/shop-npcs.ts';
-import { nearestNpc, STATION_NPCS } from '../src/gameplay/station-navigation.ts';
+import { findPath, nearestNpc, STATION_NPCS } from '../src/gameplay/station-navigation.ts';
+import { moveInShop, shopCanWalk } from '../src/features/shops/shop-navigation.ts';
 import { npcVoice } from '../src/speech/npc-voice.ts';
 
 test('each uploaded shop NPC resolves to a supported dialogue target', () => {
@@ -60,5 +61,18 @@ test('required store staff use the bundled service-asset path', () => {
   assert.equal(SERVICE_NPC_IDS.length, 6);
   assert.ok(SERVICE_NPC_IDS.every(isServiceNpc));
   assert.equal(isServiceNpc('npc_corner_cup_customer_1'), false);
+});
+
+test('both Tax Office staff have reachable interaction points that do not block the entrance', () => {
+  const staff = [{ x: 770, y: 500 }, { x: 920, y: 760 }];
+  const start = { x: 768, y: 860 };
+  const approaches = [{ x: 770, y: 555 }, { x: 920, y: 705 }];
+  for (const target of approaches) {
+    assert.equal(shopCanWalk('tax_office', target, staff), true);
+    assert.ok(findPath(start, target,
+      point => shopCanWalk('tax_office', point, staff),
+      (point, delta) => moveInShop('tax_office', point, delta, staff)).length > 0);
+  }
+  assert.equal(shopCanWalk('tax_office', start, staff), true, 'the entrance remains clear');
 });
 

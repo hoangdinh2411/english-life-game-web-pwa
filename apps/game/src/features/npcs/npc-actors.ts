@@ -9,6 +9,7 @@ export interface NpcActor {
   sprite: Phaser.GameObjects.Sprite;
   shadow?: Phaser.GameObjects.Ellipse;
   label: Phaser.GameObjects.Text;
+  sublabel?: Phaser.GameObjects.Text;
   indicatorDots?: Phaser.GameObjects.Text[];
   nameLabel?: string;
   elapsed: number;
@@ -33,6 +34,10 @@ export function npcNameplateScreenSizes(width: number): { name: number; dots: nu
   return { name: 17, dots: 20 };
 }
 
+export function npcSublabelScreenSize(width: number): number {
+  return width <= 480 ? 9 : width <= 900 ? 10 : 11;
+}
+
 type ScalableText = Pick<Phaser.GameObjects.Text, 'setScale'>;
 
 export function scaleNpcNameplates(
@@ -40,19 +45,23 @@ export function scaleNpcNameplates(
   dots: readonly ScalableText[],
   width: number,
   zoom: number,
+  sublabels: readonly ScalableText[] = [],
 ): void {
   const sizes = npcNameplateScreenSizes(width);
   const safeZoom = Math.max(zoom, Number.EPSILON);
   const labelScale = sizes.name / safeZoom / 24;
   const dotScale = sizes.dots / safeZoom / 28;
+  const sublabelScale = npcSublabelScreenSize(width) / safeZoom / 16;
   labels.forEach(label => label.setScale(labelScale));
   dots.forEach(dot => dot.setScale(dotScale));
+  sublabels.forEach(sublabel => sublabel.setScale(sublabelScale));
 }
 
 export function setNpcActorVisibility(actor: NpcActor, visible: boolean): void {
   actor.sprite.setVisible(visible);
   actor.shadow?.setVisible(visible);
   actor.label.setVisible(visible && !actor.conversationReady);
+  actor.sublabel?.setVisible(visible && !actor.conversationReady);
   actor.indicatorDots?.forEach(dot => dot.setVisible(visible && Boolean(actor.conversationReady)));
 }
 
@@ -100,6 +109,9 @@ export function updateNpcActors(actors: NpcActor[], player: Point, delta: number
       .setPosition(pose.x, pose.y - npcNameplateOffset(actor.sprite.displayHeight))
       .setVisible(!conversationReady);
     const indicatorY = pose.y - npcNameplateOffset(actor.sprite.displayHeight);
+    actor.sublabel
+      ?.setPosition(pose.x, indicatorY - 28)
+      .setVisible(!conversationReady);
     actor.indicatorDots?.forEach((dot, index) => {
       const bob = Math.sin(indicatorElapsed / 180 - index * 0.9) * 3;
       dot

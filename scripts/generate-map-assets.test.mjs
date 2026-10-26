@@ -45,6 +45,10 @@ test('Tax Office packages two named staff members and their authored artwork', a
     const directory = await generator.saveMapAssets('loc_tax_office', rootDirectory);
     const actors = JSON.parse(await readFile(join(directory, 'actors.json'), 'utf8')).actors;
     assert.deepEqual(actors.map(actor => actor.npcId), ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia']);
+    assert.deepEqual(actors.map(({ npcId, x, y }) => ({ npcId, x, y })), [
+      { npcId: 'npc_tax_clerk_marcus', x: 770, y: 500 },
+      { npcId: 'npc_tax_clerk_nadia', x: 920, y: 760 },
+    ]);
     assert.deepEqual(await readFile(join(directory, 'background.png')), await readFile(new URL('../apps/game/assets/locations/location_tax_office_interior_labeled.png', import.meta.url)));
     for (const id of ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia']) {
       const portrait = await readFile(join(directory, `portrait-${id}.png`));
