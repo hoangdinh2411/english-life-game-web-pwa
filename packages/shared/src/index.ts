@@ -20,3 +20,4 @@ export * from './npcs';
 export * from './player-preferences';
 export * from './world-clock';
 export * from './tutorial';
+export * from './id-card';

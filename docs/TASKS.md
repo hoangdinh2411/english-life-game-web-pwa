@@ -189,7 +189,7 @@ database: localhost:54323
       The service list is content, so more services can be added later without
       code. A player who says they do not have an ID card is routed to
       registration. Check: each question gets the right scripted answer; AI never answers
-      service questions. - [ ] **c. Application conversation.** The staff member
+      service questions. - [x] **c. Application conversation.** The staff member
       asks five questions, one at a time: **name**, **date of birth**,
       **address**, **gender**, and **where you come from**. Then the photo (step
       d). Then the staff member reads everything back, photo included: "Is this

@@ -4,6 +4,7 @@ import {
   CAFE_SELLER_NPC_IDS,
   SELLER_NPC_ID,
   SHOP_NPC_IDS,
+  TAX_OFFICE_NPC_IDS,
   venueHoursLabel,
   type ArrivalState,
   type SendMessageRequest,
@@ -16,6 +17,7 @@ import { CoffeeQuestService } from '../quests/coffee-quest.service';
 import { QuestsService } from '../quests/quests.service';
 import { sellerState, type ConversationRow } from './conversations.repository';
 import { SellerService } from './seller.service';
+import { IdCardApplicationService } from './id-card-application.service';
 
 interface ResolveScriptedReplyOptions {
   client: PoolClient;
@@ -44,6 +46,7 @@ export class ConversationScriptedReplyService {
     private readonly life: LifeService,
     private readonly seller: SellerService,
     private readonly coffee: CoffeeQuestService,
+    private readonly idCardApplications: IdCardApplicationService,
   ) {}
 
   async resolve(
@@ -75,6 +78,11 @@ export class ConversationScriptedReplyService {
             : {}),
         },
       };
+    }
+
+    if ((TAX_OFFICE_NPC_IDS as readonly string[]).includes(conversation.npc_id)) {
+      const application = await this.idCardApplications.reply(client, userId, request.text, arrival);
+      if (application) return { arrival, ...application };
     }
 
     if (
