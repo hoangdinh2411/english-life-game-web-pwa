@@ -6,7 +6,7 @@ import { createServer } from 'vite';
 
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { external: ['@life-abroad/shared'] } });
 try {
-  const { StoreClosedDialogue } = await server.ssrLoadModule('/src/features/shops/StoreClosedDialogue.tsx');
+  const { VenueClosedDialogue } = await server.ssrLoadModule('/src/features/location/VenueClosedDialogue.tsx');
 
   test('closed-store conversation shows the store owner, avatar and hours', () => {
     const cases = [
@@ -16,7 +16,7 @@ try {
     ];
 
     for (const [location, owner, portraitPosition] of cases) {
-      const html = renderToStaticMarkup(createElement(StoreClosedDialogue, {
+      const html = renderToStaticMarkup(createElement(VenueClosedDialogue, {
         location,
         gameTimeAvailable: true,
         onReturn() {},
@@ -31,7 +31,7 @@ try {
   });
 
   test('unknown game time gives an owner dialogue without claiming a schedule', () => {
-    const html = renderToStaticMarkup(createElement(StoreClosedDialogue, {
+    const html = renderToStaticMarkup(createElement(VenueClosedDialogue, {
       location: 'corner_cafe',
       gameTimeAvailable: false,
       onReturn() {},
@@ -39,6 +39,14 @@ try {
     assert.match(html, /aria-label="Elena avatar"/);
     assert.match(html, /I can’t confirm whether the store is open right now/);
     assert.doesNotMatch(html, /Opening hours are:/);
+  });
+
+  test('closed Tax Office conversation identifies staff and organization hours', () => {
+    const html = renderToStaticMarkup(createElement(VenueClosedDialogue, {
+      location: 'tax_office', gameTimeAvailable: true, onReturn() {},
+    }));
+    assert.match(html, /aria-label="Marcus avatar"/);
+    assert.match(html, /Sorry, the office is closed\. Opening hours are: 08:00–16:00\./);
   });
 } finally {
   await server.close();

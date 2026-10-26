@@ -41,6 +41,7 @@ async function mapAssets(mapId) {
     loc_cafe: 'location_cafe_interior.png',
     loc_corner_cafe: 'location_cafe_interior.png',
     loc_clothes: 'location_clothes_interior.png',
+    loc_tax_office: 'location_tax_office_interior_labeled.png',
   };
   if (!Object.hasOwn(backgrounds, mapId)) throw new Error('Unsupported destination map');
   const source = (path) => readFile(new URL(`../apps/game/assets/${path}`, import.meta.url));
@@ -71,7 +72,10 @@ async function mapAssets(mapId) {
     });
     assets.push({ name: 'actors.json', type: 'json', mime: 'application/json', data: JSON.stringify({ actors }) });
   } else {
-    const actors = mapId === 'loc_corner_cafe' ? [
+    const actors = mapId === 'loc_tax_office' ? [
+      { npcId: 'npc_tax_clerk_marcus', x: 560, y: 405 },
+      { npcId: 'npc_tax_clerk_nadia', x: 980, y: 405 },
+    ] : mapId === 'loc_corner_cafe' ? [
       { npcId: 'npc_corner_cup_seller', x: 800, y: 390 },
       { npcId: 'npc_corner_cup_assistant', x: 1000, y: 460 },
       { npcId: 'npc_corner_cup_customer_1', x: 430, y: 600 },

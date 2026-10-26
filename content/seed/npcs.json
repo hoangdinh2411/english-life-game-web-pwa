@@ -146,5 +146,31 @@
     "bio": "A friendly person at the station shop.", "profile": { "profileVersion": 1, "conversationTopics": ["shopping", "colours"], "temperament": "Curious and cheerful" }, "gender": "female",
     "walkImageUrl": "npcs/npc_clothes_customer/walk.png",
     "portrait": { "imageUrl": "npcs/npc_clothes_customer/portraits.png", "index": 0, "columns": 3, "rows": 1 }
+  },
+  {
+    "id": "npc_tax_clerk_marcus",
+    "name": "Marcus",
+    "role": "tax_office_staff",
+    "personality": "serious",
+    "speakingLevel": "A1",
+    "locationId": "loc_tax_office",
+    "bio": "A patient tax office staff member who helps residents with official documents.",
+    "profile": { "profileVersion": 1, "likes": ["clear forms"], "conversationTopics": ["tax office work", "official documents"], "temperament": "Calm and precise", "presenceSchedule": { "timeZoneSource": "player_country", "weeklySlots": [{ "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "start": "08:00", "end": "16:00", "locationId": "loc_tax_office" }] } },
+    "gender": "male",
+    "walkImageUrl": "npcs/npc_tax_clerk_marcus/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_tax_clerk_marcus/portraits.png", "index": 0, "columns": 3, "rows": 1 }
+  },
+  {
+    "id": "npc_tax_clerk_nadia",
+    "name": "Nadia",
+    "role": "tax_office_staff",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_tax_office",
+    "bio": "A welcoming tax office staff member who helps residents with official documents.",
+    "profile": { "profileVersion": 1, "likes": ["helping new residents"], "conversationTopics": ["tax office work", "official documents"], "temperament": "Warm and attentive", "presenceSchedule": { "timeZoneSource": "player_country", "weeklySlots": [{ "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "start": "08:00", "end": "16:00", "locationId": "loc_tax_office" }] } },
+    "gender": "female",
+    "walkImageUrl": "npcs/npc_tax_clerk_nadia/walk.png",
+    "portrait": { "imageUrl": "npcs/npc_tax_clerk_nadia/portraits.png", "index": 0, "columns": 3, "rows": 1 }
   }
 ]

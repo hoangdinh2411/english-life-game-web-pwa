@@ -30,7 +30,7 @@ export default function GameCanvas({
   appearance,
   getGameTime,
   getTimeZone,
-  onStoreClosed,
+  onVenueClosed,
   presentNpcIds,
 }: GameCanvasProps) {
   const initialMapId = initialLocation.mapId;
@@ -53,7 +53,7 @@ export default function GameCanvas({
     onEnterStreet,
     getGameTime,
     getTimeZone,
-    onStoreClosed,
+    onVenueClosed,
   });
   callbacks.current = {
     onTalk,
@@ -65,7 +65,7 @@ export default function GameCanvas({
     onEnterStreet,
     getGameTime,
     getTimeZone,
-    onStoreClosed,
+    onVenueClosed,
   };
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
@@ -130,8 +130,8 @@ export default function GameCanvas({
           ? {
               getGameTime: () => callbacks.current.getGameTime?.() ?? null,
               getTimeZone: () => callbacks.current.getTimeZone?.() ?? null,
-              onStoreClosed: (location) =>
-                callbacks.current.onStoreClosed?.(location),
+              onVenueClosed: (location) =>
+                callbacks.current.onVenueClosed?.(location),
             }
           : {}),
         onNearby: () => {},

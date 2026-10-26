@@ -21,7 +21,13 @@ export const CORNER_CUP_PORTAL: StationPortal = {
   label: "Corner Cup Café",
   ...scaleStreetPoint({ x: 505, y: 600 }),
 };
+export const TAX_OFFICE_PORTAL: StationPortal = {
+  id: "tax_office",
+  label: "Tax Office",
+  ...scaleStreetPoint({ x: 505, y: 379 }),
+};
 export const STREET_PORTALS: StationPortal[] = [
+  TAX_OFFICE_PORTAL,
   CORNER_CUP_PORTAL,
   {
     id: "station",
@@ -29,7 +35,8 @@ export const STREET_PORTALS: StationPortal[] = [
     ...scaleStreetPoint({ x: 768, y: 210 }),
   },
 ];
-export function streetSpawnPoint(arrival: "station" | "corner_cafe"): Point {
+export function streetSpawnPoint(arrival: "station" | "corner_cafe" | "tax_office"): Point {
+  if (arrival === "tax_office") return { x: TAX_OFFICE_PORTAL.x, y: TAX_OFFICE_PORTAL.y + 45 };
   if (arrival === "corner_cafe") {
     // Place the player directly in front of the café ring on the cross street,
     // just outside its auto-entry radius so returning does not reopen the café.

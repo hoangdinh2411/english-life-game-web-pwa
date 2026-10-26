@@ -2,6 +2,7 @@ import type { StationSpeaker, Conversation } from '@life-abroad/shared';
 import type { VoiceGender } from '../types/speech/narration';
 import { STREET_NPCS, type StreetNpcId } from '../features/npcs/street-npcs';
 import { STATION_ROSTER } from '../features/station/station-roster';
+import { TAX_OFFICE_STAFF, type TaxOfficeStaffId } from '../features/tax-office/tax-office-staff';
 
 const streetNpcVoices = Object.fromEntries(STREET_NPCS.map(npc => [npc.id, npc.voice])) as Record<StreetNpcId, VoiceGender>;
 
@@ -20,6 +21,7 @@ export const npcVoice: Record<StationSpeaker | Conversation['npcId'], VoiceGende
   npc_clothes_assistant: 'male',
   npc_clothes_customer: 'female',
   ...streetNpcVoices,
+  ...Object.fromEntries(TAX_OFFICE_STAFF.map(npc => [npc.id, npc.voice])) as Record<TaxOfficeStaffId, VoiceGender>,
 };
 
 function stableNpcHash(npcId: string): number {

@@ -5,7 +5,7 @@ import { loadArrival, loadOlderConversationMessages, openConversation, sendArriv
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
 import { SavedConversation } from '../dialogue/SavedConversation';
 import { createConversationController } from '../dialogue/conversation-controller';
-import type { PlayerGender, StreetNpcContent } from '@life-abroad/shared';
+import type { PlayerGender } from '@life-abroad/shared';
 import { conversationNpcSchema } from '@life-abroad/shared';
 import { streamChat } from '../dialogue/chat-stream';
 import { NPC_PORTRAIT_GRID, npcPortrait, npcPortraitPosition } from './npc-portraits';
@@ -13,7 +13,7 @@ import { countryResidentHint } from '../location/country-presentation';
 
 export function TownspersonConversation({ gender, npc, sound, countryName, onClose, onRefresh }: {
   gender?: PlayerGender | undefined;
-  npc: StreetNpcContent;
+  npc: Readonly<{ id: string; name: string; job: string }>;
   sound: boolean;
   countryName?: string | undefined;
   onClose: () => void;

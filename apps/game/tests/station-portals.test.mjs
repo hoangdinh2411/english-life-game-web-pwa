@@ -64,9 +64,14 @@ test('leaving the train station spawns outside its entry ring', () => {
 test('Town Street allows its street entrances but blocks buildings, trees, water and the fountain', () => {
   assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 768, y: 210 })), true, 'station entrance path');
   assert.deepEqual(navigation.CORNER_CUP_PORTAL, { id: 'corner_cafe', label: 'Corner Cup Café', ...navigation.scaleStreetPoint({ x: 505, y: 600 }) }, 'the entrance ring is directly outside the Corner Cup doorway');
-  assert.deepEqual(STREET_PORTALS.map(({ id }) => id), ['corner_cafe', 'station']);
+  assert.deepEqual(STREET_PORTALS.map(({ id }) => id), ['tax_office', 'corner_cafe', 'station']);
+  const taxOffice = STREET_PORTALS.find(portal => portal.id === 'tax_office');
+  const station = STREET_PORTALS.find(portal => portal.id === 'station');
+  assert.ok(taxOffice, 'Town Street must expose the tax-office entrance');
+  assert.ok(station, 'Town Street must expose the train-station entrance');
+  assert.equal(navigation.canWalkStreet(taxOffice), true, 'the tax-office entrance ring is on its front path');
   assert.equal(navigation.canWalkStreet(navigation.CORNER_CUP_PORTAL), true, 'Corner Cup entrance is on the road outside its storefront');
-  assert.equal(navigation.canWalkStreet(STREET_PORTALS[1]), true, 'train station entrance ring is on the north road');
+  assert.equal(navigation.canWalkStreet(station), true, 'train station entrance ring is on the north road');
   assert.equal(navigation.portalAt(navigation.CORNER_CUP_PORTAL, [navigation.CORNER_CUP_PORTAL])?.id, 'corner_cafe', 'standing at the doorway activates the café portal');
   for (const approach of [{ x: 150, y: 620 }, { x: 505, y: 620 }, { x: 1100, y: 620 }, { x: 1400, y: 620 },
     { x: 230, y: 855 }, { x: 600, y: 855 }, { x: 1080, y: 855 }]) {

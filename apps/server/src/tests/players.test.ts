@@ -117,6 +117,14 @@ test('player location route validates and saves the authenticated player locatio
     });
     assert.equal(invalid.status, 400);
     assert.equal(writes.length, 1);
+
+    const taxOffice = await fetch(await app.getUrl() + '/api/v1/players/location', {
+      method: 'POST', headers: { Authorization: 'Bearer fixture', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mapId: 'loc_town_street', placeId: 'loc_tax_office', x: 768, y: 860 }),
+    });
+    assert.equal(taxOffice.status, 201);
+    assert.deepEqual(await taxOffice.json(), { mapId: 'loc_town_street', placeId: 'loc_tax_office', x: 768, y: 860 });
+    assert.equal(writes.length, 2);
   } finally { await app.close(); }
 });
 

@@ -20,6 +20,7 @@ import { bundledServiceAtlases, bundledServiceTexture } from '../features/shops/
 import { countryLocationLabel } from '../features/location/country-presentation';
 import { UI_COLORS } from '../styles/colors';
 import { playerAssets, playerWalkFrame } from '../features/appearance/player-assets';
+import { TAX_OFFICE_STAFF } from '../features/tax-office/tax-office-staff';
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
   let activeLocation: MapLocation = callbacks.initialLocation ? mapLocationFromPlayerLocation(callbacks.initialLocation) : 'station';
@@ -34,7 +35,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let packAnimations: string[] = [];
   let unavailableAmbientNpcIds: ReadonlySet<string> = new Set();
   let packRequest: AbortController | null = null;
-  const mapIds = { station: 'loc_station', street: 'loc_town_street', cafe: 'loc_cafe', corner_cafe: 'loc_corner_cafe', clothes: 'loc_clothes' };
+  const mapIds = { station: 'loc_station', street: 'loc_town_street', cafe: 'loc_cafe', corner_cafe: 'loc_corner_cafe', clothes: 'loc_clothes', tax_office: 'loc_tax_office' };
   let authorizing = false;
   const P = Phaser;
   let paused = false;
@@ -193,7 +194,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (appearance) this.applyAppearance();
       for (const actor of resources?.actors ?? []) {
         const streetDefinition = activeLocation === 'street' && actor.npcId ? findStreetNpc(actor.npcId) : undefined;
-        const definition = streetDefinition ?? SHOP_NPCS.find(npc => npc.id === actor.npcId) ?? SHOP_NPCS.find(npc => npc.frame === actor.frame);
+        const definition = streetDefinition ?? SHOP_NPCS.find(npc => npc.id === actor.npcId)
+          ?? TAX_OFFICE_STAFF.find(npc => npc.id === actor.npcId) ?? SHOP_NPCS.find(npc => npc.frame === actor.frame);
         if (!definition) continue;
         const authoredRoute = streetDefinition && STREET_NPC_ROUTES.find(route => route.id === streetDefinition.routeId);
         // Route data is authoritative so stale map-pack actor coordinates cannot place NPCs on buildings.
@@ -209,7 +211,9 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           .setOrigin(0.5, 1).setScale(actor.scale).setDepth(actorPosition.y).setVisible(!lazyStreetArt && isPresent(definition.id));
         const npc = { id: definition.id, name: definition.name, texture: actor.texture, x: actorPosition.x, y: actorPosition.y };
         npcs.push(npc);
-        const labelText = definition.name;
+        const labelText = TAX_OFFICE_STAFF.some(staff => staff.id === definition.id)
+          ? `${definition.name} · Tax Office Staff`
+          : definition.name;
         const label = this.add.text(npc.x, npc.y - npcNameplateOffset(sprite.displayHeight), labelText, { fontFamily: 'sans-serif', fontSize: '24px', fontStyle: 'bold', color: UI_COLORS.creamTextPure, stroke: UI_COLORS.greenDeep, strokeThickness: 4, padding: { x: 3, y: 1 } }).setOrigin(0.5, 1).setDepth(1500);
         label.setVisible(!lazyStreetArt && isPresent(definition.id));
         this.labels.push(label);
@@ -368,7 +372,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const destination: MapLocation = this.previousLocation === 'street' ? 'street' : 'station';
       return [{ id: destination, label: destination === 'street' ? 'Town Street' : 'Train Station', x: 768, y: 930 }];
     }
-    private enterLocation(location: MapLocation, streetArrival: 'station' | 'corner_cafe' = 'station') {
+    private enterLocation(location: MapLocation, streetArrival: 'station' | 'corner_cafe' | 'tax_office' = 'station') {
       if (this.transitionPending) return;
       if (callbacks.getGameTime && !canEnterLocation(location, callbacks.getGameTime(), callbacks.getTimeZone?.() ?? null)) {
         const portal = portalAt(position, this.portalsForLocation());
@@ -380,8 +384,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         selectedNpc = null;
         this.marker?.setVisible(false);
         this.player?.setPosition(position.x, position.y).anims.stop();
-        if (location === 'cafe' || location === 'corner_cafe' || location === 'clothes') {
-          callbacks.onStoreClosed?.(location);
+        if (location === 'cafe' || location === 'corner_cafe' || location === 'clothes' || location === 'tax_office') {
+          callbacks.onVenueClosed?.(location);
         }
         return;
       }
@@ -552,8 +556,9 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       }
       const portal = portalAt(position, this.portalsForLocation());
       if (portal) {
-        if (portal.id === 'station' || portal.id === 'corner_cafe') this.previousLocation = activeLocation;
-        this.enterLocation(portal.id as MapLocation, activeLocation === 'corner_cafe' ? 'corner_cafe' : 'station');
+        if (portal.id === 'station' || portal.id === 'corner_cafe' || portal.id === 'tax_office') this.previousLocation = activeLocation;
+        const arrival = activeLocation === 'corner_cafe' ? 'corner_cafe' : activeLocation === 'tax_office' ? 'tax_office' : 'station';
+        this.enterLocation(portal.id as MapLocation, arrival);
         return;
       }
       destinationMapTarget = destinationMapTarget && Math.hypot(destinationMapTarget.x - position.x, destinationMapTarget.y - position.y) > 3 ? destinationMapTarget : null;

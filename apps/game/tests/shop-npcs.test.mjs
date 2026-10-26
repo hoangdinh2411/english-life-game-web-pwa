@@ -41,6 +41,10 @@ test('closed store hours block shop interiors but never block the street', async
   assert.equal(canEnterLocation('cafe', at(12, 0), 'Europe/Stockholm'), false, '14:00 local is closed');
   assert.equal(canEnterLocation('cafe', at(12, 0), 'America/New_York'), true, '08:00 local is open');
   assert.equal(canEnterLocation('corner_cafe', null, 'UTC'), false);
+  assert.equal(canEnterLocation('tax_office', at(7, 59), 'UTC'), false);
+  assert.equal(canEnterLocation('tax_office', at(8, 0), 'UTC'), true);
+  assert.equal(canEnterLocation('tax_office', at(15, 59), 'UTC'), true);
+  assert.equal(canEnterLocation('tax_office', at(16, 0), 'UTC'), false);
   assert.equal(canEnterLocation('street', null, null), true);
 });
 

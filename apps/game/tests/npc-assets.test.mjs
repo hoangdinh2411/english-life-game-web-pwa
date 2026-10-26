@@ -33,9 +33,9 @@ function assertSideFramesAreMirrored(image, npcId) {
 }
 
 test('every destination NPC owns a walking sheet and three-expression portrait strip', async () => {
-  assert.equal(destinationNpcs.length, 26);
-  assert.equal(new Set(destinationNpcs.map(npc => npc.walkImageUrl)).size, 26);
-  assert.equal(new Set(destinationNpcs.map(npc => npc.portrait.imageUrl)).size, 26);
+  assert.equal(destinationNpcs.length, 28);
+  assert.equal(new Set(destinationNpcs.map(npc => npc.walkImageUrl)).size, destinationNpcs.length);
+  assert.equal(new Set(destinationNpcs.map(npc => npc.portrait.imageUrl)).size, destinationNpcs.length);
   for (const npc of destinationNpcs) {
     const walk = await readFile(new URL(`../assets/${npc.walkImageUrl}`, import.meta.url));
     const portraits = await readFile(new URL(`../assets/${npc.portrait.imageUrl}`, import.meta.url));

@@ -38,6 +38,24 @@ test('Corner Cup map reuses café art and packages three additional customers', 
   }
 });
 
+// Catches the tax-office pack omitting either staff member, their three portraits, or the approved interior art.
+test('Tax Office packages two named staff members and their authored artwork', async () => {
+  const rootDirectory = await mkdtemp(join(tmpdir(), 'life-abroad-tax-office-test-'));
+  try {
+    const directory = await generator.saveMapAssets('loc_tax_office', rootDirectory);
+    const actors = JSON.parse(await readFile(join(directory, 'actors.json'), 'utf8')).actors;
+    assert.deepEqual(actors.map(actor => actor.npcId), ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia']);
+    assert.deepEqual(await readFile(join(directory, 'background.png')), await readFile(new URL('../apps/game/assets/locations/location_tax_office_interior_labeled.png', import.meta.url)));
+    for (const id of ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia']) {
+      const portrait = await readFile(join(directory, `portrait-${id}.png`));
+      assert.deepEqual([portrait.readUInt32BE(16), portrait.readUInt32BE(20)], [768, 256]);
+      assert.ok((await readdir(directory)).includes(`npc-${id}.png`));
+    }
+  } finally {
+    await rm(rootDirectory, { recursive: true, force: true });
+  }
+});
+
 test('Town Street map packages all data-authored residents at their route start points', async () => {
   const rootDirectory = await mkdtemp(join(tmpdir(), 'life-abroad-street-npcs-test-'));
   try {

@@ -3,11 +3,8 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
-<<<<<<< HEAD Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.5;
-T39.1–T39.5; S2–S7. ======= Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8;
-T38.1–T38.6; T39.1–T39.4; S2–S7.
-
-> > > > > > > 4741034a0f8abc1bef9a706f720afde5a34972e3
+Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.5;
+T39.1–T39.5; S2–S7.
 
 ## How to work
 
@@ -176,12 +173,14 @@ database: localhost:54323
       done in order a to i. Tick each step when it passes its own check. New
       art, portraits and voice clips use the existing asset pipeline (T14).
       Reward: the owner decides (default none). Codex must not invent anything
-      the owner has not given: stop and ask. - [ ] **a. Tax office and staff.**
+      the owner has not given: stop and ask.
+  - [x] **a. Tax office and staff.**
       Inspect what exists. The tax office is a map with an entrance from Town
       Street and **two named staff NPCs**; either one can run the whole flow.
       Three emotion portraits each. Opening hours from the shared check
       (organizations 08:00–16:00); a closed office says its hours. Check: the
-      player can walk in and chat with both staff. - [ ] **b. Services Q&A.**
+      player can walk in and chat with both staff.
+  - [ ] **b. Services Q&A.**
       When asked what they can help with, staff list their services: **register
       an ID card** (works now), **re-issue an ID card** and **renew an ID card**
       (information only for now: a scripted, owner-approved answer; the real

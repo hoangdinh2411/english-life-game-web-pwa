@@ -28,10 +28,11 @@ export type MapLocation =
   | "cafe"
   | "corner_cafe"
   | "clothes"
+  | "tax_office"
   | "street";
-export type StoreLocation = Extract<
+export type ClosedVenueLocation = Extract<
   MapLocation,
-  "cafe" | "corner_cafe" | "clothes"
+  "cafe" | "corner_cafe" | "clothes" | "tax_office"
 >;
 export interface StationCallbacks {
   gender?: PlayerGender | undefined;
@@ -50,7 +51,7 @@ export interface StationCallbacks {
   onError: (message: string) => void;
   getGameTime?: () => Date | null;
   getTimeZone?: () => string | null;
-  onStoreClosed?: (location: StoreLocation) => void;
+  onVenueClosed?: (location: ClosedVenueLocation) => void;
   onExitBlocked: () => void;
 }
 export interface StationGame {
@@ -86,5 +87,5 @@ export interface GameCanvasProps {
   onPlaceChange?: (location: PlayerLocation) => void;
   getGameTime?: () => Date | null;
   getTimeZone?: () => string | null;
-  onStoreClosed?: (location: StoreLocation) => void;
+  onVenueClosed?: (location: ClosedVenueLocation) => void;
 }
