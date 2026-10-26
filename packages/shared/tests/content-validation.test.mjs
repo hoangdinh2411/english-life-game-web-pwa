@@ -70,7 +70,7 @@ test('every authored NPC has a distinct versioned profile', async () => {
   const catalog = JSON.parse(await readFile(resolve(repository, 'content/seed/npcs.json'), 'utf8'));
   const street = JSON.parse(await readFile(resolve(repository, 'content/seed/street-npcs.json'), 'utf8'));
   const profiles = [...catalog, ...street.npcs].map(npc => JSON.stringify(npc.profile));
-  assert.equal(profiles.length, 29);
+  assert.equal(profiles.length, 31);
   assert.equal(new Set(profiles).size, profiles.length);
   assert.ok([...catalog, ...street.npcs].every(npc => npc.profile?.profileVersion === 1));
 });

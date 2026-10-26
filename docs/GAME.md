@@ -32,7 +32,7 @@ English is a tool to accomplish a task, not a multiple-choice test.
   scripted conversation API and authenticated station/street connection are
   implemented. Typed receptionist replies use the server; entering Town Street
   waits for the saved ticket use. Reload restores the player's last exact place
-  (station, street, café or clothes shop), its parent map and the player's
+  (station, street, café, clothes shop or tax office), its parent map and the player's
   position inside it.
 - Player movement updates the latest private location checkpoint in browser
   `localStorage`; it does not call the API for every movement sample. The client
@@ -48,6 +48,10 @@ English is a tool to accomplish a task, not a multiple-choice test.
   second café that reuses the seller/catalog flow and has an assistant and three
   customer NPCs. Players stay on the marked streets and plaza paths; building
   footprints, the fountain, and planters block movement.
+- The Tax Office opens from Town Street from 08:00–16:00 organization time.
+  Marcus and Nadia are its named male and female staff; both are identified as
+  Tax Office Staff and can open the same conversation flow. A closed entrance
+  shows the office hours.
 - Town Street has 15 named residents with distinct jobs and authored profiles,
   portrait links, and road patrol routes. Each route has 12–14 waypoints, and
   residents can be approached for scripted small talk about everyday topics.

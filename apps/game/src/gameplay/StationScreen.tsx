@@ -17,8 +17,8 @@ import { usePwa } from "../pwa/PwaProvider";
 import { PlayerProfileDialogue } from "../features/life/PlayerProfileDialogue";
 import { ShopConversation } from "../features/shops/ShopConversation";
 import { isShopNpc, type ShopNpcId } from "../features/shops/shop-npcs";
-import { StoreClosedDialogue } from "../features/shops/StoreClosedDialogue";
-import type { StoreLocation } from "../types/gameplay/world";
+import { VenueClosedDialogue } from "../features/location/VenueClosedDialogue";
+import type { ClosedVenueLocation } from "../types/gameplay/world";
 import {
   isStreetNpc,
   STREET_NPCS,
@@ -40,6 +40,7 @@ import { formatWorldTime } from "../features/world-clock/world-clock";
 import { MovementTutorial } from "../features/tutorial/MovementTutorial";
 import { movementTutorialSeen, tutorialReturnSurface, type TutorialSource } from "../features/tutorial/tutorial-state";
 import { loadTutorialSpeech } from "../api/client";
+import { isTaxOfficeStaff, TAX_OFFICE_STAFF, type TaxOfficeStaffId } from "../features/tax-office/tax-office-staff";
 
 export default function StationScreen({
   gender,
@@ -53,7 +54,7 @@ export default function StationScreen({
   life,
 }: StationScreenProps) {
   const [npcId, setNpcId] = useState<
-    StationSpeaker | ShopNpcId | StreetNpcId | null
+    StationSpeaker | ShopNpcId | StreetNpcId | TaxOfficeStaffId | null
   >(null);
   const [tutorialSource, setTutorialSource] = useState<TutorialSource | null>(() =>
     movementTutorialSeen() ? null : "first-run",
@@ -66,7 +67,7 @@ export default function StationScreen({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [closedStore, setClosedStore] = useState<StoreLocation | null>(null);
+  const [closedVenue, setClosedVenue] = useState<ClosedVenueLocation | null>(null);
   const [activeMapId, setActiveMapId] = useState<string>(
     arrival?.initialLocation.placeId ?? "loc_station",
   );
@@ -101,7 +102,7 @@ export default function StationScreen({
   const displayedCountryName = countryName?.trim() || "Not selected";
   const worldPaused =
     profileOpen ||
-    closedStore !== null ||
+    closedVenue !== null ||
     goals ||
     exitReminder ||
     Boolean(arrival?.pending || arrival?.error);
@@ -160,7 +161,7 @@ export default function StationScreen({
           ? {
               getGameTime: () => worldClock.time,
               getTimeZone: () => worldClock.timeZone,
-              onStoreClosed: (store) => setClosedStore(store),
+              onVenueClosed: (venue) => setClosedVenue(venue),
             }
           : {})}
         conversationNpcId={npcId}
@@ -171,6 +172,7 @@ export default function StationScreen({
           if (isStationSpeaker(id)) setNpcId(id);
           if (!practice && isShopNpc(id)) setNpcId(id);
           if (!practice && isStreetNpc(id)) setNpcId(id);
+          if (!practice && isTaxOfficeStaff(id)) setNpcId(id);
         }}
       />
       <div
@@ -272,14 +274,14 @@ export default function StationScreen({
           )}
         </DialogueFrame>
       ) : null}
-      {!npcId && tutorialSource === null && !goals && closedStore === null
+      {!npcId && tutorialSource === null && !goals && closedVenue === null
         ? arrival?.statusPanel
         : null}
-      {closedStore ? (
-        <StoreClosedDialogue
-          location={closedStore}
+      {closedVenue ? (
+        <VenueClosedDialogue
+          location={closedVenue}
           gameTimeAvailable={Boolean(worldClock.time)}
-          onReturn={() => setClosedStore(null)}
+          onReturn={() => setClosedVenue(null)}
         />
       ) : null}
       {profileOpen ? (
@@ -308,11 +310,13 @@ export default function StationScreen({
           }}
         />
       ) : null}
-      {npcId && isStreetNpc(npcId) ? (
+      {npcId && (isStreetNpc(npcId) || isTaxOfficeStaff(npcId)) ? (
         <TownspersonConversation
           gender={gender}
           key={npcId}
-          npc={STREET_NPCS.find((npc) => npc.id === npcId)!}
+          npc={isStreetNpc(npcId)
+            ? STREET_NPCS.find((npc) => npc.id === npcId)!
+            : TAX_OFFICE_STAFF.find((npc) => npc.id === npcId)!}
           sound={sound}
           countryName={countryName}
           onClose={() => setNpcId(null)}

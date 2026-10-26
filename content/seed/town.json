@@ -9,6 +9,7 @@
     { "id": "loc_cafe", "name": "Maple Cafe", "type": "cafe" },
     { "id": "loc_clothes", "name": "Clothes Shop", "type": "clothes" },
     { "id": "loc_corner_cafe", "name": "Corner Cup Café", "type": "cafe" },
+    { "id": "loc_tax_office", "name": "Tax Office", "type": "office" },
     { "id": "loc_bank", "name": "Bank", "type": "bank" },
     { "id": "loc_housing", "name": "Brown Housing Office", "type": "housing" }
   ]

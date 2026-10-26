@@ -8,6 +8,7 @@ import { venueNpcConfigForMapId } from '../shops/venue-npc-config';
 import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES } from '../shops/venue-npc-config';
 import { ambientNpcSpawnPoints } from '../npcs/controlled-presence';
 import { NPC_DISPLAY_SCALE } from '../npcs/actor-display';
+import { TAX_OFFICE_STAFF } from '../tax-office/tax-office-staff';
 
 type Diagnostic = (message: string) => void;
 
@@ -118,8 +119,8 @@ export function preparePack(
   }
   for (const definition of definitions) scene.anims.create(definition);
   const actorAsset = pack.assets.find(asset => asset.key === 'actors' && asset.type === 'json' && asset.npcId === null);
-  const shop = pack.mapId === 'loc_cafe' || pack.mapId === 'loc_corner_cafe' || pack.mapId === 'loc_clothes';
-  if (shop && !actorAsset) throw new Error('Shop NPC assets are missing. Please retry after the map upload finishes.');
+  const venue = pack.mapId === 'loc_cafe' || pack.mapId === 'loc_corner_cafe' || pack.mapId === 'loc_clothes' || pack.mapId === 'loc_tax_office';
+  if (venue && !actorAsset) throw new Error('Venue NPC assets are missing. Please retry after the map upload finishes.');
   const authoredActors = actorAsset ? packActorsSchema.parse(scene.cache.json.get(packKey(pack, actorAsset))).actors : [];
   const venueConfig = venueNpcConfigForMapId(pack.mapId);
   if (venueConfig) {
@@ -141,7 +142,9 @@ export function preparePack(
   ) : new Map<string, { x: number; y: number }>();
   const actors = authoredActors.flatMap(actor => {
     const streetNpc = pack.mapId === 'loc_town_street' && actor.npcId ? findStreetNpc(actor.npcId) : undefined;
-    const definition = streetNpc ?? (actor.npcId ? SHOP_NPCS.find(npc => npc.id === actor.npcId) : SHOP_NPCS.find(npc => npc.frame === actor.frame));
+    const definition = streetNpc ?? (actor.npcId
+      ? SHOP_NPCS.find(npc => npc.id === actor.npcId) ?? TAX_OFFICE_STAFF.find(npc => npc.id === actor.npcId)
+      : SHOP_NPCS.find(npc => npc.frame === actor.frame));
     if (!definition || definition.frame !== actor.frame) throw new Error('Shop NPC identity or atlas frame is invalid.');
     const ambient = venueConfig?.ambientNpcPool.includes(definition.id) ?? false;
     if (ambient && unavailableAmbientNpcIds.has(definition.id)) return [];
@@ -159,7 +162,7 @@ export function preparePack(
     if (!streetNpc) {
       const textureKey = bundledTexture ?? packKey(pack, texture!);
       const textureFrames = scene.textures.get(textureKey);
-      const missingFrame = !textureFrames.has(actor.frame) || shop && Array.from({ length: 16 }, (_, index) => `${actor.frame}-${Math.floor(index / 4)}-${index % 4}`)
+      const missingFrame = !textureFrames.has(actor.frame) || venue && Array.from({ length: 16 }, (_, index) => `${actor.frame}-${Math.floor(index / 4)}-${index % 4}`)
         .some(frame => !textureFrames.has(frame));
       if (missingFrame) {
         if (ambient) { diagnoseAmbient(definition.id); return []; }

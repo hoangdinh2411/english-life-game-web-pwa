@@ -2,6 +2,7 @@ import type { Bounds, MapLocation } from '../../types/gameplay/world';
 import { validateVenueNpcConfig, type VenueNpcCatalog, type VenueNpcConfig } from '../npcs/controlled-presence';
 import { STATION_ROSTER } from '../station/station-roster';
 import { SHOP_NPCS } from './shop-npcs';
+import { TAX_OFFICE_STAFF } from '../tax-office/tax-office-staff';
 
 export const VENUE_SPAWN_ZONES = {
   station_passengers_left: { left: 560, right: 640, top: 350, bottom: 420 },
@@ -21,8 +22,8 @@ export const VENUE_EXCLUSION_ZONES = {
 } as const satisfies Readonly<Record<string, Bounds>>;
 
 const catalog = {
-  locationIds: ['station', 'cafe', 'corner_cafe', 'clothes'],
-  npcIds: [...STATION_ROSTER.map(npc => npc.id), ...SHOP_NPCS.map(npc => npc.id)],
+  locationIds: ['station', 'cafe', 'corner_cafe', 'clothes', 'tax_office'],
+  npcIds: [...STATION_ROSTER.map(npc => npc.id), ...SHOP_NPCS.map(npc => npc.id), ...TAX_OFFICE_STAFF.map(npc => npc.id)],
   spawnZones: VENUE_SPAWN_ZONES,
   exclusionZones: VENUE_EXCLUSION_ZONES,
 } as const satisfies VenueNpcCatalog;
@@ -32,6 +33,7 @@ const configs = [
   { locationId: 'cafe', serviceNpcIds: ['npc_mia', 'npc_cafe_waiter'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_cafe_customer'], ambientCount: { min: 0, max: 1 }, spawnZoneIds: ['cafe_customers'], exclusionZoneIds: ['cafe_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
   { locationId: 'corner_cafe', serviceNpcIds: ['npc_corner_cup_seller', 'npc_corner_cup_assistant'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_corner_cup_customer_1', 'npc_corner_cup_customer_2', 'npc_corner_cup_customer_3'], ambientCount: { min: 1, max: 2 }, spawnZoneIds: ['corner_cafe_customers_left', 'corner_cafe_customers_right'], exclusionZoneIds: ['corner_cafe_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
   { locationId: 'clothes', serviceNpcIds: ['npc_clothes_seller', 'npc_clothes_assistant'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_clothes_customer'], ambientCount: { min: 0, max: 1 }, spawnZoneIds: ['clothes_customers'], exclusionZoneIds: ['clothes_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
+  { locationId: 'tax_office', serviceNpcIds: ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia'], optionalStaffNpcIds: [], ambientNpcPool: [], ambientCount: { min: 0, max: 0 }, spawnZoneIds: [], exclusionZoneIds: [], timeBuckets: ['morning', 'daytime'] },
 ] as const satisfies readonly VenueNpcConfig[];
 
 const registry = new Map(configs.map(config => [config.locationId, validateVenueNpcConfig(config, catalog)]));
@@ -47,6 +49,7 @@ const locationByMapId = {
   loc_cafe: 'cafe',
   loc_corner_cafe: 'corner_cafe',
   loc_clothes: 'clothes',
+  loc_tax_office: 'tax_office',
 } as const satisfies Readonly<Record<string, Exclude<MapLocation, 'street'>>>;
 
 export function venueNpcConfigForMapId(mapId: string): VenueNpcConfig | undefined {

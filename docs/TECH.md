@@ -526,10 +526,12 @@ reference art, but are no longer imported or built into the app.
 Generated map files are kept outside the game bundle and Git in the ignored
 `local-assets/maps/<mapId>/` directory. Recreate all three local packs without
 Docker or Supabase using `pnpm assets:generate`; pass map IDs to limit output,
-for example `pnpm assets:generate loc_cafe`. After local Supabase, migrations,
+for example `pnpm assets:generate loc_cafe` or `pnpm assets:generate loc_tax_office`.
+The Tax Office pack includes the authored interior plus Marcus and Nadia's
+walking atlases and three-frame portrait strips. After local Supabase, migrations,
 seed and NestJS are running, use
 `pnpm run assets:upload -- --target local loc_town_street 1` (also `loc_cafe`,
-`loc_clothes`). `SUPABASE_SERVICE_ROLE_KEY` comes from ignored local server
+`loc_clothes`, `loc_tax_office`). `SUPABASE_SERVICE_ROLE_KEY` comes from ignored local server
 configuration; `CONTENT_API_URL` optionally overrides
 `http://127.0.0.1:3000/api/v1` and must remain on localhost for the local
 target. For an intentional production upload, run

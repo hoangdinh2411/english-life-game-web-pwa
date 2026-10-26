@@ -6,6 +6,7 @@ const locationVenueKinds: Partial<Record<MapLocation, VenueKind>> = {
   cafe: 'store',
   corner_cafe: 'store',
   clothes: 'store',
+  tax_office: 'organization',
 };
 
 export function canEnterLocation(location: MapLocation, gameTime: Date | null, timeZone: string | null): boolean {
@@ -15,7 +16,7 @@ export function canEnterLocation(location: MapLocation, gameTime: Date | null, t
 }
 
 // Feet coordinates, measured against the authored 1536×1024 interiors.
-const furniture: Record<'cafe' | 'clothes', Bounds[]> = {
+const furniture: Record<'cafe' | 'clothes' | 'tax_office', Bounds[]> = {
   cafe: [
     { left: 110, right: 355, top: 335, bottom: 745 },
     { left: 1180, right: 1430, top: 325, bottom: 750 },
@@ -28,11 +29,16 @@ const furniture: Record<'cafe' | 'clothes', Bounds[]> = {
     { left: 1045, right: 1355, top: 430, bottom: 650 },
     { left: 1190, right: 1420, top: 635, bottom: 800 },
   ],
+  tax_office: [
+    { left: 80, right: 1460, top: 0, bottom: 430 },
+    { left: 80, right: 260, top: 430, bottom: 770 },
+    { left: 1180, right: 1460, top: 430, bottom: 760 },
+  ],
 };
 export function shopCanWalk(location: MapLocation, point: Point, npcs: readonly Point[] = []): boolean {
   if (point.x < 180 || point.x > 1380 || point.y < 325 || point.y > 985) return false;
   if (point.y > 790 && (point.x < 650 || point.x > 890)) return false;
-  const obstacles = location === 'cafe' || location === 'corner_cafe' ? furniture.cafe : location === 'clothes' ? furniture.clothes : [];
+  const obstacles = location === 'cafe' || location === 'corner_cafe' ? furniture.cafe : location === 'clothes' ? furniture.clothes : location === 'tax_office' ? furniture.tax_office : [];
   return !obstacles.some(rect => point.x >= rect.left - 18 && point.x <= rect.right + 18 && point.y >= rect.top - 12 && point.y <= rect.bottom + 12)
     && !npcs.some(npc => Math.hypot(point.x - npc.x, point.y - npc.y) < 38);
 }

@@ -6,6 +6,8 @@ import { mapLocationFromPlayerLocation, playerLocationFromMapLocation } from '..
 test('saved locations preserve the exact place and its parent map', () => {
   assert.equal(mapLocationFromPlayerLocation({ mapId: 'loc_station', placeId: 'loc_cafe', x: 700, y: 800 }), 'cafe');
   assert.equal(mapLocationFromPlayerLocation({ mapId: 'loc_town_street', placeId: 'loc_corner_cafe', x: 800, y: 700 }), 'corner_cafe');
+  assert.equal(mapLocationFromPlayerLocation({ mapId: 'loc_town_street', placeId: 'loc_tax_office', x: 768, y: 860 }), 'tax_office');
   assert.deepEqual(playerLocationFromMapLocation('clothes', { x: 720, y: 810 }), { mapId: 'loc_station', placeId: 'loc_clothes', x: 720, y: 810 });
   assert.deepEqual(playerLocationFromMapLocation('corner_cafe', { x: 800, y: 700 }), { mapId: 'loc_town_street', placeId: 'loc_corner_cafe', x: 800, y: 700 });
+  assert.deepEqual(playerLocationFromMapLocation('tax_office', { x: 768, y: 860 }), { mapId: 'loc_town_street', placeId: 'loc_tax_office', x: 768, y: 860 });
 });
