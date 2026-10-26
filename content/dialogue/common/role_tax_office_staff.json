@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "scope": "role",
+  "role": "tax_office_staff",
+  "nodes": [
+    {
+      "id": "tax_office_start",
+      "text": {
+        "default": "Hello! How can I help you?"
+      },
+      "intents": [
+        {
+          "name": "ask_id_card_services",
+          "keywords": [
+            "what can you help me with",
+            "what services do you offer",
+            "what are your services",
+            "how can you help me",
+            "what do you do here",
+            "services"
+          ],
+          "next": "tax_office_services"
+        },
+        {
+          "name": "register_id_card",
+          "keywords": [
+            "register an id card",
+            "register id card",
+            "get an id card",
+            "apply for an id card",
+            "i need an id card",
+            "don't have an id card",
+            "do not have an id card",
+            "have no id card",
+            "no id card yet",
+            "without an id card",
+            "new id card"
+          ],
+          "next": "tax_office_register"
+        },
+        {
+          "name": "update_id_card",
+          "keywords": [
+            "update my id card",
+            "update id card",
+            "change my id card",
+            "change information",
+            "edit my information",
+            "wrong information"
+          ],
+          "next": "tax_office_update"
+        },
+        {
+          "name": "ask_id_card_validity",
+          "keywords": [
+            "how long is the id card valid",
+            "how long does the id card last",
+            "when does my id card expire",
+            "id card expiry",
+            "valid for"
+          ],
+          "next": "tax_office_validity"
+        },
+        {
+          "name": "ask_id_card_renewal",
+          "keywords": [
+            "renew my id card",
+            "renew id card",
+            "re issue my id card",
+            "reissue my id card",
+            "replace my id card",
+            "lost my id card",
+            "damaged my id card"
+          ],
+          "next": "tax_office_no_renewal"
+        }
+      ],
+      "fallback": "tax_office_clarify"
+    },
+    {
+      "id": "tax_office_services",
+      "text": {
+        "default": "I can help you register an ID card or update the information on your card. Your ID card remains valid permanently."
+      }
+    },
+    {
+      "id": "tax_office_register",
+      "text": {
+        "default": "I can help you register an ID card."
+      }
+    },
+    {
+      "id": "tax_office_update",
+      "text": {
+        "default": "You can update the information on your ID card here at the tax office."
+      }
+    },
+    {
+      "id": "tax_office_validity",
+      "text": {
+        "default": "Your ID card remains valid permanently."
+      }
+    },
+    {
+      "id": "tax_office_no_renewal",
+      "text": {
+        "default": "You do not need to renew or replace your ID card. It remains valid permanently. If your information changes, come to the tax office to update it."
+      }
+    },
+    {
+      "id": "tax_office_clarify",
+      "text": {
+        "default": "I can help you register an ID card or update the information on your card. Which service do you need?"
+      }
+    }
+  ]
+}

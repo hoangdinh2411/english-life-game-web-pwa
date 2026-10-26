@@ -76,6 +76,37 @@ test('Town Street residents open casual conversations and understand common topi
   assert.ok(personalities.every(reply => /arranging flowers/.test(reply.text)));
 });
 
+test('T36.b both Tax Office staff answer service questions from scripts without AI fallback', async () => {
+  const { engine } = await fixture();
+  const cases = [
+    ['What services do you offer?', 'tax_office_services', /register.*update.*valid permanently/i],
+    ['I want to register an ID card.', 'tax_office_register', /register an ID card/i],
+    ["I don't have an ID card yet.", 'tax_office_register', /register an ID card/i],
+    ['I have no ID card.', 'tax_office_register', /register an ID card/i],
+    ['Can I change information on my ID card?', 'tax_office_update', /update.*tax office/i],
+    ['How long is the ID card valid?', 'tax_office_validity', /valid permanently/i],
+    ['Can I renew my ID card?', 'tax_office_no_renewal', /do not need to renew.*valid permanently.*update/i],
+  ] as const;
+
+  for (const npcId of ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia']) {
+    const context = { npcId, roleId: 'tax_office_staff', personality: 'cheerful' };
+    const opening = await engine.node(context, 'tax_office_start');
+    assert.equal(opening.text, 'Hello! How can I help you?');
+    for (const [input, expectedNode, expectedText] of cases) {
+      const reply = await engine.reply(context, input);
+      assert.equal(reply.node.id, expectedNode, `${npcId}: ${input}`);
+      assert.match(reply.text, expectedText, `${npcId}: ${input}`);
+      assert.equal(reply.misunderstood, false, `${npcId}: ${input}`);
+      assert.notEqual(reply.intent, null, `${npcId}: ${input}`);
+    }
+    const unknownServiceQuestion = await engine.reply(context, 'Do I need to show a passport for the ID card?');
+    assert.equal(unknownServiceQuestion.node.id, 'tax_office_clarify');
+    assert.equal(unknownServiceQuestion.intent, null);
+    assert.equal(unknownServiceQuestion.misunderstood, false, 'Tax Office service topics must not reach AI');
+    assert.doesNotMatch(unknownServiceQuestion.text, /passport/i);
+  }
+});
+
 test('NPC-07 answers every everyday topic from allowlisted context or the authored missing-fact response', async () => {
   const { engine } = await fixture();
   const context = { npcId: 'npc_mila_florist', npcName: 'Mila', roleId: 'townsperson', personality: 'cheerful',

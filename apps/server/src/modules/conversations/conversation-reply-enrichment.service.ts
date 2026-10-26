@@ -121,16 +121,6 @@ export class ConversationReplyEnrichmentService {
       metadata,
     );
 
-    if (stream && (!aiResult || aiResult.fallback)) {
-      if (stream.signal.aborted) {
-        throw stream.signal.reason ?? new Error('Chat stream cancelled.');
-      }
-      await stream.beforeSave(responseText);
-      if (stream.signal.aborted) {
-        throw stream.signal.reason ?? new Error('Chat stream cancelled.');
-      }
-    }
-
     return {
       arrival: options.scripted.arrival,
       metadata,

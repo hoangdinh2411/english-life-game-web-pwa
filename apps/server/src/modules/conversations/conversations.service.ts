@@ -1,6 +1,6 @@
 import { LifeService } from '../life/life.service';
 import { ConflictException, Injectable } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, TOWN_STREET_NPC_IDS, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID } from '@life-abroad/shared';
 import { DialogueService } from '../dialogue/dialogue.service';
 import { QuestsService } from '../quests/quests.service';
 import { ConversationsRepository, sellerState } from './conversations.repository';
@@ -41,7 +41,11 @@ export class ConversationsService {
       if (npcId !== ARRIVAL_NPC_ID) {
         const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
         const baseContext = await this.conversations.context(client, userId, npcId);
-        const openingNode = (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId) ? 'townsperson_start' : 'shop_start';
+        const openingNode = (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId)
+          ? 'townsperson_start'
+          : (TAX_OFFICE_NPC_IDS as readonly string[]).includes(npcId)
+            ? 'tax_office_start'
+            : 'shop_start';
         const id = await this.conversations.create(client, userId, npcId, openingVariation);
         const context = { ...baseContext, variationIndex: openingVariation };
         const opening = await this.dialogue.node(context, openingNode);
@@ -98,7 +102,6 @@ export class ConversationsService {
       if (stream && conversation.npc_id !== stream.npcId) throw new ConflictException('Conversation NPC does not match');
       const replay = await this.conversations.replay(client, id, request);
       if (replay) {
-        if (stream) await stream.beforeSave(replay.npcMessage.text);
         return { npcId: conversationNpcSchema.parse(conversation.npc_id), turn: { ...replay, arrival,
         ...(isCafeSeller(conversation.npc_id) || conversation.npc_id === 'npc_clothes_seller'
           ? { seller: sellerState(conversation) } : {}),
@@ -115,6 +118,7 @@ export class ConversationsService {
       const history = await this.conversations.messages(client, id);
       const reply = await this.replies.resolve({ client, userId, conversationId: id,
         conversation, context, history, request, arrival, ...(stream ? { stream } : {}) });
+      if (stream?.signal.aborted) throw stream.signal.reason ?? new Error('Chat stream cancelled.');
       arrival = reply.arrival;
       if (history.length === 0 && conversation.current_node_id) {
         const openingContext = { ...context, variationIndex: conversation.opening_variation_index };

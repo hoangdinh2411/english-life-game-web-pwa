@@ -113,6 +113,24 @@ try {
     assert.equal(controller.getSnapshot().streamedMessageId, npcMessage.id,
       'the committed reply records that its text was already revealed by the stream');
   });
+
+  test('a scripted reply without token chunks remains eligible for audio-synced reveal', async () => {
+    const arrival = { questId: 'q_station_arrival', status: 'done', currentStepId: null,
+      ticket: { issued: true, used: true }, canEnterTownStreet: true, locationId: 'loc_town_street', rewardsGranted: true };
+    const conversation = { id: globalThis.crypto.randomUUID(), npcId: 'npc_tax_clerk_marcus', messages: [], arrival };
+    const npcMessage = { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'I can help you register an ID card.',
+      createdAt: new Date().toISOString(), speech: { url: 'https://storage.test/speech.mp3' } };
+    const controller = createConversationController({ load: async () => arrival, start: async () => conversation,
+      send: async () => { throw new Error('Non-streaming API must not be used'); },
+      stream: async (_id, _npcId, body) => ({
+        playerMessage: { id: globalThis.crypto.randomUUID(), sender: 'player', text: body.text, createdAt: new Date().toISOString() },
+        npcMessage, intent: 'register_id_card', misunderstood: false, arrival,
+      }) });
+    await controller.start();
+    assert.equal(await controller.send("I don't have an ID card yet."), true);
+    assert.equal(controller.getSnapshot().streamedMessageId, null);
+    assert.equal(controller.getSnapshot().conversation?.messages.at(-1)?.speech?.url, 'https://storage.test/speech.mp3');
+  });
 } finally {
   await server.close();
 }

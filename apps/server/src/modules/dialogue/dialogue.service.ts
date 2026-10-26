@@ -45,6 +45,11 @@ function isIncompleteQuestion(input: string): boolean {
   return /^(?:(?:what|why|where|when|how) )?(?:am|are|is|was|were|do|does|did|can|could|would|will|have|has) (?:i|you|he|she|it|we|they)$/.test(input);
 }
 
+function isTaxOfficeServiceTopic(context: DialogueContext, input: string): boolean {
+  return context.roleId === 'tax_office_staff' &&
+    /\b(?:(?:id|identity) card|passport|register|update|renew|replace)\b/.test(input);
+}
+
 @Injectable()
 export class DialogueService {
   constructor(private readonly cache: DialogueCacheService) {}
@@ -92,7 +97,10 @@ export class DialogueService {
       Number(b === current) - Number(a === current) || a.node.id.localeCompare(b.node.id)));
     for (const entry of fallbacks) {
       const target = find(entry?.node.fallback);
-      if (target && !target.node.completesStep) return this.render(target, context, null);
+      if (target && !target.node.completesStep) {
+        const reply = this.render(target, context, null);
+        return isTaxOfficeServiceTopic(context, text) ? { ...reply, misunderstood: false } : reply;
+      }
     }
     const repeat = groups[2]?.find(entry => entry.node.id === 'global_repeat');
     if (repeat) return this.render(repeat, context, null);
