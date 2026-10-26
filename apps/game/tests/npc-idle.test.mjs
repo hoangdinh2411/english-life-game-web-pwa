@@ -137,9 +137,12 @@ test('a nearby NPC replaces its name with a conversation-ready indicator', () =>
 
 test('NPC nameplates use compact responsive sizes on mobile and tablet', () => {
   assert.equal(typeof npcActors.npcNameplateScreenSizes, 'function');
+  assert.equal(typeof npcActors.npcSublabelScreenSize, 'function');
   assert.deepEqual(npcActors.npcNameplateScreenSizes(375), { name: 13, dots: 16 });
   assert.deepEqual(npcActors.npcNameplateScreenSizes(768), { name: 15, dots: 18 });
   assert.deepEqual(npcActors.npcNameplateScreenSizes(1280), { name: 17, dots: 20 });
+  assert.equal(npcActors.npcSublabelScreenSize(375), 9);
+  assert.equal(npcActors.npcSublabelScreenSize(1280), 11);
 });
 
 test('resizing nameplates uses cheap transforms instead of rebuilding text textures', () => {

@@ -53,6 +53,20 @@ test('returning from Corner Cup spawns directly in front of the entrance without
   assert.ok(route.length > 0, 'the player can step back into the Corner Cup entrance ring');
 });
 
+test('Tax Office exits and closed-entry returns resolve to the Tax Office street ring', () => {
+  assert.equal(typeof navigation.streetArrivalForLocation, 'function');
+  assert.equal(navigation.streetArrivalForLocation('tax_office'), 'tax_office');
+  assert.equal(navigation.streetArrivalForLocation('corner_cafe'), 'corner_cafe');
+  assert.equal(navigation.streetArrivalForLocation('station'), 'station');
+  const spawn = navigation.streetSpawnPoint(navigation.streetArrivalForLocation('tax_office'));
+  assert.deepEqual(spawn, { x: navigation.TAX_OFFICE_PORTAL.x + 45, y: navigation.TAX_OFFICE_PORTAL.y });
+  assert.equal(navigation.canWalkStreet(spawn), true);
+  for (const delta of [{ x: 20, y: 0 }, { x: -20, y: 0 }, { x: 0, y: 20 }, { x: 0, y: -20 }]) {
+    assert.notDeepEqual(navigation.moveOnStreet(spawn, delta), spawn, `Tax Office return can move by ${JSON.stringify(delta)}`);
+  }
+  assert.ok(Math.hypot(spawn.x - navigation.CORNER_CUP_PORTAL.x, spawn.y - navigation.CORNER_CUP_PORTAL.y) > 38);
+});
+
 test('leaving the train station spawns outside its entry ring', () => {
   const spawn = navigation.streetSpawnPoint('station');
   assert.deepEqual(spawn, navigation.scaleStreetPoint({ x: 768, y: 255 }));

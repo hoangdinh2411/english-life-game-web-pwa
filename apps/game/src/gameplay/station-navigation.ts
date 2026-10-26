@@ -1,5 +1,6 @@
 import type {
   Bounds,
+  MapLocation,
   Point,
   StationNpc,
   StationPortal,
@@ -36,7 +37,11 @@ export const STREET_PORTALS: StationPortal[] = [
   },
 ];
 export function streetSpawnPoint(arrival: "station" | "corner_cafe" | "tax_office"): Point {
-  if (arrival === "tax_office") return { x: TAX_OFFICE_PORTAL.x, y: TAX_OFFICE_PORTAL.y + 45 };
+  if (arrival === "tax_office") {
+    // The space below this doorway is landscaped and blocks all movement.
+    // Return beside the ring on the connected road, outside its re-entry radius.
+    return { x: TAX_OFFICE_PORTAL.x + 45, y: TAX_OFFICE_PORTAL.y };
+  }
   if (arrival === "corner_cafe") {
     // Place the player directly in front of the café ring on the cross street,
     // just outside its auto-entry radius so returning does not reopen the café.
@@ -44,6 +49,12 @@ export function streetSpawnPoint(arrival: "station" | "corner_cafe" | "tax_offic
   }
   // Leave the train station outside its auto-entry ring to avoid bouncing back inside.
   return scaleStreetPoint({ x: 768, y: 255 });
+}
+
+export function streetArrivalForLocation(location: MapLocation): "station" | "corner_cafe" | "tax_office" {
+  if (location === "tax_office") return "tax_office";
+  if (location === "corner_cafe") return "corner_cafe";
+  return "station";
 }
 export function clampStreetPosition(point: Point): Point {
   return {
