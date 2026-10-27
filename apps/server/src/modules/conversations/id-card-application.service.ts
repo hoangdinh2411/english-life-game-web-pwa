@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { normalizeDialogue, type IdCardApplicationField, type IdCardApplicationSummary, type TurnMetadata } from '@life-abroad/shared';
+import { isIdCardConfirmation, normalizeDialogue, type IdCardApplicationField, type IdCardApplicationSummary, type TurnMetadata } from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
 import type { ArrivalState } from '@life-abroad/shared';
 import { IdCardApplicationContentService } from './id-card-application-content.service';
@@ -12,6 +12,9 @@ export interface IdCardApplicationRow {
   gender: 'male' | 'female' | null;
   origin: string | null;
 }
+
+type EditableApplicationField = Exclude<IdCardApplicationField, 'gender' | 'photo' | 'review' | 'correction'>;
+type NextApplicationField = 'dateOfBirth' | 'address' | 'origin' | 'photo';
 
 interface ApplicationReply {
   nodeId: string;
@@ -47,6 +50,14 @@ const matchesIntentPhrase = (input: string, phrases: readonly string[]): boolean
   });
 };
 
+const containsPhrase = (input: string, phrases: readonly string[]): boolean => {
+  const value = normalized(input);
+  return phrases.some(phrase => {
+    const target = normalized(phrase);
+    return value === target || value.includes(` ${target} `) || value.startsWith(`${target} `) || value.endsWith(` ${target}`);
+  });
+};
+
 const birthDate = (input: string, today = new Date()): string | null => {
   const value = input.trim();
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -58,13 +69,6 @@ const birthDate = (input: string, today = new Date()): string | null => {
   return date.getTime() <= todayUtc ? value : null;
 };
 
-const gender = (input: string): 'male' | 'female' | null => {
-  const words = normalized(input).split(' ');
-  if (words.includes('female')) return 'female';
-  if (words.includes('male')) return 'male';
-  return null;
-};
-
 @Injectable()
 export class IdCardApplicationService {
   constructor(private readonly content: IdCardApplicationContentService) {}
@@ -72,6 +76,10 @@ export class IdCardApplicationService {
   async opening(client: PoolClient, userId: string): Promise<string | null> {
     const application = await this.load(client, userId);
     if (!application) return null;
+    if (application.current_field === 'gender') {
+      await this.syncCharacterGender(client, userId, 'origin');
+      return (await this.content.get()).prompts.origin;
+    }
     return (await this.content.get()).prompts[application.current_field];
   }
 
@@ -99,9 +107,13 @@ export class IdCardApplicationService {
       return this.result('cancelled', content.cancelled, arrival, 'cancel_id_card_application');
     }
 
+    if (application.current_field === 'gender') {
+      await this.syncCharacterGender(client, userId, 'origin');
+      return this.result('origin', content.prompts.origin, arrival, 'use_character_gender');
+    }
     const current = application.current_field;
     if (current === 'photo') {
-      if (/^(?:yes|yes please|yes issue my card|correct|that is correct)$/i.test(input.trim())) {
+      if (isIdCardConfirmation(input)) {
         const reply = this.result(current, 'Thank you. I will issue your ID card now.', arrival, 'confirm_id_card_application');
         return { ...reply, metadata: { ...reply.metadata, idCardSubmit: true } };
       }
@@ -121,17 +133,20 @@ export class IdCardApplicationService {
       return this.result(field, content.prompts[field], arrival, 'select_id_card_correction');
     }
 
-    const parsed = current === 'name' ? plainText(input, 60)
-      : current === 'dateOfBirth' ? birthDate(input)
-        : current === 'address' ? (matchesPhrase(input, content.addressNullPhrases) ? null : plainText(input, 120))
-          : current === 'gender' ? gender(input)
-            : plainText(input, 60);
-    const validNullAddress = current === 'address' && matchesPhrase(input, content.addressNullPhrases);
-    if (parsed === null && !validNullAddress) return this.result(current, content.retries[current], arrival, null);
+    const answerField = current as EditableApplicationField;
+    const parsed = answerField === 'name' ? plainText(input, 60)
+      : answerField === 'dateOfBirth' ? birthDate(input)
+        : answerField === 'address' ? (containsPhrase(input, content.addressNullPhrases) ? null : plainText(input, 120))
+          : plainText(input, 60);
+    const validNullAddress = answerField === 'address' && containsPhrase(input, content.addressNullPhrases);
+    if (answerField === 'address' && normalized(input) === 'skip') {
+      return this.result(answerField, content.retries.address, arrival, null);
+    }
+    if (parsed === null && !validNullAddress) return this.result(answerField, content.retries[answerField], arrival, null);
 
-    const next = this.next(current);
-    await this.update(client, userId, next, current, parsed);
-    return this.result(next, content.prompts[next], arrival, `save_id_card_${current}`);
+    const next = this.next(answerField);
+    await this.update(client, userId, next, answerField, parsed);
+    return this.result(next, content.prompts[next], arrival, `save_id_card_${answerField}`);
   }
 
   async review(client: PoolClient, userId: string, photo: 'uploaded photo' | 'character picture',
@@ -164,16 +179,18 @@ export class IdCardApplicationService {
   }
 
   private async start(client: PoolClient, userId: string): Promise<IdCardApplicationRow> {
-    const result = await client.query<IdCardApplicationRow>(`INSERT INTO public.id_card_applications (user_id,current_field)
-      VALUES ($1,'name') ON CONFLICT (user_id) DO UPDATE SET updated_at=now()
+    const result = await client.query<IdCardApplicationRow>(`INSERT INTO public.id_card_applications (user_id,current_field,gender)
+      SELECT $1,'name',gender FROM public.characters WHERE user_id=$1
+      ON CONFLICT (user_id) DO UPDATE SET gender=excluded.gender,updated_at=now()
       RETURNING current_field,name,date_of_birth,address,gender,origin`, [userId]);
+    if (!result.rows[0]) throw new ConflictException('Complete character creation before applying for an ID card');
     return result.rows[0]!;
   }
 
   private async update(client: PoolClient, userId: string, next: IdCardApplicationField,
-    field: Exclude<IdCardApplicationField, 'photo' | 'review' | 'correction'> | null, value: string | null): Promise<void> {
-    const columns: Record<Exclude<IdCardApplicationField, 'photo' | 'review' | 'correction'>, string> = {
-      name: 'name', dateOfBirth: 'date_of_birth', address: 'address', gender: 'gender', origin: 'origin',
+    field: EditableApplicationField | null, value: string | null): Promise<void> {
+    const columns: Record<EditableApplicationField, string> = {
+      name: 'name', dateOfBirth: 'date_of_birth', address: 'address', origin: 'origin',
     };
     if (!field) {
       await client.query('UPDATE public.id_card_applications SET current_field=$2,updated_at=now() WHERE user_id=$1', [userId, next]);
@@ -183,16 +200,24 @@ export class IdCardApplicationService {
       [userId, next, value]);
   }
 
-  private next(field: Exclude<IdCardApplicationField, 'photo' | 'review' | 'correction'>): IdCardApplicationField {
-    return ({ name: 'dateOfBirth', dateOfBirth: 'address', address: 'gender', gender: 'origin', origin: 'photo' } as const)[field];
+  private next(field: EditableApplicationField): NextApplicationField {
+    return ({ name: 'dateOfBirth', dateOfBirth: 'address', address: 'origin', origin: 'photo' } as const)[field];
   }
 
-  private correctionField(input: string): Exclude<IdCardApplicationField, 'photo' | 'review' | 'correction'> | null {
+  private correctionField(input: string): EditableApplicationField | null {
     const value = normalized(input);
     if (value.includes('date of birth') || value === 'birth date') return 'dateOfBirth';
     if (value.includes('where') && value.includes('come from') || value === 'origin') return 'origin';
-    for (const field of ['name', 'address', 'gender'] as const) if (value.includes(field)) return field;
+    for (const field of ['name', 'address'] as const) if (value.includes(field)) return field;
     return null;
+  }
+
+  private async syncCharacterGender(client: PoolClient, userId: string, next: IdCardApplicationField): Promise<void> {
+    const result = await client.query(`UPDATE public.id_card_applications application
+      SET gender=character.gender,current_field=$2,updated_at=now()
+      FROM public.characters character
+      WHERE application.user_id=$1 AND character.user_id=application.user_id`, [userId, next]);
+    if (result.rowCount !== 1) throw new ConflictException('Complete character creation before applying for an ID card');
   }
 
   private result(nodeId: string, responseText: string, arrival: ArrivalState, intent: string | null): ApplicationReply {

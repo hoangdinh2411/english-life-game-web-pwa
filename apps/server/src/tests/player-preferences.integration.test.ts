@@ -50,19 +50,17 @@ test('T38.1 preferences enforce atomic initialization, bounds, ownership and cas
 
     assert.deepEqual(await players.getPreferences(userId), { preferences: null });
     const candidates = [
-      { coachEnabled: true, speechRate: 0.75, speechPitch: 1.25 },
-      { coachEnabled: false, speechRate: 1.5, speechPitch: 0.75 },
+      { speechRate: 0.75, speechPitch: 1.25 },
+      { speechRate: 1.5, speechPitch: 0.75 },
     ] as const;
     const initialized = await Promise.all(candidates.map(candidate => players.initializePreferences(userId, candidate)));
     const winner = initialized[0];
     assert.ok(winner);
     assert.deepEqual(winner, initialized[1]);
-    assert.ok(candidates.some(candidate => candidate.coachEnabled === winner.coachEnabled
-      && candidate.speechRate === winner.speechRate && candidate.speechPitch === winner.speechPitch));
+    assert.ok(candidates.some(candidate => candidate.speechRate === winner.speechRate && candidate.speechPitch === winner.speechPitch));
 
     const updated = await players.updatePreferences(userId, { speechRate: 1.2 });
     assert.equal(updated.speechRate, 1.2);
-    assert.equal(updated.coachEnabled, winner.coachEnabled);
     assert.equal(updated.speechPitch, winner.speechPitch);
     assert.deepEqual(await players.getPreferences(otherUserId), { preferences: null });
 
@@ -77,7 +75,7 @@ test('T38.1 preferences enforce atomic initialization, bounds, ownership and cas
       await restricted.query('SAVEPOINT denied_read');
       await assert.rejects(restricted.query('SELECT * FROM player_preferences'), { code: '42501' });
       await restricted.query('ROLLBACK TO SAVEPOINT denied_read');
-      await assert.rejects(restricted.query('UPDATE player_preferences SET coach_enabled=true WHERE user_id=$1', [userId]), { code: '42501' });
+      await assert.rejects(restricted.query('UPDATE player_preferences SET speech_rate=1 WHERE user_id=$1', [userId]), { code: '42501' });
     } finally {
       await restricted.query('ROLLBACK');
       restricted.release();

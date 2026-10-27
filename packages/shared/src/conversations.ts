@@ -19,6 +19,14 @@ export const TOWN_STREET_NPC_IDS = [
   'npc_sara_artist', 'npc_jamal_dog_walker', 'npc_tara_musician',
 ] as const;
 export const TAX_OFFICE_NPC_IDS = ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia'] as const;
+export const TRANSIENT_SERVICE_NPC_IDS = [
+  ...CAFE_SELLER_NPC_IDS,
+  'npc_cafe_waiter',
+  'npc_corner_cup_assistant',
+  'npc_clothes_seller',
+  'npc_clothes_assistant',
+  ...TAX_OFFICE_NPC_IDS,
+] as const;
 export const conversationNpcSchema = z.enum([ARRIVAL_NPC_ID, ...SHOP_NPC_IDS, ...TOWN_STREET_NPC_IDS, ...TAX_OFFICE_NPC_IDS]);
 export const createConversationSchema = z.object({ npcId: conversationNpcSchema }).strict();
 export const pendingOrderSchema = z.object({

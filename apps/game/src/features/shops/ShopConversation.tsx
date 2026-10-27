@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { CAFE_SELLER_NPC_IDS, type CoffeeQuestState, type PlayerGender } from '@life-abroad/shared';
 import { useSession } from '../../session/session-provider';
 import { usePwa } from '../../pwa/PwaProvider';
-import { loadArrival, loadOlderConversationMessages, openConversation, sendArrivalMessage } from '../../api/client';
+import { discardConversation, loadArrival, loadOlderConversationMessages, openConversation, sendArrivalMessage } from '../../api/client';
 import { createConversationController } from '../dialogue/conversation-controller';
 import { SavedConversation } from '../dialogue/SavedConversation';
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
@@ -61,6 +61,11 @@ export function ShopConversation({ gender, npcId, sound, onClose, onRefresh }: {
   const npc = SHOP_NPCS.find(npc => npc.id === npcId)!;
   const panelVisibility = sellerPanelVisibility(state.conversation?.messages ?? []);
   const confirmationOnly = state.farewellStage === 'confirm';
+  const close = () => {
+    const id = controller.getSnapshot().conversation?.id;
+    onClose();
+    if (id) void run(token => discardConversation(token, id)).catch(() => undefined);
+  };
   const isCafeSeller = (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId);
   const details = <>
     {isCafeSeller ? <ShopMenuPanel refreshKey={ordersRefreshKey} showMenu={panelVisibility.menu} showOrders={panelVisibility.orders} /> : null}
@@ -69,7 +74,7 @@ export function ShopConversation({ gender, npcId, sound, onClose, onRefresh }: {
     <DialogueFrame soundControl={!confirmationOnly} confirmationOnly={confirmationOnly}>
       {!confirmationOnly ? <div className="dialogue-header"><h2>{npc.name}</h2></div> : null}
       <SavedConversation gender={gender} state={state} sound={sound} online={online} send={send} loadOlder={controller.loadOlder}
-        onClose={onClose}
+        onClose={close}
         details={details}
         retry={() => void controller.start()} displayNpc={{
           name: npc.name,

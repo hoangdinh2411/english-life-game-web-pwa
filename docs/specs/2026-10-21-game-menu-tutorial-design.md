@@ -57,7 +57,7 @@ If browser storage is unavailable, the game continues safely; the tutorial may a
 
 Add a server-owned `player_preferences` record keyed by authenticated user ID. It stores only the synchronized learning preferences:
 
-- `coach_enabled`, default `false`;
+- Safe recasts are server-controlled and always enabled; no Coach preference is stored.
 - `speech_rate`, default `1`, constrained to `0.75–1.5`;
 - `speech_pitch`, default `1`, constrained to `0.75–1.25`;
 - an `updated_at` timestamp.

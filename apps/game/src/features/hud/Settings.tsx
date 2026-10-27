@@ -35,7 +35,7 @@ function SyncFeedback({ status, retry }: Pick<PreferenceControlsProps, 'status' 
 }
 
 export function PreferenceControls({
-  sound, coachEnabled, speechRate, speechPitch, status, set, retry, compact, practice,
+  sound, speechRate, speechPitch, status, set, retry, compact, practice,
 }: PreferenceControlsProps) {
   const [expanded, setExpanded] = useState(false);
   const id = useId();
@@ -47,9 +47,8 @@ export function PreferenceControls({
       <GameIcon name={sound ? 'sound-on' : 'sound-off'} className="mx-auto size-4" />
     </button> : null}
     {showDetails ? <>
-      <div className={`grid gap-2 ${compact ? '' : 'sm:grid-cols-2'}`}>
+      <div className="grid gap-2">
         <SwitchRow label="Sound" checked={sound} onChange={() => set('sound', !sound)} />
-        {!compact ? <SwitchRow label="Coach" checked={coachEnabled} onChange={() => set('coachEnabled', !coachEnabled)} /> : null}
       </div>
       <div className={`grid gap-3 ${compact ? '' : 'sm:grid-cols-2'}`}>
       <label className="grid min-w-0 gap-1 text-sm" htmlFor={`${id}-speech-rate`}>

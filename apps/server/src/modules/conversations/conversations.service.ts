@@ -1,6 +1,6 @@
 import { LifeService } from '../life/life.service';
 import { ConflictException, Injectable } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS, TRANSIENT_SERVICE_NPC_IDS, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID } from '@life-abroad/shared';
 import { DialogueService } from '../dialogue/dialogue.service';
 import { QuestsService } from '../quests/quests.service';
 import { ConversationsRepository, sellerState } from './conversations.repository';
@@ -28,6 +28,9 @@ export class ConversationsService {
     const conversation = await this.conversations.transaction(async client => {
       const arrival = await this.quests.getArrival(userId, client);
       await this.presence.assertCanStart(client, userId, npcId);
+      if ((TRANSIENT_SERVICE_NPC_IDS as readonly string[]).includes(npcId)) {
+        await this.conversations.discardTransientForNpc(client, userId, npcId);
+      }
       if (isCafeSeller(npcId) || npcId === 'npc_clothes_seller') {
         const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
         const baseContext = await this.conversations.context(client, userId, npcId);
@@ -90,6 +93,14 @@ export class ConversationsService {
       return this.conversations.olderMessages(client, userId, conversationNpcSchema.parse(npcId), before);
     });
     return this.speech.history(userId, conversationNpcSchema.parse(npcId), page);
+  }
+
+  discard(userId: string, id: string): Promise<void> {
+    return this.conversations.transaction(client => this.conversations.discardTransient(client, userId, id));
+  }
+
+  discardAllTransient(userId: string): Promise<void> {
+    return this.conversations.transaction(client => this.conversations.discardAllTransient(client, userId));
   }
 
   send(userId: string, id: string, request: SendMessageRequest): Promise<ConversationTurn> {

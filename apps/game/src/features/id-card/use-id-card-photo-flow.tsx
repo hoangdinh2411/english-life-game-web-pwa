@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import type { IdCardApplicationSummary, PlayerGender } from '@life-abroad/shared';
+import { isIdCardConfirmation, type IdCardApplicationSummary, type PlayerGender } from '@life-abroad/shared';
 import { GameButton } from '../../gameplay/GameButton';
 import { playerPortraitPresentation } from '../../gameplay/portraits';
 import { prepareIdPhoto } from './photo-processing';
@@ -49,7 +49,7 @@ export function useIdCardPhotoFlow({ application, gender, send, issue }: {
   };
   const wrappedSend = async (text: string): Promise<boolean> => {
     const normalized = text.trim().toLowerCase();
-    if (phase === 'review' && /^(?:yes|yes please|yes issue my card|correct|that is correct)$/.test(normalized)) {
+    if (phase === 'review' && isIdCardConfirmation(text)) {
       if (!confirmationSaved) {
         const sent = await send(text); if (!sent) return false;
         setConfirmationSaved(true);

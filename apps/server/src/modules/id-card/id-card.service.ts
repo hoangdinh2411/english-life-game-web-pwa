@@ -16,6 +16,11 @@ export class IdCardService {
   constructor(private readonly database: DatabaseService, private readonly images: IdCardImageService,
     private readonly storage: SupabaseIdCardPhotoStorage) {}
 
+  resetApplication(userId: string): Promise<void> {
+    return this.database.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId])
+      .then(() => undefined);
+  }
+
   async issue(userId: string, body: IssueIdCardBody, file: { buffer: Buffer; size: number } | undefined): Promise<IdCardIssueResponse> {
     const image = await this.images.process(file);
     const photoHash = createHash('sha256').update(image ?? Buffer.from('character-picture')).digest('hex');

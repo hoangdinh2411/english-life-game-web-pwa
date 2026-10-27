@@ -4,7 +4,7 @@ export const movementTutorialPages = [
   { id: 'move', title: 'Move Around', description: 'Use WASD or the arrow keys on a keyboard. On a phone or tablet, use the touch control.' },
   { id: 'interact', title: 'Talk and Interact', description: 'Walk close to people, counters, or entrances. Use the interaction prompt to talk or enter.' },
   { id: 'goals', title: 'Follow Your Goals', description: 'Open Goals when you need your next step. An exclamation mark means a quest or important action is nearby.' },
-  { id: 'practice', title: 'Practice English', description: 'Speak or type your replies during conversations. Turn on Coach for corrections and revisit useful material in English Review.' },
+  { id: 'practice', title: 'Practice English', description: 'Speak or type your replies during conversations. NPCs naturally recast useful corrections, and English Review will collect material you choose to save.' },
   { id: 'menu', title: 'Use the Game Menu', description: 'Open the Game Menu for Settings or to replay this tutorial. Return to the same live world whenever you are ready.' },
 ] as const;
 

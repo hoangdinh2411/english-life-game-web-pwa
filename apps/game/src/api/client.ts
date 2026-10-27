@@ -41,6 +41,27 @@ export const loadTutorialSpeech = async (token: string, pageId: MovementTutorial
   tutorialSpeechResponseSchema.parse(await request(`tutorial/speech/${encodeURIComponent(pageId)}`, undefined, token));
 
 export const loadArrival = async (token: string) => arrivalStateSchema.parse(await request('quests/arrival', undefined, token));
+export async function resetIdCardApplication(token: string): Promise<void> {
+  if (!navigator.onLine) throw new Error('Reconnect to restart your unfinished ID card application.');
+  const response = await fetch(`${baseUrl}/me/id-card/application`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error(`Could not restart the ID card application (${response.status})`);
+}
+async function deleteAuthenticated(path: string, token: string, errorMessage: string): Promise<void> {
+  if (!navigator.onLine) throw new Error(errorMessage);
+  const response = await fetch(`${baseUrl}/${path}`, {
+    method: 'DELETE', headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error(`${errorMessage} (${response.status})`);
+}
+export const discardConversation = (token: string, id: string): Promise<void> =>
+  deleteAuthenticated(`conversations/${encodeURIComponent(id)}`, token, 'Could not clear this service conversation.');
+export const discardTransientConversations = (token: string): Promise<void> =>
+  deleteAuthenticated('conversations/transient', token, 'Could not clear previous service conversations.');
 export const enterTownStreet = async (token: string) => arrivalStateSchema.parse(await request('quests/arrival/enter-town-street', {}, token));
 export async function openConversation(token: string, npcId: Conversation['npcId']): Promise<Conversation> {
   const history = conversationHistoryPageSchema.parse(await request(

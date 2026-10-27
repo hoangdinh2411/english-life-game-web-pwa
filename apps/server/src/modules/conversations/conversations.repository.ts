@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS, ConversationHistoryPage, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, npcProfileSchema, SHOP_NPC_IDS, type PendingOrder, type SellerState } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS, TRANSIENT_SERVICE_NPC_IDS, ConversationHistoryPage, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, npcProfileSchema, SHOP_NPC_IDS, type PendingOrder, type SellerState } from '@life-abroad/shared';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { DialogueContext } from '../dialogue/dialogue.service';
@@ -86,6 +86,9 @@ export class ConversationsRepository {
   }
 
   async olderMessages(client: PoolClient, userId: string, npcId: string, before: string | undefined): Promise<ConversationHistoryPage> {
+    if ((TRANSIENT_SERVICE_NPC_IDS as readonly string[]).includes(npcId)) {
+      return { messages: [], hasMore: false, beforeMessageId: null };
+    }
     const result = await client.query<MessageRow>(`SELECT id,sender,text,created_at,metadata FROM public.messages
       WHERE conversation_id IN (SELECT id FROM public.conversations WHERE user_id=$1 AND npc_id=$2)
         AND ($3::uuid IS NULL OR (created_at,conversation_id,sequence) < (
@@ -96,6 +99,21 @@ export class ConversationsRepository {
     const hasMore = result.rows.length > 10;
     const page = result.rows.slice(0, 10).reverse().map(message);
     return { messages: page, hasMore, beforeMessageId: hasMore ? page[0]?.id ?? null : null };
+  }
+
+  async discardTransient(client: PoolClient, userId: string, id: string): Promise<void> {
+    await client.query(`DELETE FROM public.conversations
+      WHERE id=$1 AND user_id=$2 AND npc_id=ANY($3::text[])`, [id, userId, TRANSIENT_SERVICE_NPC_IDS]);
+  }
+
+  async discardAllTransient(client: PoolClient, userId: string): Promise<void> {
+    await client.query('DELETE FROM public.conversations WHERE user_id=$1 AND npc_id=ANY($2::text[])',
+      [userId, TRANSIENT_SERVICE_NPC_IDS]);
+  }
+
+  async discardTransientForNpc(client: PoolClient, userId: string, npcId: string): Promise<void> {
+    if (!(TRANSIENT_SERVICE_NPC_IDS as readonly string[]).includes(npcId)) return;
+    await client.query('DELETE FROM public.conversations WHERE user_id=$1 AND npc_id=$2', [userId, npcId]);
   }
 
   async replay(client: PoolClient, id: string, request: SendMessageRequest): Promise<ConversationTurn | undefined> {

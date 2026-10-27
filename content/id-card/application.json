@@ -20,32 +20,42 @@
     "stop the application"
   ],
   "addressNullPhrases": [
-    "i don't have one yet",
-    "i do not have one yet",
-    "later",
+    "i don't have an address yet",
+    "i do not have an address yet",
+    "i don't know my address yet",
+    "i have no permanent address",
+    "i don't have a permanent address",
     "i'll update it later",
     "i will update it later",
-    "not now",
-    "skip"
+    "i'll add it later",
+    "i will add it later",
+    "i'll provide it later",
+    "i will provide it later",
+    "i am staying with friends",
+    "i am staying with family",
+    "i am staying at a hotel",
+    "i am living in a hotel",
+    "i am in temporary accommodation",
+    "i have temporary accommodation",
+    "i am looking for a place to live",
+    "i am between homes"
   ],
   "prompts": {
     "name": "Let’s start your application. What is your full name?",
     "dateOfBirth": "What is your date of birth? Please use YYYY-MM-DD.",
-    "address": "What is your address? You can say ‘skip’ if you do not have one yet.",
-    "gender": "What is your gender: male or female?",
+    "address": "What is your address? If you do not have one yet, please tell me about your situation.",
     "origin": "Where do you come from?",
     "photo": "Thank you. Now I need a photo for your application.",
     "review": "I will read your application back, including the photo. Is this correct?",
-    "correction": "Which answer would you like to fix: name, date of birth, address, gender, or where you come from?"
+    "correction": "Which answer would you like to fix: name, date of birth, address, or where you come from?"
   },
   "reviewTemplate": "Here is your application. Name: {name}. Date of birth: {dateOfBirth}. Address: {address}. Gender: {gender}. Where you come from: {origin}. Photo: {photo}. Is this correct?",
   "retries": {
     "name": "Please give a name between 1 and 60 characters.",
     "dateOfBirth": "Please give a real date in YYYY-MM-DD format, from 1900 through today.",
-    "address": "Please give an address between 1 and 120 characters, or say ‘skip’.",
-    "gender": "Please answer male or female.",
+    "address": "Please give an address between 1 and 120 characters, or explain that you do not have one yet or will provide it later.",
     "origin": "Please say where you come from in 1 to 60 characters.",
-    "correction": "Please choose name, date of birth, address, gender, or where you come from."
+    "correction": "Please choose name, date of birth, address, or where you come from."
   },
   "cancelled": "Your ID card application has been cancelled."
 }

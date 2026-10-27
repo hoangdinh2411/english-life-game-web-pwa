@@ -18,7 +18,7 @@ export function SettingsPanel({ practice, onBack }: SettingsPanelProps) {
         </div>
         <p className="text-sm text-muted">{practice
           ? 'These settings apply only to this local practice session. Sound remains saved on this device.'
-          : 'Sound stays on this device. Coach and voice settings follow your account.'}</p>
+          : 'Sound stays on this device. Voice settings follow your account.'}</p>
         <Settings practice={practice} />
       </div>
     </DialogueFrame>

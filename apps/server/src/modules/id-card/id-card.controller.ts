@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, HttpCode, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { issueIdCardBodySchema, type IdCardIssueResponse, type IssueIdCardBody } from '@life-abroad/shared';
 import { SchemaValidationPipe } from '../../common/pipes/schema-validation.pipe';
@@ -12,6 +12,12 @@ interface PhotoFile { buffer: Buffer; size: number }
 @UseGuards(AuthGuard)
 export class IdCardController {
   constructor(private readonly idCards: IdCardService) {}
+
+  @Delete('application')
+  @HttpCode(204)
+  resetApplication(@CurrentUser() userId: string): Promise<void> {
+    return this.idCards.resetApplication(userId);
+  }
 
   @Post()
   @UseInterceptors(FileInterceptor('photo', { limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 2, parts: 3 } }))

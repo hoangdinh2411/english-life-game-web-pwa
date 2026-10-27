@@ -90,6 +90,12 @@ English is a tool to accomplish a task, not a multiple-choice test.
   Missing facts receive a natural non-answer instead of invented detail. Shop
   NPCs keep small talk brief and redirect to service without changing orders,
   prices or quest behavior.
+- Service conversations are session-only working state, not durable chat
+  history. Seller, shop-assistant, waiter and Tax Office staff messages are
+  removed when their dialogue closes and are purged again when the game starts;
+  reopening begins a fresh conversation. Server-owned outcomes such as a paid
+  order or issued ID card remain saved. Resident/social NPC history and the
+  quest-critical station receptionist history remain durable.
 - NPC replies default to CEFR A2 when learner data is unavailable. Otherwise,
   the server combines the stored learner level with observable input complexity
   and may adjust by at most one CEFR band for that turn. Mood and relationship
@@ -167,9 +173,11 @@ draft in memory and disables remote actions until reconnection. Local
 
 - **Meaning first:** understandable but imperfect English can complete a step.
   Do not punish learners with red marks or block progress for minor grammar.
-- When the learner's meaning is clear, NPCs may weave the natural English form
-  into their reply once without announcing a correction, explaining grammar or
-  interrupting the conversation. Harmless errors may be ignored.
+- When the learner's meaning is clear, authenticated NPCs may weave the natural
+  English form into their reply once without announcing
+  a correction, explaining grammar or interrupting the conversation. This
+  shared recast happens only after authoritative intent handling, never rewrites
+  ID-card identity answers or confirmations, and harmless errors may be ignored.
 - CEFR A1–C1 guides per-turn dialogue complexity. This does not persist an
   automatic level promotion; promotion rules and XP thresholds remain
   unapproved.
