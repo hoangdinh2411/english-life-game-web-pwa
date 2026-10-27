@@ -1,6 +1,7 @@
 import { DialogueFrame } from "../../gameplay/DialogueFrame";
 import { GameButton } from "../../gameplay/GameButton";
 import { Settings } from "../hud/Settings";
+import { GameIcon } from "../../shared/GameIcon";
 
 interface SettingsPanelProps {
   practice: boolean;
@@ -13,7 +14,7 @@ export function SettingsPanel({ practice, onBack }: SettingsPanelProps) {
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-[18px] font-extrabold">Settings</h2>
-          <GameButton label="Back to Game Menu" onClick={onBack} />
+          <GameButton label="Back to Game Menu" icon={<GameIcon name="arrow-left" />} onClick={onBack} />
         </div>
         <p className="text-sm text-muted">{practice
           ? 'These settings apply only to this local practice session. Sound remains saved on this device.'

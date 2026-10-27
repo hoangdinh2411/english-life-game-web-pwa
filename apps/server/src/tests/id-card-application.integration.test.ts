@@ -27,7 +27,7 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
     const userId = user.rows[0]!.id;
     await client.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId]);
 
-    assert.equal((await service.reply(client, userId, 'I need an ID card', arrival))?.nodeId,
+    assert.equal((await service.reply(client, userId, 'I need to register an ID card', arrival))?.nodeId,
       'tax_office_application_name');
     assert.match((await service.reply(client, userId, '', arrival))!.responseText, /name between 1 and 60/i);
     assert.match((await service.reply(client, userId, 'Test Learner', arrival))!.responseText, /date of birth/i);

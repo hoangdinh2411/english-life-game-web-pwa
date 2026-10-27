@@ -49,6 +49,7 @@ import {
   TAX_OFFICE_STAFF,
   type TaxOfficeStaffId,
 } from "../features/tax-office/tax-office-staff";
+import { GameIcon } from "../shared/GameIcon";
 
 export default function StationScreen({
   gender,
@@ -187,80 +188,74 @@ export default function StationScreen({
         }}
       />
       <div
-        className="station-hud absolute [top:max(8px,_env(safe-area-inset-top))] [left:max(8px,_env(safe-area-inset-left))] [right:max(8px,_env(safe-area-inset-right))] grid [grid-template-columns:minmax(0,_1fr)_auto] [align-items:start] gap-2 pointer-events-none lg:[grid-template-columns:minmax(0,_1fr)_auto_minmax(0,_1fr)]"
+        className="station-hud pointer-events-none absolute left-[max(8px,env(safe-area-inset-left))] right-[max(8px,env(safe-area-inset-right))] top-[max(8px,env(safe-area-inset-top))] flex items-start justify-between gap-2"
         inert={Boolean(life?.sleepTransition)}
       >
-        <PlayerInfoCard
-          gender={gender}
-          playerName={playerName}
-          cityName={displayedCountryName}
-          coins={coins}
-          onOpenProfile={() => setProfileOpen(true)}
-          visible={!overlayOpen || profileOpen}
-        />
+        <div className="flex flex-col items-start gap-1">
+          <PlayerInfoCard
+            gender={gender}
+            playerName={playerName}
+            cityName={displayedCountryName}
+            coins={coins}
+            onOpenProfile={() => setProfileOpen(true)}
+            visible={!overlayOpen || profileOpen}
+          />
+          {showGoals ? (
+            <button
+              type="button"
+              onClick={() => setGoals(true)}
+              aria-label={arrival ? `Open saved arrival goals, ${arrival.goalsLabel}` : `Open goals, ${notice.active} active quests, ${notice.fresh} new quests`}
+              className="pointer-events-auto relative grid size-8 place-items-center rounded-lg border border-border/60 bg-[var(--color-dialogue-overlay-strong)] text-ink shadow-sm hover:bg-card sm:size-9"
+            >
+              <GameIcon name="goals" className="size-4 sm:size-5" />
+              {notice.fresh > 0 ? (
+                <span className="absolute -right-1 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-[var(--color-gold)] px-1 text-[10px] font-bold leading-none text-ink">
+                  {notice.fresh}
+                </span>
+              ) : null}
+            </button>
+          ) : null}
+        </div>
 
-        <aside className="[grid-column:1_/_-1] [grid-row:2] pointer-events-auto flex min-h-11 items-center justify-self-center rounded-md border-2 border-border bg-dialogue px-2 py-1 text-left shadow-[0_2px_6px_var(--color-shadow)] lg:[grid-column:2] lg:[grid-row:1]">
+        <aside className="pointer-events-auto flex h-8 items-center rounded-lg border border-border/60 bg-dialogue px-2 text-left shadow-sm sm:h-9">
           <span
             className="shrink-0 text-xs tabular-nums text-ink"
             aria-label={`Game time ${timeLabel}`}
           >
-            ◷ {timeLabel}
+            <span className="inline-flex items-center gap-1"><GameIcon name="clock" className="size-3.5" />{timeLabel}</span>
           </span>
         </aside>
 
-        <div className="station-tools [grid-column:2] [grid-row:1] [justify-self:end] flex gap-2 pointer-events-auto [@media(max-width:479px)]:gap-1 lg:[grid-column:3] lg:[grid-row:1]">
-          {/* Existing sound/menu buttons */}
-        </div>
-      </div>
-      {showGoals ? (
-        <div className="goals-control absolute [bottom:max(24px,_env(safe-area-inset-bottom))] left-3 flex flex-col items-start gap-1 [@media(max-width:479px)]:[&_.game-button]:[padding:8px_12px] [@media(max-width:479px)]:[&_.game-button]:text-[14px]">
-          <button
-            type="button"
-            onClick={() => setGoals(true)}
-            aria-label={
-              arrival
-                ? `Open saved arrival goals, ${arrival.goalsLabel}`
-                : "Open goals"
-            }
-            className="flex min-h-11 items-center gap-1.5 rounded-xl border-0 bg-[var(--color-green-strong)] px-3 py-1 text-[13px] font-bold text-[var(--color-cream-text)] lg:hidden"
-          >
-            Goals{" "}
-            <span className="rounded-md bg-[var(--color-gold)] px-1.5 py-1 text-[10px] text-ink">
-              {arrival?.goalsLabel ??
-                (notice.fresh
-                  ? `${notice.fresh} new`
-                  : notice.active
-                    ? `${notice.active} active`
-                    : "Your quests")}
-            </span>
-          </button>
-          <div className="hidden lg:flex flex-col items-start gap-1">
-            <span className="goal-notice bg-[var(--color-gold)] rounded-[8px] [padding:4px_8px] text-[12px] font-bold">
-              {arrival?.goalsLabel ??
-                (notice.fresh
-                  ? `${notice.fresh} new quest${notice.fresh > 1 ? "s" : ""}`
-                  : notice.active
-                    ? `${notice.active} active quest${notice.active > 1 ? "s" : ""}`
-                    : "Your quests")}
-            </span>
-            <GameButton
-              label={
-                arrival
-                  ? "Goals"
-                  : notice.active || notice.fresh
-                    ? "! Goals"
-                    : "Goals"
-              }
-              ariaLabel={
-                arrival
-                  ? "Open saved arrival goals"
-                  : `Open goals, ${notice.active} active quests, ${notice.fresh} new quests`
-              }
-              onClick={() => setGoals(true)}
+        <div className="station-tools pointer-events-auto flex gap-1 sm:gap-2">
+          <div className="hidden lg:block">
+            <OverlayButton
+              label={sound ? "Sound on" : "Sound off"}
+              icon={<GameIcon name={sound ? "sound-on" : "sound-off"} />}
+              onClick={() => setPreference("sound", !sound)}
             />
           </div>
+          {!overlayOpen || menu ? (
+            <span className={menu ? "relative lg:hidden" : "relative"}>
+              <OverlayButton
+                label="Menu"
+                icon={<GameIcon name="menu" />}
+                onClick={() => {
+                  if (menu) closeMenu();
+                  else setMenu(true);
+                }}
+              />
+              {!sound ? (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -bottom-0.5 -right-0.5 rounded-full bg-dialogue text-[10px] lg:hidden"
+                >
+                  <GameIcon name="sound-off" className="size-3" />
+                </span>
+              ) : null}
+            </span>
+          ) : null}
         </div>
-      ) : null}
+      </div>
       {goals ? (
         <DialogueFrame>
           <div className="dialogue-header flex items-center justify-between gap-2 [&_h2]:min-w-0 [&_h2]:[overflow-wrap:anywhere] [&_button]:shrink-0">

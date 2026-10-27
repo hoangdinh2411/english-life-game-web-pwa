@@ -7,6 +7,7 @@ import { canSubmitOnboarding, filterCountries, reconcileCountrySelection, StartL
 import { router } from '../../navigation/router';
 import { useSession } from '../../session/session-provider';
 import type { OnboardingDraft } from '../../types/onboarding';
+import { GameIcon } from '../../shared/GameIcon';
 
 interface OnboardingFormProps {
   countries: CountryOption[] | null;
@@ -103,7 +104,7 @@ export function OnboardingForm({ countries: availableCountries, loadError, onRet
             className={`flex min-h-12 w-full items-center gap-2.5 rounded-xl px-3 py-1.5 text-left text-ink hover:bg-[var(--color-success-soft)] focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-green ${activeIndex === index ? 'bg-[var(--color-success-soft)]' : ''} ${selected?.id === country.id ? 'bg-[var(--color-success-surface)] font-extrabold' : ''}`}>
             {resolveCountryFlag(country.isoCode) ? <img src={resolveCountryFlag(country.isoCode)} alt="" className="h-6 w-9 shrink-0 rounded object-cover shadow-sm" /> : <span aria-hidden="true" className="w-9 text-center text-xl">{country.flag}</span>}
             <span className="min-w-0 flex-1"><span className="block truncate">{country.name}</span><span className="text-sm font-normal text-muted">{country.isoCode}</span></span>
-            {selected?.id === country.id ? <span aria-hidden="true" className="text-green">✓</span> : null}
+            {selected?.id === country.id ? <GameIcon name="check" className="size-4 text-green" /> : null}
           </button>) : <p className="p-4 text-center text-muted" role="status">No countries match “{query}”.</p>}
         </div> : null}
         {!availableCountries && !loadError ? <p role="status">Loading countries…</p> : null}
@@ -120,7 +121,7 @@ export function OnboardingForm({ countries: availableCountries, loadError, onRet
               <span className="absolute inset-0 scale-[1.55] bg-contain bg-left bg-no-repeat"
                 style={{ backgroundImage: `url(${assets.portrait})`, backgroundSize: `${assets.portraitColumns * 100}% 100%` }} />
             </span>
-            {selectedOption ? <span className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-green font-extrabold text-white" aria-hidden="true">✓</span> : null}
+            {selectedOption ? <span className="absolute right-3 top-3 grid size-8 place-items-center rounded-full bg-green text-white" aria-hidden="true"><GameIcon name="check" className="size-4" /></span> : null}
           </button>;
         })}
       </section> : null}

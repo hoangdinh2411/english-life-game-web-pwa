@@ -1,4 +1,4 @@
 import type { OverlayButtonProps } from '../types/ui/gameplay';
 export function OverlayButton({ label, icon, onClick }: OverlayButtonProps) {
-  return <button type="button" className="overlay-button w-11 h-11 rounded-[22px] bg-[var(--color-dialogue-overlay-strong)] [border:1px_solid_var(--color-overlay-border)] text-ink text-[20px] [@media(max-width:479px)]:text-[18px]" aria-label={label} onClick={onClick}><span aria-hidden="true">{icon}</span></button>;
+  return <button type="button" className="overlay-button grid size-8 place-items-center rounded-lg border border-[var(--color-overlay-border)] bg-[var(--color-dialogue-overlay-strong)] text-ink sm:size-9" aria-label={label} onClick={onClick}><span className="size-4 sm:size-5" aria-hidden="true">{icon}</span></button>;
 }

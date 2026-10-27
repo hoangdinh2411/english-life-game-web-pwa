@@ -1,4 +1,5 @@
 import type { DialogueMessageProps } from "../types/ui/gameplay";
+import { GameIcon } from "../shared/GameIcon";
 export function DialogueMessage({
   name,
   portrait,
@@ -74,14 +75,14 @@ export function DialogueMessage({
                 disabled={replayDisabled}
                 onClick={onReplay}
               >
-                🔊
+                <GameIcon name="sound-on" className="size-4" />
               </button>
             ) : hasReplaySlot ? (
               <span
                 aria-hidden="true"
                 className="speaker-control-slot invisible grid size-11 shrink-0 place-items-center text-sm"
               >
-                🔊
+                <GameIcon name="sound-on" className="size-4" />
               </span>
             ) : null}
           </p>

@@ -38,6 +38,15 @@ const matchesPhrase = (input: string, phrases: readonly string[]): boolean => {
   return phrases.some(phrase => value === normalized(phrase));
 };
 
+const matchesIntentPhrase = (input: string, phrases: readonly string[]): boolean => {
+  const value = normalized(input);
+  const rejectsRegistration = /(?:don't|do not|dont|not) (?:want|need|wish|plan) to (?:register|apply|get)/.test(value);
+  return !rejectsRegistration && phrases.some(phrase => {
+    const intent = normalized(phrase);
+    return value === intent || value.includes(` ${intent} `) || value.startsWith(`${intent} `) || value.endsWith(` ${intent}`);
+  });
+};
+
 const birthDate = (input: string, today = new Date()): string | null => {
   const value = input.trim();
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -81,7 +90,7 @@ export class IdCardApplicationService {
     const content = await this.content.get();
     let application = await this.load(client, userId);
     if (!application) {
-      if (!matchesPhrase(input, content.registrationPhrases)) return null;
+      if (!matchesIntentPhrase(input, content.registrationPhrases)) return null;
       application = await this.start(client, userId);
       return this.result(application.current_field, content.prompts.name, arrival, 'register_id_card');
     }
