@@ -159,7 +159,8 @@ database: localhost:54323
   character. The first shop catalog has blue/green/red/yellow shirts at $30
   each.
 - **Mobile HUD (2026-10-14, T28/T29):** below 1024 px there is one menu button
-  (top-right). Sound and Coach on/off live in Settings inside the menu. The
+  (top-right). Sound and voice controls live in Settings inside the menu;
+  server-owned safe recasts are always enabled and have no toggle. The
   profile card is compact. The minimap (show/hide) sits in the top-right column
   under the menu button.
 
@@ -190,24 +191,31 @@ database: localhost:54323
       code. A player who says they do not have an ID card is routed to
       registration. Check: each question gets the right scripted answer; AI never answers
       service questions. - [x] **c. Application conversation.** The staff member
-      asks five questions, one at a time: **name**, **date of birth**,
-      **address**, **gender**, and **where you come from**. Then the photo (step
+      asks four questions, one at a time: **name**, **date of birth**,
+      **address**, and **where you come from**. Gender comes from the immutable
+      character choice and is never asked again. Then the photo (step
       d). Then the staff member reads everything back, photo included: "Is this
       correct?". **Nothing is saved to the card until the player says yes.**
-      Until then the five text answers wait in a server-owned pending state (the
-      photo is not part of it, see d), so leaving and returning resumes at the
-      saved step, and "no" lets the player fix any answer. The pending answers
+      Until then the four entered answers wait in a server-owned pending state;
+      character gender is copied from the saved character (the
+      photo is not part of it, see d), so leaving and returning during the same
+      running game resumes at the saved step, while closing/reloading the game
+      clears the unfinished application and starts it from the beginning. "No"
+      lets the player fix any entered answer. The pending answers
       are removed when the card is issued or the application is cancelled.
-      Address rule: if the player says anything meaning "I don't have one yet",
-      "later", "I'll update it later", "not now" or "skip", the address is
-      `null` (the phrases are content the owner approves); any other text of 1
+      Address rule: there is no literal "skip" command. If the player naturally
+      explains that they do not have an address yet, will provide it later, or
+      are in temporary accommodation, the address is `null` using conservative,
+      server-owned authored intent phrases; unclear wording gets a retry rather
+      than an AI guess. Any other text of 1
       to 120 characters is stored as the address. A bad answer gets a friendly
       retry (date of birth: a real date, not in the future, year 1900 or later;
-      gender: male or female, as specified; name and origin: plain text of 1 to
-      60 characters). Coach corrections still apply. Check: answers kept in
-      order; resume after reload; each address phrase gives `null`, and "12
-      Maple Street" is stored. - [ ] **d. Photo (upload or camera)**: kept in
-      the browser until the player confirms.** After the five questions the
+      name and origin: plain text of 1 to
+      60 characters). Safe server recasts remain always enabled. Check: answers kept in
+      order; resume after reload; natural no-address explanations give `null`,
+      literal "skip" gets a retry, character gender is copied server-side, and
+      "12 Maple Street" is stored. - [ ] **d. Photo (upload or camera)**: kept in
+      the browser until the player confirms.** After the four questions the
       staff member asks for a photo. The chat panel offers **Upload photo**,
       **Take photo** and **Use my character picture** (skips the photo). Use a
       file input (`accept="image/*"`, with `capture` for the camera) so it works
@@ -342,7 +350,7 @@ database: localhost:54323
       speak (owner approves the wording). The pending state lives on the server,
       so leaving and returning resumes at the saved question. "I don't know"
       gets a short example answer, never a skip. At the end: "Shall I save it?".
-      If a CV exists she offers to update it. Coach corrections still apply.
+      If a CV exists she offers to update it. Safe server recasts remain always enabled.
       Check: the five answers are kept in order, and the flow resumes after a
       reload. - [ ] **d. CV storage and API.** Table `player_cv` (one row per
       user: `name`, `desiredJob`, `skills`, `experience`, `languages`,

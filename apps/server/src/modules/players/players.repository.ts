@@ -22,7 +22,6 @@ interface PlayerRow {
 }
 
 interface PlayerPreferencesRow {
-  coach_enabled: boolean;
   speech_rate: number;
   speech_pitch: number;
   updated_at: Date | string;
@@ -36,7 +35,6 @@ interface StarterCountryRow {
 
 function mapPreferences(row: PlayerPreferencesRow): PlayerPreferences {
   return {
-    coachEnabled: row.coach_enabled,
     speechRate: row.speech_rate,
     speechPitch: row.speech_pitch,
     updatedAt: row.updated_at instanceof Date ? row.updated_at.toISOString() : new Date(row.updated_at).toISOString(),
@@ -97,7 +95,7 @@ export class PlayersRepository {
 
   async getPreferences(userId: string): Promise<PlayerPreferencesRead> {
     const result = await this.database.query<PlayerPreferencesRow>(
-      `SELECT coach_enabled, speech_rate, speech_pitch, updated_at
+      `SELECT speech_rate, speech_pitch, updated_at
        FROM public.player_preferences WHERE user_id = $1`,
       [userId],
     );
@@ -107,12 +105,12 @@ export class PlayersRepository {
   async initializePreferences(userId: string, preferences: PlayerPreferencesInitialize): Promise<PlayerPreferences> {
     return this.database.transaction(async client => {
       await client.query(
-        `INSERT INTO public.player_preferences (user_id, coach_enabled, speech_rate, speech_pitch)
-         VALUES ($1, $2, $3, $4) ON CONFLICT (user_id) DO NOTHING`,
-        [userId, preferences.coachEnabled, preferences.speechRate, preferences.speechPitch],
+        `INSERT INTO public.player_preferences (user_id, speech_rate, speech_pitch)
+         VALUES ($1, $2, $3) ON CONFLICT (user_id) DO NOTHING`,
+        [userId, preferences.speechRate, preferences.speechPitch],
       );
       const result = await client.query<PlayerPreferencesRow>(
-        `SELECT coach_enabled, speech_rate, speech_pitch, updated_at
+        `SELECT speech_rate, speech_pitch, updated_at
          FROM public.player_preferences WHERE user_id = $1`,
         [userId],
       );
@@ -124,15 +122,14 @@ export class PlayersRepository {
 
   async updatePreferences(userId: string, preferences: PlayerPreferencesUpdate): Promise<PlayerPreferences> {
     const result = await this.database.query<PlayerPreferencesRow>(
-      `INSERT INTO public.player_preferences (user_id, coach_enabled, speech_rate, speech_pitch)
-       VALUES ($1, COALESCE($2::boolean, false), COALESCE($3::real, 1), COALESCE($4::real, 1))
+      `INSERT INTO public.player_preferences (user_id, speech_rate, speech_pitch)
+       VALUES ($1, COALESCE($2::real, 1), COALESCE($3::real, 1))
        ON CONFLICT (user_id) DO UPDATE SET
-         coach_enabled = COALESCE($2::boolean, player_preferences.coach_enabled),
-         speech_rate = COALESCE($3::real, player_preferences.speech_rate),
-         speech_pitch = COALESCE($4::real, player_preferences.speech_pitch),
+         speech_rate = COALESCE($2::real, player_preferences.speech_rate),
+         speech_pitch = COALESCE($3::real, player_preferences.speech_pitch),
          updated_at = now()
-       RETURNING coach_enabled, speech_rate, speech_pitch, updated_at`,
-      [userId, preferences.coachEnabled ?? null, preferences.speechRate ?? null, preferences.speechPitch ?? null],
+       RETURNING speech_rate, speech_pitch, updated_at`,
+      [userId, preferences.speechRate ?? null, preferences.speechPitch ?? null],
     );
     const row = result.rows[0];
     if (!row) throw new ServiceUnavailableException('Player preferences are unavailable');

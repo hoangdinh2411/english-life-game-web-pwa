@@ -35,7 +35,8 @@ try {
       onReturnToGame() {},
       onOpenSettings() {},
     }));
-    const labels = [...html.matchAll(/<button[^>]*>([^<]+)<\/button>/g)].map(match => match[1]);
+    const labels = [...html.matchAll(/<button[^>]*>(.*?)<\/button>/gs)]
+      .map(match => match[1].replace(/<[^>]+>/g, ''));
     assert.deepEqual(labels, [
       'English Review',
       'Movement Tutorial',
@@ -44,6 +45,8 @@ try {
       'Settings',
     ]);
     assert.match(html, /aria-label="Game menu"/);
+    assert.equal((html.match(/<svg/g) ?? []).length, 5, 'every menu action should have an SVG icon');
+    assert.doesNotMatch(html, /🔊|🔇|▶️|🗺️|📜|⚙️/u);
     assert.doesNotMatch(html, /Paused|role="switch"|type="range"/);
   });
 

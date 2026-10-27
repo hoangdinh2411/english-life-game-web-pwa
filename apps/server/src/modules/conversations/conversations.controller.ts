@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { Conversation, ConversationTurn, conversationHistoryQuerySchema, conversationIdSchema, createConversationSchema, SendMessageRequest, sendMessageSchema } from '@life-abroad/shared';
 import { SchemaValidationPipe } from '../../common/pipes/schema-validation.pipe';
 import { AuthGuard } from '../auth/auth.guard';
@@ -14,6 +14,19 @@ export class ConversationsController {
   create(@CurrentUser() userId: string,
     @Body(new SchemaValidationPipe(createConversationSchema)) request: { npcId: string }): Promise<Conversation> {
     return this.conversations.create(userId, request.npcId);
+  }
+
+  @Delete('transient')
+  @HttpCode(204)
+  discardAllTransient(@CurrentUser() userId: string): Promise<void> {
+    return this.conversations.discardAllTransient(userId);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  discard(@CurrentUser() userId: string,
+    @Param('id', new SchemaValidationPipe(conversationIdSchema)) id: string): Promise<void> {
+    return this.conversations.discard(userId, id);
   }
 
   @Get(':id')

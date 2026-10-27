@@ -13,6 +13,7 @@ import { router } from '../../navigation/router';
 import { useLife } from '../life/useLife';
 import { streamChat } from '../dialogue/chat-stream';
 import { clearPendingPlayerLocation, createPlayerLocationSync, readPendingPlayerLocation } from '../location/player-location-sync';
+import { loadWithoutWaitingForCleanup } from './startup-cleanup';
 
 export default function ArrivalStation({ onSignOut }: { onSignOut: () => void }) {
   const session = useSession();
@@ -66,7 +67,10 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
   };
   useEffect(() => {
     let active = true;
-    void controller.load().then((loaded) => {
+    void loadWithoutWaitingForCleanup(
+      controller.load,
+      [() => run(api.resetIdCardApplication), () => run(api.discardTransientConversations)],
+    ).then((loaded) => {
       if (active && loaded) initializeLocation(session.player?.character?.lastLocation ?? {
         mapId: controller.getSnapshot().arrival?.locationId === 'loc_town_street' ? 'loc_town_street' : 'loc_station',
         placeId: controller.getSnapshot().arrival?.locationId === 'loc_town_street' ? 'loc_town_street' : 'loc_station',
@@ -82,7 +86,10 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
     return () => document.removeEventListener('visibilitychange', flushHiddenLocation);
   }, []);
   const retryLoad = async () => {
-    if (await controller.load()) initializeLocation(session.player?.character?.lastLocation ?? {
+    if (await loadWithoutWaitingForCleanup(
+      controller.load,
+      [() => run(api.resetIdCardApplication), () => run(api.discardTransientConversations)],
+    )) initializeLocation(session.player?.character?.lastLocation ?? {
       mapId: controller.getSnapshot().arrival?.locationId === 'loc_town_street' ? 'loc_town_street' : 'loc_station',
       placeId: controller.getSnapshot().arrival?.locationId === 'loc_town_street' ? 'loc_town_street' : 'loc_station',
       x: controller.getSnapshot().arrival?.locationId === 'loc_town_street' ? 1152 : 768,

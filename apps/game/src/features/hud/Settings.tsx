@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import type { Preferences } from './preferences';
 import type { PreferenceSyncStatus } from './synced-preferences';
 import { usePreferences } from './usePreferences';
+import { GameIcon } from '../../shared/GameIcon';
 
 type SetPreference = <Setting extends keyof Preferences>(setting: Setting, value: Preferences[Setting]) => void;
 
@@ -34,7 +35,7 @@ function SyncFeedback({ status, retry }: Pick<PreferenceControlsProps, 'status' 
 }
 
 export function PreferenceControls({
-  sound, coachEnabled, speechRate, speechPitch, status, set, retry, compact, practice,
+  sound, speechRate, speechPitch, status, set, retry, compact, practice,
 }: PreferenceControlsProps) {
   const [expanded, setExpanded] = useState(false);
   const id = useId();
@@ -43,12 +44,11 @@ export function PreferenceControls({
     {compact && !expanded ? <button type="button" role="switch" aria-label="Sound" aria-checked={sound}
       onClick={() => set('sound', !sound)}
       className="min-h-11 min-w-11 rounded-xl border-2 border-green-strong bg-dialogue p-1 text-ink">
-      <span aria-hidden="true">{sound ? '🔊' : '🔇'}</span>
+      <GameIcon name={sound ? 'sound-on' : 'sound-off'} className="mx-auto size-4" />
     </button> : null}
     {showDetails ? <>
-      <div className={`grid gap-2 ${compact ? '' : 'sm:grid-cols-2'}`}>
+      <div className="grid gap-2">
         <SwitchRow label="Sound" checked={sound} onChange={() => set('sound', !sound)} />
-        {!compact ? <SwitchRow label="Coach" checked={coachEnabled} onChange={() => set('coachEnabled', !coachEnabled)} /> : null}
       </div>
       <div className={`grid gap-3 ${compact ? '' : 'sm:grid-cols-2'}`}>
       <label className="grid min-w-0 gap-1 text-sm" htmlFor={`${id}-speech-rate`}>
@@ -64,7 +64,7 @@ export function PreferenceControls({
       </div>
       {!practice && status !== 'local' ? <SyncFeedback status={status} retry={retry} /> : null}
     </> : null}
-    {compact ? <button type="button" aria-label="Dialogue settings" aria-expanded={expanded} onClick={() => setExpanded(value => !value)} className="min-h-11 min-w-11 rounded-xl border-2 border-green-strong bg-dialogue text-ink"><span aria-hidden="true">⚙</span></button> : null}
+    {compact ? <button type="button" aria-label="Dialogue settings" aria-expanded={expanded} onClick={() => setExpanded(value => !value)} className="grid size-8 place-items-center rounded-lg border border-green-strong bg-dialogue text-ink sm:size-9"><GameIcon name="settings" className="size-4" /></button> : null}
   </section>;
 }
 

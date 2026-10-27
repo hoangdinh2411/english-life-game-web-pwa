@@ -19,6 +19,8 @@ test('T7 validates typed messages and IDs, rejects forged state and uses verifie
       create: async (id: string) => { calls.push(id); return {}; },
       get: async (id: string) => { calls.push(id); return {}; },
       send: async (id: string) => { calls.push(id); return {}; },
+      discard: async (id: string, conversationId: string) => { calls.push(`${id}:${conversationId}`); },
+      discardAllTransient: async (id: string) => { calls.push(`${id}:transient`); },
     }).compile();
   const app = module.createNestApplication();
   app.setGlobalPrefix('api/v1');
@@ -32,6 +34,8 @@ test('T7 validates typed messages and IDs, rejects forged state and uses verifie
     assert.equal((await post('', { npcId: 'npc_receptionist' })).status, 201);
     assert.equal((await fetch(base + '/' + id, { headers })).status, 200);
     assert.equal((await post(`/${id}/messages`, request)).status, 201);
+    assert.equal((await fetch(base + '/' + id, { method: 'DELETE', headers })).status, 204);
+    assert.equal((await fetch(base + '/transient', { method: 'DELETE', headers })).status, 204);
     for (const body of [null, {}, { npcId: 'npc_missing' }, { npcId: 'npc_receptionist', userId: 'forged' }]) {
       assert.equal((await post('', body)).status, 400);
     }
@@ -49,6 +53,7 @@ test('T7 validates typed messages and IDs, rejects forged state and uses verifie
         assert.equal(response.status, 401);
       }
     }
-    assert.deepEqual(calls, ['verified-player', 'verified-player', 'verified-player']);
+    assert.deepEqual(calls, ['verified-player', 'verified-player', 'verified-player',
+      `verified-player:${id}`, 'verified-player:transient']);
   } finally { await app.close(); }
 });

@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { usePwa } from '../../pwa/PwaProvider';
 import { useSession } from '../../session/session-provider';
-import { issueIdCard, loadArrival, loadOlderConversationMessages, openConversation, sendArrivalMessage } from '../../api/client';
+import { discardConversation, issueIdCard, loadArrival, loadOlderConversationMessages, openConversation, sendArrivalMessage } from '../../api/client';
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
 import { SavedConversation } from '../dialogue/SavedConversation';
 import { createConversationController } from '../dialogue/conversation-controller';
@@ -52,12 +52,17 @@ export function TownspersonConversation({ gender, npc, sound, countryName, onClo
       await onRefresh();
     } });
   const confirmationOnly = state.farewellStage === 'confirm';
+  const close = () => {
+    const id = controller.getSnapshot().conversation?.id;
+    onClose();
+    if (id) void run(token => discardConversation(token, id)).catch(() => undefined);
+  };
   return <DialogueFrame soundControl={!confirmationOnly} confirmationOnly={confirmationOnly}>
     {!confirmationOnly ? <div className="dialogue-header">
       <div className="min-w-0"><h2>{npc.name}</h2><p className="dialogue-hint text-[var(--color-hint)] text-[14px] leading-[1.4]">{npc.job}</p></div>
     </div> : null}
     <SavedConversation gender={gender} state={state} sound={sound} online={online}
-      send={photoFlow.send} loadOlder={controller.loadOlder} retry={() => void controller.start()} onClose={onClose}
+      send={photoFlow.send} loadOlder={controller.loadOlder} retry={() => void controller.start()} onClose={close}
       actions={photoFlow.actions} composerHidden={photoFlow.composerHidden}
       displayNpc={{
         name: npc.name,

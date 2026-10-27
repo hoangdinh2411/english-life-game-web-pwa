@@ -11,13 +11,20 @@ export const idCardApplicationContentSchema = z.object({
   registrationPhrases: z.array(authoredText).min(1),
   cancellationPhrases: z.array(authoredText).min(1),
   addressNullPhrases: z.array(authoredText).min(1),
-  prompts: z.record(idCardApplicationFieldSchema, authoredText),
+  prompts: z.object({
+    name: authoredText,
+    dateOfBirth: authoredText,
+    address: authoredText,
+    origin: authoredText,
+    photo: authoredText,
+    review: authoredText,
+    correction: authoredText,
+  }).strict(),
   reviewTemplate: authoredText,
   retries: z.object({
     name: authoredText,
     dateOfBirth: authoredText,
     address: authoredText,
-    gender: authoredText,
     origin: authoredText,
     correction: authoredText,
   }).strict(),
@@ -49,4 +56,10 @@ export const idCardIssueResponseSchema = z.object({
 export type IdCardApplicationSummary = z.infer<typeof idCardApplicationSummarySchema>;
 export type IssueIdCardBody = z.infer<typeof issueIdCardBodySchema>;
 export type IdCardIssueResponse = z.infer<typeof idCardIssueResponseSchema>;
+
+export function isIdCardConfirmation(input: string): boolean {
+  const normalized = input.trim().toLowerCase().replace(/[’]/g, "'")
+    .replace(/[^a-z0-9']+/g, ' ').trim();
+  return ['yes', 'yes please', 'yes issue my card', 'correct', 'that is correct'].includes(normalized);
+}
 

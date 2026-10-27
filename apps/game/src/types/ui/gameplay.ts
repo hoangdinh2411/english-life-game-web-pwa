@@ -15,12 +15,13 @@ export interface ComposerActionProps {
 export interface GameButtonProps {
   label: string;
   ariaLabel?: string;
+  icon?: ReactNode;
   onClick: () => void;
   disabled?: boolean;
 }
 export interface OverlayButtonProps {
   label: string;
-  icon: string;
+  icon: ReactNode;
   onClick: () => void;
 }
 export interface PlayerInfoCardProps {

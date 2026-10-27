@@ -20,7 +20,7 @@ try {
     const html = renderToStaticMarkup(createElement(SettingsPanel, { practice: false, onBack() {} }));
     assert.match(html, /aria-label="Settings"/);
     assert.match(html, />Sound</);
-    assert.match(html, />Coach</);
+    assert.doesNotMatch(html, />Coach</);
     assert.match(html, /Voice speed:/);
     assert.match(html, /Voice pitch:/);
     assert.match(html, />Back to Game Menu</);
@@ -39,7 +39,6 @@ try {
     assert.equal(typeof PreferenceControls, 'function');
     const base = {
       sound: true,
-      coachEnabled: false,
       speechRate: 1,
       speechPitch: 1,
       compact: false,

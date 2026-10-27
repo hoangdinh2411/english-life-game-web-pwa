@@ -248,11 +248,13 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
 
 - Sound mute/volume remains device-local under `life-abroad.sound`; the legacy
   `life-abroad.preferences` value is read only as a migration fallback.
-  Signed-in coach, speech-rate and pitch preferences use the NestJS-owned
+  Signed-in speech-rate and pitch preferences use the NestJS-owned
   `/players/preferences` contract and `player_preferences` table. Local practice
   keeps those controls in memory and never calls that account endpoint. Invalid
   or blocked storage falls back safely; no account data or tokens are stored
   with device sound settings.
+  Safe recasts are always enabled by the server and are not a stored user
+  preference or setting.
 - Browser calls **Supabase SDK only for authentication**
   (`apps/game/src/api/supabase-auth.ts`). Tokens and expiry persist in
   `localStorage` for PWA reopen; one-time `sessionStorage` migration; both

@@ -1,13 +1,12 @@
 export interface Preferences {
   sound: boolean;
-  coachEnabled: boolean;
   speechRate: number;
   speechPitch: number;
 }
 type DeviceStorage = Pick<Storage, 'getItem' | 'setItem'>;
 const legacyKey = 'life-abroad.preferences';
 const soundKey = 'life-abroad.sound';
-export const defaultPreferences: Preferences = { sound: true, coachEnabled: false, speechRate: 1, speechPitch: 1 };
+export const defaultPreferences: Preferences = { sound: true, speechRate: 1, speechPitch: 1 };
 
 const bounds = {
   speechRate: { min: 0.75, max: 1.5 },
@@ -28,7 +27,6 @@ export function createPreferences(storage?: DeviceStorage) {
       state = {
         sound: typeof savedSound === 'boolean' ? savedSound
           : 'sound' in saved && typeof saved.sound === 'boolean' ? saved.sound : true,
-        coachEnabled: 'coachEnabled' in saved && typeof saved.coachEnabled === 'boolean' ? saved.coachEnabled : false,
         speechRate: bounded('speechRate' in saved ? saved.speechRate : undefined, 'speechRate'),
         speechPitch: bounded('speechPitch' in saved ? saved.speechPitch : undefined, 'speechPitch'),
       };

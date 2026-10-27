@@ -25,11 +25,10 @@ interface SyncOptions {
   debounceMs?: number;
 }
 
-const learningKeys = ['coachEnabled', 'speechRate', 'speechPitch'] as const;
+const learningKeys = ['speechRate', 'speechPitch'] as const;
 
 function learningValues(preferences: Preferences): PlayerPreferencesInitialize {
   return {
-    coachEnabled: preferences.coachEnabled,
     speechRate: preferences.speechRate,
     speechPitch: preferences.speechPitch,
   };
@@ -105,12 +104,6 @@ export function createSyncedPreferences(
     if (setting === 'sound' || !active) return;
     const requestRevision = ++revision;
     const update = { [setting]: local.getSnapshot()[setting] } as PlayerPreferencesUpdate;
-    if (setting === 'coachEnabled') {
-      if (timer !== undefined) clearTimeout(timer);
-      timer = undefined;
-      void save(update, requestRevision);
-      return;
-    }
     if (timer !== undefined) clearTimeout(timer);
     setStatus('saving');
     timer = setTimeout(() => {

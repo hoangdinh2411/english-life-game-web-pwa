@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  checkGrammar,
   type ConversationMessage,
   type SendMessageRequest,
   type TurnMetadata,
@@ -113,6 +114,10 @@ export class ConversationReplyEnrichmentService {
       metadata = { ...metadata, farewellStage: farewell.response.stage };
     }
 
+    if (!farewell.response) {
+      responseText = await this.recast(client, userId, conversation, request, metadata, responseText);
+    }
+
     metadata = await this.addSocialMetadata(
       client,
       userId,
@@ -128,6 +133,21 @@ export class ConversationReplyEnrichmentService {
       responseText,
       ...(aiResult ? { aiResult } : {}),
     };
+  }
+
+  private async recast(client: PoolClient, userId: string, conversation: ConversationRow,
+    request: SendMessageRequest, metadata: TurnMetadata, responseText: string): Promise<string> {
+    const sensitiveIntent = metadata.intent !== null && [
+      'save_id_card_name', 'save_id_card_dateOfBirth', 'save_id_card_address', 'save_id_card_origin',
+      'use_character_gender', 'await_id_card_photo', 'review_id_card_application',
+      'confirm_id_card_application', 'correct_id_card_application', 'select_id_card_correction',
+    ].includes(metadata.intent);
+    const sensitiveNode = conversation.current_node_id?.startsWith('tax_office_application_') === true;
+    if (metadata.misunderstood || sensitiveIntent || sensitiveNode) return responseText;
+    const feedback = checkGrammar(request.text);
+    if (!feedback) return responseText;
+    const recast = feedback.question.replace(/[.!?]+$/, '');
+    return `Oh, ${recast}? ${responseText}`;
   }
 
   recordAiUsage(

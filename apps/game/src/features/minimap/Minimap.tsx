@@ -8,13 +8,14 @@ import {
 } from "./model";
 import { observeMinimap } from "./polling";
 import { drawMinimap } from "./draw";
+import { GameIcon } from "../../shared/GameIcon";
 
 interface Props {
   visible: boolean;
   read: () => MinimapSnapshot | null;
 }
 const buttonStyle =
-  "min-h-11 min-w-11 rounded-lg border-2 border-[var(--color-green-strong)] bg-[var(--color-cream-text)] px-2 text-[13px] font-bold text-[var(--color-ink)] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-map-player)]";
+  "grid size-8 cursor-pointer place-items-center rounded-lg border border-[var(--color-overlay-border)] bg-[var(--color-cream-text)] text-[var(--color-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-map-player)] sm:size-9";
 
 function initialMode(): MinimapMode {
   try {
@@ -133,7 +134,7 @@ export function Minimap({ visible, read }: Props) {
           aria-keyshortcuts="M"
           onClick={() => choose(nextMode(mode))}
         >
-          Map {open ? "−" : "⌖"}
+          <GameIcon name="map" className="size-4 sm:size-5" />
         </button>
       </div>
       {open ? (
