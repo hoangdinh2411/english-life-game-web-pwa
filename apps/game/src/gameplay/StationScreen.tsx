@@ -5,7 +5,6 @@ import GameCanvas from "./GameCanvas";
 import ConversationPanel from "./ConversationPanel";
 import { DialogueFrame } from "./DialogueFrame";
 import { GameButton } from "./GameButton";
-import { OverlayButton } from "./OverlayButton";
 import { PlayerInfoCard } from "./PlayerInfoCard";
 import { QuestBoard } from "./QuestBoard";
 import {
@@ -82,7 +81,7 @@ export default function StationScreen({
     arrival?.initialLocation.placeId ?? "loc_station",
   );
   const [goals, setGoals] = useState(false);
-  const { sound, set: setPreference } = usePreferences();
+  const { sound } = usePreferences();
   const closeMenu = useCallback(() => {
     setMenu(false);
     requestAnimationFrame(() => {
