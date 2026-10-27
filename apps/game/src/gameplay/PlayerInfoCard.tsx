@@ -31,7 +31,7 @@ export function PlayerInfoCard({
           </strong>
 
           <span className="text-sm lg:text-md leading-tight text-[var(--color-hint)]">
-            {cityName} · ◈ {coins}
+            {cityName} · ${coins}
           </span>
         </span>
       </button>
