@@ -6,6 +6,7 @@ import type {
   StationPortal,
 } from "../types/gameplay/world";
 import { STATION_ROSTER } from "../features/station/station-roster";
+import { canWalkTownStreet } from "../features/location/town-street-collision";
 
 export const STREET_MAP_SCALE = 1.5;
 export const STREET_MAP_SIZE = {
@@ -69,65 +70,8 @@ export function clampStreetPosition(point: Point): Point {
   };
 }
 
-// These walkable areas and building footprints follow the replaced 1536×1024
-// expanded map: the station approach, plaza, three cross streets and riverwalk.
-const streetRoads: Bounds[] = [
-  { left: 714, right: 822, top: 150, bottom: 965 }, // Full paved width between the central promenade's curbs
-  { left: 375, right: 630, top: 374, bottom: 385 }, // Clear sidewalk below Tax Office steps
-  { left: 930, right: 1160, top: 374, bottom: 385 }, // Clear sidewalk below Police steps, before the planted beds
-  { left: 500, right: 1036, top: 300, bottom: 610 }, // Paved plaza and paths around the fountain
-  { left: 0, right: 1536, top: 600, bottom: 650 }, // Road in front of the shops
-  { left: 0, right: 1536, top: 855, bottom: 900 }, // Road in front of southern buildings
-];
-const streetObstacles: Bounds[] = [
-  // Station and civic-building footprints, including their front steps.
-  { left: 0, right: 710, top: 0, bottom: 245 }, // Train platforms and west station wing
-  { left: 826, right: 1536, top: 0, bottom: 245 }, // East station wing and platform
-  { left: 0, right: 300, top: 0, bottom: 320 }, // Library and steps
-  { left: 350, right: 660, top: 0, bottom: 350 }, // Tax Office and steps
-  { left: 875, right: 1210, top: 0, bottom: 350 }, // Police station and steps
-  { left: 1260, right: 1536, top: 0, bottom: 320 }, // Workplace and steps
-  { left: 711, right: 825, top: 389, bottom: 490 }, // Fountain basin and surrounding flower pots
-  { left: 610, right: 680, top: 292, bottom: 365 }, // North-west plaza planters
-  { left: 856, right: 926, top: 292, bottom: 365 }, // North-east plaza planters
-  { left: 510, right: 555, top: 475, bottom: 540 }, // South-west plaza planter
-  { left: 980, right: 1026, top: 475, bottom: 540 }, // South-east plaza planter
-  { left: 0, right: 285, top: 390, bottom: 575 }, // Clothes shop, including its roof
-  { left: 355, right: 660, top: 390, bottom: 590 }, // Corner Cup Cafe roof, facade and steps
-  { left: 880, right: 1240, top: 390, bottom: 590 }, // Restaurant roof and steps
-  { left: 1270, right: 1536, top: 390, bottom: 590 }, // Supermarket roof and steps
-  { left: 55, right: 410, top: 650, bottom: 850 }, // Bank and steps
-  { left: 425, right: 680, top: 650, bottom: 850 }, // Hospital and steps stop west of the central promenade
-  { left: 875, right: 1260, top: 650, bottom: 850 }, // Stationery Shop and steps
-  // Fixed street furniture, planters, trees, and shop patio items.
-  { left: 565, right: 625, top: 440, bottom: 505 }, // Plaza bench and planting
-  { left: 910, right: 970, top: 440, bottom: 505 }, // Plaza bench and planting
-  { left: 320, right: 490, top: 525, bottom: 590 }, // Corner Cup patio tables and umbrellas
-  { left: 990, right: 1205, top: 520, bottom: 600 }, // Restaurant patio tables and umbrellas
-  { left: 1320, right: 1490, top: 520, bottom: 600 }, // Supermarket carts and display
-  { left: 98, right: 114, top: 900, bottom: 930 }, // Riverwalk tree trunk
-  { left: 345, right: 360, top: 862, bottom: 886 }, // Southern garden tree trunk
-  { left: 1170, right: 1186, top: 862, bottom: 886 }, // Stationery shop garden tree trunk
-  { left: 460, right: 485, top: 335, bottom: 365 }, // North-west lamp post
-  { left: 1045, right: 1070, top: 335, bottom: 365 }, // North-east lamp post
-  { left: 468, right: 480, top: 590, bottom: 618 }, // West shop-front lamp post
-  { left: 1232, right: 1244, top: 590, bottom: 618 }, // East shop-front lamp post
-];
-const insideStreet = (point: Point, rect: Bounds): boolean =>
-  point.x >= rect.left &&
-  point.x <= rect.right &&
-  point.y >= rect.top &&
-  point.y <= rect.bottom;
-
 export function canWalkStreet(point: Point): boolean {
-  const sourcePoint = {
-    x: point.x / STREET_MAP_SCALE,
-    y: point.y / STREET_MAP_SCALE,
-  };
-  return (
-    streetRoads.some((road) => insideStreet(sourcePoint, road)) &&
-    !streetObstacles.some((obstacle) => insideStreet(sourcePoint, obstacle))
-  );
+  return canWalkTownStreet({ x: point.x / STREET_MAP_SCALE, y: point.y / STREET_MAP_SCALE });
 }
 
 export function recoverStreetPosition(point: Point): Point {

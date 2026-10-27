@@ -82,7 +82,10 @@ export class ConversationScriptedReplyService {
 
     if ((TAX_OFFICE_NPC_IDS as readonly string[]).includes(conversation.npc_id)) {
       const application = await this.idCardApplications.reply(client, userId, request.text, arrival);
-      if (application) return { arrival, ...application };
+      if (application) {
+        const idCardApplication = await this.idCardApplications.summary(client, userId);
+        return { arrival, ...application, metadata: { ...application.metadata, ...(idCardApplication ? { idCardApplication } : {}) } };
+      }
     }
 
     if (

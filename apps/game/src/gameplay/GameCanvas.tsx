@@ -82,6 +82,9 @@ export default function GameCanvas({
   useEffect(() => {
     game.current?.setAppearance(appearance);
   }, [appearance]);
+  useEffect(() => {
+    game.current?.enforceVenueHours();
+  }, [getGameTime, getTimeZone]);
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [locationLabel, setLocationLabel] = useState(
@@ -169,6 +172,7 @@ export default function GameCanvas({
         },
       });
       game.current = instance;
+      instance.enforceVenueHours();
       syncNpcPresence(instance, presentNpcIdsRef.current);
       instance.pause(
         pausedRef.current || document.hidden,

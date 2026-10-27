@@ -8,7 +8,7 @@ import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../features/ass
 import { authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetArrivalForLocation, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
-import { canEnterLocation, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
+import { canEnterLocation, closedVenueExit, moveInShop, shopCanWalk } from '../features/shops/shop-navigation';
 import { npcNameplateOffset, scaleNpcNameplates, setNpcActorVisibility, updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
 import type { MinimapSnapshot } from '../features/minimap/model';
@@ -21,6 +21,8 @@ import { countryLocationLabel } from '../features/location/country-presentation'
 import { UI_COLORS } from '../styles/colors';
 import { playerAssets, playerWalkFrame } from '../features/appearance/player-assets';
 import { TAX_OFFICE_STAFF } from '../features/tax-office/tax-office-staff';
+import { TOWN_STREET_COLLISION } from '../features/location/town-street-collision';
+import { drawCollisionDebug } from '../features/location/collision-debug';
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
   let activeLocation: MapLocation = callbacks.initialLocation ? mapLocationFromPlayerLocation(callbacks.initialLocation) : 'station';
@@ -65,6 +67,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let nearby: string | null = null;
   let npcs = STATION_NPCS.map((npc) => ({ ...npc }));
   let refreshPresence: (() => void) | undefined;
+  let enforceVenueHours: (() => void) | undefined;
   const controlledPresence = () => {
     if (activeLocation === 'street') return { ids: new Set<string>(), signature: 'street' };
     const gameTime = callbacks.getGameTime?.() ?? null;
@@ -113,6 +116,15 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       this.events.once('shutdown', () => this.load.off('loaderror', onLoadError));
     }
     create() {
+      enforceVenueHours = () => {
+        const exit = closedVenueExit(activeLocation);
+        const gameTime = callbacks.getGameTime?.() ?? null;
+        const timeZone = callbacks.getTimeZone?.() ?? null;
+        if (!exit || this.transitionPending || canEnterLocation(activeLocation, gameTime, timeZone)) return;
+        this.previousLocation = exit.closedLocation;
+        callbacks.onVenueClosed?.(exit.closedLocation);
+        this.enterLocation(exit.location, exit.streetArrival);
+      };
       refreshAppearance = () => { if (this.worldReady) this.applyAppearance(); };
       refreshPresence = () => {
         if (!this.worldReady) return;
@@ -126,6 +138,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         readMinimap = () => null;
         refreshAppearance = undefined;
         refreshPresence = undefined;
+        enforceVenueHours = undefined;
         this.npcArtQueue.clear();
         this.npcArtRetryAt.clear();
         this.npcArtLoading = false;
@@ -184,6 +197,13 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       npcs = activeLocation === 'station' ? STATION_NPCS.map(npc => ({ ...npc, ...stationSpawns.get(npc.id) })) : [];
       const background = this.add.image(0, 0, resources?.background ?? 'station').setOrigin(0);
       if (activeLocation === 'street') background.setScale(STREET_MAP_SCALE);
+      if (activeLocation === 'street' && import.meta.env.DEV && new URLSearchParams(window.location.search).has('collision')) {
+        drawCollisionDebug(this, TOWN_STREET_COLLISION, {
+          scale: STREET_MAP_SCALE,
+          walkableColor: UI_COLORS.energyFillStart,
+          obstacleColor: UI_COLORS.energyLowStart,
+        });
+      }
       this.marker = this.add.circle(0, 0, 16, 0xf6df9e, 0.5).setStrokeStyle(3, 0x426f61).setVisible(false);
       // Station animation frames stay bundled; destination definitions come from Storage.
       if (!currentPack || !callbacks.practice) for (let row = 0; row < 4; row++) {
@@ -355,6 +375,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       callbacks.onMapChange?.(mapIds[activeLocation]);
       saveLocation();
       this.worldReady = true;
+      queueMicrotask(() => enforceVenueHours?.());
       this.applyPresence();
       callbacks.onReady();
     }
@@ -635,6 +656,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   const game = new P.Game({ type: P.AUTO, parent, width: parent.clientWidth, height: parent.clientHeight, backgroundColor: UI_COLORS.worldBackground, scene: StationScene,
     scale: { mode: P.Scale.RESIZE, autoCenter: P.Scale.CENTER_BOTH }, render: { pixelArt: false }, loader: { timeout: 15000 } });
   return { destroy: () => { destroyed = true; packRequest?.abort(); game.destroy(true); }, pause: (value, pauseWorld = value, talkingNpc = null) => { paused = value; worldPaused = pauseWorld; conversationNpcId = talkingNpc; refreshPresence?.(); }, unlockExit: (value) => { exitUnlocked = value; }, talk,
+    enforceVenueHours: () => enforceVenueHours?.(),
     setPresentNpcIds: (ids) => { presentNpcIds = new Set(ids); refreshPresence?.(); },
     readMinimap: () => destroyed ? null : readMinimap(),
     setAppearance: (value) => { if (callbacks.practice) return; appearance = value; refreshAppearance?.(); } };

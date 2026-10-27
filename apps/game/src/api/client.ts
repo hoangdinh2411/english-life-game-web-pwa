@@ -1,5 +1,5 @@
-import type { CreateCharacterRequest, MovementTutorialPageId, NpcPresenceResponse, OnboardingOptions, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState, TutorialSpeechResponse } from '@life-abroad/shared';
-import { parseOnboardingOptions, arrivalStateSchema, conversationHistoryPageSchema, conversationSchema, conversationTurnSchema, npcPresenceResponseSchema, playerPreferencesReadSchema, playerPreferencesSchema, tutorialSpeechResponseSchema, ARRIVAL_NPC_ID, type Conversation, type ConversationHistoryPage, type SendMessageRequest } from '@life-abroad/shared';
+import type { CreateCharacterRequest, IdCardIssueResponse, IssueIdCardBody, MovementTutorialPageId, NpcPresenceResponse, OnboardingOptions, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState, TutorialSpeechResponse } from '@life-abroad/shared';
+import { parseOnboardingOptions, arrivalStateSchema, conversationHistoryPageSchema, conversationSchema, conversationTurnSchema, idCardIssueResponseSchema, npcPresenceResponseSchema, playerPreferencesReadSchema, playerPreferencesSchema, tutorialSpeechResponseSchema, ARRIVAL_NPC_ID, type Conversation, type ConversationHistoryPage, type SendMessageRequest } from '@life-abroad/shared';
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
 
@@ -58,4 +58,21 @@ export async function loadOlderConversationMessages(token: string, npcId: Conver
 export const startArrivalConversation = (token: string) => openConversation(token, ARRIVAL_NPC_ID);
 export const sendArrivalMessage = async (token: string, id: string, body: SendMessageRequest) =>
   conversationTurnSchema.parse(await request(`conversations/${encodeURIComponent(id)}/messages`, body, token));
+
+export async function issueIdCard(token: string, body: IssueIdCardBody, photo: Blob | null): Promise<IdCardIssueResponse> {
+  if (!navigator.onLine) throw new Error('Reconnect to issue your ID card. Nothing was queued.');
+  const form = new FormData();
+  form.set('conversationId', body.conversationId);
+  form.set('idempotencyKey', body.idempotencyKey);
+  if (photo) form.set('photo', photo, 'id-photo.jpg');
+  const response = await fetch(`${baseUrl}/me/id-card`, { method: 'POST',
+    headers: { Authorization: `Bearer ${token}` }, body: form, cache: 'no-store', signal: AbortSignal.timeout(30000) });
+  if (!response.ok) {
+    const result: unknown = await response.json().catch(() => null);
+    const message = typeof result === 'object' && result !== null && 'error' in result && typeof result.error === 'object' && result.error !== null && 'message' in result.error
+      ? String(result.error.message) : `Request failed (${response.status})`;
+    const error = new Error(message); Object.assign(error, { status: response.status }); throw error;
+  }
+  return idCardIssueResponseSchema.parse(await response.json());
+}
 

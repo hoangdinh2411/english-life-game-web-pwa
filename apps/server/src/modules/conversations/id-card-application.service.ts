@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { normalizeDialogue, type IdCardApplicationField, type TurnMetadata } from '@life-abroad/shared';
+import { normalizeDialogue, type IdCardApplicationField, type IdCardApplicationSummary, type TurnMetadata } from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
 import type { ArrivalState } from '@life-abroad/shared';
 import { IdCardApplicationContentService } from './id-card-application-content.service';
@@ -66,6 +66,17 @@ export class IdCardApplicationService {
     return (await this.content.get()).prompts[application.current_field];
   }
 
+  async summary(client: PoolClient, userId: string): Promise<IdCardApplicationSummary | undefined> {
+    const application = await this.load(client, userId);
+    if (!application || !['photo', 'review'].includes(application.current_field) || !application.name ||
+      !application.date_of_birth || !application.gender || !application.origin) return undefined;
+    const dateOfBirth = application.date_of_birth instanceof Date
+      ? `${application.date_of_birth.getFullYear()}-${String(application.date_of_birth.getMonth() + 1).padStart(2, '0')}-${String(application.date_of_birth.getDate()).padStart(2, '0')}`
+      : application.date_of_birth;
+    return { step: application.current_field as 'photo' | 'review', name: application.name, dateOfBirth,
+      address: application.address, gender: application.gender, origin: application.origin };
+  }
+
   async reply(client: PoolClient, userId: string, input: string, arrival: ArrivalState): Promise<ApplicationReply | null> {
     const content = await this.content.get();
     let application = await this.load(client, userId);
@@ -80,7 +91,13 @@ export class IdCardApplicationService {
     }
 
     const current = application.current_field;
-    if (current === 'photo') return this.result(current, content.prompts.photo, arrival, 'await_id_card_photo');
+    if (current === 'photo') {
+      if (/^(?:yes|yes please|yes issue my card|correct|that is correct)$/i.test(input.trim())) {
+        const reply = this.result(current, 'Thank you. I will issue your ID card now.', arrival, 'confirm_id_card_application');
+        return { ...reply, metadata: { ...reply.metadata, idCardSubmit: true } };
+      }
+      return this.result(current, content.prompts.photo, arrival, 'await_id_card_photo');
+    }
     if (current === 'review') {
       if (/^(?:no|nope|not correct|that is wrong)$/i.test(input.trim())) {
         await this.update(client, userId, 'correction', null, null);

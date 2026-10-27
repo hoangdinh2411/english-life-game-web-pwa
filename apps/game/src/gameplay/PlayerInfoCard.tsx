@@ -12,31 +12,25 @@ export function PlayerInfoCard({
   return (
     <aside
       hidden={!visible}
-      className="player-card w-[min(260px,_100%)] max-lg:w-[min(260px,_calc(50vw_-_8px),_100%)] min-w-0 [&[hidden]]:hidden"
+      className="player-card [grid-column:1] [grid-row:1] min-w-0 w-fit lg:[grid-column:1] lg:[grid-row:1] lg:max-w-[260px] [&[hidden]]:hidden"
     >
       <button
         type="button"
-        className="pointer-events-auto flex min-h-11 w-full min-w-0 items-center gap-1.5 rounded-[12px] bg-dialogue border-2 border-border p-1 text-left text-ink shadow-[0_2px_6px_var(--color-shadow)] lg:hidden"
-        aria-label={`Open ${playerName}'s profile`}
-        onClick={onOpenProfile}
-      >
-        <PlayerPortrait gender={gender} className="size-6 rounded-full" />
-      </button>
-      <button
-        type="button"
-        className="pointer-events-auto hidden lg:flex flex-wrap min-h-14 w-full min-w-0 items-center gap-2 rounded-[14px] bg-[var(--color-dialogue-overlay-strong)] [border:2px_solid_var(--color-border)] p-2 text-left text-ink shadow-[0_2px_6px_var(--color-shadow)] hover:bg-[var(--color-card)]"
+        className="pointer-events-auto flex min-h-14 w-full min-w-0 items-center gap-2 overflow-hidden rounded-[14px] border-2 border-border bg-[var(--color-dialogue-overlay-strong)]  p-2 pr-4  text-left text-ink shadow-[0_2px_6px_var(--color-shadow)] hover:bg-[var(--color-card)] lg:flex"
         aria-label={`Open ${playerName}'s profile`}
         onClick={onOpenProfile}
       >
         <PlayerPortrait
           gender={gender}
-          className="size-10 rounded-full [border:1px_solid_var(--color-border)]"
+          className="size-9 lg:size-10 rounded-full [border:1px_solid_var(--color-border)]"
         />
-        <span className="flex min-w-[6em] flex-1 flex-col gap-0.5">
-          <strong className="truncate text-[14px] leading-tight">
+
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <strong className="truncate text-sm lg:text-md leading-tight">
             {playerName}
           </strong>
-          <span className="text-[12px] leading-tight text-[var(--color-hint)]">
+
+          <span className="text-sm lg:text-md leading-tight text-[var(--color-hint)]">
             {cityName} · ${coins}
           </span>
         </span>

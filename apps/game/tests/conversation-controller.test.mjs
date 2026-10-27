@@ -131,6 +131,26 @@ try {
     assert.equal(controller.getSnapshot().streamedMessageId, null);
     assert.equal(controller.getSnapshot().conversation?.messages.at(-1)?.speech?.url, 'https://storage.test/speech.mp3');
   });
+
+  test('T36.d exposes the server confirmation signal only after the saved yes turn', async () => {
+    const arrival = { questId: 'q_station_arrival', status: 'done', currentStepId: null,
+      ticket: { issued: true, used: true }, canEnterTownStreet: true, locationId: 'loc_tax_office', rewardsGranted: true };
+    const application = { step: 'photo', name: 'Test Learner', dateOfBirth: '1995-02-28', address: null,
+      gender: 'female', origin: 'Vietnam' };
+    const conversation = { id: globalThis.crypto.randomUUID(), npcId: 'npc_tax_clerk_nadia', messages: [], arrival, idCardApplication: application };
+    const controller = createConversationController({ load: async () => arrival, start: async () => conversation,
+      send: async (_id, body) => ({
+        playerMessage: { id: globalThis.crypto.randomUUID(), sender: 'player', text: body.text, createdAt: new Date().toISOString() },
+        npcMessage: { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'I will issue it now.', createdAt: new Date().toISOString() },
+        intent: 'confirm_id_card_application', misunderstood: false, arrival, idCardApplication: application, idCardSubmit: true,
+      }) });
+    await controller.start();
+    assert.equal(controller.getSnapshot().idCardSubmitReady, false);
+    assert.equal(await controller.send('Yes, issue my card'), true);
+    assert.equal(controller.getSnapshot().idCardSubmitReady, true);
+    controller.clearIdCardSubmit();
+    assert.equal(controller.getSnapshot().idCardSubmitReady, false);
+  });
 } finally {
   await server.close();
 }

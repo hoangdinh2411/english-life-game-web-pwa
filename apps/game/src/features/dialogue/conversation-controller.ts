@@ -21,6 +21,7 @@ export interface ConversationSnapshot {
   announcement: string;
   farewellStage?: ConversationTurn['farewellStage'];
   historyLoading: boolean;
+  idCardSubmitReady: boolean;
 }
 
 const typingPause = (milliseconds: number): Promise<void> =>
@@ -39,7 +40,8 @@ export async function revealStreamChunk(text: string, emit: (piece: string) => v
 // Private state lives only in memory. All mutations come from authenticated API responses.
 export function createConversationController(api: ConversationApi) {
   let state: ConversationSnapshot = { arrival: null, conversation: null, pending: false, error: '', retryMessage: null,
-    streaming: false, streamedReply: '', streamedMessageId: null, announcement: '', farewellStage: undefined, historyLoading: false };
+    streaming: false, streamedReply: '', streamedMessageId: null, announcement: '', farewellStage: undefined, historyLoading: false,
+    idCardSubmitReady: false };
   let epoch = 0;
   let disposed = false;
   let retry: SendMessageRequest | null = null;
@@ -76,7 +78,7 @@ export function createConversationController(api: ConversationApi) {
     },
     start: () => run(async () => {
       const started = await api.start();
-      return { conversation: started, arrival: started.arrival, farewellStage: undefined };
+      return { conversation: started, arrival: started.arrival, farewellStage: undefined, idCardSubmitReady: false };
     }),
     loadOlder: async () => {
       const conversation = state.conversation;
@@ -140,8 +142,10 @@ export function createConversationController(api: ConversationApi) {
         const seller = turn.seller;
         const coffeeQuest = turn.coffeeQuest;
         return { conversation: { ...conversation, messages, arrival, ...(seller ? { seller } : {}),
+          ...(turn.idCardApplication ? { idCardApplication: turn.idCardApplication } : {}),
           ...(coffeeQuest ? { coffeeQuest } : {}) }, arrival, retryMessage: null,
           farewellStage: turn.farewellStage, streaming: false, streamedReply: '',
+          idCardSubmitReady: turn.idCardSubmit === true,
           streamedMessageId: receivedStreamText ? turn.npcMessage.id : null };
       }).finally(() => {
         streamCancellation = null;
@@ -158,6 +162,7 @@ export function createConversationController(api: ConversationApi) {
         return { arrival };
       });
     },
+    clearIdCardSubmit: () => update({ idCardSubmitReady: false }),
     dispose: () => { disposed = true; epoch++; streamCancellation?.abort(); streamCancellation = null;
       state = { ...state, pending: false, streaming: false, streamedReply: '' }; listeners.clear(); },
   };
