@@ -46,7 +46,7 @@ try {
     ]);
     assert.match(html, /aria-label="Game menu"/);
     assert.equal((html.match(/<svg/g) ?? []).length, 5, 'every menu action should have an SVG icon');
-    assert.doesNotMatch(html, /[🔊🔇▶️🗺️📜⚙️]/u);
+    assert.doesNotMatch(html, /🔊|🔇|▶️|🗺️|📜|⚙️/u);
     assert.doesNotMatch(html, /Paused|role="switch"|type="range"/);
   });
 
