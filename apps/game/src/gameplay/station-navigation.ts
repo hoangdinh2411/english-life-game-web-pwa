@@ -6,6 +6,7 @@ import type {
   StationPortal,
 } from "../types/gameplay/world";
 import { STATION_ROSTER } from "../features/station/station-roster";
+import { canWalkTownStreet } from "../features/location/town-street-collision";
 
 export const STREET_MAP_SCALE = 1.5;
 export const STREET_MAP_SIZE = {
@@ -69,71 +70,8 @@ export function clampStreetPosition(point: Point): Point {
   };
 }
 
-// These walkable areas and building footprints follow the replaced 1536×1024
-// expanded map: the station approach, plaza, three cross streets and riverwalk.
-const streetRoads: Bounds[] = [
-  { left: 675, right: 860, top: 105, bottom: 965 }, // Central promenade, including both paved edges around the fountain
-  { left: 285, right: 375, top: 300, bottom: 650 }, // West side street beside the civic buildings and shops
-  { left: 345, right: 385, top: 650, bottom: 900 }, // Paved passage between the Bank and Hospital
-  { left: 1160, right: 1275, top: 300, bottom: 650 }, // East side street beside the civic buildings and shops
-  { left: 1210, right: 1275, top: 650, bottom: 900 }, // Paved passage beside the Stationery Shop
-  { left: 0, right: 1536, top: 350, bottom: 405 }, // Upper cross street below the civic buildings
-  { left: 500, right: 1036, top: 300, bottom: 610 }, // Paved plaza and paths around the fountain
-  { left: 0, right: 1536, top: 580, bottom: 660 }, // Middle cross street and storefront pavement
-  { left: 0, right: 1536, top: 840, bottom: 900 }, // Southern cross street above the landscaped riverwalk
-];
-const streetObstacles: Bounds[] = [
-  // Station and civic-building footprints, including their front steps.
-  { left: 0, right: 710, top: 0, bottom: 245 }, // Train platforms and west station wing
-  { left: 826, right: 1536, top: 0, bottom: 245 }, // East station wing and platform
-  { left: 0, right: 300, top: 0, bottom: 320 }, // Library and steps
-  { left: 350, right: 660, top: 0, bottom: 350 }, // Tax Office and steps
-  { left: 875, right: 1210, top: 0, bottom: 320 }, // Police station building
-  { left: 875, right: 985, top: 320, bottom: 350 }, // Police west frontage and planting
-  { left: 1075, right: 1210, top: 320, bottom: 350 }, // Police east frontage and planting
-  { left: 1260, right: 1536, top: 0, bottom: 320 }, // Workplace and steps
-  { left: 711, right: 825, top: 389, bottom: 490 }, // Fountain basin and surrounding flower pots
-  { left: 610, right: 680, top: 292, bottom: 365 }, // North-west plaza planters
-  { left: 856, right: 926, top: 292, bottom: 365 }, // North-east plaza planters
-  { left: 510, right: 555, top: 475, bottom: 540 }, // South-west plaza planter
-  { left: 980, right: 1026, top: 475, bottom: 540 }, // South-east plaza planter
-  { left: 0, right: 285, top: 390, bottom: 575 }, // Clothes shop, including its roof
-  { left: 355, right: 630, top: 390, bottom: 430 }, // Corner Cup upper roof, leaving its paved north-east turning corner open
-  { left: 355, right: 660, top: 430, bottom: 590 }, // Corner Cup lower roof, facade and steps
-  { left: 880, right: 1210, top: 390, bottom: 590 }, // Restaurant roof and steps
-  { left: 1270, right: 1536, top: 390, bottom: 590 }, // Supermarket roof and steps
-  { left: 55, right: 345, top: 650, bottom: 850 }, // Bank and steps
-  { left: 425, right: 680, top: 650, bottom: 850 }, // Hospital and steps stop west of the central promenade
-  { left: 875, right: 1210, top: 650, bottom: 850 }, // Stationery Shop and steps
-  // Fixed street furniture, planters, trees, and shop patio items.
-  { left: 565, right: 625, top: 440, bottom: 505 }, // Plaza bench and planting
-  { left: 910, right: 970, top: 440, bottom: 505 }, // Plaza bench and planting
-  { left: 320, right: 490, top: 525, bottom: 590 }, // Corner Cup patio tables and umbrellas
-  { left: 990, right: 1205, top: 520, bottom: 600 }, // Restaurant patio tables and umbrellas
-  { left: 1320, right: 1490, top: 520, bottom: 600 }, // Supermarket carts and display
-  { left: 98, right: 114, top: 900, bottom: 930 }, // Riverwalk tree trunk
-  { left: 345, right: 360, top: 862, bottom: 886 }, // Southern garden tree trunk
-  { left: 1170, right: 1186, top: 862, bottom: 886 }, // Stationery shop garden tree trunk
-  { left: 460, right: 485, top: 335, bottom: 365 }, // North-west lamp post
-  { left: 1045, right: 1070, top: 335, bottom: 365 }, // North-east lamp post
-  { left: 468, right: 480, top: 590, bottom: 618 }, // West shop-front lamp post
-  { left: 1232, right: 1244, top: 590, bottom: 618 }, // East shop-front lamp post
-];
-const insideStreet = (point: Point, rect: Bounds): boolean =>
-  point.x >= rect.left &&
-  point.x <= rect.right &&
-  point.y >= rect.top &&
-  point.y <= rect.bottom;
-
 export function canWalkStreet(point: Point): boolean {
-  const sourcePoint = {
-    x: point.x / STREET_MAP_SCALE,
-    y: point.y / STREET_MAP_SCALE,
-  };
-  return (
-    streetRoads.some((road) => insideStreet(sourcePoint, road)) &&
-    !streetObstacles.some((obstacle) => insideStreet(sourcePoint, obstacle))
-  );
+  return canWalkTownStreet({ x: point.x / STREET_MAP_SCALE, y: point.y / STREET_MAP_SCALE });
 }
 
 export function recoverStreetPosition(point: Point): Point {

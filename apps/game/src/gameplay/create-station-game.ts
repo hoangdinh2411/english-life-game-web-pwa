@@ -21,6 +21,8 @@ import { countryLocationLabel } from '../features/location/country-presentation'
 import { UI_COLORS } from '../styles/colors';
 import { playerAssets, playerWalkFrame } from '../features/appearance/player-assets';
 import { TAX_OFFICE_STAFF } from '../features/tax-office/tax-office-staff';
+import { TOWN_STREET_COLLISION } from '../features/location/town-street-collision';
+import { drawCollisionDebug } from '../features/location/collision-debug';
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
   let activeLocation: MapLocation = callbacks.initialLocation ? mapLocationFromPlayerLocation(callbacks.initialLocation) : 'station';
@@ -195,6 +197,13 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       npcs = activeLocation === 'station' ? STATION_NPCS.map(npc => ({ ...npc, ...stationSpawns.get(npc.id) })) : [];
       const background = this.add.image(0, 0, resources?.background ?? 'station').setOrigin(0);
       if (activeLocation === 'street') background.setScale(STREET_MAP_SCALE);
+      if (activeLocation === 'street' && import.meta.env.DEV && new URLSearchParams(window.location.search).has('collision')) {
+        drawCollisionDebug(this, TOWN_STREET_COLLISION, {
+          scale: STREET_MAP_SCALE,
+          walkableColor: UI_COLORS.energyFillStart,
+          obstacleColor: UI_COLORS.energyLowStart,
+        });
+      }
       this.marker = this.add.circle(0, 0, 16, 0xf6df9e, 0.5).setStrokeStyle(3, 0x426f61).setVisible(false);
       // Station animation frames stay bundled; destination definitions come from Storage.
       if (!currentPack || !callbacks.practice) for (let row = 0; row < 4; row++) {

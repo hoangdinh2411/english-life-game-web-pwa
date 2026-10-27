@@ -147,6 +147,24 @@ placement but omit those staff images. Customers may remain map-pack assets.
 Town Street continues to use server-authored weekly presence schedules rather
 than controlled randomness.
 
+### Map collision geometry
+
+Non-trivial maps keep versioned collision geometry in
+`features/location/<map>-collision.json` and build their walkability predicate
+with `createMapCollision` from `features/location/map-collision.ts`. Define the
+paved floor as one or more walkable polygons, then subtract polygon obstacles
+for buildings and planted areas and circle obstacles for compact street
+fixtures. Apply player clearance to circles only; globally expanding building
+polygons makes valid narrow roads and corners inaccessible.
+
+Model a tight junction with a stepped or concave obstacle polygon that follows
+the visible corner and leaves a small turning pocket. Do not widen an entire
+road to fix one turn. Keyboard movement, click pathfinding, saved-position
+recovery and NPC-route validation must all use the same map predicate. Add
+regression samples for both the open corner and the adjacent blocked interior.
+In development, append `?collision=1` to the game URL to draw walkable outlines
+in green and obstacles in red. Reuse `drawCollisionDebug` for future maps.
+
 **Server: NestJS domain modules.** Build only modules required by the current
 task, each with its own controller/service/repository **as needed**:
 

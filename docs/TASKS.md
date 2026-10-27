@@ -312,6 +312,21 @@ database: localhost:54323
 
 ## LATER — only when explicitly requested and policies are decided
 
+- [ ] **DOC-01 — Split maintained game and technical references by domain.**
+      Defer until `docs/GAME.md` or `docs/TECH.md` becomes difficult to navigate
+      (default trigger: either file exceeds about 300 lines, or one section owns
+      multiple independently changing domains). Keep `GAME.md` and `TECH.md` as
+      short entry points and move detail into cohesive `docs/game/` and
+      `docs/tech/` files. Product behavior belongs under `game/`; implementation,
+      interfaces and operations belong under `tech/`. Start with the smallest
+      justified domain set; do not create one file per feature, quest, NPC or
+      venue. Update `AGENTS.md` with domain-based reading routes and repair all
+      affected links. This is a documentation-only refactor: preserve every
+      current rule, source-of-truth boundary and task reference without changing
+      product behavior. Check: every moved section has exactly one canonical
+      location, both index files link to all domain files, repository references
+      resolve, searches find no obsolete anchors or duplicated normative rules,
+      and a before/after section inventory proves no maintained content was lost.
 - [ ] **T37 — Library and CV (start only after T36).** One task, done in order a
       to g. Tick each step when it passes its own check. Art, portraits and
       voice clips use the existing asset pipeline (T14). - [ ] **a. Library

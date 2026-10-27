@@ -122,12 +122,33 @@ test('Town Street keeps the visible side streets, intersections and paved corner
   }
   assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 645, y: 405 })), true,
     'the paved north-east Corner Cup turn should not require walking past the corner');
-  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 620, y: 405 })), false,
+  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 580, y: 430 })), false,
     'opening the Corner Cup turn must not make its roof walkable');
+  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 615, y: 405 })), true,
+    'the Corner Cup horizontal lane should remain wide through the turn');
+  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 640, y: 435 })), true,
+    'the Corner Cup turning pocket should accept a diagonal approach');
   assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 1010, y: 335 })), true,
     'the visible Police entrance path should be approachable without overshooting it');
   assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 950, y: 335 })), false,
     'opening the Police entrance must not make its planted frontage walkable');
+
+  for (const turn of [
+    { open: { x: 270, y: 430 }, blocked: { x: 240, y: 430 }, name: 'Clothes' },
+    { open: { x: 895, y: 430 }, blocked: { x: 1000, y: 430 }, name: 'Restaurant west' },
+    { open: { x: 1195, y: 430 }, blocked: { x: 1100, y: 430 }, name: 'Restaurant east' },
+    { open: { x: 1285, y: 430 }, blocked: { x: 1320, y: 430 }, name: 'Supermarket' },
+    { open: { x: 330, y: 685 }, blocked: { x: 300, y: 685 }, name: 'Bank' },
+    { open: { x: 440, y: 685 }, blocked: { x: 500, y: 685 }, name: 'Hospital west' },
+    { open: { x: 665, y: 685 }, blocked: { x: 600, y: 685 }, name: 'Hospital east' },
+    { open: { x: 890, y: 685 }, blocked: { x: 1000, y: 685 }, name: 'Stationery west' },
+    { open: { x: 1195, y: 685 }, blocked: { x: 1100, y: 685 }, name: 'Stationery east' },
+  ]) {
+    assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint(turn.open)), true,
+      `${turn.name} turning pocket should be walkable`);
+    assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint(turn.blocked)), false,
+      `${turn.name} turning pocket must not open the building interior`);
+  }
 });
 
 test('Town Street blocks street furniture, planted beds, and storefront patio objects', () => {
@@ -147,6 +168,12 @@ test('Town Street blocks street furniture, planted beds, and storefront patio ob
     assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint(obstruction)), false,
       `visible object at ${obstruction.x},${obstruction.y} should block walking`);
   }
+  for (const obstruction of [{ x: 300, y: 490 }, { x: 680, y: 500 }, { x: 850, y: 720 }]) {
+    assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint(obstruction)), false,
+      `circular street fixture at ${obstruction.x},${obstruction.y} should block walking`);
+  }
+  assert.equal(navigation.canWalkStreet(navigation.scaleStreetPoint({ x: 317, y: 490 })), false,
+    'player clearance should keep the visible sprite from overlapping a lamp post');
 });
 
 test('river walls and water are blocked while the street above the gardens remains reachable', () => {
