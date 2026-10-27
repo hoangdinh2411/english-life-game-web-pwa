@@ -5,7 +5,6 @@ import GameCanvas from "./GameCanvas";
 import ConversationPanel from "./ConversationPanel";
 import { DialogueFrame } from "./DialogueFrame";
 import { GameButton } from "./GameButton";
-import { OverlayButton } from "./OverlayButton";
 import { PlayerInfoCard } from "./PlayerInfoCard";
 import { QuestBoard } from "./QuestBoard";
 import {
@@ -50,6 +49,7 @@ import {
   type TaxOfficeStaffId,
 } from "../features/tax-office/tax-office-staff";
 import { GameIcon } from "../shared/GameIcon";
+import { OverlayButton } from "./OverlayButton";
 
 export default function StationScreen({
   gender,
@@ -204,10 +204,17 @@ export default function StationScreen({
             <button
               type="button"
               onClick={() => setGoals(true)}
-              aria-label={arrival ? `Open saved arrival goals, ${arrival.goalsLabel}` : `Open goals, ${notice.active} active quests, ${notice.fresh} new quests`}
+              aria-label={
+                arrival
+                  ? `Open saved arrival goals, ${arrival.goalsLabel}`
+                  : `Open goals, ${notice.active} active quests, ${notice.fresh} new quests`
+              }
               className="pointer-events-auto relative grid size-8 place-items-center rounded-lg border border-border/60 bg-[var(--color-dialogue-overlay-strong)] text-ink shadow-sm hover:bg-card sm:size-9"
             >
-              <GameIcon name="goals" className="size-4 sm:size-5" />
+              <GameIcon
+                name="goals"
+                className="size-4 sm:size-5"
+              />
               {notice.fresh > 0 ? (
                 <span className="absolute -right-1 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-[var(--color-gold)] px-1 text-[10px] font-bold leading-none text-ink">
                   {notice.fresh}
@@ -222,7 +229,13 @@ export default function StationScreen({
             className="shrink-0 text-xs tabular-nums text-ink"
             aria-label={`Game time ${timeLabel}`}
           >
-            <span className="inline-flex items-center gap-1"><GameIcon name="clock" className="size-3.5" />{timeLabel}</span>
+            <span className="inline-flex items-center gap-1">
+              <GameIcon
+                name="clock"
+                className="size-3.5"
+              />
+              {timeLabel}
+            </span>
           </span>
         </aside>
 
@@ -249,7 +262,10 @@ export default function StationScreen({
                   aria-hidden="true"
                   className="pointer-events-none absolute -bottom-0.5 -right-0.5 rounded-full bg-dialogue text-[10px] lg:hidden"
                 >
-                  <GameIcon name="sound-off" className="size-3" />
+                  <GameIcon
+                    name="sound-off"
+                    className="size-3"
+                  />
                 </span>
               ) : null}
             </span>

@@ -30,7 +30,7 @@ export function PlayerInfoCard({
             {playerName}
           </strong>
 
-          <span className="truncate text-xs leading-tight text-[var(--color-hint)]">
+          <span className="text-sm lg:text-md leading-tight text-[var(--color-hint)]">
             {cityName} · ${coins}
           </span>
         </span>
