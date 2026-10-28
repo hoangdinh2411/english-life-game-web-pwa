@@ -20,6 +20,8 @@ export const idCardApplicationContentSchema = z.object({
     review: authoredText,
     correction: authoredText,
   }).strict(),
+  answerConfirmationTemplate: authoredText,
+  answerConfirmationRetry: authoredText,
   reviewTemplate: authoredText,
   retries: z.object({
     name: authoredText,

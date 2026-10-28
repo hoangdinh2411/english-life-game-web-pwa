@@ -12,7 +12,7 @@ const arrival: ArrivalState = {
   locationId: 'loc_tax_office',
 };
 
-test('T36.c keeps ordered answers in server state, resumes, and maps approved address phrases to null', async () => {
+test('T36.c confirms every ordered answer, resumes confirmation, and maps approved address phrases to null', async () => {
   const databaseUrl = process.env.DATABASE_URL ?? '';
   const email = process.env.TEST_ACCOUNT_EMAIL ?? '';
   assert.ok(databaseUrl, 'DATABASE_URL is required');
@@ -31,12 +31,22 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
     assert.equal((await service.reply(client, userId, 'I need to register an ID card', arrival))?.nodeId,
       'tax_office_application_name');
     assert.match((await service.reply(client, userId, '', arrival))!.responseText, /name between 1 and 60/i);
-    assert.match((await service.reply(client, userId, 'Test Learner', arrival))!.responseText, /date of birth/i);
+    assert.match((await service.reply(client, userId, 'Test Learner', arrival))!.responseText, /Test Learner.*correct/i);
+    assert.match(await service.opening(client, userId) ?? '', /Test Learner.*correct/i,
+      'a reopened conversation resumes the pending confirmation');
+    assert.match((await service.reply(client, userId, 'maybe', arrival))!.responseText, /yes or no/i);
+    assert.match((await service.reply(client, userId, 'no', arrival))!.responseText, /full name/i);
+    assert.match((await service.reply(client, userId, 'Test Learner', arrival))!.responseText, /Test Learner.*correct/i);
+    assert.match((await service.reply(client, userId, 'yes', arrival))!.responseText, /date of birth/i);
     assert.match((await service.reply(client, userId, '2099-01-01', arrival))!.responseText, /real date/i);
-    assert.match((await service.reply(client, userId, '1995-02-28', arrival))!.responseText, /address/i);
-    assert.match(await service.opening(client, userId) ?? '', /address/i, 'a reopened conversation resumes the saved field');
-    assert.match((await service.reply(client, userId, '12 Maple Street', arrival))!.responseText, /come from/i);
-    assert.match((await service.reply(client, userId, 'Vietnam', arrival))!.responseText, /photo/i);
+    assert.match((await service.reply(client, userId, '28th February 1995', arrival))!.responseText, /28 February 1995.*correct/i);
+    assert.match((await service.reply(client, userId, 'yes', arrival))!.responseText, /address/i);
+    assert.match((await service.reply(client, userId, '12 Wrong Street', arrival))!.responseText, /12 Wrong Street.*correct/i);
+    assert.match((await service.reply(client, userId, 'no', arrival))!.responseText, /What is your address/i);
+    assert.match((await service.reply(client, userId, '12 Maple Street', arrival))!.responseText, /12 Maple Street.*correct/i);
+    assert.match((await service.reply(client, userId, 'yes', arrival))!.responseText, /come from/i);
+    assert.match((await service.reply(client, userId, 'Vietnam', arrival))!.responseText, /Vietnam.*correct/i);
+    assert.match((await service.reply(client, userId, 'yes', arrival))!.responseText, /photo/i);
     const confirmation = await service.reply(client, userId, 'Yes, issue my card', arrival);
     assert.equal(confirmation?.metadata.intent, 'confirm_id_card_application');
     assert.equal(confirmation?.metadata.idCardSubmit, true);
@@ -68,7 +78,7 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
     ];
     for (const phrase of phrases) {
       await client.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId]);
-      for (const answer of ['I need an ID card', 'Test Learner', '1995-02-28', phrase]) {
+      for (const answer of ['I need an ID card', 'Test Learner', 'yes', '1995-02-28', 'yes', phrase, 'yes']) {
         await service.reply(client, userId, answer, arrival);
       }
       const address = await client.query<{ address: string | null; current_field: string }>(
@@ -77,7 +87,7 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
     }
 
     await client.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId]);
-    for (const answer of ['I need an ID card', 'Test Learner', '1995-02-28']) {
+    for (const answer of ['I need an ID card', 'Test Learner', 'yes', '1995-02-28', 'yes']) {
       await service.reply(client, userId, answer, arrival);
     }
     assert.match((await service.reply(client, userId, 'skip', arrival))!.responseText, /explain/i);

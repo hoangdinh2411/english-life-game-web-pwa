@@ -3,9 +3,11 @@ import { isIdCardConfirmation, normalizeDialogue, type IdCardApplicationField, t
 import type { PoolClient } from 'pg';
 import type { ArrivalState } from '@life-abroad/shared';
 import { IdCardApplicationContentService } from './id-card-application-content.service';
+import { parseIdCardBirthDate } from './id-card-birth-date';
 
 export interface IdCardApplicationRow {
   current_field: IdCardApplicationField;
+  confirmation_field: EditableApplicationField | null;
   name: string | null;
   date_of_birth: string | Date | null;
   address: string | null;
@@ -58,17 +60,6 @@ const containsPhrase = (input: string, phrases: readonly string[]): boolean => {
   });
 };
 
-const birthDate = (input: string, today = new Date()): string | null => {
-  const value = input.trim();
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return null;
-  const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  if (year < 1900 || date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
-  const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-  return date.getTime() <= todayUtc ? value : null;
-};
-
 @Injectable()
 export class IdCardApplicationService {
   constructor(private readonly content: IdCardApplicationContentService) {}
@@ -76,11 +67,13 @@ export class IdCardApplicationService {
   async opening(client: PoolClient, userId: string): Promise<string | null> {
     const application = await this.load(client, userId);
     if (!application) return null;
+    const content = await this.content.get();
+    if (application.confirmation_field) return this.confirmationText(content.answerConfirmationTemplate, application);
     if (application.current_field === 'gender') {
       await this.syncCharacterGender(client, userId, 'origin');
-      return (await this.content.get()).prompts.origin;
+      return content.prompts.origin;
     }
-    return (await this.content.get()).prompts[application.current_field];
+    return content.prompts[application.current_field];
   }
 
   async summary(client: PoolClient, userId: string): Promise<IdCardApplicationSummary | undefined> {
@@ -111,6 +104,19 @@ export class IdCardApplicationService {
       await this.syncCharacterGender(client, userId, 'origin');
       return this.result('origin', content.prompts.origin, arrival, 'use_character_gender');
     }
+    if (application.confirmation_field) {
+      const field = application.confirmation_field;
+      if (isIdCardConfirmation(input)) {
+        const next = this.next(field);
+        await this.finishConfirmation(client, userId, next);
+        return this.result(next, content.prompts[next], arrival, `confirm_id_card_${field}`);
+      }
+      if (/^(?:no|nope|not correct|that is wrong|that's wrong)$/i.test(input.trim())) {
+        await this.rejectConfirmation(client, userId, field);
+        return this.result(field, content.prompts[field], arrival, `retry_id_card_${field}`);
+      }
+      return this.result(field, this.confirmationText(content.answerConfirmationRetry, application), arrival, null);
+    }
     const current = application.current_field;
     if (current === 'photo') {
       if (isIdCardConfirmation(input)) {
@@ -135,7 +141,7 @@ export class IdCardApplicationService {
 
     const answerField = current as EditableApplicationField;
     const parsed = answerField === 'name' ? plainText(input, 60)
-      : answerField === 'dateOfBirth' ? birthDate(input)
+      : answerField === 'dateOfBirth' ? parseIdCardBirthDate(input)
         : answerField === 'address' ? (containsPhrase(input, content.addressNullPhrases) ? null : plainText(input, 120))
           : plainText(input, 60);
     const validNullAddress = answerField === 'address' && containsPhrase(input, content.addressNullPhrases);
@@ -144,9 +150,10 @@ export class IdCardApplicationService {
     }
     if (parsed === null && !validNullAddress) return this.result(answerField, content.retries[answerField], arrival, null);
 
-    const next = this.next(answerField);
-    await this.update(client, userId, next, answerField, parsed);
-    return this.result(next, content.prompts[next], arrival, `save_id_card_${answerField}`);
+    await this.saveForConfirmation(client, userId, answerField, parsed);
+    const pending = { ...application, [this.column(answerField)]: parsed, confirmation_field: answerField };
+    return this.result(answerField, this.confirmationText(content.answerConfirmationTemplate, pending), arrival,
+      `save_id_card_${answerField}`);
   }
 
   async review(client: PoolClient, userId: string, photo: 'uploaded photo' | 'character picture',
@@ -173,7 +180,7 @@ export class IdCardApplicationService {
   }
 
   private async load(client: PoolClient, userId: string): Promise<IdCardApplicationRow | null> {
-    const result = await client.query<IdCardApplicationRow>(`SELECT current_field,name,date_of_birth,address,gender,origin
+    const result = await client.query<IdCardApplicationRow>(`SELECT current_field,confirmation_field,name,date_of_birth,address,gender,origin
       FROM public.id_card_applications WHERE user_id=$1 FOR UPDATE`, [userId]);
     return result.rows[0] ?? null;
   }
@@ -182,7 +189,7 @@ export class IdCardApplicationService {
     const result = await client.query<IdCardApplicationRow>(`INSERT INTO public.id_card_applications (user_id,current_field,gender)
       SELECT $1,'name',gender FROM public.characters WHERE user_id=$1
       ON CONFLICT (user_id) DO UPDATE SET gender=excluded.gender,updated_at=now()
-      RETURNING current_field,name,date_of_birth,address,gender,origin`, [userId]);
+      RETURNING current_field,confirmation_field,name,date_of_birth,address,gender,origin`, [userId]);
     if (!result.rows[0]) throw new ConflictException('Complete character creation before applying for an ID card');
     return result.rows[0]!;
   }
@@ -193,11 +200,55 @@ export class IdCardApplicationService {
       name: 'name', dateOfBirth: 'date_of_birth', address: 'address', origin: 'origin',
     };
     if (!field) {
-      await client.query('UPDATE public.id_card_applications SET current_field=$2,updated_at=now() WHERE user_id=$1', [userId, next]);
+      await client.query(`UPDATE public.id_card_applications
+        SET current_field=$2,confirmation_field=null,updated_at=now() WHERE user_id=$1`, [userId, next]);
       return;
     }
-    await client.query(`UPDATE public.id_card_applications SET current_field=$2,${columns[field]}=$3,updated_at=now() WHERE user_id=$1`,
+    await client.query(`UPDATE public.id_card_applications
+      SET current_field=$2,confirmation_field=null,${columns[field]}=$3,updated_at=now() WHERE user_id=$1`,
       [userId, next, value]);
+  }
+
+  private async saveForConfirmation(client: PoolClient, userId: string, field: EditableApplicationField,
+    value: string | null): Promise<void> {
+    await client.query(`UPDATE public.id_card_applications
+      SET ${this.column(field)}=$3,confirmation_field=$2,updated_at=now() WHERE user_id=$1`, [userId, field, value]);
+  }
+
+  private async finishConfirmation(client: PoolClient, userId: string, next: NextApplicationField): Promise<void> {
+    await client.query(`UPDATE public.id_card_applications
+      SET current_field=$2,confirmation_field=null,updated_at=now() WHERE user_id=$1`, [userId, next]);
+  }
+
+  private async rejectConfirmation(client: PoolClient, userId: string, field: EditableApplicationField): Promise<void> {
+    await client.query(`UPDATE public.id_card_applications
+      SET ${this.column(field)}=null,confirmation_field=null,updated_at=now() WHERE user_id=$1`, [userId]);
+  }
+
+  private column(field: EditableApplicationField): 'name' | 'date_of_birth' | 'address' | 'origin' {
+    return ({ name: 'name', dateOfBirth: 'date_of_birth', address: 'address', origin: 'origin' } as const)[field];
+  }
+
+  private confirmationText(template: string, application: IdCardApplicationRow): string {
+    const field = application.confirmation_field;
+    if (!field) return template;
+    const value = field === 'name' ? application.name
+      : field === 'dateOfBirth' ? this.readableDate(application.date_of_birth)
+        : field === 'address' ? (application.address ?? 'you do not have an address yet')
+          : application.origin;
+    return template.replace('{answer}', value ?? '');
+  }
+
+  private readableDate(value: string | Date | null): string {
+    if (!value) return '';
+    const iso = value instanceof Date
+      ? `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, '0')}-${String(value.getUTCDate()).padStart(2, '0')}`
+      : value;
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+    if (!match) return iso;
+    const month = new Intl.DateTimeFormat('en-GB', { month: 'long', timeZone: 'UTC' })
+      .format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))));
+    return `${Number(match[3])} ${month} ${match[1]}`;
   }
 
   private next(field: EditableApplicationField): NextApplicationField {

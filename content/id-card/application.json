@@ -42,17 +42,19 @@
   ],
   "prompts": {
     "name": "Let’s start your application. What is your full name?",
-    "dateOfBirth": "What is your date of birth? Please use YYYY-MM-DD.",
+    "dateOfBirth": "What is your date of birth?",
     "address": "What is your address? If you do not have one yet, please tell me about your situation.",
     "origin": "Where do you come from?",
     "photo": "Thank you. Now I need a photo for your application.",
     "review": "I will read your application back, including the photo. Is this correct?",
     "correction": "Which answer would you like to fix: name, date of birth, address, or where you come from?"
   },
+  "answerConfirmationTemplate": "I heard: {answer}. Is that correct?",
+  "answerConfirmationRetry": "Please answer yes or no. Is this correct: {answer}?",
   "reviewTemplate": "Here is your application. Name: {name}. Date of birth: {dateOfBirth}. Address: {address}. Gender: {gender}. Where you come from: {origin}. Photo: {photo}. Is this correct?",
   "retries": {
     "name": "Please give a name between 1 and 60 characters.",
-    "dateOfBirth": "Please give a real date in YYYY-MM-DD format, from 1900 through today.",
+    "dateOfBirth": "Please give a real date from 1900 through today. You can write it naturally, for example: 24 November 1992.",
     "address": "Please give an address between 1 and 120 characters, or explain that you do not have one yet or will provide it later.",
     "origin": "Please say where you come from in 1 to 60 characters.",
     "correction": "Please choose name, date of birth, address, or where you come from."

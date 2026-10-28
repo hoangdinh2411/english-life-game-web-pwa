@@ -305,7 +305,9 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   unique forward migrations; applied migrations remain immutable. Migration
   `035` adds the immutable, check-constrained character gender used to resolve
   approved player walking and portrait assets; existing rows are backfilled
-  before the column becomes required. Canonical speech keys include only
+  before the column becomes required. Migration `040` adds the nullable,
+  check-constrained pending confirmation field for per-answer ID-card read-back.
+  Canonical speech keys include only
   generation inputs, and callers receive 60-second signed URLs. AI audio uses
   `AI_SPEECH_CACHE_TTL_SECONDS` (30–3600, default 300) and rejects sensitive
   text. Inspect schema and current database before applying new changes.
@@ -402,7 +404,10 @@ shares its peer-IP bucket.
   arrival state. Another owner's ID returns 404; all routes require Auth.
 - Tax-office registration uses the same conversation routes. One private
   `id_card_applications` row per player keeps the five validated text answers
-  and current question across conversations; either clerk resumes it. The row
+  and current question across conversations; either clerk resumes it. Each
+  entered name, birth date, address and origin remains at its question until the
+  player confirms the staff member's read-back; denial clears only that value.
+  The row
   is removed on cancellation and remains separate from the future issued card
   and browser-only photo flow.
 - `POST /conversations/:id/messages` with `{ clientMessageId: <UUID>, text }`:

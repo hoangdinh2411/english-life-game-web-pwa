@@ -183,7 +183,11 @@ database: localhost:54323
       service questions. - [x] **c. Application conversation.** The staff member
       asks four questions, one at a time: **name**, **date of birth**,
       **address**, and **where you come from**. Gender comes from the immutable
-      character choice and is never asked again. Then the photo (step
+      character choice and is never asked again. After each answer, the staff
+      member reads it back and asks whether it is correct. A clear "yes" moves
+      to the next question; "no" clears only that answer and asks the same
+      question again; an unclear response asks for yes or no. This confirmation
+      state resumes with either clerk. Then the photo (step
       d). Then the staff member reads everything back, photo included: "Is this
       correct?". **Nothing is saved to the card until the player says yes.**
       Until then the four entered answers wait in a server-owned pending state;
@@ -199,10 +203,14 @@ database: localhost:54323
       server-owned authored intent phrases; unclear wording gets a retry rather
       than an AI guess. Any other text of 1
       to 120 characters is stored as the address. A bad answer gets a friendly
-      retry (date of birth: a real date, not in the future, year 1900 or later;
+      retry (date of birth: accept clear natural English formats or `YYYY-MM-DD`,
+      normalize to `YYYY-MM-DD`, and ask again for ambiguous numeric dates; the
+      initial question does not mention limits, while an invalid answer explains
+      that it must be a real date from 1900 through today;
       name and origin: plain text of 1 to
       60 characters). Safe server recasts remain always enabled. Check: answers kept in
-      order; resume after reload; natural no-address explanations give `null`,
+      order; every answer is confirmed before advancing; resume after reload;
+      natural no-address explanations give `null`,
       literal "skip" gets a retry, character gender is copied server-side, and
       "12 Maple Street" is stored. - [ ] **d. Photo (upload or camera)**: kept in
       the browser until the player confirms.** After the four questions the
