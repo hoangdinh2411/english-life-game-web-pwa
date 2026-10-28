@@ -21,12 +21,13 @@ services:
       - key: CLIENT_ORIGIN
         sync: false
 
-  - type: static_site
+  - type: web
+    runtime: static
     name: life-abroad-client-staging
     branch: staging
     autoDeployTrigger: "off"
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter game build
-    publishPath: apps/game/dist
+    staticPublishPath: apps/game/dist
     envVars:
       - key: VITE_API_URL
         sync: false
