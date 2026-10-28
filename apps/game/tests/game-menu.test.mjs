@@ -50,6 +50,19 @@ try {
     assert.doesNotMatch(html, /Paused|role="switch"|type="range"/);
   });
 
+  test('game menu actions keep a 44px minimum touch target', () => {
+    const html = renderToStaticMarkup(createElement(GameMenu, {
+      onOpenTutorial() {},
+      onOpenReview() {},
+      onSignOut() {},
+      onReturnToGame() {},
+      onOpenSettings() {},
+    }));
+    const actionButtons = [...html.matchAll(/<button[^>]*class="([^"]+)"/g)];
+    assert.equal(actionButtons.length, 5);
+    for (const [, className] of actionButtons) assert.match(className, /\bmin-h-11\b/);
+  });
+
   test('local practice omits account review and uses the approved exit label', () => {
     const html = renderToStaticMarkup(createElement(GameMenu, {
       practice: true,

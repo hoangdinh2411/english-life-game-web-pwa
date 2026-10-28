@@ -3,7 +3,7 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
-Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.5;
+Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.6;
 T39.1–T39.5; S2–S7.
 
 ## How to work
@@ -68,16 +68,6 @@ database: localhost:54323
         behavior. Done when repository search finds old clock names only in
         historical/contract migrations, and content validation, lint, typecheck,
         unit tests, build, integration tests and PWA checks pass.
-
-- [ ] **T38 — Non-pausing game menu, synchronized Settings and movement
-      tutorial.** Implement only one slice per request and stop after its
-      checks. The menu and all utility overlays must leave NPC movement and game
-      time running; they may capture player input. The approved design is
-      `docs/specs/2026-10-21-game-menu-tutorial-design.md`, and the executable
-      plan is `docs/plans/2026-10-21-game-menu-settings-tutorial.md`.
-  - [ ] **T38.6 — Tutorial art and final verification.** Add compact game-style
-        illustrations, run responsive and behavioral checks, prove continuous
-        NPC/time behavior, run repository gates and update maintained docs.
 
 - [x] **T39 — Complete controlled NPC presence for stations and stores.** Finish
       the partially implemented behavior in
