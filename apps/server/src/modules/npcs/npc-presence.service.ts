@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { npcPresenceResponseSchema, npcProfileSchema, SHOP_NPC_IDS, TOWN_STREET_NPC_IDS,
+import { isVenueOpenAtLocalMinute, npcPresenceResponseSchema, npcProfileSchema, SHOP_NPC_IDS, TOWN_STREET_NPC_IDS,
   type NpcPresenceResponse, type NpcProfile } from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
@@ -38,8 +38,9 @@ function slotMatches(slot: NonNullable<NpcProfile['presenceSchedule']>['weeklySl
   return slot.days.includes(previous) && local.minutes < end;
 }
 
-function venueOpen(local: PresenceLocalTime): boolean {
-  return local.minutes >= 8 * 60 && local.minutes < 14 * 60;
+function venueOpen(locationId: string, local: PresenceLocalTime): boolean {
+  const kind = locationId === 'loc_cafe' || locationId === 'loc_corner_cafe' ? 'cafe' : 'store';
+  return isVenueOpenAtLocalMinute(kind, local.minutes);
 }
 
 export function npcIsPresent(row: Pick<PresenceRow, 'id' | 'location_id'> & { profile: NpcProfile }, mapId: string,
@@ -48,10 +49,10 @@ export function npcIsPresent(row: Pick<PresenceRow, 'id' | 'location_id'> & { pr
   const schedule = row.profile.presenceSchedule;
   if (schedule) {
     const authored = schedule.weeklySlots.some(slot => slot.locationId === mapId && slotMatches(slot, local));
-    return authored && (!SHOP_IDS.has(row.id) || venueOpen(local));
+    return authored && (!SHOP_IDS.has(row.id) || venueOpen(row.location_id, local));
   }
   if (STREET_IDS.has(row.id)) return false;
-  if (SHOP_IDS.has(row.id)) return venueOpen(local);
+  if (SHOP_IDS.has(row.id)) return venueOpen(row.location_id, local);
   return true;
 }
 

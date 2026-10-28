@@ -143,8 +143,9 @@ database: localhost:54323
   running at 6× server elapsed time. Sleep becomes a five-second rest available
   below 30 energy; it adds 50 energy and never moves world time. Until ONB-01 is
   complete, the current per-player eight-hour sleep remains legacy behavior, not
-  the target contract. Opening hours remain organizations 08:00–16:00, stores
-  08:00–14:00 and workplaces 07:00–17:00 in country-local game time.
+  the target contract. Opening hours remain cafés 08:00–21:00,
+  organizations 08:00–16:00, stores 10:00–20:00, supermarkets 07:00–22:00 and
+  workplaces 07:00–17:00 in country-local game time.
 - Appearance uses separate hair, shirt and trouser colors, saved with the
   character. The first shop catalog has blue/green/red/yellow shirts at $30
   each.

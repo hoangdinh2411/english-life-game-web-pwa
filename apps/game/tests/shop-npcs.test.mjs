@@ -36,10 +36,15 @@ test('closed store hours block shop interiors but never block the street', async
   const { canEnterLocation, closedVenueExit, shouldDeferClosedVenueExit } = navigation;
   const at = (hour, minute) => new Date(Date.UTC(2026, 9, 13, hour, minute));
   assert.equal(canEnterLocation('cafe', at(7, 59), 'UTC'), false);
+  assert.equal(canEnterLocation('cafe', at(8, 0), 'UTC'), true);
   assert.equal(canEnterLocation('corner_cafe', at(8, 0), 'UTC'), true);
-  assert.equal(canEnterLocation('clothes', at(13, 59), 'UTC'), true);
-  assert.equal(canEnterLocation('cafe', at(14, 0), 'UTC'), false);
-  assert.equal(canEnterLocation('cafe', at(12, 0), 'Europe/Stockholm'), false, '14:00 local is closed');
+  assert.equal(canEnterLocation('clothes', at(9, 59), 'UTC'), false);
+  assert.equal(canEnterLocation('clothes', at(10, 0), 'UTC'), true);
+  assert.equal(canEnterLocation('clothes', at(19, 59), 'UTC'), true);
+  assert.equal(canEnterLocation('clothes', at(20, 0), 'UTC'), false);
+  assert.equal(canEnterLocation('cafe', at(20, 59), 'UTC'), true);
+  assert.equal(canEnterLocation('cafe', at(21, 0), 'UTC'), false);
+  assert.equal(canEnterLocation('cafe', at(19, 0), 'Europe/Stockholm'), false, '21:00 local is closed');
   assert.equal(canEnterLocation('cafe', at(12, 0), 'America/New_York'), true, '08:00 local is open');
   assert.equal(canEnterLocation('corner_cafe', null, 'UTC'), false);
   assert.equal(canEnterLocation('tax_office', at(7, 59), 'UTC'), false);

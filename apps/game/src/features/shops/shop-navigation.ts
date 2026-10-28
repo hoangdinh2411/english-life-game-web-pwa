@@ -3,8 +3,8 @@ import { isVenueOpenAtLocalMinute, type VenueKind } from '@life-abroad/shared';
 import { localWorldMinutes } from '../world-clock/world-clock';
 
 const locationVenueKinds: Partial<Record<MapLocation, VenueKind>> = {
-  cafe: 'store',
-  corner_cafe: 'store',
+  cafe: 'cafe',
+  corner_cafe: 'cafe',
   clothes: 'store',
   tax_office: 'organization',
 };

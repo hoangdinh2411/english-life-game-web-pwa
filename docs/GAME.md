@@ -110,7 +110,8 @@ English is a tool to accomplish a task, not a multiple-choice test.
   Speech uses only styles supported by the selected provider voice and falls
   back to neutral delivery.
 - Shop and station NPCs have individual names. Venue hours use game time:
-  organizations 08:00–16:00, stores 08:00–14:00 and workplaces 07:00–17:00. The
+  cafés 08:00–21:00, organizations 08:00–16:00, stores 10:00–20:00,
+  supermarkets 07:00–22:00 and workplaces 07:00–17:00. The
   current playable map gates its store interiors; closed entrances show the
   owner's dialogue with opening hours. The pause menu does not list opening-hour
   schedules.

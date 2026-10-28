@@ -10,7 +10,13 @@ export const appearanceSchema = z.object({
   trousers: z.enum(['navy', 'charcoal', 'brown']),
 }).strict();
 export type Appearance = z.infer<typeof appearanceSchema>;
-export const VENUE_HOURS = { organization: [8, 16], store: [8, 14], workplace: [7, 17] } as const;
+export const VENUE_HOURS = {
+  cafe: [8, 21],
+  organization: [8, 16],
+  store: [10, 20],
+  supermarket: [7, 22],
+  workplace: [7, 17],
+} as const;
 export type VenueKind = keyof typeof VENUE_HOURS;
 export function isVenueOpenAtLocalMinute(kind: VenueKind, localMinutes: number): boolean {
   const hour = Math.floor(localMinutes / 60);

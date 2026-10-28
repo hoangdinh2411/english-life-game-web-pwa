@@ -60,7 +60,7 @@ export class NpcPromptService {
       FROM public.messages m JOIN public.conversations c ON c.id=m.conversation_id
       WHERE m.conversation_id=$1 AND c.user_id=$2 AND c.npc_id=$3 AND m.client_message_id IS NOT NULL
       ORDER BY m.sequence DESC LIMIT 12`, [conversationId, userId, npcId]);
-    const kind = (SHOP_NPC_IDS as readonly string[]).includes(npcId) ? 'store'
+    const kind = (SHOP_NPC_IDS as readonly string[]).includes(npcId) ? (npcId.startsWith('npc_clothes_') ? 'store' : 'cafe')
       : row.place_type === 'workplace' ? 'workplace' : 'organization';
     const open = await this.life.venueOpen(client, userId, kind);
     const mood = await this.moods.resolve(client, userId, npcId);
@@ -71,7 +71,7 @@ export class NpcPromptService {
       facts: allowedFacts(npcProfileSchema.parse(row.profile)), place: row.place, city: row.city, country: row.country, open,
       effectiveMood: relationship.reactionMood ?? mood.id, relationshipStage: relationship.stage, responseLevel };
     return { text: scrub(text, names), prompt: {
-      system: `${npcSystemPrompt(responseLevel, kind === 'store')}\nNPC context: ${JSON.stringify(persona)}`,
+      system: `${npcSystemPrompt(responseLevel, kind === 'store' || kind === 'cafe')}\nNPC context: ${JSON.stringify(persona)}`,
       history: history.rows.slice(0, 12).reverse().map(message => ({
         speaker: message.sender, text: scrub(message.text, names),
       })),

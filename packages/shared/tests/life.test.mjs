@@ -8,14 +8,16 @@ test('life rules restore approved energy and enforce exact opening boundaries', 
   assert.equal(life.restoredEnergy(0, ['food']), 50);
   assert.equal(life.restoredEnergy(0, ['drink', 'food']), 80);
   assert.equal(life.restoredEnergy(90, ['drink']), 100);
-  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T07:59:00Z')), false);
-  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T08:00:00Z')), true);
-  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T13:59:00Z')), true);
-  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T14:00:00Z')), false);
-  assert.equal(life.venueHoursLabel('store'), '08:00–14:00');
+  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T09:59:00Z')), false);
+  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T10:00:00Z')), true);
+  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T19:59:00Z')), true);
+  assert.equal(life.isVenueOpen('store', new Date('2000-01-01T20:00:00Z')), false);
+  assert.equal(life.venueHoursLabel('store'), '10:00–20:00');
   for (const [kind, opens, closes] of [
+    ['cafe', 8, 21],
     ['organization', 8, 16],
-    ['store', 8, 14],
+    ['store', 10, 20],
+    ['supermarket', 7, 22],
     ['workplace', 7, 17],
   ]) {
     const timeAt = (hour, minute = 0) => new Date(Date.UTC(2000, 0, 1, hour, minute));

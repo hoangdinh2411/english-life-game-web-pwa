@@ -24,7 +24,7 @@ export function VenueClosedDialogue({ location, conversationNpcId = null, gameTi
     : SHOP_NPCS.find(npc => npc.id === conversationNpcId);
   const staff = conversationStaff ?? (isOffice ? TAX_OFFICE_STAFF[0]! : SHOP_NPCS.find(npc => npc.id === storeOwners[location])!);
   const venue = isOffice ? 'office' : 'store';
-  const hours = venueHoursLabel(isOffice ? 'organization' : 'store');
+  const hours = venueHoursLabel(isOffice ? 'organization' : location === 'clothes' ? 'store' : 'cafe');
   const message = conversationNpcId !== null
     ? `I’m sorry, but the ${venue} is closed now. We’re open from ${hours}. Please come back during those hours.`
     : gameTimeAvailable

@@ -58,12 +58,12 @@ export class ConversationScriptedReplyService {
 
     if (
       (SHOP_NPC_IDS as readonly string[]).includes(conversation.npc_id) &&
-      !(await this.life.venueOpen(client, userId, 'store'))
+      !(await this.life.venueOpen(client, userId, conversation.npc_id.startsWith('npc_clothes_') ? 'store' : 'cafe'))
     ) {
       const reply = await this.dialogue.node(context, 'global_store_closed');
       return {
         arrival,
-        responseText: reply.text.replace('{hours}', venueHoursLabel('store')),
+        responseText: reply.text.replace('{hours}', venueHoursLabel(conversation.npc_id.startsWith('npc_clothes_') ? 'store' : 'cafe')),
         nodeId: reply.node.id,
         metadata: {
           arrival,
