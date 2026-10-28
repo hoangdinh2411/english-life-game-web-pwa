@@ -16,17 +16,17 @@ export const STREET_MAP_SIZE = {
 export function scaleStreetPoint(point: Point): Point {
   return { x: point.x * STREET_MAP_SCALE, y: point.y * STREET_MAP_SCALE };
 }
-// Coordinates match the expanded Town Street illustration. The café ring
-// sits on the road immediately outside its front door.
+// Coordinates match the spacious Town Street illustration. Portals sit on the
+// broad public pavement directly outside each venue's front door.
 export const CORNER_CUP_PORTAL: StationPortal = {
   id: "corner_cafe",
   label: "Corner Cup Café",
-  ...scaleStreetPoint({ x: 505, y: 600 }),
+  ...scaleStreetPoint({ x: 150, y: 610 }),
 };
 export const TAX_OFFICE_PORTAL: StationPortal = {
   id: "tax_office",
   label: "Tax Office",
-  ...scaleStreetPoint({ x: 505, y: 379 }),
+  ...scaleStreetPoint({ x: 500, y: 365 }),
 };
 export const STREET_PORTALS: StationPortal[] = [
   TAX_OFFICE_PORTAL,
@@ -34,14 +34,12 @@ export const STREET_PORTALS: StationPortal[] = [
   {
     id: "station",
     label: "Train Station",
-    ...scaleStreetPoint({ x: 768, y: 210 }),
+    ...scaleStreetPoint({ x: 768, y: 145 }),
   },
 ];
 export function streetSpawnPoint(arrival: "station" | "corner_cafe" | "tax_office"): Point {
   if (arrival === "tax_office") {
-    // The space below this doorway is landscaped and blocks all movement.
-    // Return beside the ring on the connected road, outside its re-entry radius.
-    return { x: TAX_OFFICE_PORTAL.x + 45, y: TAX_OFFICE_PORTAL.y };
+    return { x: TAX_OFFICE_PORTAL.x, y: TAX_OFFICE_PORTAL.y + 45 };
   }
   if (arrival === "corner_cafe") {
     // Place the player directly in front of the café ring on the cross street,
@@ -49,7 +47,7 @@ export function streetSpawnPoint(arrival: "station" | "corner_cafe" | "tax_offic
     return { x: CORNER_CUP_PORTAL.x, y: CORNER_CUP_PORTAL.y + 45 };
   }
   // Leave the train station outside its auto-entry ring to avoid bouncing back inside.
-  return scaleStreetPoint({ x: 768, y: 255 });
+  return scaleStreetPoint({ x: 768, y: 180 });
 }
 
 export function streetArrivalForLocation(location: MapLocation): "station" | "corner_cafe" | "tax_office" {
