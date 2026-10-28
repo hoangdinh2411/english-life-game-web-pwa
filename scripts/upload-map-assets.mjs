@@ -12,7 +12,7 @@ if (targetArgs.length) {
   target = targetArgument.startsWith('--target=') ? targetArgument.slice('--target='.length) : args[targetIndex + 1] ?? '';
   positionalArgs = args.filter((_, index) => index !== targetIndex && (targetArgument.startsWith('--target=') || index !== targetIndex + 1));
 }
-if (target !== 'local' && target !== 'production') throw new Error('Usage: assets:upload [--target local|production] [mapId] [version]');
+if (target !== 'local' && target !== 'staging' && target !== 'production') throw new Error('Usage: assets:upload [--target local|staging|production] [mapId] [version]');
 
 if (target === 'local') await import('../apps/server/scripts/load-env.mjs');
 
@@ -20,20 +20,20 @@ const [mapId = 'loc_town_street', version = '1'] = positionalArgs;
 if (!/^[1-9]\d*$/.test(version)) throw new Error('Version must be a positive integer');
 const baseUrl = target === 'local'
   ? process.env.CONTENT_API_URL ?? 'http://127.0.0.1:3000/api/v1'
-  : process.env.PRODUCTION_CONTENT_API_URL;
+  : target === 'staging' ? process.env.CONTENT_API_URL : process.env.PRODUCTION_CONTENT_API_URL;
 const serviceKey = target === 'local'
   ? process.env.SUPABASE_SERVICE_ROLE_KEY
-  : process.env.PRODUCTION_SUPABASE_SERVICE_ROLE_KEY;
+  : target === 'staging' ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.PRODUCTION_SUPABASE_SERVICE_ROLE_KEY;
 if (!baseUrl || !serviceKey) {
   throw new Error(target === 'local'
     ? 'Local CONTENT_API_URL and SUPABASE_SERVICE_ROLE_KEY are required. Start local Supabase and run supabase:env.'
-    : 'PRODUCTION_CONTENT_API_URL and PRODUCTION_SUPABASE_SERVICE_ROLE_KEY must be supplied through the deployment environment.');
+    : `${target === 'staging' ? 'STAGING' : 'PRODUCTION'}_CONTENT_API_URL and ${target === 'staging' ? 'STAGING' : 'PRODUCTION'}_SUPABASE_SERVICE_ROLE_KEY must be supplied through the deployment environment.`);
 }
 
 const parsedUrl = new URL(baseUrl);
 const localHosts = new Set(['localhost', '127.0.0.1', '[::1]']);
 if ((target === 'local' && !localHosts.has(parsedUrl.hostname)) ||
-    (target === 'production' && (parsedUrl.protocol !== 'https:' || localHosts.has(parsedUrl.hostname)))) {
+    (target !== 'local' && (parsedUrl.protocol !== 'https:' || localHosts.has(parsedUrl.hostname)))) {
   throw new Error(`The ${target} target has an invalid API URL.`);
 }
 
