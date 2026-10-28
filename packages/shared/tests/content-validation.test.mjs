@@ -16,8 +16,8 @@ async function fixture(run) {
     await cp(resolve(repository, 'packages/shared/src/dialogue/content'), resolve(root, 'packages/shared/src/dialogue/content'), { recursive: true });
     await mkdir(resolve(root, 'apps/game/assets'), { recursive: true });
     await cp(resolve(repository, 'apps/game/assets/flags'), resolve(root, 'apps/game/assets/flags'), { recursive: true });
-    await mkdir(resolve(root, 'apps/server/migrations'), { recursive: true });
-    await cp(resolve(repository, 'apps/server/migrations/032_country_clock_worlds.sql'), resolve(root, 'apps/server/migrations/032_country_clock_worlds.sql'));
+    await mkdir(resolve(root, 'supabase/migrations'), { recursive: true });
+    await cp(resolve(repository, 'supabase/migrations/032_country_clock_worlds.sql'), resolve(root, 'supabase/migrations/032_country_clock_worlds.sql'));
     await run(root);
   } finally {
     await rm(root, { recursive: true, force: true });

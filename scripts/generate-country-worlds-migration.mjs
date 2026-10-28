@@ -124,7 +124,7 @@ const countries = await loadCountries();
 const output = renderMigration(countries);
 if (process.argv.includes('--check')) {
   const committed = await readFile(migrationPath, 'utf8').catch(() => '');
-  if (committed !== output) throw new Error('032_country_clock_worlds.sql is not deterministic or is out of date');
+  if (committed.replaceAll('\r\n', '\n') !== output) throw new Error('032_country_clock_worlds.sql is not deterministic or is out of date');
 } else {
   await writeFile(migrationPath, output);
 }
