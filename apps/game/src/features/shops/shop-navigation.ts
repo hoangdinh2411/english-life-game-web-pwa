@@ -15,6 +15,8 @@ export function canEnterLocation(location: MapLocation, gameTime: Date | null, t
     isVenueOpenAtLocalMinute(venueKind, localWorldMinutes(gameTime, timeZone)));
 }
 
+export const shouldDeferClosedVenueExit = (conversationNpcId: string | null): boolean => conversationNpcId !== null;
+
 export function closedVenueExit(location: MapLocation): {
   closedLocation: ClosedVenueLocation;
   location: 'station' | 'street';

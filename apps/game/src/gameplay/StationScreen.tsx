@@ -51,6 +51,11 @@ import {
 import { GameIcon } from "../shared/GameIcon";
 import { OverlayButton } from "./OverlayButton";
 
+type ClosedVenueNotice = Readonly<{
+  location: ClosedVenueLocation;
+  conversationNpcId: string | null;
+}>;
+
 export default function StationScreen({
   gender,
   playerName,
@@ -76,9 +81,8 @@ export default function StationScreen({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [closedVenue, setClosedVenue] = useState<ClosedVenueLocation | null>(
-    null,
-  );
+  const [closedVenue, setClosedVenue] = useState<ClosedVenueNotice | null>(null);
+  const [closedVenueExitSignal, setClosedVenueExitSignal] = useState(0);
   const [activeMapId, setActiveMapId] = useState<string>(
     arrival?.initialLocation.placeId ?? "loc_station",
   );
@@ -173,7 +177,9 @@ export default function StationScreen({
           ? {
               getGameTime: () => worldClock.time,
               getTimeZone: () => worldClock.timeZone,
-              onVenueClosed: (venue) => setClosedVenue(venue),
+              onVenueClosed: (venue, conversationNpcId) =>
+                setClosedVenue({ location: venue, conversationNpcId }),
+              closedVenueExitSignal,
             }
           : {})}
         conversationNpcId={npcId}
@@ -294,9 +300,16 @@ export default function StationScreen({
         : null}
       {closedVenue ? (
         <VenueClosedDialogue
-          location={closedVenue}
+          location={closedVenue.location}
+          conversationNpcId={closedVenue.conversationNpcId}
           gameTimeAvailable={Boolean(worldClock.time)}
-          onReturn={() => setClosedVenue(null)}
+          onReturn={() => {
+            if (closedVenue.conversationNpcId !== null) {
+              setNpcId(null);
+              setClosedVenueExitSignal(current => current + 1);
+            }
+            setClosedVenue(null);
+          }}
         />
       ) : null}
       {profileOpen ? (

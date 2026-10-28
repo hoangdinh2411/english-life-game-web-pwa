@@ -24,6 +24,8 @@ export function useIdCardPhotoFlow({ application, gender, send, issue }: {
   const portrait = playerPortraitPresentation(gender);
   const clearPreview = useCallback(() => {
     setPreview(current => { if (current) URL.revokeObjectURL(current); return null; });
+    if (upload.current) upload.current.value = '';
+    if (camera.current) camera.current.value = '';
     setPhoto(null); setError(''); setConfirmationSaved(false); setPhase('choose'); key.current = crypto.randomUUID();
   }, []);
   useEffect(() => clearPreview, [clearPreview]);
@@ -55,7 +57,13 @@ export function useIdCardPhotoFlow({ application, gender, send, issue }: {
         setConfirmationSaved(true);
       }
       setPhase('issuing'); setError('');
-      try { await issue(photo, key.current); setPhase('issued'); return true; }
+      try {
+        await issue(photo, key.current);
+        setPreview(current => { if (current) URL.revokeObjectURL(current); return null; });
+        setPhoto(null);
+        setPhase('issued');
+        return true;
+      }
       catch (failure) { setPhase('review'); setError(failure instanceof Error ? failure.message : 'ID card issue failed. Try again.'); return false; }
     }
     if (phase === 'review' && /^(?:no|nope|not correct|that is wrong)$/.test(normalized)) clearPreview();

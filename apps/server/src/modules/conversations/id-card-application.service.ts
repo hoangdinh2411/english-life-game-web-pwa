@@ -3,6 +3,7 @@ import { isIdCardConfirmation, normalizeDialogue, type IdCardApplicationField, t
 import type { PoolClient } from 'pg';
 import type { ArrivalState } from '@life-abroad/shared';
 import { IdCardApplicationContentService } from './id-card-application-content.service';
+import { parseIdCardBirthDate } from './id-card-birth-date';
 
 export interface IdCardApplicationRow {
   current_field: IdCardApplicationField;
@@ -56,17 +57,6 @@ const containsPhrase = (input: string, phrases: readonly string[]): boolean => {
     const target = normalized(phrase);
     return value === target || value.includes(` ${target} `) || value.startsWith(`${target} `) || value.endsWith(` ${target}`);
   });
-};
-
-const birthDate = (input: string, today = new Date()): string | null => {
-  const value = input.trim();
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return null;
-  const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  if (year < 1900 || date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
-  const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-  return date.getTime() <= todayUtc ? value : null;
 };
 
 @Injectable()
@@ -135,7 +125,7 @@ export class IdCardApplicationService {
 
     const answerField = current as EditableApplicationField;
     const parsed = answerField === 'name' ? plainText(input, 60)
-      : answerField === 'dateOfBirth' ? birthDate(input)
+      : answerField === 'dateOfBirth' ? parseIdCardBirthDate(input)
         : answerField === 'address' ? (containsPhrase(input, content.addressNullPhrases) ? null : plainText(input, 120))
           : plainText(input, 60);
     const validNullAddress = answerField === 'address' && containsPhrase(input, content.addressNullPhrases);
@@ -206,8 +196,8 @@ export class IdCardApplicationService {
 
   private correctionField(input: string): EditableApplicationField | null {
     const value = normalized(input);
-    if (value.includes('date of birth') || value === 'birth date') return 'dateOfBirth';
-    if (value.includes('where') && value.includes('come from') || value === 'origin') return 'origin';
+    if (value.includes('date of birth') || value === 'birth date' || value.includes('birthday')) return 'dateOfBirth';
+    if (value.includes('where') && value.includes('come from') || value === 'origin' || value.includes('country')) return 'origin';
     for (const field of ['name', 'address'] as const) if (value.includes(field)) return field;
     return null;
   }

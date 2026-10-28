@@ -51,11 +51,12 @@ export interface StationCallbacks {
   onError: (message: string) => void;
   getGameTime?: () => Date | null;
   getTimeZone?: () => string | null;
-  onVenueClosed?: (location: ClosedVenueLocation) => void;
+  onVenueClosed?: (location: ClosedVenueLocation, conversationNpcId: string | null) => void;
   onExitBlocked: () => void;
 }
 export interface StationGame {
   enforceVenueHours: () => void;
+  leaveClosedVenue: () => void;
   readMinimap: () => MinimapSnapshot | null;
   setAppearance: (appearance: Appearance | undefined) => void;
   destroy: () => void;
@@ -88,5 +89,6 @@ export interface GameCanvasProps {
   onPlaceChange?: (location: PlayerLocation) => void;
   getGameTime?: () => Date | null;
   getTimeZone?: () => string | null;
-  onVenueClosed?: (location: ClosedVenueLocation) => void;
+  onVenueClosed?: (location: ClosedVenueLocation, conversationNpcId: string | null) => void;
+  closedVenueExitSignal?: number;
 }
