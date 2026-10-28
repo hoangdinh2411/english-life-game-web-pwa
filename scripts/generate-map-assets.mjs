@@ -7,11 +7,6 @@ import { fileURLToPath } from 'node:url';
 const localAssetRoot = fileURLToPath(new URL('../local-assets/maps/', import.meta.url));
 const streetNpcDataUrl = new URL('../content/seed/street-npcs.json', import.meta.url);
 const npcDataUrl = new URL('../content/seed/npcs.json', import.meta.url);
-const bundledServiceNpcIds = new Set([
-  'npc_mia', 'npc_cafe_waiter',
-  'npc_corner_cup_seller', 'npc_corner_cup_assistant',
-  'npc_clothes_seller', 'npc_clothes_assistant',
-]);
 
 function npcWalkAtlas(outputName) {
   const frame = (column, row) => ({ frame: { x: column * 128, y: row * 192, w: 128, h: 192 }, rotated: false, trimmed: false,
@@ -37,6 +32,7 @@ async function npcAsset(reference) {
 // Package authored artwork byte-for-byte. Never substitute generated placeholders.
 async function mapAssets(mapId) {
   const backgrounds = {
+    loc_station: 'location_station_map_labeled.png',
     loc_town_street: 'location_maplewood_street_expanded.png',
     loc_cafe: 'location_cafe_interior.png',
     loc_corner_cafe: 'location_cafe_interior.png',
@@ -50,7 +46,27 @@ async function mapAssets(mapId) {
     { name: 'player.png', type: 'spritesheet', mime: 'image/png', data: await source('runtime/player.png') },
     { name: 'animations.json', type: 'animation', mime: 'application/json', data: JSON.stringify({ animations: Array.from({ length: 4 }, (_, row) => ({ key: `walk-${row}`, texture: 'player', frames: Array.from({ length: 4 }, (_, column) => row * 4 + column), frameRate: 7, repeat: -1 })) }) },
   ];
-  if (mapId === 'loc_town_street') {
+  if (mapId === 'loc_station') {
+    const stationActors = [
+      ['backpack', 'runtime/backpack.png', 'runtime/backpack.json'],
+      ['suitcase', 'runtime/suitcase.png', 'runtime/suitcase.json'],
+      ['receptionist', 'runtime/receptionist.png', 'runtime/receptionist.json'],
+    ];
+    for (const [key, image, atlas] of stationActors) assets.push(
+      { name: `${key}.png`, type: 'image', mime: 'image/png', data: await source(image) },
+      { name: `${key}-atlas.json`, type: 'json', mime: 'application/json', data: await source(atlas) },
+    );
+    const visitorFile = 'visitor.png';
+    const visitorAtlas = JSON.parse(npcWalkAtlas(visitorFile).toString('utf8'));
+    visitorAtlas.frames = Object.fromEntries(Array.from({ length: 16 }, (_, index) => {
+      const row = Math.floor(index / 4), column = index % 4;
+      return [`${row}-${column}`, visitorAtlas.frames[`walk-${row}-${column}`]];
+    }));
+    assets.push(
+      { name: visitorFile, type: 'image', mime: 'image/png', data: await source('npcs/npc_cafe_customer/walk.png') },
+      { name: 'visitor-atlas.json', type: 'json', mime: 'application/json', data: JSON.stringify(visitorAtlas) },
+    );
+  } else if (mapId === 'loc_town_street') {
     const catalog = JSON.parse(await readFile(streetNpcDataUrl, 'utf8'));
     const textureByNpc = new Map();
     for (const [index, npc] of catalog.npcs.entries()) {
@@ -96,10 +112,6 @@ async function mapAssets(mapId) {
     for (const actor of actors) {
       const npc = byId.get(actor.npcId);
       if (!npc?.walkImageUrl) throw new Error(`${actor.npcId} is missing its walking asset`);
-      if (bundledServiceNpcIds.has(actor.npcId)) {
-        actorData.push({ ...actor, frame: 'walk', texture: `service-${actor.npcId}`, scale: 0.6 });
-        continue;
-      }
       const key = `npc-${actor.npcId}`;
       const filename = `${key}.png`;
       assets.push(

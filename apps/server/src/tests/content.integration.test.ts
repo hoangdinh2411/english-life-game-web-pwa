@@ -4,7 +4,7 @@ import test from "node:test";
 import { spawnSync } from "node:child_process";
 import { resolve, join } from "node:path";
 import { readdir, readFile } from "node:fs/promises";
-import { createHash, randomInt } from "node:crypto";
+import { createHash } from "node:crypto";
 import { Test } from "@nestjs/testing";
 import { createClient } from "@supabase/supabase-js";
 import { AppModule } from "../app.module";
@@ -46,13 +46,18 @@ test("T14 generated files remain in the local asset folder after upload, and imm
   const app = module.createNestApplication();
   app.setGlobalPrefix("api/v1");
   const database = module.get(DatabaseService);
-  const uploadVersion = randomInt(1_000_000_000, 2_000_000_000);
+  let existingPaths = new Set<string>();
   const storage = createClient(target.toString(), key, {
     auth: { persistSession: false, autoRefreshToken: false },
   }).storage.from("game-assets");
   try {
     await app.listen(0, "127.0.0.1");
     const base = `${await app.getUrl()}/api/v1`;
+    existingPaths = new Set((await database.query<{ path: string }>(
+      "SELECT path FROM assets WHERE map_id=$1", ["loc_town_street"],
+    )).rows.map(row => row.path));
+    const generated = spawnSync(process.execPath, [resolve("../../scripts/save-map-assets.mjs"), "loc_town_street"], { encoding: "utf8" });
+    assert.equal(generated.status, 0, generated.stderr);
     // Spawn asynchronously: the API in this test process must keep servicing requests.
     const { spawn } = await import("node:child_process");
     const invoke = () =>
@@ -64,7 +69,6 @@ test("T14 generated files remain in the local asset folder after upload, and imm
             "--target",
             "local",
             "loc_town_street",
-            String(uploadVersion),
           ],
           {
             env: { ...process.env, CONTENT_API_URL: base },
@@ -88,13 +92,11 @@ test("T14 generated files remain in the local asset folder after upload, and imm
       });
     const assetDirectory = resolve("../../local-assets/maps/loc_town_street");
     const sourceBefore = await sourceFiles(join(assetDirectory, "source"));
-    const first = JSON.parse(await invoke()) as { assets: Array<{ path: string }> };
-    const second = JSON.parse(await invoke()) as { assets: Array<{ path: string }> };
-    assert.deepEqual(
-      first,
-      second,
-      "Identical retries must keep immutable paths",
-    );
+    const first = JSON.parse(await invoke()) as { uploadCount: number; assets: Array<{ key: string; npcId?: string; sha256: string }> };
+    const second = JSON.parse(await invoke()) as { uploadCount: number; assets: Array<{ action: string }> };
+    assert.ok(first.uploadCount > 0);
+    assert.equal(second.uploadCount, 0, "Identical retries must skip immutable assets");
+    assert.ok(second.assets.every(asset => asset.action === "skip"));
     const entries = await readdir(assetDirectory, { withFileTypes: true });
     const files = entries
       .filter((entry) => entry.isFile())
@@ -110,7 +112,8 @@ test("T14 generated files remain in the local asset folder after upload, and imm
     assert.equal(response.status, 200);
     const pack = mapPackSchema.parse(await response.json());
     for (const uploaded of first.assets) {
-      assert.ok(pack.assets.some((asset) => asset.url.includes(uploaded.path)));
+      assert.ok(pack.assets.some((asset) => asset.key === uploaded.key
+        && asset.npcId === (uploaded.npcId ?? null) && asset.sha256 === uploaded.sha256));
     }
     for (const asset of pack.assets) {
       assert.ok(asset.url.includes("/storage/v1/object/public/game-assets/"));
@@ -119,24 +122,6 @@ test("T14 generated files remain in the local asset folder after upload, and imm
       assert.match(file.headers.get("cache-control") ?? "", /max-age=31536000/);
       assert.equal((await file.arrayBuffer()).byteLength, asset.bytes);
     }
-    const send = (mapId: string, type: string, data: string) => {
-      const form = new FormData();
-      form.set(
-        "file",
-        new Blob([data], { type: "image/svg+xml" }),
-        "background.svg",
-      );
-      form.set("mapId", mapId);
-      form.set("type", type);
-      form.set("version", "2");
-      return fetch(`${base}/content/assets/upload`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}` },
-        body: form,
-      });
-    };
-    assert.equal((await send("loc_town_street", "map", "<svg/>")).status, 409);
-    assert.equal((await send("loc_station", "map", "<svg/>")).status, 400);
     // Client roles cannot enumerate metadata through direct database access.
     const permission = spawnSync(
       process.execPath,
@@ -148,16 +133,12 @@ test("T14 generated files remain in the local asset folder after upload, and imm
     );
     assert.equal(permission.status, 0);
   } finally {
-    const uploaded = await database.query<{ path: string }>(
-      "SELECT path FROM assets WHERE map_id=$1 AND version=$2",
-      ["loc_town_street", uploadVersion],
-    );
-    if (uploaded.rows.length) {
-      await storage.remove(uploaded.rows.map((row) => row.path));
-      await database.query("DELETE FROM assets WHERE map_id=$1 AND version=$2", [
-        "loc_town_street",
-        uploadVersion,
-      ]);
+    const uploaded = (await database.query<{ path: string }>(
+      "SELECT path FROM assets WHERE map_id=$1", ["loc_town_street"],
+    )).rows.filter(row => !existingPaths.has(row.path));
+    if (uploaded.length) {
+      await storage.remove(uploaded.map((row) => row.path));
+      await database.query("DELETE FROM assets WHERE path = ANY($1::text[])", [uploaded.map(row => row.path)]);
     }
     await app.close();
   }

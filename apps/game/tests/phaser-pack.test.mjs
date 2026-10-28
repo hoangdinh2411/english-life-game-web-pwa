@@ -4,6 +4,26 @@ import test from 'node:test';
 import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../src/features/assets/phaser-pack.ts';
 import { NPC_DISPLAY_SCALE } from '../src/features/npcs/actor-display.ts';
 
+// Regression: Train Station actors are owned by STATION_NPCS, not an uploaded actors.json manifest.
+test('Train Station pack prepares without a venue actor manifest', () => {
+  const assets = [
+    { key: 'background', type: 'map', version: 1, npcId: null },
+    { key: 'player', type: 'spritesheet', version: 1, npcId: null },
+    { key: 'animations', type: 'animation', version: 1, npcId: null },
+  ];
+  const scene = {
+    cache: { json: { get: () => ({ animations: [0, 1, 2, 3].map(row => ({
+      key: `walk-${row}`, texture: 'player', frames: [row * 4], frameRate: 7, repeat: -1,
+    })) }) } },
+    textures: { get: () => ({ has: () => true }) },
+    anims: { create: () => {} },
+  };
+
+  const result = preparePack(scene, { mapId: 'loc_station', assets });
+  assert.deepEqual(result.actors, []);
+  assert.equal(result.background, 'pack:loc_station:map:background:v1');
+});
+
 // Catches loading the six-character sheet as one giant NPC instead of an atlas.
 test('pack loader pairs an NPC image with its atlas JSON', async () => {
   const calls = [], events = new Map();

@@ -6,6 +6,17 @@ import * as navigation from '../src/gameplay/station-navigation.ts';
 const { canWalk, portalAt, STATION_PORTALS, STREET_PORTALS } = navigation;
 const street = point => navigation.scaleStreetPoint(point);
 
+test('street authorization reports success and failure to the transition UI', async () => {
+  let entered = false;
+  assert.equal(await navigation.authorizeStreetExit(async () => true, () => { entered = true; }), true);
+  assert.equal(entered, true);
+
+  entered = false;
+  assert.equal(await navigation.authorizeStreetExit(async () => false, () => { entered = true; }), false);
+  assert.equal(entered, false);
+  assert.equal(await navigation.authorizeStreetExit(async () => { throw new Error('offline'); }, () => {}), false);
+});
+
 test('denied station shop entry returns to a walkable point', () => {
   for (const portal of STATION_PORTALS.filter(portal => portal.id !== 'street')) {
     const start = navigation.stationStoreReturnPoint(portal);

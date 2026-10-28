@@ -2,7 +2,7 @@ import type Phaser from 'phaser';
 import type { MapPack } from '@life-abroad/shared';
 import { packActorsSchema, packAnimationsSchema } from '@life-abroad/shared';
 import { packKey } from './map-pack';
-import { isServiceNpc, SHOP_NPCS } from '../shops/shop-npcs';
+import { SHOP_NPCS } from '../shops/shop-npcs';
 import { findStreetNpc, STREET_NPCS } from '../npcs/street-npcs';
 import { venueNpcConfigForMapId } from '../shops/venue-npc-config';
 import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES } from '../shops/venue-npc-config';
@@ -29,12 +29,6 @@ export function isDeferredStreetNpcAsset(pack: MapPack, asset: MapPack['assets']
       || asset.type === 'json' && asset.key === 'street-voices'
       || asset.key.startsWith('street-npcs-')
         && (asset.type === 'image' || (asset.type === 'json' && asset.key.endsWith('-atlas'))));
-}
-
-export function isBundledServiceAsset(asset: MapPack['assets'][number]): boolean {
-  return SHOP_NPCS.some(npc => isServiceNpc(npc.id) && (
-    asset.key === `npc-${npc.id}` || asset.key === `npc-${npc.id}-atlas` || asset.key === `portrait-${npc.id}`
-  ));
 }
 
 export function loadPack(
@@ -75,7 +69,7 @@ export function loadPack(
     scene.load.on('loaderror', error);
     scene.load.once('complete', complete);
     for (const asset of pack.assets) {
-      if (isDeferredStreetNpcAsset(pack, asset) || isBundledServiceAsset(asset)) continue;
+      if (isDeferredStreetNpcAsset(pack, asset)) continue;
       const key = packKey(pack, asset);
       const atlas = asset.type === 'image' ? pack.assets.find(item =>
         item.type === 'json' && item.key === `${asset.key}-atlas` && item.npcId === asset.npcId && item.version === asset.version) : undefined;
@@ -122,7 +116,8 @@ export function preparePack(
   const venue = pack.mapId === 'loc_cafe' || pack.mapId === 'loc_corner_cafe' || pack.mapId === 'loc_clothes' || pack.mapId === 'loc_tax_office';
   if (venue && !actorAsset) throw new Error('Venue NPC assets are missing. Please retry after the map upload finishes.');
   const authoredActors = actorAsset ? packActorsSchema.parse(scene.cache.json.get(packKey(pack, actorAsset))).actors : [];
-  const venueConfig = venueNpcConfigForMapId(pack.mapId);
+  // Train Station owns its roster and randomized presence outside the uploaded actor manifest.
+  const venueConfig = venue ? venueNpcConfigForMapId(pack.mapId) : undefined;
   if (venueConfig) {
     for (const npcId of [...venueConfig.serviceNpcIds, ...venueConfig.optionalStaffNpcIds]) {
       if (!authoredActors.some(actor => actor.npcId === npcId)) throw new Error(`Required service NPC ${npcId} definition is missing.`);

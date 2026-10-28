@@ -6,7 +6,7 @@ import { assetIdSchema, type AssetUpload, type MapPack } from '@life-abroad/shar
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 export interface AssetFile { originalname: string; mimetype: string; buffer: Buffer; size: number }
-interface AssetRow { key: string; type: MapPack['assets'][number]['type']; version: number; path: string; bytes: number; npc_id: string | null }
+interface AssetRow { key: string; type: MapPack['assets'][number]['type']; version: number; path: string; bytes: number; npc_id: string | null; sha256: string }
 const extensions: Record<string, string> = {
   'image/png': 'png', 'image/svg+xml': 'svg', 'image/webp': 'webp',
   'audio/mpeg': 'mp3', 'audio/ogg': 'ogg', 'audio/wav': 'wav', 'application/json': 'json',
@@ -33,7 +33,7 @@ export class ContentService {
     }
     const npc = input.npcId ? (await this.database.query<{ location_id: string }>('SELECT location_id FROM npcs WHERE id=$1', [input.npcId])).rows[0] : undefined;
     const mapId = input.mapId ?? npc?.location_id;
-    if (!mapId || mapId === 'loc_station' || npc?.location_id === 'loc_station') throw new BadRequestException('Station assets stay bundled.');
+    if (!mapId) throw new BadRequestException('An asset map is required.');
     if (input.npcId && (!npc || npc.location_id !== mapId)) throw new BadRequestException('NPC does not belong to this map.');
     if (!(await this.database.query('SELECT 1 FROM locations WHERE id=$1', [mapId])).rowCount) throw new NotFoundException('Map not found.');
     const hash = createHash('sha256').update(file.buffer).digest('hex');
@@ -50,20 +50,19 @@ export class ContentService {
       const result = await storage.upload(path, file.buffer, { contentType: file.mimetype, cacheControl: '31536000', upsert: false });
       if (result.error) throw new ServiceUnavailableException('Asset upload failed.');
       try {
-        await client.query('INSERT INTO assets(map_id,npc_id,key,type,version,path,bytes) VALUES($1,$2,$3,$4,$5,$6,$7)', [mapId, input.npcId ?? null, key, input.type, input.version, path, file.size]);
+        await client.query('INSERT INTO assets(map_id,npc_id,key,type,version,path,bytes,sha256) VALUES($1,$2,$3,$4,$5,$6,$7,$8)', [mapId, input.npcId ?? null, key, input.type, input.version, path, file.size, hash]);
       } catch (error: unknown) { await storage.remove([path]); throw error; }
       return { path, url: storage.getPublicUrl(path).data.publicUrl, bytes: file.size };
     });
   }
   async map(mapId: string): Promise<MapPack> {
-    if (mapId === 'loc_station') throw new BadRequestException('Station assets stay bundled.');
-    const result = await this.database.query<AssetRow>(`SELECT DISTINCT ON (a.key, a.npc_id) a.key,a.type,a.version,a.path,a.bytes,a.npc_id
+    const result = await this.database.query<AssetRow>(`SELECT DISTINCT ON (a.key, a.npc_id) a.key,a.type,a.version,a.path,a.bytes,a.npc_id,a.sha256
       FROM assets a LEFT JOIN npcs n ON n.id=a.npc_id
       WHERE a.map_id=$1 OR (a.map_id IS NULL AND n.location_id=$1)
       ORDER BY a.key,a.npc_id,a.version DESC`, [mapId]);
     if (!result.rows.some((asset) => asset.type === 'map')) throw new NotFoundException('Map pack is not available.');
     const storage = this.storage();
     return { mapId, assets: result.rows.map((asset) => ({ key: asset.key, type: asset.type, version: asset.version,
-      url: storage.getPublicUrl(asset.path).data.publicUrl, bytes: asset.bytes, npcId: asset.npc_id })) };
+      url: storage.getPublicUrl(asset.path).data.publicUrl, bytes: asset.bytes, npcId: asset.npc_id, sha256: asset.sha256 })) };
   }
 }

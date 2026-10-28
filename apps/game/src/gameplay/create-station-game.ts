@@ -16,13 +16,13 @@ import { effectiveNpcIds, npcIsVisible } from '../features/npcs/npc-presence';
 import { mapLocationFromPlayerLocation, playerLocationFromMapLocation } from '../features/location/player-location';
 import { activeNpcIds, ambientNpcSpawnPoints, countryLocalSeedInput } from '../features/npcs/controlled-presence';
 import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES, venueNpcConfig } from '../features/shops/venue-npc-config';
-import { bundledServiceAtlases, bundledServiceTexture } from '../features/shops/service-npc-assets';
 import { countryLocationLabel } from '../features/location/country-presentation';
 import { UI_COLORS } from '../styles/colors';
 import { playerAssets, playerWalkFrame } from '../features/appearance/player-assets';
 import { TAX_OFFICE_STAFF } from '../features/tax-office/tax-office-staff';
 import { TOWN_STREET_COLLISION } from '../features/location/town-street-collision';
 import { drawCollisionDebug } from '../features/location/collision-debug';
+import { registerPackPortraits } from '../features/npcs/npc-portraits';
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
   let activeLocation: MapLocation = callbacks.initialLocation ? mapLocationFromPlayerLocation(callbacks.initialLocation) : 'station';
@@ -103,12 +103,11 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     private worldReady = false;
     private nextPresenceCheck = 0;
     preload() {
-      for (const atlas of bundledServiceAtlases) if (!this.textures.exists(atlas.key)) this.load.atlas(atlas.key, atlas.url, atlas.data);
       if (!callbacks.practice) {
         const atlas = savedPlayerAtlas(callbacks.gender ?? 'male');
         if (!this.textures.exists(atlas.key)) this.load.atlas(atlas.key, atlas.url, atlas.data);
       }
-      if (activeLocation === 'station') {
+      if (activeLocation === 'station' && callbacks.practice) {
         this.load.image('station', stationBackground);
         for (const atlas of stationAtlases) if (!this.textures.exists(atlas.key)) this.load.atlas(atlas.key, atlas.url, atlas.data);
       }
@@ -157,16 +156,15 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         if (this.textures.exists('player:appearance')) this.textures.remove('player:appearance');
         packRequest?.abort();
         if (currentPack) { unloadPack(currentPack, this, packAnimations); currentPack = null; packAnimations = []; }
-        if (stationOwned) {
+        if (stationOwned && callbacks.practice) {
           for (const atlas of stationAtlases) {
             for (let row = 0; row < 4; row++) this.anims.remove(atlas.key === 'player' ? `walk-${row}` : `${atlas.key}-walk-${row}`);
             this.textures.remove(atlas.key);
           }
           this.textures.remove('station');
         }
-        for (const atlas of bundledServiceAtlases) this.textures.remove(atlas.key);
       });
-      if (activeLocation === 'station') this.createWorld();
+      if (activeLocation === 'station' && callbacks.practice) this.createWorld();
       else {
         packRequest = new AbortController();
         const signal = packRequest.signal;
@@ -174,6 +172,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         void fetchMapPack(mapIds[activeLocation], signal).then(async (pack) => {
           if (signal.aborted || destroyed) return;
           currentPack = pack;
+          registerPackPortraits(pack);
           unavailableAmbientNpcIds = await loadPack(this, pack, callbacks.onProgress, signal);
           if (!signal.aborted && !destroyed) this.createWorld();
         }).catch((error: unknown) => {
@@ -185,10 +184,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const controlled = controlledPresence();
       controlledNpcIds = controlled.ids;
       controlledPresenceSignature = controlled.signature;
-      const resources = currentPack ? preparePack(this, currentPack, bundledServiceTexture, unavailableAmbientNpcIds) : null;
-      if (activeLocation === 'station' && (!this.textures.exists('station') || stationAtlases.some((atlas) => !this.textures.exists(atlas.key)))) return;
-      this.playerTexture = callbacks.practice ? (resources?.player ?? 'player') : savedPlayerTexture;
-      this.walkPrefix = callbacks.practice ? (resources?.walkPrefix ?? 'walk') : `${savedPlayerTexture}-walk`;
+      const resources = currentPack ? preparePack(this, currentPack, undefined, unavailableAmbientNpcIds) : null;
+      if (activeLocation === 'station' && callbacks.practice && (!this.textures.exists('station') || stationAtlases.some((atlas) => !this.textures.exists(atlas.key)))) return;
+      this.playerTexture = resources?.player ?? (callbacks.practice ? 'player' : savedPlayerTexture);
+      this.walkPrefix = resources?.walkPrefix ?? (callbacks.practice ? 'walk' : `${savedPlayerTexture}-walk`);
       this.sourcePlayerTexture = this.playerTexture;
       this.sourceWalkPrefix = this.walkPrefix;
       if (!callbacks.practice && savedPlayerGender === 'male') {
@@ -203,7 +202,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const stationSpawns = activeLocation === 'station' ? ambientNpcSpawnPoints(
         venueNpcConfig('station'), VENUE_SPAWN_ZONES, VENUE_EXCLUSION_ZONES, STATION_NPCS.map(npc => npc.id),
       ) : new Map<string, Point>();
-      npcs = activeLocation === 'station' ? STATION_NPCS.map(npc => ({ ...npc, ...stationSpawns.get(npc.id) })) : [];
+      npcs = activeLocation === 'station' ? STATION_NPCS.map(npc => {
+        const remoteTexture = currentPack?.assets.find(asset => asset.key === npc.texture && asset.type === 'image');
+        return { ...npc, texture: remoteTexture ? packKey(currentPack!, remoteTexture) : npc.texture, ...stationSpawns.get(npc.id) };
+      }) : [];
       const background = this.add.image(0, 0, resources?.background ?? 'station').setOrigin(0);
       if (activeLocation === 'street') background.setScale(STREET_MAP_SCALE);
       if (activeLocation === 'street' && import.meta.env.DEV && new URLSearchParams(window.location.search).has('collision')) {
@@ -294,7 +296,11 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (activeLocation === 'station') for (const npc of npcs) {
         const shadow = this.add.ellipse(npc.x, npc.y - 3, 48, 16, 0x443728, 0.22);
         const sprite = this.add.sprite(npc.x, npc.y, npc.texture, '0-0').setOrigin(0.5, 1).setScale(npc.scale ?? 2).setDepth(npc.y);
-        for (const row of [0, 1, 2, 3]) if (!this.anims.exists(`${npc.texture}-walk-${row}`)) this.anims.create({ key: `${npc.texture}-walk-${row}`, frames: Array.from({ length: 4 }, (_, column) => ({ key: npc.texture, frame: `${row}-${column}` })), frameRate: 8, repeat: -1 });
+        for (const row of [0, 1, 2, 3]) {
+          const animationKey = `${npc.texture}-walk-${row}`;
+          if (!this.anims.exists(animationKey)) this.anims.create({ key: animationKey, frames: Array.from({ length: 4 }, (_, column) => ({ key: npc.texture, frame: `${row}-${column}` })), frameRate: 8, repeat: -1 });
+          if (currentPack) packAnimations.push(animationKey);
+        }
         sprite.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
           if (paused) return;
           if (Math.hypot(position.x - npc.x, position.y - npc.y) <= 110) { callbacks.onTalk(npc.id); return; }
@@ -319,7 +325,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         fontFamily: 'sans-serif', fontSize: '32px', fontStyle: 'bold', color: UI_COLORS.creamTextBright,
         backgroundColor: UI_COLORS.greenStrong, padding: { x: 18, y: 8 },
       }).setOrigin(0.5).setDepth(1500);
-      this.player = this.add.sprite(position.x, position.y, this.playerTexture, callbacks.practice && currentPack ? 0 : '0-0').setOrigin(0.5, 1).setScale(callbacks.practice ? 2 : savedPlayerScale);
+      this.player = this.add.sprite(position.x, position.y, this.playerTexture, currentPack ? 0 : '0-0').setOrigin(0.5, 1).setScale(callbacks.practice ? 2 : savedPlayerScale);
       this.keys = this.input.keyboard?.createCursorKeys();
       if (this.input.keyboard) {
         // Do not capture browser input: the text composer must retain normal typing.
@@ -431,6 +437,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         return;
       }
       this.transitionPending = true;
+      callbacks.onTransitionStart?.();
       activeLocation = location;
       destinationMapTarget = null;
       route = [];
@@ -651,8 +658,12 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         // Move outside the ring so a failed request needs a deliberate retry.
         position = { x: portal.x, y: portal.y - 55 };
         this.player.setPosition(position.x, position.y);
+        this.player.anims.stop();
+        callbacks.onTransitionStart?.();
         void authorizeStreetExit(callbacks.onEnterStreet, () => {
           if (!destroyed) { this.previousLocation = 'station'; this.enterLocation('street'); }
+        }).then((authorized) => {
+          if (!authorized && !destroyed) callbacks.onReady();
         }).finally(() => { authorizing = false; });
         return;
       }

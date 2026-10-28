@@ -124,11 +124,14 @@ export function portalAt(
 export async function authorizeStreetExit(
   authorize: () => Promise<boolean>,
   enter: () => void,
-): Promise<void> {
+): Promise<boolean> {
   try {
-    if (await authorize()) enter();
+    const authorized = await authorize();
+    if (authorized) enter();
+    return authorized;
   } catch {
     /* Failed authorization leaves the player at the station. */
+    return false;
   }
 }
 

@@ -145,6 +145,13 @@ export default function GameCanvas({
         onTalk: (id) => {
           if (!cancelled) callbacks.current.onTalk(id);
         },
+        onTransitionStart: () => {
+          if (!cancelled) {
+            setProgress(0);
+            setReady(false);
+            callbacks.current.onReadyChange(false);
+          }
+        },
         onReady: () => {
           if (!cancelled) {
             setReady(true);
@@ -234,18 +241,20 @@ export default function GameCanvas({
         aria-label={`${locationLabel}. Tap the path to walk, or use arrow keys or WASD. An exclamation mark shows an NPC with an active or new goal. Approach a nearby NPC to talk.`}
       />
       {!ready || error ? (
-        <div className="station-loading absolute [top:50%] [left:50%] [transform:translateX(-50%)] bg-dialogue p-5 rounded-[16px] max-w-[calc(100%_-_24px)]">
-          {error ? (
-            <>
-              <p role="alert">{error}</p>
-              <GameButton
-                label="Retry map"
-                onClick={() => setAttempt((value) => value + 1)}
-              />
-            </>
-          ) : (
-            <p role="status">Loading map… {Math.round(progress * 100)}%</p>
-          )}
+        <div className="station-loading absolute inset-0 z-20 grid place-items-center bg-[var(--color-dark-surface)]">
+          <div className="bg-dialogue p-5 rounded-[16px] max-w-[calc(100%_-_24px)]">
+            {error ? (
+              <>
+                <p role="alert">{error}</p>
+                <GameButton
+                  label="Retry map"
+                  onClick={() => setAttempt((value) => value + 1)}
+                />
+              </>
+            ) : (
+              <p role="status">Loading map… {Math.round(progress * 100)}%</p>
+            )}
+          </div>
         </div>
       ) : null}
     </div>
