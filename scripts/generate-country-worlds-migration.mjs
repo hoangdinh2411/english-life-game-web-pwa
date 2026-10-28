@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 const rootArgumentIndex = process.argv.indexOf('--root');
 const root = rootArgumentIndex === -1 ? resolve(import.meta.dirname, '..') : resolve(process.argv[rootArgumentIndex + 1] ?? '');
 const catalogPath = resolve(root, 'apps/game/assets/flags/countries.json');
-const migrationPath = resolve(root, 'apps/server/migrations/032_country_clock_worlds.sql');
+const migrationPath = resolve(root, 'supabase/migrations/032_country_clock_worlds.sql');
 
 function fail(message) {
   throw new Error(`apps/game/assets/flags/countries.json: ${message}`);
@@ -124,7 +124,7 @@ const countries = await loadCountries();
 const output = renderMigration(countries);
 if (process.argv.includes('--check')) {
   const committed = await readFile(migrationPath, 'utf8').catch(() => '');
-  if (committed !== output) throw new Error('032_country_clock_worlds.sql is not deterministic or is out of date');
+  if (committed.replaceAll('\r\n', '\n') !== output) throw new Error('032_country_clock_worlds.sql is not deterministic or is out of date');
 } else {
   await writeFile(migrationPath, output);
 }

@@ -9,7 +9,5 @@ coverage/
 *.tsbuildinfo
 .refactor-backups/
 /local-assets/
-apps/server/supabase/.temp/
-apps/server/supabase/.branches/
 /supabase/.temp/
 /supabase/.branches/

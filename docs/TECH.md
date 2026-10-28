@@ -305,7 +305,11 @@ consumed across client/server. Authored quest/NPC/dialogue content stays in
   unique forward migrations; applied migrations remain immutable. Migration
   `035` adds the immutable, check-constrained character gender used to resolve
   approved player walking and portrait assets; existing rows are backfilled
-  before the column becomes required. Canonical speech keys include only
+  before the column becomes required. Migration
+  `20261028195955_harden_public_rls.sql` removes legacy client policies and
+  privileges, enables RLS on every public table, and makes future public-schema
+  objects private by default; all application data remains accessible only
+  through NestJS. Canonical speech keys include only
   generation inputs, and callers receive 60-second signed URLs. AI audio uses
   `AI_SPEECH_CACHE_TTL_SECONDS` (30–3600, default 300) and rejects sensitive
   text. Inspect schema and current database before applying new changes.
@@ -617,6 +621,7 @@ Install Node >=20.19, pnpm 11 and Docker (only needed for local Supabase):
 pnpm install
 pnpm supabase:start             # local Auth/API, Postgres and Studio (Docker)
 pnpm supabase:env               # generates ignored server-local environment
+pnpm db:migration:new -- <name> # creates supabase/migrations/<timestamp>_<name>.sql
 pnpm db:migrate                # forward migrations only
 pnpm db:seed                   # idempotent authored JSON seed
 pnpm dev                       # Vite :8082 + NestJS :3000
@@ -630,6 +635,10 @@ Supabase settings into the game local env. These files are ignored by Git and
 **excluded from shared ZIP packages**. For a phone browser, configure reachable
 HTTPS client/API/Auth origins and correct CORS; `localhost` on the phone refers
 to the phone, not the computer.
+
+Supabase project configuration and all forward SQL migrations live in the
+root-level `supabase/` directory. Create new migrations with
+`pnpm db:migration:new -- <name>`; do not add migrations under `apps/server`.
 
 - `pnpm dev:game`, `pnpm dev:web`, `pnpm dev:server`: targeted dev servers.
 - `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm content:validate`,

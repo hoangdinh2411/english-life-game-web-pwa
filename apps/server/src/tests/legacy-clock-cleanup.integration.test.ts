@@ -35,7 +35,7 @@ test('033 drops only per-player clock columns and preserves appearance and actio
       VALUES ($1,now(),now(),2,'black','blue','navy')`, [userId]);
     await client.query(`INSERT INTO ${schema}.player_actions (user_id,key,response)
       VALUES ($1,$2,$3)`, [userId, actionKey, { energy: 79 }]);
-    const migration = await readFile(resolve('migrations/033_remove_per_player_clock.sql'), 'utf8');
+    const migration = await readFile(resolve('../../supabase/migrations/033_remove_per_player_clock.sql'), 'utf8');
     await client.query(migration.replace('public.player_life', `${schema}.player_life`));
     const columns = await client.query<{ column_name: string }>(`SELECT column_name
       FROM information_schema.columns WHERE table_schema=$1 AND table_name='player_life'

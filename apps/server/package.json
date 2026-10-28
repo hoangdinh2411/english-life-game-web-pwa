@@ -12,6 +12,7 @@
     "test:integration": "pnpm build && node scripts/test-integration.mjs",
     "ai:evaluate": "pnpm build && node --import ./scripts/load-env.mjs ./dist/scripts/evaluate-ai.js",
     "migrate": "node scripts/migrate.mjs",
+    "migration:new": "node scripts/supabase.mjs migration new",
     "seed": "pnpm --filter @life-abroad/shared build && pnpm build && node scripts/seed.mjs",
     "supabase:start": "node scripts/supabase.mjs start",
     "supabase:stop": "node scripts/supabase.mjs stop",
