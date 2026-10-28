@@ -3,8 +3,11 @@ services:
     name: life-abroad-api-staging
     runtime: node
     branch: staging
+    plan: free
     autoDeployTrigger: "off"
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @life-abroad/shared build && pnpm --filter server build
+    buildCommand:
+      corepack enable && pnpm install --frozen-lockfile && pnpm --filter
+      @life-abroad/shared build && pnpm --filter server build
     startCommand: node apps/server/dist/main.js
     healthCheckPath: /api/v1/health
     envVars:
@@ -26,7 +29,9 @@ services:
     name: life-abroad-client-staging
     branch: staging
     autoDeployTrigger: "off"
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter game build
+    buildCommand:
+      corepack enable && pnpm install --frozen-lockfile && pnpm --filter game
+      build
     staticPublishPath: apps/game/dist
     envVars:
       - key: VITE_API_URL
