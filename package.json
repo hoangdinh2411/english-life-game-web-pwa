@@ -25,6 +25,7 @@
     "test": "pnpm -r test",
     "build": "pnpm -r build",
     "db:migrate": "pnpm --filter server migrate",
+    "db:migration:new": "pnpm --filter server migration:new",
     "db:seed": "pnpm --filter server seed",
     "supabase:start": "pnpm --filter server supabase:start",
     "supabase:stop": "pnpm --filter server supabase:stop",

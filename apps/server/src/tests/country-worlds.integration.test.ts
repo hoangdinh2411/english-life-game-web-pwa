@@ -24,7 +24,7 @@ test('ONB-01.1 migrates the canonical catalog and protects one immutable world p
       CREATE SCHEMA storage;
       CREATE TABLE storage.buckets
         (id text PRIMARY KEY, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);`);
-    const migrationDirectory = resolve('migrations');
+    const migrationDirectory = resolve('../../supabase/migrations');
     const migrations = (await readdir(migrationDirectory)).filter(file => file.endsWith('.sql')).sort();
     for (const file of migrations.filter(file => file < '032_country_clock_worlds.sql')) {
       await database.query(await readFile(resolve(migrationDirectory, file), 'utf8'));

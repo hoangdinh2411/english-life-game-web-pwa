@@ -28,7 +28,7 @@ test('ONB-01.2 creates one character, grant and country world with idempotent co
       CREATE SCHEMA storage;
       CREATE TABLE storage.buckets
         (id text PRIMARY KEY, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);`);
-    const migrationDirectory = resolve('migrations');
+    const migrationDirectory = resolve('../../supabase/migrations');
     for (const file of (await readdir(migrationDirectory)).filter(file => file.endsWith('.sql')).sort()) {
       await pool.query(await readFile(resolve(migrationDirectory, file), 'utf8'));
     }

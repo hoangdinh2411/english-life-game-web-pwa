@@ -8,14 +8,15 @@ const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error('DATABASE_URL is required to run migrations.');
 const here = dirname(fileURLToPath(import.meta.url));
+const migrationDirectory = join(here, '../../../supabase/migrations');
 const pool = new Pool({ connectionString: databaseUrl });
 try {
   await pool.query('CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
-  const files = (await readdir(join(here, '../migrations'))).filter((file) => file.endsWith('.sql')).sort();
+  const files = (await readdir(migrationDirectory)).filter((file) => file.endsWith('.sql')).sort();
   for (const name of files) {
     const existing = await pool.query('SELECT 1 FROM schema_migrations WHERE name = $1', [name]);
     if (existing.rowCount) continue;
-    const sql = await readFile(join(here, '../migrations', name), 'utf8');
+    const sql = await readFile(join(migrationDirectory, name), 'utf8');
     const client = await pool.connect();
     try {
       await client.query('BEGIN');

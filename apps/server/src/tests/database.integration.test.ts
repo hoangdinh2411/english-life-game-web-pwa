@@ -44,8 +44,31 @@ test('R2/T2 clean migrations and seed, cache, character writes, rollback, RLS an
       });
       assert.equal(migration.status, 0, migration.stderr);
     }
-    const migrationCount = readdirSync(resolve('migrations')).filter(file => file.endsWith('.sql')).length;
+    const migrationCount = readdirSync(resolve('../../supabase/migrations')).filter(file => file.endsWith('.sql')).length;
     assert.equal((await clean.query('SELECT * FROM schema_migrations')).rowCount, migrationCount);
+    const rlsAudit = (await clean.query<{
+      table_count: number;
+      protected_count: number;
+      policy_count: number;
+      client_grant_count: number;
+    }>(`SELECT
+      count(DISTINCT relation.oid)::int AS table_count,
+      count(DISTINCT relation.oid) FILTER (WHERE relation.relrowsecurity)::int AS protected_count,
+      count(DISTINCT policy.oid)::int AS policy_count,
+      count(DISTINCT concat(grant_row.grantee, ':', grant_row.privilege_type, ':', grant_row.table_name))
+        FILTER (WHERE grant_row.grantee IS NOT NULL)::int AS client_grant_count
+      FROM pg_class relation
+      JOIN pg_namespace namespace ON namespace.oid=relation.relnamespace
+      LEFT JOIN pg_policy policy ON policy.polrelid=relation.oid
+      LEFT JOIN information_schema.role_table_grants grant_row
+        ON grant_row.table_schema=namespace.nspname
+        AND grant_row.table_name=relation.relname
+        AND grant_row.grantee IN ('anon','authenticated')
+      WHERE namespace.nspname='public' AND relation.relkind IN ('r','p')`)).rows[0];
+    assert.ok(rlsAudit);
+    assert.equal(rlsAudit.protected_count, rlsAudit.table_count);
+    assert.equal(rlsAudit.policy_count, 0);
+    assert.equal(rlsAudit.client_grant_count, 0);
     assert.equal((await clean.query('SELECT * FROM countries')).rowCount, 247);
     assert.equal((await clean.query(`SELECT count(*)::int AS count FROM countries
       WHERE starter_city_id='city_maplewood' AND starter_location_id='loc_station'`)).rows[0].count, 247);

@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 export function supabase(args, options = {}) {
   return spawnSync(process.execPath, [fileURLToPath(new URL('../node_modules/supabase/dist/supabase.js', import.meta.url)), ...args],
-    { cwd: fileURLToPath(new URL('..', import.meta.url)), env: { ...process.env, SUPABASE_TELEMETRY_DISABLED: '1' }, ...options });
+    { cwd: fileURLToPath(new URL('../../..', import.meta.url)), env: { ...process.env, SUPABASE_TELEMETRY_DISABLED: '1' }, ...options });
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
