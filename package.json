@@ -10,6 +10,7 @@
     "assets:normalize-npcs": "node scripts/normalize-npc-sprites.mjs",
     "assets:upload": "node scripts/upload-map-assets.mjs",
     "assets:generate": "node scripts/save-map-assets.mjs",
+    "assets:release:plan": "node scripts/plan-asset-release.mjs",
     "assets:archive": "node scripts/archive-map-assets.mjs",
     "voices:build": "pnpm --filter @life-abroad/shared build && pnpm --filter game exec node --import tsx ../../scripts/generate-station-voices.mjs",
     "voices:street": "pnpm --filter @life-abroad/shared build && node scripts/generate-street-voices.mjs",

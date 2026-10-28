@@ -1,0 +1,63 @@
+name: Asset release experiment
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/asset-release-ci-experiment]
+    paths:
+      - apps/game/assets/**
+      - content/seed/npcs.json
+      - content/seed/street-npcs.json
+      - scripts/generate-map-assets.mjs
+      - scripts/plan-asset-release.mjs
+      - .github/workflows/asset-release-experiment.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asset-release-experiment-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test release planner
+        run: node --test scripts/plan-asset-release.test.mjs
+
+      - name: Generate release plan
+        env:
+          ASSET_RELEASE_ID: ci-${{ github.run_id }}-${{ github.run_attempt }}
+        run: pnpm assets:release:plan -- --output local-assets/release-plan
+
+      - name: Add measurements to job summary
+        run: cat local-assets/release-plan/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload release-plan evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: asset-release-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            local-assets/release-plan/manifest.json
+            local-assets/release-plan/summary.md
+          if-no-files-found: error
+          retention-days: 7
