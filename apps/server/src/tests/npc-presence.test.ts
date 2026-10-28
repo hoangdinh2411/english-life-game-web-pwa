@@ -32,9 +32,12 @@ test('NPC-05 supports multiple shifts and overnight rollover', () => {
 
 test('NPC-05 fails closed for unscheduled street NPCs and constrains store fallback', () => {
   assert.equal(npcIsPresent(street({ profileVersion: 1 }), 'loc_town_street', local('mon', 9 * 60)), false);
-  const shop = { id: 'npc_cafe_customer', location_id: 'loc_cafe', profile: { profileVersion: 1 } as NpcProfile };
-  assert.equal(npcIsPresent(shop, 'loc_cafe', local('mon', 8 * 60)), true);
-  assert.equal(npcIsPresent(shop, 'loc_cafe', local('mon', 14 * 60)), false);
+  const cafe = { id: 'npc_cafe_customer', location_id: 'loc_cafe', profile: { profileVersion: 1 } as NpcProfile };
+  assert.equal(npcIsPresent(cafe, 'loc_cafe', local('mon', 8 * 60)), true);
+  assert.equal(npcIsPresent(cafe, 'loc_cafe', local('mon', 21 * 60)), false);
+  const clothes = { id: 'npc_clothes_customer', location_id: 'loc_clothes', profile: { profileVersion: 1 } as NpcProfile };
+  assert.equal(npcIsPresent(clothes, 'loc_clothes', local('mon', 10 * 60)), true);
+  assert.equal(npcIsPresent(clothes, 'loc_clothes', local('mon', 20 * 60)), false);
 });
 
 test('NPC-05 next boundary follows country-local DST and weekday rollover', () => {

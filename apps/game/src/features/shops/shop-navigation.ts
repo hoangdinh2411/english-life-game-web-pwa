@@ -3,8 +3,8 @@ import { isVenueOpenAtLocalMinute, type VenueKind } from '@life-abroad/shared';
 import { localWorldMinutes } from '../world-clock/world-clock';
 
 const locationVenueKinds: Partial<Record<MapLocation, VenueKind>> = {
-  cafe: 'store',
-  corner_cafe: 'store',
+  cafe: 'cafe',
+  corner_cafe: 'cafe',
   clothes: 'store',
   tax_office: 'organization',
 };
@@ -14,6 +14,8 @@ export function canEnterLocation(location: MapLocation, gameTime: Date | null, t
   return venueKind === undefined || (gameTime !== null && timeZone !== null &&
     isVenueOpenAtLocalMinute(venueKind, localWorldMinutes(gameTime, timeZone)));
 }
+
+export const shouldDeferClosedVenueExit = (conversationNpcId: string | null): boolean => conversationNpcId !== null;
 
 export function closedVenueExit(location: MapLocation): {
   closedLocation: ClosedVenueLocation;

@@ -78,8 +78,11 @@ English is a tool to accomplish a task, not a multiple-choice test.
   absent. Station passengers and shop customers use deterministic controlled
   presence based on game date, location and morning/daytime/evening bucket, so
   repeated entry does not reroll a location. Required service staff remain
-  present while an accessible venue is open, and conversations already in
-  progress may finish after a presence boundary.
+  present while an accessible venue is open. Ordinary presence changes do not
+  remove an NPC from an active conversation. If the venue closes, the staff
+  member explains the opening hours, replies are disabled, and the player leaves
+  only after closing that notice; without an active conversation, the player is
+  moved outside immediately and shown the reason.
 - Each player builds a separate relationship with each NPC. Familiarity and
   affinity change slowly from explicit greetings, thanks, polite requests,
   apologies and insults. Ambiguous language and learner mistakes do not count.
@@ -90,6 +93,10 @@ English is a tool to accomplish a task, not a multiple-choice test.
   Missing facts receive a natural non-answer instead of invented detail. Shop
   NPCs keep small talk brief and redirect to service without changing orders,
   prices or quest behavior.
+- Staff in every service role speak as helpful professionals: they acknowledge
+  the player's request, offer help and use short, polite transitions before
+  asking the next question. Concise dialogue must not sound abrupt, dismissive
+  or like an interrogation.
 - Service conversations are session-only working state, not durable chat
   history. Seller, shop-assistant, waiter and Tax Office staff messages are
   removed when their dialogue closes and are purged again when the game starts;
@@ -103,7 +110,8 @@ English is a tool to accomplish a task, not a multiple-choice test.
   Speech uses only styles supported by the selected provider voice and falls
   back to neutral delivery.
 - Shop and station NPCs have individual names. Venue hours use game time:
-  organizations 08:00–16:00, stores 08:00–14:00 and workplaces 07:00–17:00. The
+  cafés 08:00–21:00, organizations 08:00–16:00, stores 10:00–20:00,
+  supermarkets 07:00–22:00 and workplaces 07:00–17:00. The
   current playable map gates its store interiors; closed entrances show the
   owner's dialogue with opening hours. The pause menu does not list opening-hour
   schedules.

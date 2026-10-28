@@ -28,14 +28,16 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
     const userId = user.rows[0]!.id;
     await client.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId]);
 
-    assert.equal((await service.reply(client, userId, 'I need to register an ID card', arrival))?.nodeId,
-      'tax_office_application_name');
-    assert.match((await service.reply(client, userId, '', arrival))!.responseText, /name between 1 and 60/i);
-    assert.match((await service.reply(client, userId, 'Test Learner', arrival))!.responseText, /date of birth/i);
-    assert.match((await service.reply(client, userId, '2099-01-01', arrival))!.responseText, /real date/i);
-    assert.match((await service.reply(client, userId, '1995-02-28', arrival))!.responseText, /address/i);
+    const registration = await service.reply(client, userId, 'I need to register an ID card', arrival);
+    assert.equal(registration?.nodeId, 'tax_office_application_name');
+    assert.match(registration!.responseText, /I can help you with that/i);
+    assert.match(registration!.responseText, /full name/i);
+    assert.match((await service.reply(client, userId, '', arrival))!.responseText, /full name/i);
+    assert.match((await service.reply(client, userId, 'Test Learner', arrival))!.responseText, /when were you born/i);
+    assert.match((await service.reply(client, userId, '2099-01-01', arrival))!.responseText, /what date were you born/i);
+    assert.match((await service.reply(client, userId, '28 February 1995', arrival))!.responseText, /address/i);
     assert.match(await service.opening(client, userId) ?? '', /address/i, 'a reopened conversation resumes the saved field');
-    assert.match((await service.reply(client, userId, '12 Maple Street', arrival))!.responseText, /come from/i);
+    assert.match((await service.reply(client, userId, '12 Maple Street', arrival))!.responseText, /where are you from/i);
     assert.match((await service.reply(client, userId, 'Vietnam', arrival))!.responseText, /photo/i);
     const confirmation = await service.reply(client, userId, 'Yes, issue my card', arrival);
     assert.equal(confirmation?.metadata.intent, 'confirm_id_card_application');
@@ -57,8 +59,8 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
     assert.match(review.responseText, new RegExp(`Gender: ${user.rows[0]!.gender}`));
     assert.match(review.responseText, /Where you come from: Vietnam/);
     assert.match(review.responseText, /Photo: character picture\. Is this correct\?$/);
-    assert.match((await service.reply(client, userId, 'no', arrival))!.responseText, /Which answer/i);
-    assert.match((await service.reply(client, userId, 'address', arrival))!.responseText, /What is your address/i);
+    assert.match((await service.reply(client, userId, 'no', arrival))!.responseText, /What would you like to change/i);
+    assert.match((await service.reply(client, userId, 'address', arrival))!.responseText, /What’s your address/i);
 
     const phrases = [
       "I don't have an address yet",
@@ -80,7 +82,7 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
     for (const answer of ['I need an ID card', 'Test Learner', '1995-02-28']) {
       await service.reply(client, userId, answer, arrival);
     }
-    assert.match((await service.reply(client, userId, 'skip', arrival))!.responseText, /explain/i);
+    assert.match((await service.reply(client, userId, 'skip', arrival))!.responseText, /don’t have one/i);
     const afterSkip = await client.query<{ current_field: string; address: string | null }>(
       'SELECT current_field,address FROM public.id_card_applications WHERE user_id=$1', [userId]);
     assert.deepEqual(afterSkip.rows[0], { current_field: 'address', address: null });

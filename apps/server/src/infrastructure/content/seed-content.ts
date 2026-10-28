@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { dialogueSchema, idCardApplicationContentSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, townSeedSchema, voicePoolsSchema } from '@life-abroad/shared';
+import { dialogueSchema, idCardApplicationContentSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, townSeedSchema, VENUE_HOURS, voicePoolsSchema } from '@life-abroad/shared';
 
 async function json(path: string): Promise<unknown> {
   try { return JSON.parse(await readFile(path, 'utf8')) as unknown; }
@@ -39,8 +39,12 @@ export async function loadSeedContent(root: string) {
       requireReference(locations.has(slot.locationId), `${npc.id}: unknown schedule location ${slot.locationId}`);
       requireReference(slot.locationId === npc.locationId, `${npc.id}: schedule location must match the NPC location`);
       if ((SHOP_NPC_IDS as readonly string[]).includes(npc.id)) {
-        requireReference(slot.start >= '08:00' && slot.end <= '14:00' && slot.start < slot.end,
-          `${npc.id}: store schedule must stay within venue hours`);
+        const kind = slot.locationId === 'loc_cafe' || slot.locationId === 'loc_corner_cafe' ? 'cafe' : 'store';
+        const [opens, closes] = VENUE_HOURS[kind];
+        const opening = `${String(opens).padStart(2, '0')}:00`;
+        const closing = `${String(closes).padStart(2, '0')}:00`;
+        requireReference(slot.start >= opening && slot.end <= closing && slot.start < slot.end,
+          `${npc.id}: ${kind} schedule must stay within venue hours`);
       }
     }
   }

@@ -31,6 +31,7 @@ export default function GameCanvas({
   getGameTime,
   getTimeZone,
   onVenueClosed,
+  closedVenueExitSignal = 0,
   presentNpcIds,
 }: GameCanvasProps) {
   const initialMapId = initialLocation.mapId;
@@ -85,6 +86,9 @@ export default function GameCanvas({
   useEffect(() => {
     game.current?.enforceVenueHours();
   }, [getGameTime, getTimeZone]);
+  useEffect(() => {
+    if (closedVenueExitSignal > 0) game.current?.leaveClosedVenue();
+  }, [closedVenueExitSignal]);
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
   const [locationLabel, setLocationLabel] = useState(
@@ -133,8 +137,8 @@ export default function GameCanvas({
           ? {
               getGameTime: () => callbacks.current.getGameTime?.() ?? null,
               getTimeZone: () => callbacks.current.getTimeZone?.() ?? null,
-              onVenueClosed: (location) =>
-                callbacks.current.onVenueClosed?.(location),
+              onVenueClosed: (location, talkingNpcId) =>
+                callbacks.current.onVenueClosed?.(location, talkingNpcId),
             }
           : {}),
         onNearby: () => {},

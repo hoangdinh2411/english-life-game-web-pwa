@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
-import { dialogueSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, practiceDialogueNodeSchema, voicePoolsSchema } from '../packages/shared/dist/index.js';
+import { dialogueSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, practiceDialogueNodeSchema, VENUE_HOURS, voicePoolsSchema } from '../packages/shared/dist/index.js';
 
 async function readJson(file) {
   try {
@@ -42,8 +42,14 @@ const locationIds = new Set(town.locations.map(location => location.id));
 for (const npc of [...npcCatalog, ...streetNpcContent.npcs]) for (const slot of npc.profile.presenceSchedule?.weeklySlots ?? []) {
   if (!locationIds.has(slot.locationId)) throw new Error(`${npc.id}: unknown schedule location ${slot.locationId}`);
   if (slot.locationId !== npc.locationId) throw new Error(`${npc.id}: schedule location must match the NPC location`);
-  if (SHOP_NPC_IDS.includes(npc.id) && !(slot.start >= '08:00' && slot.end <= '14:00' && slot.start < slot.end)) {
-    throw new Error(`${npc.id}: store schedule must stay within venue hours`);
+  if (SHOP_NPC_IDS.includes(npc.id)) {
+    const kind = slot.locationId === 'loc_cafe' || slot.locationId === 'loc_corner_cafe' ? 'cafe' : 'store';
+    const [opens, closes] = VENUE_HOURS[kind];
+    const opening = `${String(opens).padStart(2, '0')}:00`;
+    const closing = `${String(closes).padStart(2, '0')}:00`;
+    if (!(slot.start >= opening && slot.end <= closing && slot.start < slot.end)) {
+      throw new Error(`${npc.id}: ${kind} schedule must stay within venue hours`);
+    }
   }
 }
 if (town.isStarterCity !== true) throw new Error('town.json must explicitly mark the starter city.');

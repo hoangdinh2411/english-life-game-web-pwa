@@ -10,12 +10,12 @@ try {
 
   test('closed-store conversation shows the store owner, avatar and hours', () => {
     const cases = [
-      ['cafe', 'Mia', '100% 0%'],
-      ['corner_cafe', 'Elena', '100% 0%'],
-      ['clothes', 'Ravi', '100% 0%'],
+      ['cafe', 'Mia', '100% 0%', '08:00–21:00'],
+      ['corner_cafe', 'Elena', '100% 0%', '08:00–21:00'],
+      ['clothes', 'Ravi', '100% 0%', '10:00–20:00'],
     ];
 
-    for (const [location, owner, portraitPosition] of cases) {
+    for (const [location, owner, portraitPosition, hours] of cases) {
       const html = renderToStaticMarkup(createElement(VenueClosedDialogue, {
         location,
         gameTimeAvailable: true,
@@ -25,7 +25,7 @@ try {
       assert.ok(html.includes(`background-position:${portraitPosition}`));
       assert.ok(html.includes('background-size:300% 100%'));
       assert.match(html, new RegExp(`<strong>${owner}</strong>`));
-      assert.match(html, /Sorry, the store is closed\. Opening hours are: 08:00–14:00\./);
+      assert.match(html, new RegExp(`Sorry, the store is closed\\. Opening hours are: ${hours}\\.`));
       assert.doesNotMatch(html, /UTC/);
     }
   });
@@ -47,6 +47,19 @@ try {
     }));
     assert.match(html, /aria-label="Marcus avatar"/);
     assert.match(html, /Sorry, the office is closed\. Opening hours are: 08:00–16:00\./);
+    assert.match(html, />OK</);
+  });
+
+  test('an active Tax Office conversation explains closing before the player leaves', () => {
+    const html = renderToStaticMarkup(createElement(VenueClosedDialogue, {
+      location: 'tax_office', conversationNpcId: 'npc_tax_clerk_nadia', gameTimeAvailable: true, onReturn() {},
+    }));
+    assert.match(html, /aria-label="Nadia avatar"/);
+    assert.match(html, /office is closed now/);
+    assert.match(html, /open from 08:00–16:00/);
+    assert.match(html, /Please come back during those hours/);
+    assert.match(html, />Close conversation</);
+    assert.doesNotMatch(html, /textarea|input/);
   });
 } finally {
   await server.close();

@@ -72,10 +72,13 @@ export class LifeService {
   purchase(userId: string, request: PurchaseRequest): Promise<LifeState> {
     const itemIds = [...request.itemIds].sort();
     return this.action(userId, request.key, 'purchase', { itemIds }, async (client, state) => {
-      if (!this.isOpen('store', await this.worldClock.read(userId, client))) throw new ConflictException(`Stores open from ${venueHoursLabel('store')}`);
       const result = await client.query<ShopItem>('SELECT id,name,kind,price,shop,color FROM shop_items WHERE id=ANY($1::text[])', [itemIds]);
       const items = result.rows;
       if (items.length !== itemIds.length) throw new BadRequestException('Unknown shop item');
+      const venueKind: VenueKind = items.every(item => item.shop === 'cafe') ? 'cafe' : 'store';
+      if (!this.isOpen(venueKind, await this.worldClock.read(userId, client))) {
+        throw new ConflictException(`${venueKind === 'cafe' ? 'Cafés' : 'Stores'} open from ${venueHoursLabel(venueKind)}`);
+      }
       if (items.length === 2 && !(items.every(item => item.shop === 'cafe') &&
           items.some(item => item.kind === 'drink') && items.some(item => item.kind === 'food'))) {
         throw new BadRequestException('Choose one item or one drink and one food');
@@ -127,7 +130,7 @@ export class LifeService {
     await this.repository.lock(client, userId);
     const clock = await this.worldClock.read(userId, client);
     const state = await this.repository.state(client, userId, clock);
-    if (!this.isOpen('store', clock)) throw new ConflictException(`Stores open from ${venueHoursLabel('store')}`);
+    if (!this.isOpen('cafe', clock)) throw new ConflictException(`Cafés open from ${venueHoursLabel('cafe')}`);
     const total = item.price * quantity;
     if (state.coins < total) return false;
     await this.economy.spendInTransaction(client, userId, total, 'shop_purchase', `seller_order:${orderId}`, orderId);

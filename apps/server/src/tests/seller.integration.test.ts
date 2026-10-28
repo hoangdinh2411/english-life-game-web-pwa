@@ -235,7 +235,7 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
     const setStoreTime = async (time: string) => {
       worldClock.setGameTime(`2000-01-01T${time}:00.000Z`);
     };
-    for (const [time, expected] of [['07:59', 409], ['08:00', 201], ['13:59', 201], ['14:00', 409]] as const) {
+    for (const [time, expected] of [['07:59', 409], ['08:00', 201], ['20:59', 201], ['21:00', 409]] as const) {
       await setStoreTime(time);
       await client.query('UPDATE player_stats SET coins=500,energy=100 WHERE user_id=$1', [userId]);
       const purchaseKey = randomUUID();
@@ -245,9 +245,9 @@ test('T17 seller Auth/API: existing account, pending order, pay once, cancel and
         'SELECT count(*) FROM public.shop_orders WHERE user_id=$1 AND idempotency_key=$2', [userId, purchaseKey]);
       assert.equal(Number(orderCount.rows[0]!.count), expected === 201 ? 1 : 0,
         `direct café purchase history at ${time}`);
-      if (expected === 409) assert.match(JSON.stringify(await response.json()), /08:00.*14:00/);
+      if (expected === 409) assert.match(JSON.stringify(await response.json()), /08:00.*21:00/);
     }
-    await setStoreTime('07:59');
+    await setStoreTime('09:59');
     const closedOpening = await call('/conversations', { npcId: 'npc_clothes_seller' });
     assert.equal(closedOpening.status, 409);
     assert.match(JSON.stringify(await closedOpening.json()), /not here right now/i);
