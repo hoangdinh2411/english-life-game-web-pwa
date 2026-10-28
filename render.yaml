@@ -3,13 +3,19 @@ services:
     name: life-abroad-api-staging
     runtime: node
     branch: staging
+    plan: free
     autoDeployTrigger: "off"
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @life-abroad/shared build && pnpm --filter server build
+    buildCommand:
+      npm install --global pnpm@11.19.0 && pnpm --version && pnpm install
+      --frozen-lockfile && pnpm --filter @life-abroad/shared build && pnpm --filter
+      server build
     startCommand: node apps/server/dist/main.js
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_VERSION
         value: 22.20.0
+      - key: HOST
+        value: 0.0.0.0
       - key: DATABASE_URL
         sync: false
       - key: SUPABASE_URL
@@ -21,12 +27,16 @@ services:
       - key: CLIENT_ORIGIN
         sync: false
 
-  - type: static_site
+  - type: web
+    runtime: static
     name: life-abroad-client-staging
     branch: staging
     autoDeployTrigger: "off"
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter game build
-    publishPath: apps/game/dist
+    buildCommand:
+      npm install --global pnpm@11.19.0 && pnpm --version && pnpm install
+      --frozen-lockfile && pnpm --filter @life-abroad/shared build && pnpm
+      --filter game build
+    staticPublishPath: apps/game/dist
     envVars:
       - key: VITE_API_URL
         sync: false
