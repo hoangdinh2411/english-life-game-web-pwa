@@ -1,0 +1,96 @@
+name: Promote staging
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [dev]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: staging-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out the tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Validate staging environment
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CLIENT_ORIGIN: ${{ vars.CLIENT_ORIGIN }}
+        run: node scripts/validate-staging-environment.mjs
+
+      - name: Promote tested commit to staging
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: gh api --method PATCH repos/${{ github.repository }}/git/refs/heads/staging -f sha="$COMMIT_SHA" -F force=false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply staging migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm db:migrate
+
+      - name: Seed staging content
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: pnpm db:seed
+
+      - name: Deploy API
+        id: api-deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_API_SERVICE_ID }}
+          RENDER_COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: node scripts/deploy-render-service.mjs
+
+      - name: Deploy client
+        id: client-deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_CLIENT_SERVICE_ID }}
+          RENDER_COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: node scripts/deploy-render-service.mjs
+
+      - name: Smoke-check staging API
+        env:
+          API_ORIGIN: ${{ vars.API_ORIGIN }}
+        run: node scripts/smoke-check-staging.mjs
+
+      - name: Upload staging map assets
+        env:
+          CONTENT_API_URL: ${{ vars.API_ORIGIN }}/api/v1
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: pnpm run assets:upload -- --target staging

@@ -656,8 +656,34 @@ to the phone, not the computer.
   for local infrastructure / existing station recordings.
 
 The app's unauthenticated `/practice` route runs locally and gives no progress.
+
+## Staging deployment
+
+The repository includes a Render Blueprint in `render.yaml` for the staging API
+and static PWA. Both services track the `staging` branch with auto-deploy
+disabled; `.github/workflows/staging.yml` is the sole promotion path. A
+successful CI run on `dev` fast-forwards `staging`, validates the hosted
+Supabase credentials, applies migrations, seeds content, deploys both Render
+services at the tested commit, waits for both deployments to become `live`, and
+smoke-checks `/api/v1/health`. Only after those checks does it run
+`pnpm run assets:upload -- --target staging`. Asset generation/upload is therefore
+not part of CI and cannot publish a mixed release before the application is
+healthy.
+
+Create a separate Supabase staging project and GitHub `staging` environment with
+these secrets: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
+`SUPABASE_SERVICE_ROLE_KEY`, `RENDER_API_KEY`, `RENDER_API_SERVICE_ID`, and
+`RENDER_CLIENT_SERVICE_ID`. Configure these environment variables:
+`CLIENT_ORIGIN` and `API_ORIGIN`. GitHub injects the values from the selected
+Environment, so the names stay generic and production can use the same contract
+in a different Environment. Render service environment variables must reference the
+same staging Supabase project and client origin. The validation script rejects
+local or insecure URLs and missing values.
+
 Production deployment needs HTTPS, SPA route fallback, correct CORS, and
-cache/revalidation headers. No deployment is included in this repository.
+cache/revalidation headers. Production asset uploads remain an explicit
+operator action using the production target; staging promotion does not modify
+production.
 Physical Android/iOS install, standalone reopen and airplane-mode testing are
 **unverified**, even though desktop/browser offline practice was tested.
 
