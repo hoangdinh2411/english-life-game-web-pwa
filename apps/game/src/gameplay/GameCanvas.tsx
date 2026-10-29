@@ -90,6 +90,7 @@ export default function GameCanvas({
     if (closedVenueExitSignal > 0) game.current?.leaveClosedVenue();
   }, [closedVenueExitSignal]);
   const [error, setError] = useState("");
+  const [assetWarning, setAssetWarning] = useState("");
   const [ready, setReady] = useState(false);
   const [locationLabel, setLocationLabel] = useState(
     initialPlaceId === "loc_town_street"
@@ -108,6 +109,7 @@ export default function GameCanvas({
     parent.current?.append(host);
     setReady(false);
     setError("");
+    setAssetWarning("");
     callbacks.current.onReadyChange(false);
     const start = async () => {
       const { createStationGame } = await import("./create-station-game");
@@ -151,6 +153,9 @@ export default function GameCanvas({
             setReady(false);
             callbacks.current.onReadyChange(false);
           }
+        },
+        onAssetWarning: (message) => {
+          if (!cancelled) setAssetWarning(message);
         },
         onReady: () => {
           if (!cancelled) {
@@ -255,6 +260,12 @@ export default function GameCanvas({
               <p role="status">Loading map… {Math.round(progress * 100)}%</p>
             )}
           </div>
+        </div>
+      ) : null}
+      {ready && assetWarning ? (
+        <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between gap-3 rounded-[12px] bg-card p-3 text-[var(--color-warning)] shadow-lg" role="alert">
+          <span>{assetWarning}</span>
+          <GameButton label="Retry artwork" onClick={() => setAttempt((value) => value + 1)} />
         </div>
       ) : null}
     </div>

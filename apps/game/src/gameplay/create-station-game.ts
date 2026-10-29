@@ -1,6 +1,6 @@
 import type { MapLocation, Point, StationCallbacks, StationGame, StationPortal } from '../types/gameplay/world';
 import Phaser from 'phaser';
-import { savedPlayerAtlas, stationAtlases, stationBackground } from './station-assets';
+import { practiceStationAtlases, savedPlayerAtlas, stationAtlases, stationBackground } from './station-assets';
 import type { MapAsset, MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
@@ -23,6 +23,8 @@ import { TAX_OFFICE_STAFF } from '../features/tax-office/tax-office-staff';
 import { TOWN_STREET_COLLISION } from '../features/location/town-street-collision';
 import { drawCollisionDebug } from '../features/location/collision-debug';
 import { registerPackPortraits } from '../features/npcs/npc-portraits';
+import { registerStationNpcPortrait } from './portraits';
+import { PRACTICE_REMOTE_NPCS, practiceNpcAssets } from '../features/station/practice-assets';
 
 export function createStationGame(parent: HTMLElement, callbacks: StationCallbacks): StationGame {
   let activeLocation: MapLocation = callbacks.initialLocation ? mapLocationFromPlayerLocation(callbacks.initialLocation) : 'station';
@@ -109,9 +111,12 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       }
       if (activeLocation === 'station' && callbacks.practice) {
         this.load.image('station', stationBackground);
-        for (const atlas of stationAtlases) if (!this.textures.exists(atlas.key)) this.load.atlas(atlas.key, atlas.url, atlas.data);
+        for (const atlas of practiceStationAtlases) if (!this.textures.exists(atlas.key)) this.load.atlas(atlas.key, atlas.url, atlas.data);
       }
-      const onLoadError = () => callbacks.onError('Station artwork could not load. Please retry.');
+      const onLoadError = (file: { key?: string }) => {
+        if (callbacks.practice && PRACTICE_REMOTE_NPCS.some(npc => npc.assetKey === file.key)) return;
+        callbacks.onError('Station artwork could not load. Please retry.');
+      };
       this.load.on('loaderror', onLoadError);
       this.events.once('shutdown', () => this.load.off('loaderror', onLoadError));
     }
@@ -164,7 +169,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           this.textures.remove('station');
         }
       });
-      if (activeLocation === 'station' && callbacks.practice) this.createWorld();
+      if (activeLocation === 'station' && callbacks.practice) this.loadPracticeNpcArtwork();
       else {
         packRequest = new AbortController();
         const signal = packRequest.signal;
@@ -180,12 +185,69 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         });
       }
     }
+    private loadPracticeNpcArtwork() {
+      packRequest = new AbortController();
+      const signal = packRequest.signal;
+      callbacks.onProgress(0);
+      void fetchMapPack('loc_station', signal).then((pack) => {
+        if (signal.aborted || destroyed) return;
+        const loadable = PRACTICE_REMOTE_NPCS.flatMap((npc) => {
+          try {
+            return [{ npc, assets: practiceNpcAssets(pack, npc) }];
+          } catch (error) {
+            unavailableAmbientNpcIds = new Set([...unavailableAmbientNpcIds, npc.id]);
+            callbacks.onAssetWarning?.(`${error instanceof Error ? error.message : `${npc.name}’s artwork could not load.`} Ruth is still available offline.`);
+            return [];
+          }
+        });
+        if (!loadable.length) return;
+        for (const { npc, assets } of loadable) registerStationNpcPortrait(npc.id, assets.portrait.url);
+        return new Promise<void>((resolve, reject) => {
+          const failedKeys = new Set<string>();
+          const loadError = (file: { key?: string }) => {
+            if (file.key && loadable.some(({ npc }) => npc.assetKey === file.key)) failedKeys.add(file.key);
+          };
+          const abort = () => {
+            this.load.off('loaderror', loadError);
+            this.load.off('complete', complete);
+            this.load.reset();
+          };
+          const complete = () => {
+            this.load.off('loaderror', loadError);
+            signal.removeEventListener('abort', abort);
+            const failed = loadable.filter(({ npc }) => failedKeys.has(npc.assetKey) || !this.textures.exists(npc.assetKey));
+            for (const { npc } of failed) unavailableAmbientNpcIds = new Set([...unavailableAmbientNpcIds, npc.id]);
+            if (failed.length) reject(new Error(`${failed.map(({ npc }) => npc.name).join(' and ')} artwork could not load from Storage.`));
+            else resolve();
+          };
+          signal.addEventListener('abort', abort, { once: true });
+          this.load.on('loaderror', loadError);
+          this.load.once('complete', complete);
+          for (const { npc, assets } of loadable) this.load.atlas(npc.assetKey, assets.image.url, assets.atlas.url);
+          this.load.start();
+        });
+      }).then(() => {
+        if (signal.aborted || destroyed) return;
+        callbacks.onProgress(1);
+        this.createWorld();
+      }).catch((error: unknown) => {
+        if (signal.aborted || destroyed) return;
+        unavailableAmbientNpcIds = new Set([
+          ...unavailableAmbientNpcIds,
+          ...PRACTICE_REMOTE_NPCS.filter(npc => !this.textures.exists(npc.assetKey)).map(npc => npc.id),
+        ]);
+        callbacks.onAssetWarning?.(`${error instanceof Error ? error.message : 'Passenger artwork could not load.'} Ruth is still available offline.`);
+        this.createWorld();
+      });
+    }
     private createWorld() {
       const controlled = controlledPresence();
       controlledNpcIds = controlled.ids;
       controlledPresenceSignature = controlled.signature;
       const resources = currentPack ? preparePack(this, currentPack, undefined, unavailableAmbientNpcIds) : null;
-      if (activeLocation === 'station' && callbacks.practice && (!this.textures.exists('station') || stationAtlases.some((atlas) => !this.textures.exists(atlas.key)))) return;
+      if (activeLocation === 'station' && callbacks.practice && (!this.textures.exists('station')
+        || practiceStationAtlases.some((atlas) => !this.textures.exists(atlas.key))
+        || PRACTICE_REMOTE_NPCS.some(npc => !unavailableAmbientNpcIds.has(npc.id) && !this.textures.exists(npc.assetKey)))) return;
       this.playerTexture = resources?.player ?? (callbacks.practice ? 'player' : savedPlayerTexture);
       this.walkPrefix = resources?.walkPrefix ?? (callbacks.practice ? 'walk' : `${savedPlayerTexture}-walk`);
       this.sourcePlayerTexture = this.playerTexture;
@@ -202,7 +264,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const stationSpawns = activeLocation === 'station' ? ambientNpcSpawnPoints(
         venueNpcConfig('station'), VENUE_SPAWN_ZONES, VENUE_EXCLUSION_ZONES, STATION_NPCS.map(npc => npc.id),
       ) : new Map<string, Point>();
-      npcs = activeLocation === 'station' ? STATION_NPCS.map(npc => {
+      npcs = activeLocation === 'station' ? STATION_NPCS.filter(npc => !unavailableAmbientNpcIds.has(npc.id)).map(npc => {
         const remoteTexture = currentPack?.assets.find(asset => asset.key === npc.texture && asset.type === 'image');
         return { ...npc, texture: remoteTexture ? packKey(currentPack!, remoteTexture) : npc.texture, ...stationSpawns.get(npc.id) };
       }) : [];

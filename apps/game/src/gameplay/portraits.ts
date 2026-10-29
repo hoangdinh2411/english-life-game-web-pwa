@@ -17,3 +17,7 @@ export function playerPortraitPresentation(gender: PlayerGender = 'male') {
 }
 const portraitAssets = { backpack, suitcase, receptionist, visitor };
 export const npcPortraits = Object.fromEntries(STATION_ROSTER.map(npc => [npc.id, portraitAssets[npc.portrait]])) as Record<StationSpeaker, string>;
+
+export function registerStationNpcPortrait(npcId: StationSpeaker, url: string): void {
+  npcPortraits[npcId] = url;
+}

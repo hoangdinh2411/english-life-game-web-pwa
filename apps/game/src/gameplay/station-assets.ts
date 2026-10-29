@@ -11,6 +11,7 @@ import suitcaseAtlas from '../../assets/runtime/suitcase.json';
 import receptionistAtlas from '../../assets/runtime/receptionist.json';
 import type { PlayerGender } from '@life-abroad/shared';
 import { NPC_FRAME_HEIGHT, NPC_FRAME_WIDTH, NPC_SHEET_COLUMNS, NPC_SHEET_ROWS } from '../features/npcs/actor-display';
+import { PRACTICE_REMOTE_NPCS } from '../features/station/practice-assets';
 
 function assetUrl(asset: unknown): string {
   if (typeof asset === 'string') return asset;
@@ -34,6 +35,8 @@ export const stationAtlases = [
     meta: { image: 'visitor.png', size: { w: NPC_FRAME_WIDTH * NPC_SHEET_COLUMNS, h: NPC_FRAME_HEIGHT * NPC_SHEET_ROWS }, scale: '1' },
   } },
 ];
+const remotePracticeAtlasKeys = new Set<string>(PRACTICE_REMOTE_NPCS.map(npc => npc.assetKey));
+export const practiceStationAtlases = stationAtlases.filter(atlas => !remotePracticeAtlasKeys.has(atlas.key));
 
 export function savedPlayerAtlas(gender: PlayerGender) {
   const atlas = stationAtlases.find(candidate => candidate.key === `player-${gender}`);

@@ -6,6 +6,13 @@ import { fileURLToPath } from 'node:url';
 
 const assetRoot = fileURLToPath(new URL('../local-assets/maps/', import.meta.url));
 const supportedMaps = new Set(['loc_station', 'loc_town_street', 'loc_cafe', 'loc_corner_cafe', 'loc_clothes', 'loc_tax_office']);
+const supplementalAssets = new Map([
+  ['loc_station', [
+    { path: 'source/runtime/backpack-portrait.png' },
+    { path: 'source/runtime/suitcase-portrait.png' },
+    { path: '../loc_cafe/portrait-npc_cafe_customer.png', filename: 'visitor-portrait.png' },
+  ]],
+]);
 
 async function filesBelow(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -18,8 +25,8 @@ async function filesBelow(directory) {
   return files;
 }
 
-function describeAsset(root, path) {
-  const filename = path.split(/[\\/]/).at(-1);
+function describeAsset(root, path, filenameOverride) {
+  const filename = filenameOverride ?? path.split(/[\\/]/).at(-1);
   const extension = extname(filename).toLowerCase();
   const key = filename.slice(0, -extension.length);
   const npcId = key.startsWith('portrait-npc_') ? key.slice('portrait-'.length) : undefined;
@@ -43,14 +50,28 @@ export function planAssetSync(localAssets, remoteAssets) {
   });
 }
 
+export function assertUniqueAssetIdentities(assets) {
+  const identities = new Set();
+  for (const asset of assets) {
+    const identity = `${asset.npcId ?? ''}:${asset.key}`;
+    if (identities.has(identity)) throw new Error(`Duplicate local asset identity: ${identity}`);
+    identities.add(identity);
+  }
+}
+
 export async function syncMapAssets({ mapId, baseUrl, serviceKey, dryRun = false, fetcher = fetch }) {
   if (!supportedMaps.has(mapId)) throw new Error(`Unsupported map: ${mapId}`);
   const directory = join(assetRoot, mapId);
-  const localAssets = await Promise.all((await filesBelow(directory)).map(async path => {
-    const asset = describeAsset(directory, path);
-    const bytes = await readFile(path);
+  const sources = [
+    ...(await filesBelow(directory)).map(path => ({ path })),
+    ...(supplementalAssets.get(mapId) ?? []).map(asset => ({ ...asset, path: join(directory, asset.path) })),
+  ];
+  const localAssets = await Promise.all(sources.map(async source => {
+    const asset = describeAsset(directory, source.path, source.filename);
+    const bytes = await readFile(source.path);
     return { ...asset, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') };
   }));
+  assertUniqueAssetIdentities(localAssets);
   const response = await fetcher(`${baseUrl}/content/maps/${mapId}`, { signal: AbortSignal.timeout(15000) });
   const remoteAssets = response.status === 404 ? [] : response.ok ? (await response.json()).assets : (() => { throw new Error(`Asset metadata failed (${response.status})`); })();
   const plan = planAssetSync(localAssets, remoteAssets);

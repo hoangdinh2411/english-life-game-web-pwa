@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { planAssetSync } from './sync-map-assets.mjs';
+import { assertUniqueAssetIdentities, planAssetSync } from './sync-map-assets.mjs';
 
 test('sync uploads only missing or changed assets and increments changed versions', () => {
   const local = [
@@ -18,4 +18,16 @@ test('sync uploads only missing or changed assets and increments changed version
     { action: 'update', version: 5 },
     { action: 'upload', version: 1 },
   ]);
+});
+
+test('sync rejects duplicate logical identities before upload', () => {
+  assert.throws(() => assertUniqueAssetIdentities([
+    { key: 'sprite', npcId: 'npc_mia' },
+    { key: 'sprite', npcId: 'npc_mia' },
+  ]), /Duplicate local asset identity: npc_mia:sprite/);
+
+  assert.doesNotThrow(() => assertUniqueAssetIdentities([
+    { key: 'sprite', npcId: 'npc_mia' },
+    { key: 'sprite', npcId: 'npc_noah' },
+  ]));
 });
