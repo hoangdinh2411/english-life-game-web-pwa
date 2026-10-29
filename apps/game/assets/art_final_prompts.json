@@ -4,11 +4,11 @@
     "prompt": "Use case: stylized-concept. Asset for Life Abroad, friendly western chibi 2D English-learning RPG. Warm soft palette cream #F6E7CB, ink #594B45, terracotta #CB8067, sage #95AB8D, muted blue #789DAA, gold #D8B36A. Clean pixel-art-like silhouettes, orthographic top-down RPG sprites, no anime gloss, no 3D, no lettering, no watermark. Transparent PNG background. Create ONE neatly aligned character production reference sheet for player avatar: young adult newcomer with short dark hair, teal jacket, cream shirt, tan trousers, small travel backpack, sneakers. Upper portion: 4 by 4 walking sprite grid, rows down/left/right/up, columns four successive walk-cycle frames. All 16 full-body sprites identical size and proportions, aligned feet, no overlaps, intended native sprite 32x48 pixels. Lower portion: three separated square bust portraits of same character, neutral/happy/confused in that order, intended 256x256 each. Generous transparent gutters; no grid lines or labels. Exact same outfit and identity in all views. Sheet is a high-resolution source to later slice, not a mockup."
   },
   {
-    "file": "npcs/npc_passenger_backpack_source.png",
+    "file": "local-assets/maps/loc_station/source/npcs/npc_passenger_backpack_source.png",
     "prompt": "Use case: stylized-concept. Asset for Life Abroad, friendly western chibi 2D English-learning RPG. Warm soft palette cream #F6E7CB, ink #594B45, terracotta #CB8067, sage #95AB8D, muted blue #789DAA, gold #D8B36A. Clean pixel-art-like silhouettes, orthographic top-down RPG sprites, no anime gloss, no 3D, no lettering, no watermark. Transparent PNG background. Create ONE neatly aligned character source sheet: young adult female passenger, curly chestnut bob, mustard cardigan, cream shirt, blue jeans, red backpack. Upper portion: exactly 4 by 4 walk sprite grid, rows facing down/left/right/up, columns four successive walking frames. All 16 full-body figures same scale, feet aligned, identical outfit, no overlaps, native target 32x48. Lower portion: three separated square bust dialogue portraits of same person, neutral, happy, confused in that order, native target 256x256. Transparent gutters, no labels, no grid lines. Consistent western chibi proportions, large head, small body."
   },
   {
-    "file": "npcs/npc_passenger_suitcase_source.png",
+    "file": "local-assets/maps/loc_station/source/npcs/npc_passenger_suitcase_source.png",
     "prompt": "Use case: stylized-concept. Asset for Life Abroad, friendly western chibi 2D English-learning RPG. Warm soft palette cream #F6E7CB, ink #594B45, terracotta #CB8067, sage #95AB8D, muted blue #789DAA, gold #D8B36A. Clean pixel-art-like silhouettes, orthographic top-down RPG sprites, no anime gloss, no 3D, no lettering, no watermark. Transparent PNG background. Create ONE neatly aligned character source sheet: middle-aged male passenger, brown skin, short salt-and-pepper hair, round glasses, terracotta sweater, navy trousers, compact sage rolling suitcase. Upper portion: exactly 4 by 4 walk sprite grid, rows facing down/left/right/up, columns four successive walking frames. All 16 full-body figures same scale, feet aligned, identical outfit, no overlaps, native target 32x48. Lower portion: three separated square bust dialogue portraits of same person, neutral, happy, confused in that order, native target 256x256. Transparent gutters, no labels, no grid lines. Consistent western chibi proportions, large head, small body."
   },
   {
@@ -29,9 +29,9 @@
     "reference": "characters/character_newcomer_source.png"
   },
   {
-    "file": "npcs/npc_passenger_backpack_transparent.png",
+    "file": "local-assets/maps/loc_station/source/npcs/npc_passenger_backpack_transparent.png",
     "prompt": "Background extraction: remove gradient backdrop; preserve all foreground sprites, portraits/UI, positions, colors and details; transparent PNG.",
-    "reference": "npcs/npc_passenger_backpack_source.png"
+    "reference": "local-assets/maps/loc_station/source/npcs/npc_passenger_backpack_source.png"
   },
   {
     "file": "npcs/npc_station_information_transparent.png",

@@ -35,16 +35,10 @@ test('station NPC sprites have comparable visible character heights', () => {
   assert.equal(displayedHeights[2], WORLD_NPC_VISIBLE_HEIGHT);
 });
 
-test('station identities keep bundled sprite and portrait assets', async () => {
+test('only the receptionist keeps bundled station NPC artwork', async () => {
   const assets = [
     '../assets/runtime/receptionist.png',
     '../assets/runtime/receptionist-portrait.png',
-    '../assets/runtime/backpack.png',
-    '../assets/runtime/backpack-portrait.png',
-    '../assets/runtime/suitcase.png',
-    '../assets/runtime/suitcase-portrait.png',
-    '../assets/npcs/npc_cafe_customer/walk.png',
-    '../assets/npcs/npc_cafe_customer/portraits.png',
   ];
   await Promise.all(assets.map(asset => access(new URL(asset, import.meta.url))));
 });

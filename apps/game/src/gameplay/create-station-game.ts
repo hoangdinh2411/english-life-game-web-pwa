@@ -166,6 +166,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
             for (let row = 0; row < 4; row++) this.anims.remove(atlas.key === 'player' ? `walk-${row}` : `${atlas.key}-walk-${row}`);
             this.textures.remove(atlas.key);
           }
+          for (const npc of PRACTICE_REMOTE_NPCS) {
+            for (let row = 0; row < 4; row++) this.anims.remove(`${npc.assetKey}-walk-${row}`);
+            this.textures.remove(npc.assetKey);
+          }
           this.textures.remove('station');
         }
       });

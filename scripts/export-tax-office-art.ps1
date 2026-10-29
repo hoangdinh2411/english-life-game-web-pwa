@@ -1,8 +1,8 @@
 Add-Type -AssemblyName System.Drawing
-$assetRoot = Join-Path $PSScriptRoot '../apps/game/assets'
+$mapAssetRoot = Join-Path $PSScriptRoot '../local-assets/maps/loc_tax_office'
 $characters = @(
-  @{ Id = 'npc_tax_clerk_marcus'; Source = 'npcs/npc_tax_clerk_source.png' },
-  @{ Id = 'npc_tax_clerk_nadia'; Source = 'npcs/npc_tax_clerk_female_source.png' }
+  @{ Id = 'npc_tax_clerk_marcus'; Source = (Join-Path $mapAssetRoot 'source/npcs/npc_tax_clerk_source.png') },
+  @{ Id = 'npc_tax_clerk_nadia'; Source = (Join-Path $mapAssetRoot 'source/npcs/npc_tax_clerk_female_source.png') }
 )
 function Get-VisibleBounds([System.Drawing.Bitmap]$image, [System.Drawing.Rectangle]$cell) {
   $left=$cell.Right; $top=$cell.Bottom; $right=-1; $bottom=-1
@@ -14,10 +14,8 @@ function Get-VisibleBounds([System.Drawing.Bitmap]$image, [System.Drawing.Rectan
   [System.Drawing.Rectangle]::FromLTRB($left,$top,$right+1,$bottom+1)
 }
 foreach ($character in $characters) {
-  $source=[System.Drawing.Bitmap]::new((Join-Path $assetRoot $character.Source))
+  $source=[System.Drawing.Bitmap]::new($character.Source)
   if ($source.Width -ne 1024 -or $source.Height -ne 1536) { throw "$($character.Source) must be 1024x1536." }
-  $outputDirectory=Join-Path $assetRoot "npcs/$($character.Id)"
-  New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
   $walk=[System.Drawing.Bitmap]::new(512,768,[System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
   $graphics=[System.Drawing.Graphics]::FromImage($walk); $graphics.InterpolationMode=[System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
   for ($row=0; $row -lt 4; $row++) { for ($column=0; $column -lt 4; $column++) {
@@ -40,7 +38,7 @@ foreach ($character in $characters) {
       $walk.SetPixel($x,$row*192+$y,[System.Drawing.Color]::Transparent)
     } }
   }
-  $walk.Save((Join-Path $outputDirectory 'walk.png'),[System.Drawing.Imaging.ImageFormat]::Png); $walk.Dispose()
+  $walk.Save((Join-Path $mapAssetRoot "npc-$($character.Id).png"),[System.Drawing.Imaging.ImageFormat]::Png); $walk.Dispose()
   $portraits=[System.Drawing.Bitmap]::new(768,256,[System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
   $graphics=[System.Drawing.Graphics]::FromImage($portraits); $graphics.InterpolationMode=[System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
   for ($column=0; $column -lt 3; $column++) {
@@ -50,6 +48,6 @@ foreach ($character in $characters) {
     $destination=[System.Drawing.Rectangle]::new($column*256+[Math]::Floor((256-$width)/2),251-$height,$width,$height)
     $graphics.DrawImage($source,$destination,$bounds,[System.Drawing.GraphicsUnit]::Pixel)
   }
-  $portraits.Save((Join-Path $outputDirectory 'portraits.png'),[System.Drawing.Imaging.ImageFormat]::Png); $graphics.Dispose(); $portraits.Dispose(); $source.Dispose()
+  $portraits.Save((Join-Path $mapAssetRoot "portrait-$($character.Id).png"),[System.Drawing.Imaging.ImageFormat]::Png); $graphics.Dispose(); $portraits.Dispose(); $source.Dispose()
 }
 Write-Output 'Exported Tax Office walking sheets and portrait strips.'

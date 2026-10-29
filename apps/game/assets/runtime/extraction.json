@@ -11,7 +11,7 @@
     },
     {
         "W":  185,
-        "File":  "npcs/npc_passenger_backpack_transparent.png",
+        "File":  "local-assets/maps/loc_station/source/npcs/npc_passenger_backpack_transparent.png",
         "Y":  30,
         "Name":  "backpack",
         "X":  90,
@@ -31,7 +31,7 @@
     },
     {
         "W":  180,
-        "File":  "npcs/npc_passenger_suitcase_source.png",
+        "File":  "local-assets/maps/loc_station/source/npcs/npc_passenger_suitcase_source.png",
         "Y":  15,
         "Name":  "suitcase",
         "X":  250,

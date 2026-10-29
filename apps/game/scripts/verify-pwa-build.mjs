@@ -39,8 +39,11 @@ for (const path of urls) {
 assert.ok(urls.some((path) => /create-station-game.*\.js$/.test(path)));
 assert.ok(urls.some((path) => /location_station_map_labeled.*\.png$/.test(path)));
 assert.equal(urls.filter((path) => path.endsWith('.mp3')).length, 20);
-assert.equal(urls.filter((path) => /-portrait-.*\.png$/.test(path)).length, 5);
-assert.ok(urls.some((path) => path.includes('player-female-portrait-') && path.endsWith('.png')));
+const portraitUrls = urls.filter((path) => /-portrait-.*\.png$/.test(path));
+assert.equal(portraitUrls.length, 3);
+for (const name of ['player-female-portrait-', 'player-portrait-', 'receptionist-portrait-']) {
+  assert.ok(portraitUrls.some((path) => path.includes(name)));
+}
 assert.ok(urls.some((path) => path.includes('player-female-') && !path.includes('portrait') && path.endsWith('.png')));
 assert.ok(urls.filter((path) => path.endsWith('.svg')).length >= 200);
 console.log(`PASS: standalone manifest/icons, ${urls.length} unique public precache files (${(bytes / 1024 / 1024).toFixed(2)} MiB), Phaser/maps/portraits/flags/20 country-neutral audio clips; all exist.`);

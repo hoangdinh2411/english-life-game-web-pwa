@@ -12,7 +12,8 @@ labeled background and these small atlases at runtime; tax-office art is deferre
 
 Generated with the built-in ImageGen tool using the existing station and information-officer images as style references, using the warm chibi style references and prompt records in this asset folder.
 
-- `npcs/npc_tax_clerk_source.png`: four directional rows of four walking poses and neutral/happy/confused portraits.
+- `local-assets/maps/loc_tax_office/source/npcs/npc_tax_clerk_source.png`: four directional rows of four walking poses and neutral/happy/confused portraits.
+- `local-assets/maps/loc_tax_office/source/npcs/npc_tax_clerk_female_source.png`: Nadia's four directional walking poses and neutral/happy/confused portraits.
 - `ui/ui_id_card_source.png`: fictional ID-card inventory icon, without personal data.
 - `locations/location_station_map_labeled.png`: station map with TRAIN STATION, CAFE, and CLOTHES signs.
 - `locations/location_tax_office_exterior_labeled.png`: exterior with TAX OFFICE sign.
@@ -30,8 +31,8 @@ Generated with the built-in ImageGen tool for the requested station scene. These
 ## Files
 
 - `characters/character_newcomer_source.png`: player walking poses and three dialogue expressions.
-- `npcs/npc_passenger_backpack_source.png`: backpack passenger poses and portraits.
-- `npcs/npc_passenger_suitcase_source.png`: suitcase passenger poses and portraits.
+- `local-assets/maps/loc_station/source/npcs/npc_passenger_backpack_source.png`: backpack passenger poses and portraits.
+- `local-assets/maps/loc_station/source/npcs/npc_passenger_suitcase_source.png`: suitcase passenger poses and portraits.
 - `npcs/npc_station_information_source.png`: information officer poses and portraits.
 - `locations/location_station_map_labeled.png`: station, food/drink store, clothing store and connecting concourse with readable signs.
 - `ui/ui_dialogue_source.png`: empty dialogue panel, portrait frame, nameplate, buttons and icons.
