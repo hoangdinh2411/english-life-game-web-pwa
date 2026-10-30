@@ -4,8 +4,9 @@ import { readdir, readFile } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const assetRoot = fileURLToPath(new URL('../local-assets/maps/', import.meta.url));
-const supportedMaps = new Set(['loc_station', 'loc_town_street', 'loc_cafe', 'loc_corner_cafe', 'loc_clothes', 'loc_tax_office']);
+export const defaultAssetRoot = fileURLToPath(new URL('../local-assets/maps/', import.meta.url));
+export const supportedMaps = Object.freeze(['loc_station', 'loc_town_street', 'loc_cafe', 'loc_corner_cafe', 'loc_clothes', 'loc_tax_office']);
+const supportedMapSet = new Set(supportedMaps);
 const supplementalAssets = new Map([
   ['loc_station', [
     { path: 'source/runtime/backpack-portrait.png' },
@@ -23,6 +24,24 @@ async function filesBelow(directory) {
     else if (entry.isFile()) files.push(path);
   }
   return files;
+}
+
+async function validateRuntimeContract(directory, files) {
+  const names = new Set(files.map(path => relative(directory, path).replaceAll('\\', '/')));
+  for (const required of ['background.png', 'player.png', 'animations.json']) {
+    if (!names.has(required)) throw new Error(`Missing required asset: ${required}`);
+  }
+  let animationFile;
+  try { animationFile = JSON.parse(await readFile(join(directory, 'animations.json'), 'utf8')); }
+  catch { throw new Error('Malformed asset: animations.json must contain valid JSON.'); }
+  const animations = Array.isArray(animationFile?.animations) ? animationFile.animations : [];
+  for (const key of ['walk-0', 'walk-1', 'walk-2', 'walk-3']) {
+    const animation = animations.find(entry => entry?.key === key);
+    if (animation?.texture !== 'player' || !Array.isArray(animation.frames) || animation.frames.length === 0
+      || !animation.frames.every(Number.isInteger) || !Number.isFinite(animation.frameRate) || !Number.isInteger(animation.repeat)) {
+      throw new Error(`Malformed asset: animations.json has an invalid ${key} contract.`);
+    }
+  }
 }
 
 function describeAsset(root, path, filenameOverride) {
@@ -59,24 +78,42 @@ export function assertUniqueAssetIdentities(assets) {
   }
 }
 
-export async function syncMapAssets({ mapId, baseUrl, serviceKey, dryRun = false, fetcher = fetch }) {
-  if (!supportedMaps.has(mapId)) throw new Error(`Unsupported map: ${mapId}`);
-  const directory = join(assetRoot, mapId);
+
+export async function collectLocalMapAssets(mapId, root = defaultAssetRoot) {
+  if (!supportedMapSet.has(mapId)) throw new Error(`Unsupported map: ${mapId}`);
+  const directory = join(root, mapId);
+  const files = await filesBelow(directory);
+  await validateRuntimeContract(directory, files);
   const sources = [
-    ...(await filesBelow(directory)).map(path => ({ path })),
+    ...files.map(path => ({ path })),
     ...(supplementalAssets.get(mapId) ?? []).map(asset => ({ ...asset, path: join(directory, asset.path) })),
   ];
   const localAssets = await Promise.all(sources.map(async source => {
     const asset = describeAsset(directory, source.path, source.filename);
-    const bytes = await readFile(source.path);
-    return { ...asset, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') };
+    const data = await readFile(source.path);
+    return { ...asset, bytes: data.length, sha256: createHash('sha256').update(data).digest('hex') };
   }));
   assertUniqueAssetIdentities(localAssets);
+  return localAssets;
+}
+
+export async function executeAssetPlan(plan, upload) {
+  const failures = [];
+  for (const asset of plan.filter(entry => entry.action !== 'skip')) {
+    try { await upload(asset); }
+    catch (error) { failures.push({ key: `${asset.npcId ?? 'map'}:${asset.key}`, error: error instanceof Error ? error.message : String(error) }); }
+  }
+  if (failures.length) throw new AggregateError(failures.map(failure => new Error(`${failure.key}: ${failure.error}`)),
+    `Asset reconciliation failed for ${failures.map(failure => failure.key).join(', ')}. Successful immutable uploads were retained.`);
+}
+
+export async function syncMapAssets({ mapId, baseUrl, serviceKey, dryRun = false, fetcher = fetch, assetRoot = defaultAssetRoot }) {
+  const localAssets = await collectLocalMapAssets(mapId, assetRoot);
   const response = await fetcher(`${baseUrl}/content/maps/${mapId}`, { signal: AbortSignal.timeout(15000) });
   const remoteAssets = response.status === 404 ? [] : response.ok ? (await response.json()).assets : (() => { throw new Error(`Asset metadata failed (${response.status})`); })();
   const plan = planAssetSync(localAssets, remoteAssets);
   const changed = plan.filter(asset => asset.action !== 'skip');
-  if (!dryRun) for (const asset of changed) {
+  if (!dryRun) await executeAssetPlan(changed, async asset => {
     const data = await readFile(asset.path);
     const form = new FormData();
     form.set('file', new Blob([data], { type: asset.mime }), asset.filename);
@@ -84,7 +121,7 @@ export async function syncMapAssets({ mapId, baseUrl, serviceKey, dryRun = false
     if (asset.npcId) form.set('npcId', asset.npcId);
     const upload = await fetcher(`${baseUrl}/content/assets/upload`, { method: 'POST', headers: { Authorization: `Bearer ${serviceKey}` }, body: form, signal: AbortSignal.timeout(60000) });
     if (!upload.ok) throw new Error(`Upload failed for ${asset.relativePath} (${upload.status}). No remote files were deleted.`);
-  }
+  });
   return { mapId, dryRun, uploadCount: changed.length, skipCount: plan.length - changed.length,
     assets: plan.map(asset => ({ relativePath: asset.relativePath, key: asset.key, ...(asset.npcId ? { npcId: asset.npcId } : {}),
       type: asset.type, bytes: asset.bytes, sha256: asset.sha256, action: asset.action, version: asset.version })), remoteDeletes: 0 };

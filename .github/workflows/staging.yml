@@ -93,4 +93,4 @@ jobs:
         env:
           CONTENT_API_URL: ${{ vars.API_ORIGIN }}/api/v1
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: pnpm run assets:upload -- --target staging
+        run: pnpm run assets:upload -- --target staging --apply

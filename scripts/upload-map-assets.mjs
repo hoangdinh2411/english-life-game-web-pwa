@@ -2,7 +2,9 @@ import { syncMapAssets } from './sync-map-assets.mjs';
 
 const rawArgs = process.argv.slice(2).filter(argument => argument !== '--');
 const dryRun = rawArgs.includes('--dry-run');
-const args = rawArgs.filter(argument => argument !== '--dry-run');
+const apply = rawArgs.includes('--apply');
+if (dryRun && apply) throw new Error('Choose either --dry-run or --apply.');
+const args = rawArgs.filter(argument => argument !== '--dry-run' && argument !== '--apply');
 const targetArgs = args.filter((argument) => argument === '--target' || argument.startsWith('--target='));
 if (targetArgs.length > 1) throw new Error('Specify --target only once.');
 
@@ -15,6 +17,7 @@ if (targetArgs.length) {
   positionalArgs = args.filter((_, index) => index !== targetIndex && (targetArgument.startsWith('--target=') || index !== targetIndex + 1));
 }
 if (target !== 'local' && target !== 'staging' && target !== 'production') throw new Error('Usage: assets:upload [--dry-run] [--target local|staging|production] [mapId]');
+if (target === 'production' && !apply) throw new Error('Production asset mutation requires explicit --apply. Use --dry-run for a read-only comparison.');
 
 if (target === 'local') await import('../apps/server/scripts/load-env.mjs');
 
@@ -40,4 +43,4 @@ if ((target === 'local' && !localHosts.has(parsedUrl.hostname)) ||
 }
 
 const result = await syncMapAssets({ mapId, dryRun, baseUrl: baseUrl.replace(/\/+$/, ''), serviceKey });
-console.log(JSON.stringify({ target, ...result, localAssetDirectory: `local-assets/maps/${mapId}`, localFilesRetained: true }, null, 2));
+console.log(JSON.stringify({ target, apply: !dryRun, ...result, localAssetDirectory: `local-assets/maps/${mapId}`, localFilesRetained: true }, null, 2));

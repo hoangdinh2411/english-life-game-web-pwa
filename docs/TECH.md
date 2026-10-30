@@ -679,7 +679,7 @@ successful CI run on `dev` fast-forwards `staging`, validates the hosted
 Supabase credentials, applies migrations, seeds content, deploys both Render
 services at the tested commit, waits for both deployments to become `live`, and
 smoke-checks `/api/v1/health`. Only after those checks does it run
-`pnpm run assets:upload -- --target staging`. Asset generation/upload is therefore
+`pnpm run assets:upload -- --target staging --apply`. Asset generation/upload is therefore
 not part of CI and cannot publish a mixed release before the application is
 healthy.
 
@@ -693,10 +693,53 @@ in a different Environment. Render service environment variables must reference 
 same staging Supabase project and client origin. The validation script rejects
 local or insecure URLs and missing values.
 
-Production deployment needs HTTPS, SPA route fallback, correct CORS, and
-cache/revalidation headers. Production asset uploads remain an explicit
-operator action using the production target; staging promotion does not modify
-production.
+## Production deployment
+
+`.github/workflows/production.yml` is the only production promotion path. It is
+manual (`workflow_dispatch`), requires the literal `DEPLOY_PRODUCTION`, pins a
+full commit SHA and runs inside the protected GitHub `production` Environment.
+Configure required reviewers and prevent administrators from bypassing them;
+keep Render auto-deploy disabled. Normal pushes never invoke this workflow.
+
+The Environment supplies secrets `DATABASE_URL`, `SUPABASE_URL`,
+`SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RENDER_API_KEY`,
+`RENDER_API_SERVICE_ID`, `RENDER_CLIENT_SERVICE_ID`,
+`PRODUCTION_SMOKE_EMAIL`, and `PRODUCTION_SMOKE_PASSWORD`, plus variables
+`API_ORIGIN` and `CLIENT_ORIGIN`. Render must use the same production Supabase
+project and origins. The service-role key is scoped only to validation, seed,
+and asset-upload steps; client build and smoke steps receive only the public
+publishable key. Production validation rejects local/non-HTTPS endpoints, a
+wrong target, incomplete commit SHAs, and service-role values exposed through
+`VITE_*` variables.
+
+`local-assets/maps/` remains the one-way canonical source and is intentionally
+ignored by Git. From a reviewed workstation copy, create the immutable handoff
+with `pnpm production:assets -- create <output>/production-assets.tgz
+<output>/production-assets.manifest.json`. Review its manifest, upload both
+files to a dedicated GitHub Release, and record both printed SHA-256 values.
+The production dispatch pins the Release tag and both hashes, then validates
+every file and all six packs (`loc_station`, `loc_town_street`, `loc_cafe`,
+`loc_corner_cafe`, `loc_clothes`, `loc_tax_office`) before any mutation. The
+workflow never generates artwork, writes back to the archive, or deletes remote
+objects.
+
+Release order is locked: lint/typecheck/tests/content/PWA checks and build;
+forward migrations; idempotent seed; compatible API deploy; changed-only asset
+reconciliation and a read-only confirmation pass; client deploy; authenticated
+health/catalog and five-page tutorial-audio smoke checks. Asset paths include
+their immutable version and SHA-256. Identical retries upload nothing; partial
+success remains available for retry. Roll back by dispatching the previous
+commit plus its pinned asset manifest. Forward database migrations must remain
+compatible with that previous code; newer immutable assets are retained and
+are never deleted automatically.
+
+The signed-out `/practice` Receptionist route continues to use bundled PWA
+assets and does not depend on production Storage. Production smoke verifies its
+HTML shell, but physical install/reopen and airplane-mode behavior remain manual
+checks. A failed configuration/network request, checksum/manifest mismatch,
+missing or malformed pack, migration/deploy error, reconciliation mismatch, or
+authenticated smoke failure stops the workflow. Mocked/local checks are not
+OPS-01.5 production proof.
 Physical Android/iOS install, standalone reopen and airplane-mode testing are
 **unverified**, even though desktop/browser offline practice was tested.
 

@@ -1,0 +1,156 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_commit_sha:
+        description: Full tested commit SHA to deploy
+        required: true
+        type: string
+      asset_pack_release_tag:
+        description: GitHub Release containing reviewed production-assets.tgz and production-assets.manifest.json
+        required: true
+        type: string
+      asset_pack_sha256:
+        description: SHA-256 of production-assets.tgz
+        required: true
+        type: string
+      asset_manifest_sha256:
+        description: SHA-256 of production-assets.manifest.json
+        required: true
+        type: string
+      confirmation:
+        description: Type DEPLOY_PRODUCTION to confirm
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ inputs.confirmation == 'DEPLOY_PRODUCTION' }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out the explicitly selected release
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_commit_sha }}
+
+      - name: Require an exact checked-out commit
+        env:
+          EXPECTED_SHA: ${{ inputs.release_commit_sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate protected production configuration
+        env:
+          DEPLOYMENT_TARGET: production
+          RELEASE_COMMIT_SHA: ${{ inputs.release_commit_sha }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PRODUCTION_CONTENT_API_URL: ${{ vars.API_ORIGIN }}/api/v1
+          API_ORIGIN: ${{ vars.API_ORIGIN }}
+          CLIENT_ORIGIN: ${{ vars.CLIENT_ORIGIN }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_SERVICE_ID: ${{ secrets.RENDER_API_SERVICE_ID }}
+          RENDER_CLIENT_SERVICE_ID: ${{ secrets.RENDER_CLIENT_SERVICE_ID }}
+        run: node scripts/validate-production-environment.mjs
+
+      - name: Download reviewed canonical asset pack
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACK_TAG: ${{ inputs.asset_pack_release_tag }}
+        run: gh release download "$PACK_TAG" --pattern production-assets.tgz --pattern production-assets.manifest.json --dir production-assets
+
+      - name: Verify and inspect canonical asset pack
+        env:
+          PACK_SHA256: ${{ inputs.asset_pack_sha256 }}
+          MANIFEST_SHA256: ${{ inputs.asset_manifest_sha256 }}
+        run: |
+          node scripts/verify-file-sha256.mjs production-assets/production-assets.tgz "$PACK_SHA256"
+          node scripts/verify-file-sha256.mjs production-assets/production-assets.manifest.json "$MANIFEST_SHA256"
+          mkdir -p local-assets
+          tar -xzf production-assets/production-assets.tgz -C local-assets
+          node scripts/production-asset-pack.mjs validate local-assets/maps production-assets/production-assets.manifest.json
+
+      - name: Validate release
+        env:
+          VITE_API_URL: ${{ vars.API_ORIGIN }}/api/v1
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+          pnpm content:validate
+          pnpm build
+          pnpm check:pwa
+
+      - name: Apply forward database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm db:migrate
+
+      - name: Seed idempotent authored content
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: pnpm db:seed
+
+      - name: Deploy compatible production API
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_API_SERVICE_ID }}
+          RENDER_COMMIT_SHA: ${{ inputs.release_commit_sha }}
+        run: node scripts/deploy-render-service.mjs
+
+      - name: Reconcile immutable production assets
+        env:
+          PRODUCTION_CONTENT_API_URL: ${{ vars.API_ORIGIN }}/api/v1
+          PRODUCTION_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node scripts/reconcile-production-assets.mjs --apply
+          node scripts/reconcile-production-assets.mjs --check
+
+      - name: Deploy production client
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_CLIENT_SERVICE_ID }}
+          RENDER_COMMIT_SHA: ${{ inputs.release_commit_sha }}
+        run: node scripts/deploy-render-service.mjs
+
+      - name: Run authenticated production smoke checks
+        env:
+          API_ORIGIN: ${{ vars.API_ORIGIN }}
+          CLIENT_ORIGIN: ${{ vars.CLIENT_ORIGIN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          PRODUCTION_SMOKE_EMAIL: ${{ secrets.PRODUCTION_SMOKE_EMAIL }}
+          PRODUCTION_SMOKE_PASSWORD: ${{ secrets.PRODUCTION_SMOKE_PASSWORD }}
+        run: node scripts/smoke-check-production.mjs
+

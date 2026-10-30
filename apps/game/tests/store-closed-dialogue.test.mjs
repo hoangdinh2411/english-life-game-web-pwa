@@ -7,6 +7,11 @@ import { createServer } from 'vite';
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom', ssr: { external: ['@life-abroad/shared'] } });
 try {
   const { VenueClosedDialogue } = await server.ssrLoadModule('/src/features/location/VenueClosedDialogue.tsx');
+  const { registerPackPortraits } = await server.ssrLoadModule('/src/features/npcs/npc-portraits.ts');
+  const portraitIds = ['npc_mia', 'npc_corner_cup_seller', 'npc_clothes_seller', 'npc_tax_clerk_marcus', 'npc_tax_clerk_nadia'];
+  registerPackPortraits({ mapId: 'fixture', assets: portraitIds.map(npcId => ({
+    key: `portrait-${npcId}`, npcId, type: 'image', version: 1, url: `https://assets.example/${npcId}.png`, bytes: 1, sha256: 'a'.repeat(64),
+  })) });
 
   test('closed-store conversation shows the store owner, avatar and hours', () => {
     const cases = [
