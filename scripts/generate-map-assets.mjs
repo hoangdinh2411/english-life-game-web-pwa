@@ -7,11 +7,75 @@ import { fileURLToPath } from 'node:url';
 const localAssetRoot = fileURLToPath(new URL('../local-assets/maps/', import.meta.url));
 const streetNpcDataUrl = new URL('../content/seed/street-npcs.json', import.meta.url);
 const npcDataUrl = new URL('../content/seed/npcs.json', import.meta.url);
-const bundledServiceNpcIds = new Set([
-  'npc_mia', 'npc_cafe_waiter',
-  'npc_corner_cup_seller', 'npc_corner_cup_assistant',
-  'npc_clothes_seller', 'npc_clothes_assistant',
+const migratedSourcePaths = new Map([
+  ['runtime/backpack.png', 'loc_station/backpack.png'],
+  ['runtime/backpack.json', 'loc_station/backpack-atlas.json'],
+  ['runtime/suitcase.png', 'loc_station/suitcase.png'],
+  ['runtime/suitcase.json', 'loc_station/suitcase-atlas.json'],
+  ['npcs/npc_cafe_customer/walk.png', 'loc_cafe/npc-npc_cafe_customer.png'],
+  ['npcs/npc_cafe_customer/portraits.png', 'loc_cafe/portrait-npc_cafe_customer.png'],
+  ['npcs/npc_mia/walk.png', 'loc_cafe/npc-npc_mia.png'],
+  ['npcs/npc_mia/portraits.png', 'loc_cafe/portrait-npc_mia.png'],
+  ['npcs/npc_cafe_waiter/walk.png', 'loc_cafe/npc-npc_cafe_waiter.png'],
+  ['npcs/npc_cafe_waiter/portraits.png', 'loc_cafe/portrait-npc_cafe_waiter.png'],
+  ['npcs/npc_clothes_seller/walk.png', 'loc_clothes/npc-npc_clothes_seller.png'],
+  ['npcs/npc_clothes_seller/portraits.png', 'loc_clothes/portrait-npc_clothes_seller.png'],
+  ['npcs/npc_clothes_assistant/walk.png', 'loc_clothes/npc-npc_clothes_assistant.png'],
+  ['npcs/npc_clothes_assistant/portraits.png', 'loc_clothes/portrait-npc_clothes_assistant.png'],
+  ['npcs/npc_clothes_customer/walk.png', 'loc_clothes/npc-npc_clothes_customer.png'],
+  ['npcs/npc_clothes_customer/portraits.png', 'loc_clothes/portrait-npc_clothes_customer.png'],
+  ['npcs/npc_corner_cup_seller/walk.png', 'loc_corner_cafe/npc-npc_corner_cup_seller.png'],
+  ['npcs/npc_corner_cup_seller/portraits.png', 'loc_corner_cafe/portrait-npc_corner_cup_seller.png'],
+  ['npcs/npc_corner_cup_assistant/walk.png', 'loc_corner_cafe/npc-npc_corner_cup_assistant.png'],
+  ['npcs/npc_corner_cup_assistant/portraits.png', 'loc_corner_cafe/portrait-npc_corner_cup_assistant.png'],
+  ['npcs/npc_corner_cup_customer_1/walk.png', 'loc_corner_cafe/npc-npc_corner_cup_customer_1.png'],
+  ['npcs/npc_corner_cup_customer_1/portraits.png', 'loc_corner_cafe/portrait-npc_corner_cup_customer_1.png'],
+  ['npcs/npc_corner_cup_customer_2/walk.png', 'loc_corner_cafe/npc-npc_corner_cup_customer_2.png'],
+  ['npcs/npc_corner_cup_customer_2/portraits.png', 'loc_corner_cafe/portrait-npc_corner_cup_customer_2.png'],
+  ['npcs/npc_corner_cup_customer_3/walk.png', 'loc_corner_cafe/npc-npc_corner_cup_customer_3.png'],
+  ['npcs/npc_corner_cup_customer_3/portraits.png', 'loc_corner_cafe/portrait-npc_corner_cup_customer_3.png'],
+  ['npcs/npc_tax_clerk_marcus/walk.png', 'loc_tax_office/npc-npc_tax_clerk_marcus.png'],
+  ['npcs/npc_tax_clerk_marcus/portraits.png', 'loc_tax_office/portrait-npc_tax_clerk_marcus.png'],
+  ['npcs/npc_tax_clerk_nadia/walk.png', 'loc_tax_office/npc-npc_tax_clerk_nadia.png'],
+  ['npcs/npc_tax_clerk_nadia/portraits.png', 'loc_tax_office/portrait-npc_tax_clerk_nadia.png'],
+  ['npcs/npc_mila_florist/walk.png', 'loc_town_street/street-npcs-1.png'],
+  ['npcs/npc_mila_florist/portraits.png', 'loc_town_street/portrait-npc_mila_florist.png'],
+  ['npcs/npc_amir_courier/walk.png', 'loc_town_street/street-npcs-2.png'],
+  ['npcs/npc_amir_courier/portraits.png', 'loc_town_street/portrait-npc_amir_courier.png'],
+  ['npcs/npc_ethan_baker/walk.png', 'loc_town_street/street-npcs-3.png'],
+  ['npcs/npc_ethan_baker/portraits.png', 'loc_town_street/portrait-npc_ethan_baker.png'],
+  ['npcs/npc_lina_librarian/walk.png', 'loc_town_street/street-npcs-4.png'],
+  ['npcs/npc_lina_librarian/portraits.png', 'loc_town_street/portrait-npc_lina_librarian.png'],
+  ['npcs/npc_ben_gardener/walk.png', 'loc_town_street/street-npcs-5.png'],
+  ['npcs/npc_ben_gardener/portraits.png', 'loc_town_street/portrait-npc_ben_gardener.png'],
+  ['npcs/npc_maya_teacher/walk.png', 'loc_town_street/street-npcs-6.png'],
+  ['npcs/npc_maya_teacher/portraits.png', 'loc_town_street/portrait-npc_maya_teacher.png'],
+  ['npcs/npc_raj_pharmacist/walk.png', 'loc_town_street/street-npcs-7.png'],
+  ['npcs/npc_raj_pharmacist/portraits.png', 'loc_town_street/portrait-npc_raj_pharmacist.png'],
+  ['npcs/npc_nora_bookseller/walk.png', 'loc_town_street/street-npcs-8.png'],
+  ['npcs/npc_nora_bookseller/portraits.png', 'loc_town_street/portrait-npc_nora_bookseller.png'],
+  ['npcs/npc_leo_driver/walk.png', 'loc_town_street/street-npcs-9.png'],
+  ['npcs/npc_leo_driver/portraits.png', 'loc_town_street/portrait-npc_leo_driver.png'],
+  ['npcs/npc_dani_mechanic/walk.png', 'loc_town_street/street-npcs-10.png'],
+  ['npcs/npc_dani_mechanic/portraits.png', 'loc_town_street/portrait-npc_dani_mechanic.png'],
+  ['npcs/npc_amara_market_vendor/walk.png', 'loc_town_street/street-npcs-11.png'],
+  ['npcs/npc_amara_market_vendor/portraits.png', 'loc_town_street/portrait-npc_amara_market_vendor.png'],
+  ['npcs/npc_owen_post_worker/walk.png', 'loc_town_street/street-npcs-12.png'],
+  ['npcs/npc_owen_post_worker/portraits.png', 'loc_town_street/portrait-npc_owen_post_worker.png'],
+  ['npcs/npc_sara_artist/walk.png', 'loc_town_street/street-npcs-13.png'],
+  ['npcs/npc_sara_artist/portraits.png', 'loc_town_street/portrait-npc_sara_artist.png'],
+  ['npcs/npc_jamal_dog_walker/walk.png', 'loc_town_street/street-npcs-14.png'],
+  ['npcs/npc_jamal_dog_walker/portraits.png', 'loc_town_street/portrait-npc_jamal_dog_walker.png'],
+  ['npcs/npc_tara_musician/walk.png', 'loc_town_street/street-npcs-15.png'],
+  ['npcs/npc_tara_musician/portraits.png', 'loc_town_street/portrait-npc_tara_musician.png'],
 ]);
+
+function sourceAsset(path) {
+  const migratedPath = migratedSourcePaths.get(path);
+  return readFile(migratedPath
+    ? new URL(`../local-assets/maps/${migratedPath}`, import.meta.url)
+    : new URL(`../apps/game/assets/${path}`, import.meta.url));
+}
 
 function npcWalkAtlas(outputName) {
   const frame = (column, row) => ({ frame: { x: column * 128, y: row * 192, w: 128, h: 192 }, rotated: false, trimmed: false,
@@ -31,12 +95,13 @@ async function npcAsset(reference) {
     return Buffer.from(await response.arrayBuffer());
   }
   if (!/^npcs\/[a-z0-9_]+\/(?:walk|portraits)\.png$/.test(reference)) throw new Error('NPC artwork must use a per-NPC asset path or HTTPS URL');
-  return readFile(new URL(`../apps/game/assets/${reference}`, import.meta.url));
+  return sourceAsset(reference);
 }
 
 // Package authored artwork byte-for-byte. Never substitute generated placeholders.
 async function mapAssets(mapId) {
   const backgrounds = {
+    loc_station: 'location_station_map_labeled.png',
     loc_town_street: 'location_maplewood_street_expanded.png',
     loc_cafe: 'location_cafe_interior.png',
     loc_corner_cafe: 'location_cafe_interior.png',
@@ -44,13 +109,33 @@ async function mapAssets(mapId) {
     loc_tax_office: 'location_tax_office_interior_labeled.png',
   };
   if (!Object.hasOwn(backgrounds, mapId)) throw new Error('Unsupported destination map');
-  const source = (path) => readFile(new URL(`../apps/game/assets/${path}`, import.meta.url));
+  const source = sourceAsset;
   const assets = [
     { name: 'background.png', type: 'map', mime: 'image/png', data: await source(`locations/${backgrounds[mapId]}`) },
     { name: 'player.png', type: 'spritesheet', mime: 'image/png', data: await source('runtime/player.png') },
     { name: 'animations.json', type: 'animation', mime: 'application/json', data: JSON.stringify({ animations: Array.from({ length: 4 }, (_, row) => ({ key: `walk-${row}`, texture: 'player', frames: Array.from({ length: 4 }, (_, column) => row * 4 + column), frameRate: 7, repeat: -1 })) }) },
   ];
-  if (mapId === 'loc_town_street') {
+  if (mapId === 'loc_station') {
+    const stationActors = [
+      ['backpack', 'runtime/backpack.png', 'runtime/backpack.json'],
+      ['suitcase', 'runtime/suitcase.png', 'runtime/suitcase.json'],
+      ['receptionist', 'runtime/receptionist.png', 'runtime/receptionist.json'],
+    ];
+    for (const [key, image, atlas] of stationActors) assets.push(
+      { name: `${key}.png`, type: 'image', mime: 'image/png', data: await source(image) },
+      { name: `${key}-atlas.json`, type: 'json', mime: 'application/json', data: await source(atlas) },
+    );
+    const visitorFile = 'visitor.png';
+    const visitorAtlas = JSON.parse(npcWalkAtlas(visitorFile).toString('utf8'));
+    visitorAtlas.frames = Object.fromEntries(Array.from({ length: 16 }, (_, index) => {
+      const row = Math.floor(index / 4), column = index % 4;
+      return [`${row}-${column}`, visitorAtlas.frames[`walk-${row}-${column}`]];
+    }));
+    assets.push(
+      { name: visitorFile, type: 'image', mime: 'image/png', data: await source('npcs/npc_cafe_customer/walk.png') },
+      { name: 'visitor-atlas.json', type: 'json', mime: 'application/json', data: JSON.stringify(visitorAtlas) },
+    );
+  } else if (mapId === 'loc_town_street') {
     const catalog = JSON.parse(await readFile(streetNpcDataUrl, 'utf8'));
     const textureByNpc = new Map();
     for (const [index, npc] of catalog.npcs.entries()) {
@@ -96,10 +181,6 @@ async function mapAssets(mapId) {
     for (const actor of actors) {
       const npc = byId.get(actor.npcId);
       if (!npc?.walkImageUrl) throw new Error(`${actor.npcId} is missing its walking asset`);
-      if (bundledServiceNpcIds.has(actor.npcId)) {
-        actorData.push({ ...actor, frame: 'walk', texture: `service-${actor.npcId}`, scale: 0.6 });
-        continue;
-      }
       const key = `npc-${actor.npcId}`;
       const filename = `${key}.png`;
       assets.push(

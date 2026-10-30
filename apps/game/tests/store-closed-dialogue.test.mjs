@@ -22,6 +22,7 @@ try {
         onReturn() {},
       }));
       assert.match(html, new RegExp(`aria-label="${owner} avatar"`));
+      assert.doesNotMatch(html, /background-image:url\(\)/);
       assert.ok(html.includes(`background-position:${portraitPosition}`));
       assert.ok(html.includes('background-size:300% 100%'));
       assert.match(html, new RegExp(`<strong>${owner}</strong>`));

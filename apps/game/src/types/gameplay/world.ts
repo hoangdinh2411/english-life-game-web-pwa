@@ -44,6 +44,8 @@ export interface StationCallbacks {
   onEnterStreet?: () => Promise<boolean>;
   onNearby: (id: string | null) => void;
   onTalk: (id: string) => void;
+  onTransitionStart?: () => void;
+  onAssetWarning?: (message: string) => void;
   onReady: () => void;
   onLocationChange: (location: string) => void;
   onMapChange?: (mapId: string) => void;

@@ -13,7 +13,7 @@
         "Y":  1115,
         "X":  15,
         "W":  315,
-        "File":  "npcs/npc_passenger_backpack_transparent.png"
+        "File":  "local-assets/maps/loc_station/source/npcs/npc_passenger_backpack_transparent.png"
     },
     {
         "H":  395,
@@ -29,6 +29,6 @@
         "Y":  890,
         "X":  190,
         "W":  295,
-        "File":  "npcs/npc_passenger_suitcase_source.png"
+        "File":  "local-assets/maps/loc_station/source/npcs/npc_passenger_suitcase_source.png"
     }
 ]

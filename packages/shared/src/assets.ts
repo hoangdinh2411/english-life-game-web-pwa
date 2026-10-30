@@ -9,6 +9,7 @@ export const assetUploadSchema = z.object({
 export const mapAssetSchema = z.object({
   key: assetIdSchema, type: assetTypeSchema, version: z.number().int().positive(),
   url: z.string().url(), bytes: z.number().int().positive(), npcId: assetIdSchema.nullable(),
+  sha256: z.string().regex(/^[a-f0-9]{64}$/),
 });
 export const mapPackSchema = z.object({ mapId: assetIdSchema, assets: z.array(mapAssetSchema).min(1) });
 export type MapAsset = z.infer<typeof mapAssetSchema>;

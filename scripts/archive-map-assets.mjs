@@ -11,9 +11,6 @@ const filesByMap = {
     'locations/location_station_map_labeled.png',
     'characters/character_newcomer_source.png',
     'characters/character_newcomer_transparent.png',
-    'npcs/npc_passenger_backpack_source.png',
-    'npcs/npc_passenger_backpack_transparent.png',
-    'npcs/npc_passenger_suitcase_source.png',
     'npcs/npc_station_information_source.png',
     'npcs/npc_station_information_transparent.png',
     'runtime/backpack-portrait.png',
@@ -38,7 +35,6 @@ const filesByMap = {
   loc_tax_office: [
     'locations/location_tax_office_exterior_labeled.png',
     'locations/location_tax_office_interior_labeled.png',
-    'npcs/npc_tax_clerk_source.png',
     'ui/ui_id_card_source.png',
   ],
 };

@@ -337,11 +337,11 @@ shares its peer-IP bucket.
   `npcId?`, `type`, positive integer `version` → `{ path, url, bytes }`. Send
   `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>` from server tooling only.
   One file ≤20 MiB; filename stem supplies its logical key. Types: `map`,
-  `image`, `audio`, `spritesheet`, `json`, `animation`. Station ownership is
-  rejected. Version + SHA-256 filenames are immutable, cached for one year;
+  `image`, `audio`, `spritesheet`, `json`, `animation`. Station and destination
+  packs use the same upload path. Version + SHA-256 filenames are immutable, cached for one year;
   identical retries reuse metadata, changed bytes/type require a new version.
 - `GET /content/maps/:mapId` (public):
-  `{ mapId, assets: [{ key, type, version, url, bytes, npcId }] }`. Latest
+  `{ mapId, assets: [{ key, type, version, url, bytes, npcId, sha256 }] }`. Latest
   version per map/NPC logical key, resolved from PostgreSQL; no browser
   PostgREST access. Unavailable packs return 404.
 - `GET /health` → `{ status: "ok" }` (public).
@@ -543,14 +543,14 @@ Mia.
   audio generated from server-trusted tutorial copy. The client never sends free
   text or Azure credentials. Signed-out local practice makes no speech request.
 
-## Destination assets (T14 experiment)
+## Remote game assets
 
-Station art/voices remain bundled for first load and offline `/practice`.
-Practice portals stay in the station. Signed-in destinations load public packs
+Offline `/practice` keeps its Train Station art and recorded voices bundled.
+Signed-in Train Station and destinations load public packs
 on entry with progress, retry and an offline explanation; scene shutdown removes
 previous textures, sounds/audio, JSON and animation keys. Storage URLs are never
-included in PWA precache. The old destination PNG sources are retained as
-reference art, but are no longer imported or built into the app.
+included in PWA precache. Destination NPC sprites and portraits are no longer
+imported into the client bundle.
 
 Generated map files are kept outside the game bundle and Git in the ignored
 `local-assets/maps/<mapId>/` directory. Recreate all three local packs without
@@ -558,21 +558,25 @@ Docker or Supabase using `pnpm assets:generate`; pass map IDs to limit output,
 for example `pnpm assets:generate loc_cafe` or `pnpm assets:generate loc_tax_office`.
 The Tax Office pack includes the authored interior plus Marcus and Nadia's
 walking atlases and three-frame portrait strips. After local Supabase, migrations,
-seed and NestJS are running, use
-`pnpm run assets:upload -- --target local loc_town_street 1` (also `loc_cafe`,
-`loc_clothes`, `loc_tax_office`). `SUPABASE_SERVICE_ROLE_KEY` comes from ignored local server
+seed and NestJS are running, first inspect with
+`pnpm assets:upload -- --dry-run loc_town_street`, then publish with
+`pnpm assets:upload -- loc_town_street` (also `loc_station`, `loc_cafe`,
+`loc_corner_cafe`, `loc_clothes`, and `loc_tax_office`). The script compares the
+local SHA-256 values with the `assets` table, uploads only missing or changed
+files, and automatically assigns the next immutable version. It never writes
+back to local files or deletes remote objects. `SUPABASE_SERVICE_ROLE_KEY` comes from ignored local server
 configuration; `CONTENT_API_URL` optionally overrides
 `http://127.0.0.1:3000/api/v1` and must remain on localhost for the local
 target. For an intentional production upload, run
-`pnpm run assets:upload -- --target production loc_town_street 1` with
+`pnpm assets:upload -- --target production loc_town_street` with
 `PRODUCTION_CONTENT_API_URL` and `PRODUCTION_SUPABASE_SERVICE_ROLE_KEY` supplied
 by the deployment environment. The URL must be HTTPS and non-local; the API must
 be configured for that same production Supabase project. Production values are
 never loaded from local `.env` files, and the service key remains server-side.
-The upload script generates experimental SVG backgrounds, 32×48 player frames
-and JSON walking definitions in `local-assets/maps/<mapId>/`, then uploads each
-through NestJS. The ignored local copies remain available to inspect, back up or
-upload again. Failed uploads leave the files in place for retry. Original map
+`pnpm assets:generate` creates reviewed runtime packs; the upload command only
+reads those files and publishes them through NestJS. The ignored local copies
+remain available to inspect, back up or upload again. Failed uploads leave the
+files in place for retry. Original map
 artwork and station NPC atlases, portraits, and Kokoro-generated voice clips can
 be copied from `apps/game/assets` into map-organized ignored folders with
 `pnpm assets:archive`. Station voice clips are grouped under each matching NPC
