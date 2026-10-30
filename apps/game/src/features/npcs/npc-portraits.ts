@@ -17,4 +17,8 @@ export function npcPortrait(npcId: string): string {
   return portrait;
 }
 
+export function loadedNpcPortrait(npcId: string): string | undefined {
+  return portraits.get(npcId);
+}
+
 export const NPC_PORTRAIT_GRID = { columns: 3, rows: 1 } as const;

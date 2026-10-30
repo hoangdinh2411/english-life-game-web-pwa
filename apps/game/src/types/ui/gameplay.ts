@@ -37,7 +37,7 @@ export interface DialogueMessageProps {
   portraitPosition?: string | undefined;
   portraitGrid?: { columns: number; rows: number } | undefined;
   name: string;
-  portrait: string;
+  portrait: string | undefined;
   text: string;
   fullText?: string;
   revealing?: boolean;

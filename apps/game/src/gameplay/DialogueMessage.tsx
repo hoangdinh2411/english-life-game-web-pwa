@@ -30,19 +30,19 @@ export function DialogueMessage({
             aria-label={`${name} avatar`}
             className="w-12 h-12 shrink-0 rounded-xl bg-[var(--color-portrait-placeholder)]"
             style={{
-              backgroundImage: `url(${portrait})`,
+              ...(portrait ? { backgroundImage: `url(${portrait})` } : {}),
               backgroundSize: `${portraitGrid?.columns ?? 3}00% ${portraitGrid?.rows ?? 2}00%`,
               backgroundPosition: portraitPosition,
             }}
           />
-        ) : (
+        ) : portrait ? (
           <img
             alt={`${name} avatar`}
             src={portrait}
             width="48"
             height="48"
           />
-        )}
+        ) : <span role="img" aria-label={`${name} avatar`} className="w-12 h-12 shrink-0 rounded-xl bg-[var(--color-portrait-placeholder)]" />}
         <div className="message-bubble min-w-0  flex-1 bg-[var(--color-cream-muted)] rounded-md p-2 [&_strong]:text-[var(--color-message-strong)] [&_strong]:text-[13px] [&_p]:mt-1 [&_p]:text-[16px] [&_p]:leading-[1.45] [&_p]:whitespace-pre-wrap [&_p]:[overflow-wrap:anywhere]">
           <strong>{name}</strong>
           <p className="flex items-center gap-1">
