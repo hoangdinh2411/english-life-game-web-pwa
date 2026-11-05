@@ -1,4 +1,4 @@
-import type { ArrivalState, Conversation, ConversationHistoryPage, ConversationTurn, SendMessageRequest } from '@life-abroad/shared';
+import type { ArrivalState, Conversation, ConversationHistoryPage, ConversationMessage, ConversationTurn, SendMessageRequest } from '@life-abroad/shared';
 
 export interface ConversationApi {
   load: () => Promise<ArrivalState>;
@@ -162,7 +162,14 @@ export function createConversationController(api: ConversationApi) {
         return { arrival };
       });
     },
-    clearIdCardSubmit: () => update({ idCardSubmitReady: false }),
+    completeIdCardIssue: (npcMessage: ConversationMessage) => {
+      const conversation = state.conversation;
+      if (!conversation) return;
+      const { idCardApplication: _application, ...withoutApplication } = conversation;
+      const messages = conversation.messages.some(message => message.id === npcMessage.id)
+        ? conversation.messages : [...conversation.messages, npcMessage];
+      update({ conversation: { ...withoutApplication, messages }, idCardSubmitReady: false });
+    },
     dispose: () => { disposed = true; epoch++; streamCancellation?.abort(); streamCancellation = null;
       state = { ...state, pending: false, streaming: false, streamedReply: '' }; listeners.clear(); },
   };

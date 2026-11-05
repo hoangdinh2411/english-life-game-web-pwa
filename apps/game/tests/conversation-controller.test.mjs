@@ -148,8 +148,12 @@ try {
     assert.equal(controller.getSnapshot().idCardSubmitReady, false);
     assert.equal(await controller.send('Yes, issue my card'), true);
     assert.equal(controller.getSnapshot().idCardSubmitReady, true);
-    controller.clearIdCardSubmit();
+    const issuedMessage = { id: globalThis.crypto.randomUUID(), sender: 'npc',
+      text: 'Your ID card has been issued. Is there anything else I can help you with?', createdAt: new Date().toISOString() };
+    controller.completeIdCardIssue(issuedMessage);
     assert.equal(controller.getSnapshot().idCardSubmitReady, false);
+    assert.equal(controller.getSnapshot().conversation?.idCardApplication, undefined);
+    assert.deepEqual(controller.getSnapshot().conversation?.messages.at(-1), issuedMessage);
   });
 } finally {
   await server.close();

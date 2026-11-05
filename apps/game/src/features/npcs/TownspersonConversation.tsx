@@ -47,8 +47,8 @@ export function TownspersonConversation({ gender, npc, sound, countryName, onClo
     issue: async (photo, idempotencyKey) => {
       const current = controller.getSnapshot();
       if (!current.idCardSubmitReady || !current.conversation) throw new Error('Confirm the application with the staff member first.');
-      await run(token => issueIdCard(token, { conversationId: current.conversation!.id, idempotencyKey }, photo));
-      controller.clearIdCardSubmit();
+      const result = await run(token => issueIdCard(token, { conversationId: current.conversation!.id, idempotencyKey }, photo));
+      controller.completeIdCardIssue(result.npcMessage);
       await onRefresh();
     } });
   const confirmationOnly = state.farewellStage === 'confirm';

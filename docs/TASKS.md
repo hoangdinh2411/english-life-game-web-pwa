@@ -205,7 +205,7 @@ database: localhost:54323
       60 characters). Safe server recasts remain always enabled. Check: answers kept in
       order; resume after reload; natural no-address explanations give `null`,
       literal "skip" gets a retry, character gender is copied server-side, and
-      "12 Maple Street" is stored. - [ ] **d. Photo (upload or camera)**: kept in
+      "12 Maple Street" is stored. - [x] **d. Photo (upload or camera)**: kept in
       the browser until the player confirms.** After the four questions the
       staff member asks for a photo. The chat panel offers **Upload photo**,
       **Take photo** and **Use my character picture** (skips the photo). Use a
@@ -298,6 +298,64 @@ database: localhost:54323
       Goals, no overlap, no horizontal scroll. Done when a to i are ticked,
       content validation fails for a missing step or an unknown NPC, and the AI
       evaluation shows no ID card data in any prompt.
+
+- [ ] **T40 — Shared contextual intent detection.** Replace feature-owned
+      sentence lists and ad-hoc confirmation regexes with one small,
+      deterministic intent layer reused by stateful conversations. Build on the
+      existing dialogue pipeline and `normalizeDialogue`; do not create a
+      second dialogue framework or one rules engine per store. Complete the
+      slices in order and stop after each requested slice. Finish T40 before
+      implementing the T37 CV interview so that flow does not copy the current
+      ID-card matching approach.
+  - [ ] **a. Contract and characterization.** Inventory the existing shared,
+        seller and ID-card intent seams and add tests that preserve their
+        current state transitions. Define one strict result contract:
+        `matched` has one `primary` intent plus zero or more ordered
+        `modifiers`; `unclear` has a reason (`no_match`, `ambiguous` or
+        `conflicting`). Initial reusable intents are `confirm`, `deny`,
+        `cancel`, `unknown`, `not_available` and `provide_later`. Intent names
+        describe language only; they never grant rewards or mutate state.
+        Check: the contract rejects unknown intents, duplicate modifiers and a
+        modifier equal to the primary intent.
+  - [ ] **b. Deterministic contextual detector.** Implement one pure detector
+        using normalized authored patterns and the current question/context.
+        Optional politeness, determiners and time phrases must not require a
+        complete sentence entry. It recognizes a primary intent and compatible
+        modifiers, while contradictory or unsupported wording returns
+        `unclear` instead of guessing. Check at least: “yes”, “no”, cancellation,
+        “I don't know”, “Sorry, I don't have any address right now”, and “I
+        don't have one, but I'll provide it later”; also prove that the same
+        words can resolve differently under two different question contexts.
+  - [ ] **c. Domain-owned decisions and authored clarification.** Migrate the
+        ID-card application and one existing seller confirmation path to the
+        shared detector as the reuse proof. Each domain explicitly allowlists
+        accepted intents for its current state and remains solely responsible
+        for validation, persistence and transitions. Responses and simple
+        clarification questions stay in validated content JSON. Remove only
+        the superseded feature-owned phrase lists/regexes. Check: no-address
+        answers store `null`; unclear input changes nothing and asks again;
+        confirm/deny/cancel preserve existing seller behavior; replay remains
+        idempotent.
+  - [ ] **d. Constrained AI fallback policy.** Rules run first. AI intent
+        classification is allowed only for low-risk, non-sensitive conversation
+        where the domain explicitly opts in; it receives no ID-card fields,
+        private profile data, payment data or reward state. The model may choose
+        only from that state's fixed intent allowlist, its output is schema
+        validated, and invalid, unavailable, conflicting or low-confidence
+        output becomes `unclear`. AI output never directly writes data or grants
+        progress: the domain must still validate and execute the action. ID-card,
+        economy, quest rewards and purchases use deterministic matching plus
+        clarification only. Check with a mocked provider: rules bypass AI;
+        allowed low-risk fallback resolves; unknown output fails closed; no
+        sensitive/state payload reaches the provider.
+  - [ ] **e. Verification and extension guide.** Run focused detector and domain
+        tests, content validation, typecheck, lint and the relevant integration
+        tests. Update `docs/TECH.md` with one short extension route showing how
+        a future domain supplies context, allowlisted intents, authored patterns
+        and clarification copy without adding a new detector. Check: repository
+        search finds no duplicate migrated matchers, both migrated domains pass,
+        and adding a test-only context requires data plus a domain handler—not
+        changes to the detector core.
 
 ## BLOCKED — start only after the Open decisions below are answered
 

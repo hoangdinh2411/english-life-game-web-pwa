@@ -70,8 +70,7 @@ export function useIdCardPhotoFlow({ application, gender, send, issue }: {
     return send(text);
   };
   if (!application) return { composerHidden: false, send: wrappedSend };
-  if (phase === 'issued') return { composerHidden: true, send: wrappedSend,
-    actions: <p role="status" className="text-[var(--color-success)]">Your ID card has been issued.</p> };
+  if (phase === 'issued') return { composerHidden: true, send: wrappedSend };
   const readback = `Name: ${application.name}. Date of birth: ${application.dateOfBirth}. Address: ${application.address ?? 'Not provided'}. Gender: ${application.gender}. Where you come from: ${application.origin}. Photo: ${photoLabel}. Is this correct?`;
   return { send: wrappedSend, composerHidden: phase !== 'review', actions: <section aria-label="ID card photo" className="flex flex-col gap-2">
     <input ref={upload} className="sr-only" type="file" accept="image/*" onChange={event => void choose(event.target.files?.[0])} />

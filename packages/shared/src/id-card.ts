@@ -15,10 +15,12 @@ export const idCardApplicationContentSchema = z.object({
     name: authoredText,
     dateOfBirth: authoredText,
     address: authoredText,
+    addressNotProvided: authoredText,
     origin: authoredText,
     photo: authoredText,
     review: authoredText,
     correction: authoredText,
+    issued: authoredText,
   }).strict(),
   reviewTemplate: authoredText,
   retries: z.object({
@@ -51,6 +53,9 @@ export const issueIdCardBodySchema = z.object({
 export const idCardIssueResponseSchema = z.object({
   issued: z.literal(true),
   photoUrl: z.string().url().nullable(),
+  npcMessage: z.object({
+    id: z.string().uuid(), sender: z.literal('npc'), text: z.string(), createdAt: z.string().datetime(),
+  }).strict(),
 }).strict();
 
 export type IdCardApplicationSummary = z.infer<typeof idCardApplicationSummarySchema>;

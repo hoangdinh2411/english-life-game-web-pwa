@@ -136,7 +136,8 @@ export class IdCardApplicationService {
 
     const next = this.next(answerField);
     await this.update(client, userId, next, answerField, parsed);
-    return this.result(next, content.prompts[next], arrival, `save_id_card_${answerField}`);
+    const responseText = validNullAddress ? content.prompts.addressNotProvided : content.prompts[next];
+    return this.result(next, responseText, arrival, `save_id_card_${answerField}`);
   }
 
   async review(client: PoolClient, userId: string, photo: 'uploaded photo' | 'character picture',

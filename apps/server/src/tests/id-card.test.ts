@@ -6,11 +6,14 @@ import type { DatabaseService } from '../infrastructure/database/database.servic
 import type { IdCardImageService } from '../modules/id-card/id-card-image.service';
 import type { SupabaseIdCardPhotoStorage } from '../modules/id-card/id-card-photo.storage';
 import { IdCardService } from '../modules/id-card/id-card.service';
+import { IdCardApplicationContentService } from '../modules/conversations/id-card-application-content.service';
 
 function fixture(failCardInsert = false) {
   let card: { photo_path: string | null } | undefined;
   let request: { conversation_id: string; photo_hash: string } | undefined;
   let uploads = 0, removals = 0;
+  let issuedMessages = 0;
+  let issuedMessage: { id: string; sender: 'npc'; text: string; created_at: Date } | undefined;
   const conversationId = randomUUID();
   const client = { query: async (sql: string, values: unknown[] = []) => {
     if (sql.includes('SELECT photo_path FROM public.player_id_card')) return { rows: card ? [card] : [] };
@@ -24,14 +27,20 @@ function fixture(failCardInsert = false) {
     if (sql.includes('INSERT INTO public.id_card_issue_requests')) {
       request = { conversation_id: values[2] as string, photo_hash: values[3] as string }; return { rows: [] };
     }
+    if (sql.includes('INSERT INTO public.messages')) {
+      issuedMessages += 1;
+      issuedMessage = { id: randomUUID(), sender: 'npc', text: values[1] as string, created_at: new Date('2026-11-05T12:00:00.000Z') };
+      return { rows: [issuedMessage] };
+    }
+    if (sql.includes('FROM public.messages') && sql.includes("sender='npc'")) return { rows: issuedMessage ? [issuedMessage] : [] };
     return { rows: [] };
   } } as unknown as PoolClient;
   const database = { transaction: <T>(work: (transaction: PoolClient) => Promise<T>) => work(client) } as DatabaseService;
   const images = { process: async () => Buffer.from('sanitized-jpeg') } as unknown as IdCardImageService;
   const storage = { upload: async () => { uploads += 1; }, remove: async () => { removals += 1; },
     signedUrl: async () => 'http://127.0.0.1:54321/storage/v1/object/sign/id-card-photos/test' } as unknown as SupabaseIdCardPhotoStorage;
-  return { service: new IdCardService(database, images, storage), conversationId,
-    counts: () => ({ uploads, removals, card, request }) };
+  return { service: new IdCardService(database, images, storage, new IdCardApplicationContentService()), conversationId,
+    counts: () => ({ uploads, removals, issuedMessages, card, request }) };
 }
 
 test('T36.d issues one card/photo and exact retries do not upload or insert again', async () => {
@@ -43,7 +52,11 @@ test('T36.d issues one card/photo and exact retries do not upload or insert agai
   assert.deepEqual(first, replay);
   assert.equal(first.issued, true);
   assert.match(first.photoUrl ?? '', /\/object\/sign\/id-card-photos\//);
+  assert.equal(first.npcMessage.text, 'Your ID card has been issued. Is there anything else I can help you with?');
+  assert.equal(first.npcMessage.sender, 'npc');
+  assert.deepEqual(replay.npcMessage, first.npcMessage);
   assert.equal(setup.counts().uploads, 1);
+  assert.equal(setup.counts().issuedMessages, 1);
   assert.equal(setup.counts().card?.photo_path, 'user-1/id-photo');
 });
 
@@ -51,6 +64,6 @@ test('T36.d removes an uploaded photo when the database write fails', async () =
   const setup = fixture(true);
   await assert.rejects(setup.service.issue('user-1', { conversationId: setup.conversationId, idempotencyKey: randomUUID() },
     { buffer: Buffer.from('source'), size: 6 }), /injected database failure/);
-  assert.deepEqual(setup.counts(), { uploads: 1, removals: 1, card: undefined, request: undefined });
+  assert.deepEqual(setup.counts(), { uploads: 1, removals: 1, issuedMessages: 0, card: undefined, request: undefined });
 });
 

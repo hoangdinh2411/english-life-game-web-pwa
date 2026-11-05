@@ -22,6 +22,10 @@
   "addressNullPhrases": [
     "i don't have an address yet",
     "i do not have an address yet",
+    "i don't have any address right now",
+    "i do not have any address right now",
+    "i don't have an address right now",
+    "i do not have an address right now",
     "i don't know my address yet",
     "i have no permanent address",
     "i don't have a permanent address",
@@ -44,10 +48,12 @@
     "name": "Of course. I can help you with that. What’s your full name?",
     "dateOfBirth": "Thanks. When were you born?",
     "address": "Thank you. What’s your address?",
+    "addressNotProvided": "That's okay. You can provide an address later. Where are you from?",
     "origin": "Great. And where are you from?",
     "photo": "Thanks. Now I need a photo.",
     "review": "I will read your application back, including the photo. Is this correct?",
-    "correction": "What would you like to change: your name, birthday, address, or country?"
+    "correction": "What would you like to change: your name, birthday, address, or country?",
+    "issued": "Your ID card has been issued. Is there anything else I can help you with?"
   },
   "reviewTemplate": "Here is your application. Name: {name}. Date of birth: {dateOfBirth}. Address: {address}. Gender: {gender}. Where you come from: {origin}. Photo: {photo}. Is this correct?",
   "retries": {
