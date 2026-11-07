@@ -4,8 +4,10 @@ import { MessageComposer } from "../../gameplay/MessageComposer";
 import { GameButton } from "../../gameplay/GameButton";
 import { npcPortraits, playerPortraitPresentation } from "../../gameplay/portraits";
 import type { PlayerGender } from "@life-abroad/shared";
-import type { ConversationSnapshot } from "./conversation-controller";
+import { displayConversationInput, isPhotoSelectionInput, type ConversationSnapshot } from "./conversation-controller";
 import { useSavedConversation } from "./use-saved-conversation";
+import { IdCardApplicationReview } from "../id-card/IdCardApplicationReview";
+import { IdCardIssuingSpinner } from "../id-card/IdCardIssuingSpinner";
 
 export function SavedConversation({
   state,
@@ -22,6 +24,10 @@ export function SavedConversation({
   onClose,
   actions,
   composerHidden = false,
+  reviewPhoto,
+  onNpcMessagePresented,
+  issuingMessageId,
+  playerPortraitUrl,
 }: {
   state: ConversationSnapshot;
   sound: boolean;
@@ -42,6 +48,10 @@ export function SavedConversation({
   onClose?: () => void;
   actions?: ReactNode;
   composerHidden?: boolean;
+  reviewPhoto?: ReactNode;
+  onNpcMessagePresented?: (messageId: string) => void;
+  issuingMessageId?: string;
+  playerPortraitUrl?: string;
 }) {
   const playerPortrait = playerPortraitPresentation(gender);
   const {
@@ -50,6 +60,7 @@ export function SavedConversation({
     history,
     hintOpen,
     onHistoryScroll,
+    presentationBusy,
     reveal,
     setDismissEndPrompt,
     setHintOpen,
@@ -67,6 +78,7 @@ export function SavedConversation({
     completed,
     send,
     ...(loadOlder ? { loadOlder } : {}),
+    ...(onNpcMessagePresented ? { onNpcMessagePresented } : {}),
   });
   if (showEndPrompt) {
     return (
@@ -87,11 +99,19 @@ export function SavedConversation({
       </div>
     );
   }
+  const reviewPhotoMessageId = reviewPhoto
+    ? state.conversation?.messages.reduce<string | undefined>((id, message) =>
+      message.sender === "npc" && message.text.startsWith("Here is your application:") ? message.id : id, undefined)
+    : undefined;
+  const selectedPhotoMessageId = reviewPhoto
+    ? state.conversation?.messages.reduce<string | undefined>((id, message) =>
+      message.sender === "player" && message.text === "Review" ? message.id : id, undefined)
+    : undefined;
   return (
     <>
       <div
         ref={history}
-        className="conversation-history h-[min(220px,_28dvh)] min-h-16 max-h-[min(220px,_28dvh)] flex-1 overflow-y-auto overscroll-contain pr-1 [@media(max-height:480px)]:h-[120px] [@media(max-height:480px)]:max-h-[120px]"
+        className="conversation-history h-[min(320px,_40dvh)] min-h-24 max-h-[min(320px,_40dvh)] flex-1 overflow-y-auto overscroll-contain pr-1 [@media(max-height:480px)]:h-[160px] [@media(max-height:480px)]:max-h-[160px]"
         role="log"
         aria-label="Conversation history"
         aria-live="polite"
@@ -125,34 +145,42 @@ export function SavedConversation({
             player={message.sender === "player"}
             portrait={
               message.sender === "player"
-                ? playerPortrait.portrait
+                ? (playerPortraitUrl ?? playerPortrait.portrait)
                 : (displayNpc?.portrait ?? npcPortraits.npc_station_information)
             }
             portraitPosition={
               message.sender === "player"
-                ? playerPortrait.portraitPosition
+                ? (playerPortraitUrl ? undefined : playerPortrait.portraitPosition)
                 : message.sender === "npc"
                 ? displayNpc?.portraitPosition(message.text)
                 : undefined
             }
             portraitGrid={
-              message.sender === "player" ? playerPortrait.portraitGrid : displayNpc?.portraitGrid
+              message.sender === "player" ? (playerPortraitUrl ? undefined : playerPortrait.portraitGrid) : displayNpc?.portraitGrid
             }
-            onReplay={() => voice.listen(message.text, message.speech?.url)}
+            onReplay={() => voice.listen(message.speech?.text ?? message.text, message.speech?.url)}
             replayVisible={sound && voice.supported}
             replayDisabled={
               !sound || !voice.supported || state.pending || speech.listening
             }
+            body={message.id === selectedPhotoMessageId ? reviewPhoto
+              : message.id === reviewPhotoMessageId && reviewPhoto
+                ? <IdCardApplicationReview text={message.text} photo={reviewPhoto} />
+                : undefined}
+            attachment={message.id === issuingMessageId ? <IdCardIssuingSpinner /> : undefined}
           />
         ))}
-        {state.streaming && state.retryMessage ? (
+        {state.pending && state.retryMessage ? (
           <DialogueMessage
             name="You"
-            text={state.retryMessage.text}
+            text={reviewPhoto && isPhotoSelectionInput(state.retryMessage.text)
+              ? ""
+              : displayConversationInput(state.retryMessage.text)}
+            body={reviewPhoto && isPhotoSelectionInput(state.retryMessage.text) ? reviewPhoto : undefined}
             player
-            portrait={playerPortrait.portrait}
-            portraitPosition={playerPortrait.portraitPosition}
-            portraitGrid={playerPortrait.portraitGrid}
+            portrait={playerPortraitUrl ?? playerPortrait.portrait}
+            portraitPosition={playerPortraitUrl ? undefined : playerPortrait.portraitPosition}
+            portraitGrid={playerPortraitUrl ? undefined : playerPortrait.portraitGrid}
           />
         ) : null}
         {state.streaming ? (
@@ -175,7 +203,7 @@ export function SavedConversation({
         ) : null}
       </div>
       {details}
-      {actions}
+      {!presentationBusy ? actions : null}
       {hint ? (
         <div className="flex items-center gap-2">
           <span
@@ -215,8 +243,8 @@ export function SavedConversation({
           draft stays here; nothing is queued.
         </p>
       ) : null}
-      {state.pending && !state.streaming ? (
-        <p role="status">Waiting for the server…</p>
+      {state.pending && !state.streaming && state.conversation ? (
+        <p role="status">Sending your reply…</p>
       ) : null}
       {state.error ? (
         <p
@@ -240,16 +268,18 @@ export function SavedConversation({
           onClick={retry}
         />
       ) : null}
-      {!composerHidden ? <MessageComposer
-        text={text}
-        onChange={setText}
-        onSend={() => void submit()}
-        pending={blocked}
-        voiceSupported={speech.supported}
-        listening={speech.listening}
-        onRecord={toggleRecording}
-        onCancelRecording={cancelRecording}
-      /> : null}
+      {!composerHidden ? (
+        <MessageComposer
+          text={text}
+          onChange={setText}
+          onSend={() => void submit()}
+          pending={blocked}
+          voiceSupported={speech.supported}
+          listening={speech.listening}
+          onRecord={toggleRecording}
+          onCancelRecording={cancelRecording}
+        />
+      ) : null}
       {speech.listening ? (
         <p className="hint text-muted text-[13px] leading-[1.4]">
           Recording… Stop to review, or Send to finish.

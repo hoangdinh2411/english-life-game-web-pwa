@@ -20,7 +20,7 @@ export async function loadSeedContent(root: string) {
   const quests = questCatalogSchema.parse(await json(join(root, 'seed/quests.json')));
   const shops = shopCatalogSchema.parse(await json(join(root, 'seed/shops.json')));
   const voicePools = voicePoolsSchema.parse(await json(join(root, 'voice-pools.json')));
-  idCardApplicationContentSchema.parse(await json(join(root, 'id-card/application.json')));
+  const idCardApplication = idCardApplicationContentSchema.parse(await json(join(root, 'id-card/application.json')));
   const dialogues = [];
   for (const file of (await readdir(join(root, 'dialogue'), { recursive: true })).filter(file => file.endsWith('.json')).sort()) {
     dialogues.push(dialogueSchema.parse(await json(join(root, 'dialogue', file))));
@@ -70,7 +70,7 @@ export async function loadSeedContent(root: string) {
     }
   }
   for (const npcId of Object.keys(voicePools.voiceOverrides)) requireReference(npcIds.has(npcId), `Unknown voice override NPC ${npcId}`);
-  return { moods, town, roles, npcs, streetNpcs, quests, shops, dialogues, voicePools };
+  return { moods, town, roles, npcs, streetNpcs, quests, shops, dialogues, voicePools, idCardApplication };
 }
 
 export type SeedContent = Awaited<ReturnType<typeof loadSeedContent>>;

@@ -33,7 +33,7 @@ test('shop NPC voices match their authored identities', () => {
 test('closed store hours block shop interiors but never block the street', async () => {
   const navigation = await import('../src/features/shops/shop-navigation.ts');
   assert.equal(typeof navigation.canEnterLocation, 'function');
-  const { canEnterLocation, closedVenueExit, shouldDeferClosedVenueExit } = navigation;
+  const { canEnterLocation, closedVenueExit, shouldCloseActiveVenue, shouldDeferClosedVenueExit } = navigation;
   const at = (hour, minute) => new Date(Date.UTC(2026, 9, 13, hour, minute));
   assert.equal(canEnterLocation('cafe', at(7, 59), 'UTC'), false);
   assert.equal(canEnterLocation('cafe', at(8, 0), 'UTC'), true);
@@ -51,6 +51,9 @@ test('closed store hours block shop interiors but never block the street', async
   assert.equal(canEnterLocation('tax_office', at(8, 0), 'UTC'), true);
   assert.equal(canEnterLocation('tax_office', at(15, 59), 'UTC'), true);
   assert.equal(canEnterLocation('tax_office', at(16, 0), 'UTC'), false);
+  assert.equal(shouldCloseActiveVenue('tax_office', null, null), false, 'wait for the server clock after reload');
+  assert.equal(shouldCloseActiveVenue('tax_office', at(15, 59), 'UTC'), false);
+  assert.equal(shouldCloseActiveVenue('tax_office', at(16, 0), 'UTC'), true);
   assert.deepEqual(closedVenueExit('cafe'), { closedLocation: 'cafe', location: 'station', streetArrival: 'station' });
   assert.deepEqual(closedVenueExit('clothes'), { closedLocation: 'clothes', location: 'station', streetArrival: 'station' });
   assert.deepEqual(closedVenueExit('corner_cafe'), { closedLocation: 'corner_cafe', location: 'street', streetArrival: 'corner_cafe' });

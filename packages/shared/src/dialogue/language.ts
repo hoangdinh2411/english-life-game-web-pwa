@@ -24,6 +24,19 @@ export function farewellClosing(input: string): string {
   return 'I hope to see you again. It was nice talking with you. Goodbye!';
 }
 
+export function serviceContinuationIntent(input: string): 'continue' | 'finish' | 'unclear' {
+  const normalized = normalizeDialogue(input).toLowerCase().replace(/[.!?,]+$/g, '').trim();
+  const hasNewRequest = /\b(?:i|we) (?:also )?(?:need|want|would like|have to)\b/.test(normalized)
+    && !/\b(?:i|we) (?:do not|don't|dont|no longer) (?:need|want|have to)\b/.test(normalized);
+  if (hasNewRequest) return 'continue';
+  const intent = detectIntent(normalized);
+  if (intent?.id === 'deny' || intent?.id === 'goodbye') return 'finish';
+  if (intent?.id === 'confirm') return 'continue';
+  if (intent?.id === 'thank' && /^(?:thanks|thank you)(?: very much| so much)?$/.test(normalized)) return 'finish';
+  if (/^(?:nothing else|that(?:'s| is) all|i(?:'m| am) done|no more|not today|all good)$/.test(normalized)) return 'finish';
+  return normalized ? 'continue' : 'unclear';
+}
+
 export function detectIntent(input: string, confirmation = false, domainIntents: readonly IntentDefinition[] = []): IntentMatch | undefined {
   const normalized = normalizeDialogue(input);
   const { greeting: hasGreeting, body } = splitGreeting(normalized);

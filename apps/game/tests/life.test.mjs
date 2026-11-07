@@ -7,6 +7,7 @@ const server = await createServer({ server: { middlewareMode: true, ws: false },
 try {
   const { isDefiniteRejection } = await server.ssrLoadModule('/src/features/life/life-clock.ts');
   const { refreshLifeOnConnection } = await server.ssrLoadModule('/src/features/life/life-sync.ts');
+  const { restartGame } = await server.ssrLoadModule('/src/features/life/restart-game.ts');
   const { PlayerProfileDialogue } = await server.ssrLoadModule('/src/features/life/PlayerProfileDialogue.tsx');
   const { EnergyDisplay } = await server.ssrLoadModule('/src/features/life/EnergyDisplay.tsx');
   const { PlayerInfoCard } = await server.ssrLoadModule('/src/gameplay/PlayerInfoCard.tsx');
@@ -25,6 +26,11 @@ try {
     await refreshLifeOnConnection(true, refresh, catalog);
     await refreshLifeOnConnection(true, refresh, catalog);
     assert.deepEqual([stateRefreshes, catalogRefreshes], [2, 2]);
+  });
+  test('restart reloads the current game document', () => {
+    let reloads = 0;
+    restartGame({ reload: () => { reloads += 1; } });
+    assert.equal(reloads, 1);
   });
   test('energy is labelled, readable without color, and explains empty/low energy', () => {
     for (const energy of [0, 20, 100]) {

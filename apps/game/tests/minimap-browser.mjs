@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import Phaser from 'phaser';
 import StationScreen from '../src/gameplay/StationScreen.tsx';
 import { PwaProvider } from '../src/pwa/PwaProvider.tsx';
+import { SessionProvider } from '../src/session/session-provider.tsx';
 import { STREET_NPCS } from '../src/features/npcs/street-npcs.ts';
 import '../src/styles.css';
 
@@ -23,11 +24,13 @@ const buttons = document.createElement('div');
 buttons.className = 'flex flex-wrap gap-1';
 controls.append(buttons, status);
 document.body.append(controls);
-createRoot(root).render(React.createElement(PwaProvider, null,
-  React.createElement(StationScreen, { playerName: 'Fictional minimap preview', xp: 0, coins: 99999, onSignOut() {},
-    life: { time: new Date('2026-10-15T10:00:00Z'), state: null, refresh: async () => {} },
+createRoot(root).render(React.createElement(SessionProvider, null,
+  React.createElement(PwaProvider, null,
+    React.createElement(StationScreen, { playerName: 'Fictional minimap preview', xp: 0, coins: 99999, onSignOut() {},
+    life: { time: new Date('2026-10-15T10:00:00Z'), state: null, refresh: async () => {},
+      error: 'Unable to load shop catalog. Reconnect and refresh.' },
     arrival: { initialLocation: { mapId: 'loc_station', placeId: 'loc_station', x: 768, y: 370 }, exitUnlocked: true, pending: false, error: '', online: true, goalsLabel: 'Preview', questPanel: null, statusPanel: null, blockedExitMessage: '', onRetry() {}, onOpenReceptionist() {}, onEnterStreet: async () => true, onPlaceChange() {}, renderReceptionist: () => 'Fictional conversation preview' },
-  })));
+  }))));
 // Keep verification controls outside the game viewport.
 document.body.className = 'h-dvh flex flex-col overflow-hidden';
 root.className = 'flex flex-col flex-1 min-h-0';

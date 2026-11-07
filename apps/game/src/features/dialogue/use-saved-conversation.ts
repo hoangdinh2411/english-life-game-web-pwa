@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, type UIEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type UIEvent } from "react";
 import { useNarration } from "../../speech/use-narration";
 import { npcVoice } from "../../speech/npc-voice";
 import { useSpeech } from "../../speech/use-speech";
 import type { ConversationSnapshot } from "./conversation-controller";
 import {
   shouldAutomaticallyRevealNpcMessage,
+  shouldRevealEntireNpcMessage,
   shouldUseTypingFallback,
   useNpcMessageReveal,
 } from "./use-npc-message-reveal";
@@ -16,6 +17,7 @@ interface SavedConversationBehaviorOptions {
   completed: boolean;
   send: (text: string) => Promise<boolean>;
   loadOlder?: () => Promise<boolean>;
+  onNpcMessagePresented?: (messageId: string) => void;
 }
 
 export function useSavedConversation({
@@ -25,6 +27,7 @@ export function useSavedConversation({
   completed,
   send,
   loadOlder,
+  onNpcMessagePresented,
 }: SavedConversationBehaviorOptions) {
   const [text, setText] = useState(state.retryMessage?.text ?? "");
   const [hintOpen, setHintOpen] = useState(false);
@@ -44,14 +47,16 @@ export function useSavedConversation({
   const lastNpc = state.conversation?.messages.findLast(
     (message) => message.sender === "npc",
   );
+  const spokenText = lastNpc?.speech?.text ?? lastNpc?.text ?? "";
   const voice = useNarration(
-    lastNpc?.text ?? "",
+    spokenText,
     sound && !state.pending && !speech.listening,
     lastNpc?.id ?? "",
     npcVoice[state.conversation?.npcId ?? "npc_station_information"],
     state.conversation?.npcId,
     Boolean(lastNpc?.ai),
     lastNpc?.speech?.url,
+    false,
   );
   const latestMessage = state.conversation?.messages.at(-1);
   const reveal = useNpcMessageReveal(
@@ -61,6 +66,7 @@ export function useSavedConversation({
           text: latestMessage.text,
           npc:
             latestMessage.sender === "npc" &&
+            shouldRevealEntireNpcMessage(latestMessage.text, latestMessage.speech?.text) &&
             shouldAutomaticallyRevealNpcMessage(
               latestMessage.id,
               state.streamedMessageId,
@@ -86,8 +92,13 @@ export function useSavedConversation({
     !voice.speaking &&
     !narrationPending &&
     !dismissEndPrompt;
+  const presentationBusy = Boolean(reveal?.revealing || voice.speaking || narrationPending);
 
   useEffect(() => {
+    if (lastNpc && !presentationBusy) onNpcMessagePresented?.(lastNpc.id);
+  }, [lastNpc, onNpcMessagePresented, presentationBusy]);
+
+  useLayoutEffect(() => {
     const element = history.current;
     if (!element) return;
     if (previousScrollHeight.current !== null) {
@@ -96,11 +107,12 @@ export function useSavedConversation({
       return;
     }
     element.scrollTop = element.scrollHeight;
-  }, [state.conversation?.messages]);
+  }, [latestMessage?.id, state.conversation?.messages, state.streaming]);
 
   const submit = async (original = false): Promise<void> => {
     if (sending.current || blocked) return;
     sending.current = true;
+    let clearedReply: string | null = null;
     try {
       let reply: string | null = original
         ? (state.retryMessage?.text ?? text)
@@ -109,10 +121,20 @@ export function useSavedConversation({
         setFinalizing(true);
         reply = await speech.finish();
       }
-      if (reply !== null && (await send(reply))) {
+      if (reply !== null) {
+        clearedReply = reply;
         setText("");
-        setDismissEndPrompt(false);
+        if (await send(reply)) {
+          clearedReply = null;
+          setDismissEndPrompt(false);
+        } else {
+          clearedReply = null;
+          setText(reply);
+        }
       }
+    } catch (error: unknown) {
+      if (clearedReply !== null) setText(clearedReply);
+      throw error;
     } finally {
       sending.current = false;
       setFinalizing(false);
@@ -156,6 +178,7 @@ export function useSavedConversation({
     history,
     hintOpen,
     onHistoryScroll,
+    presentationBusy,
     reveal,
     setDismissEndPrompt,
     setHintOpen,

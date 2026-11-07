@@ -13,11 +13,31 @@ export function DialogueMessage({
   onReplay,
   replayVisible,
   replayDisabled = false,
+  body,
+  attachment,
 }: DialogueMessageProps) {
   const hasReplaySlot =
     !player && (onReplay !== undefined || replayVisible !== undefined);
   const showReplay =
     hasReplaySlot && !thinking && replayVisible !== false && onReplay;
+  const replayControl = showReplay ? (
+    <button
+      type="button"
+      className="speaker-control-slot grid size-11 shrink-0 place-items-center rounded-md border-0 bg-transparent text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-green-strong)]"
+      aria-label={`Replay message from ${name}`}
+      disabled={replayDisabled}
+      onClick={onReplay}
+    >
+      <GameIcon name="sound-on" className="size-4" />
+    </button>
+  ) : hasReplaySlot ? (
+    <span
+      aria-hidden="true"
+      className="speaker-control-slot invisible grid size-11 shrink-0 place-items-center text-sm"
+    >
+      <GameIcon name="sound-on" className="size-4" />
+    </span>
+  ) : null;
 
   return (
     <div
@@ -45,7 +65,8 @@ export function DialogueMessage({
         ) : <span role="img" aria-label={`${name} avatar`} className="w-12 h-12 shrink-0 rounded-xl bg-[var(--color-portrait-placeholder)]" />}
         <div className="message-bubble min-w-0  flex-1 bg-[var(--color-cream-muted)] rounded-md p-2 [&_strong]:text-[var(--color-message-strong)] [&_strong]:text-[13px] [&_p]:mt-1 [&_p]:text-[16px] [&_p]:leading-[1.45] [&_p]:whitespace-pre-wrap [&_p]:[overflow-wrap:anywhere]">
           <strong>{name}</strong>
-          <p className="flex items-center gap-1">
+          {body ? <div>{body}<div className="flex justify-end">{replayControl}</div></div>
+            : <p className="flex items-center gap-1">
             {thinking ? (
               <span role="status">Thinking…</span>
             ) : revealing ? (
@@ -67,25 +88,9 @@ export function DialogueMessage({
             ) : (
               text
             )}
-            {showReplay ? (
-              <button
-                type="button"
-                className="speaker-control-slot grid size-11 shrink-0 place-items-center rounded-md border-0 bg-transparent text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-green-strong)]"
-                aria-label={`Replay message from ${name}`}
-                disabled={replayDisabled}
-                onClick={onReplay}
-              >
-                <GameIcon name="sound-on" className="size-4" />
-              </button>
-            ) : hasReplaySlot ? (
-              <span
-                aria-hidden="true"
-                className="speaker-control-slot invisible grid size-11 shrink-0 place-items-center text-sm"
-              >
-                <GameIcon name="sound-on" className="size-4" />
-              </span>
-            ) : null}
-          </p>
+            {replayControl}
+          </p>}
+          {attachment ? <div className="mt-2">{attachment}</div> : null}
         </div>
       </div>
       {revealing && !player ? (

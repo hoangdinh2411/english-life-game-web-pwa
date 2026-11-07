@@ -5,6 +5,7 @@ import { loadCatalog, loadLife, performLifeAction, type LifeAction } from './lif
 import { isDefiniteRejection } from './life-clock';
 import { runQuickRestTransition, type QuickRestPhase } from './quick-rest-transition';
 import { refreshLifeOnConnection } from './life-sync';
+import { shouldRefreshAfterLifeAction } from './life-action-refresh';
 export function useLife(run: SessionManager['run'], online: boolean) {
   const [state, setState] = useState<LifeState | null>(null);
   const [catalog, setCatalog] = useState<ShopItem[]>([]);
@@ -44,7 +45,7 @@ export function useLife(run: SessionManager['run'], online: boolean) {
         : await perform();
       if (mounted.current) setState(result);
       if (mounted.current) setRetry(null);
-      await refresh();
+      if (shouldRefreshAfterLifeAction(action)) await refresh();
     } catch (failure) {
       if (mounted.current) {
         setRetry(isDefiniteRejection(failure) ? null : action);

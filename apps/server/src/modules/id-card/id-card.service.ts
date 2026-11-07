@@ -6,6 +6,8 @@ import type { IdCardIssueResponse, IssueIdCardBody } from '@life-abroad/shared';
 import { IdCardImageService } from './id-card-image.service';
 import { SupabaseIdCardPhotoStorage } from './id-card-photo.storage';
 import { IdCardApplicationContentService } from '../conversations/id-card-application-content.service';
+import { ConversationSpeechService } from '../speech/conversation-speech.service';
+import { conversationNpcSchema } from '@life-abroad/shared';
 
 interface ApplicationRow {
   current_field: string; name: string | null; date_of_birth: Date | null; address: string | null;
@@ -17,7 +19,8 @@ interface IssuedMessageRow { id: string; sender: 'npc'; text: string; created_at
 @Injectable()
 export class IdCardService {
   constructor(private readonly database: DatabaseService, private readonly images: IdCardImageService,
-    private readonly storage: SupabaseIdCardPhotoStorage, private readonly content: IdCardApplicationContentService) {}
+    private readonly storage: SupabaseIdCardPhotoStorage, private readonly content: IdCardApplicationContentService,
+    private readonly speech: ConversationSpeechService) {}
 
   resetApplication(userId: string): Promise<void> {
     return this.database.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId])
@@ -28,11 +31,14 @@ export class IdCardService {
     const image = await this.images.process(file);
     const photoHash = createHash('sha256').update(image ?? Buffer.from('character-picture')).digest('hex');
     const photoPath = image ? `${userId}/id-photo` : null;
-    const issuedText = (await this.content.get()).prompts.issued;
+    const prompts = (await this.content.get()).prompts;
     let uploaded = false;
     try {
       const result = await this.database.transaction(async client => {
         await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`id-card:${userId}`]);
+        const conversation = await client.query<{ npc_id: string }>(
+          'SELECT npc_id FROM public.conversations WHERE id=$1 AND user_id=$2', [body.conversationId, userId]);
+        const npcId = conversationNpcSchema.parse(conversation.rows[0]?.npc_id);
         const replay = await client.query<{ conversation_id: string; photo_hash: string }>(
           'SELECT conversation_id,photo_hash FROM public.id_card_issue_requests WHERE user_id=$1 AND idempotency_key=$2',
           [userId, body.idempotencyKey]);
@@ -41,9 +47,33 @@ export class IdCardService {
         }
         const existing = await client.query<{ photo_path: string | null }>('SELECT photo_path FROM public.player_id_card WHERE user_id=$1', [userId]);
         if (existing.rows[0]) {
-          const message = await this.issuedMessage(client, replay.rows[0]?.conversation_id ?? body.conversationId,
-            replay.rows[0] ? body.idempotencyKey : null);
-          return { photoPath: existing.rows[0].photo_path, message };
+          if (replay.rows[0]) {
+            const message = await this.issuedMessage(client, replay.rows[0].conversation_id, body.idempotencyKey);
+            return { photoPath: existing.rows[0].photo_path, message, npcId };
+          }
+          const pending = await client.query('SELECT 1 FROM public.id_card_applications WHERE user_id=$1', [userId]);
+          if (!pending.rows[0]) {
+            await client.query(`INSERT INTO public.id_card_issue_requests
+              (user_id,idempotency_key,conversation_id,photo_hash) VALUES ($1,$2,$3,$4)`,
+            [userId, body.idempotencyKey, body.conversationId, photoHash]);
+            const message = (await client.query<IssuedMessageRow>(`INSERT INTO public.messages
+              (conversation_id,sender,text,client_message_id) VALUES ($1,'npc',$2,$3)
+              RETURNING id,sender,text,created_at`, [body.conversationId, prompts.issued, body.idempotencyKey])).rows[0]!;
+            return { photoPath: existing.rows[0].photo_path, message, npcId };
+          }
+          const application = await this.application(client, userId, body.conversationId);
+          if (image && photoPath) { await this.storage.upload(photoPath, image); uploaded = true; }
+          await client.query(`UPDATE public.player_id_card SET full_name=$2,birth_date=$3,address=$4,
+            gender=$5,origin=$6,photo_path=COALESCE($7,photo_path),updated_at=now() WHERE user_id=$1`,
+          [userId, application.name, application.date_of_birth, application.address, application.gender, application.origin, photoPath]);
+          await client.query(`INSERT INTO public.id_card_issue_requests
+            (user_id,idempotency_key,conversation_id,photo_hash) VALUES ($1,$2,$3,$4)`,
+          [userId, body.idempotencyKey, body.conversationId, photoHash]);
+          const message = (await client.query<IssuedMessageRow>(`INSERT INTO public.messages
+            (conversation_id,sender,text,client_message_id) VALUES ($1,'npc',$2,$3)
+            RETURNING id,sender,text,created_at`, [body.conversationId, prompts.updated, body.idempotencyKey])).rows[0]!;
+          await client.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId]);
+          return { photoPath: photoPath ?? existing.rows[0].photo_path, message, npcId };
         }
         const application = await this.application(client, userId, body.conversationId);
         if (image && photoPath) { await this.storage.upload(photoPath, image); uploaded = true; }
@@ -56,12 +86,14 @@ export class IdCardService {
         [userId, body.idempotencyKey, body.conversationId, photoHash]);
         const message = (await client.query<IssuedMessageRow>(`INSERT INTO public.messages
           (conversation_id,sender,text,client_message_id) VALUES ($1,'npc',$2,$3)
-          RETURNING id,sender,text,created_at`, [body.conversationId, issuedText, body.idempotencyKey])).rows[0]!;
+          RETURNING id,sender,text,created_at`, [body.conversationId, prompts.issued, body.idempotencyKey])).rows[0]!;
         await client.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId]);
-        return { photoPath, message };
+        return { photoPath, message, npcId };
       });
+      const spokenMessage = await this.speech.message(userId, result.npcId, this.message(result.message));
+      const npcMessage = { ...spokenMessage, sender: 'npc' as const };
       return { issued: true, photoUrl: result.photoPath ? await this.storage.signedUrl(result.photoPath) : null,
-        npcMessage: this.message(result.message) };
+        npcMessage };
     } catch (error) {
       if (uploaded && photoPath) await this.storage.remove(photoPath).catch(() => undefined);
       throw error;

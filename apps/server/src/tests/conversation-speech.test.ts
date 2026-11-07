@@ -48,6 +48,44 @@ test('player messages and speech failures preserve readable conversation text', 
   assert.deepEqual(await service.message('user', npc, playerMessage), playerMessage);
 });
 
+test('review speech generates only the confirmation question while preserving the full visible summary', async () => {
+  const generated: string[] = [];
+  const service = new ConversationSpeechService({ get: async (input: SpeechCacheIdentity) => {
+    generated.push(input.text);
+    return { cacheKey: 'review', path: 'review.mp3', url: 'https://audio.test/review.mp3' };
+  } } as never, {} as never, { identity: async () => identity } as never);
+  const visibleText = 'Here is your application:\n• Name: Test Learner\n\nWould you like to change anything?';
+  const spokenText = 'Would you like to change anything?';
+  const turn = await service.turn('user', npc, {
+    playerMessage: { id: crypto.randomUUID(), sender: 'player', text: 'Review', createdAt: new Date().toISOString() },
+    npcMessage: { ...message(crypto.randomUUID(), visibleText), speechText: spokenText },
+    intent: 'review_id_card_application', misunderstood: false,
+    arrival: { questId: 'q_station_arrival', status: 'done', currentStepId: null,
+      ticket: { issued: true, used: true }, canEnterTownStreet: true, locationId: 'loc_tax_office', rewardsGranted: true },
+    speechText: spokenText,
+  });
+  assert.deepEqual(generated, [spokenText]);
+  assert.equal(turn.npcMessage.text, visibleText);
+  assert.deepEqual(turn.npcMessage.speech, { url: 'https://audio.test/review.mp3', text: spokenText });
+});
+
+test('the ID-card acknowledgement receives speech before issuance begins', async () => {
+  const generated: string[] = [];
+  const service = new ConversationSpeechService({ get: async (input: SpeechCacheIdentity) => {
+    generated.push(input.text); return { cacheKey: 'unused', path: 'unused.mp3', url: 'https://audio.test/unused.mp3' };
+  } } as never, {} as never, { identity: async () => identity } as never);
+  const turn = {
+    playerMessage: { id: crypto.randomUUID(), sender: 'player' as const, text: 'Yes, issue my card', createdAt: new Date().toISOString() },
+    npcMessage: message(crypto.randomUUID(), 'Thank you. I will issue your ID card now.'),
+    intent: 'confirm_id_card_application', misunderstood: false, idCardSubmit: true as const,
+    arrival: { questId: 'q_station_arrival' as const, status: 'done' as const, currentStepId: null,
+      ticket: { issued: true, used: true }, canEnterTownStreet: true, locationId: 'loc_tax_office' as const, rewardsGranted: true },
+  };
+  const spoken = await service.turn('user', npc, turn);
+  assert.deepEqual(generated, ['Thank you. I will issue your ID card now.']);
+  assert.equal(spoken.npcMessage.speech?.url, 'https://audio.test/unused.mp3');
+});
+
 test('a slow speech dependency cannot consume the conversation response deadline', async () => {
   const startedAt = Date.now();
   await assert.rejects(withinSpeechReplyBudget(new Promise<never>(() => undefined), 1), /Speech generation timed out/);

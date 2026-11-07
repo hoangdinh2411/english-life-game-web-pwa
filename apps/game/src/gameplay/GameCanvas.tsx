@@ -3,6 +3,7 @@ import { Minimap } from "../features/minimap/Minimap";
 import { GameButton } from "./GameButton";
 import type { GameCanvasProps, StationGame } from "../types/gameplay/world";
 import { syncNpcPresence } from "../features/npcs/npc-presence";
+import { appearanceSignature } from "../features/appearance/appearance-signature";
 
 const DEFAULT_INITIAL_LOCATION = {
   mapId: "loc_station",
@@ -78,11 +79,12 @@ export default function GameCanvas({
   exitRef.current = exitUnlocked;
   const appearanceRef = useRef(appearance);
   appearanceRef.current = appearance;
+  const appearanceKey = appearanceSignature(appearance);
   const presentNpcIdsRef = useRef(presentNpcIds);
   presentNpcIdsRef.current = presentNpcIds;
   useEffect(() => {
     game.current?.setAppearance(appearance);
-  }, [appearance]);
+  }, [appearanceKey]);
   useEffect(() => {
     game.current?.enforceVenueHours();
   }, [getGameTime, getTimeZone]);

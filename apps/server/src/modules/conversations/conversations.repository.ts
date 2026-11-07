@@ -14,8 +14,11 @@ export function sellerState(row: ConversationRow): SellerState {
 }
 
 function message(row: MessageRow): ConversationMessage {
-  const ai = row.sender === 'npc' && (row.metadata as { ai?: unknown } | null)?.ai === true;
-  return { id: row.id, sender: row.sender, text: row.text, createdAt: row.created_at.toISOString(), ...(ai ? { ai: true as const } : {}) };
+  const metadata = row.metadata as { ai?: unknown; speechText?: unknown } | null;
+  const ai = row.sender === 'npc' && metadata?.ai === true;
+  const speechText = row.sender === 'npc' && typeof metadata?.speechText === 'string' ? metadata.speechText : undefined;
+  return { id: row.id, sender: row.sender, text: row.text, createdAt: row.created_at.toISOString(),
+    ...(ai ? { ai: true as const } : {}), ...(speechText ? { speechText } : {}) };
 }
 
 @Injectable()

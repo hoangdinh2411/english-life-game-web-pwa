@@ -22,7 +22,8 @@ test('T36.d real storage/database issues one private sanitized photo for the exi
   const pool = new Pool({ connectionString: databaseUrl });
   const database = new DatabaseService(config);
   const storage = new SupabaseIdCardPhotoStorage(config);
-  const service = new IdCardService(database, new IdCardImageService(), storage, new IdCardApplicationContentService());
+  const speech = { message: async (_userId: string, _npcId: string, message: object) => message };
+  const service = new IdCardService(database, new IdCardImageService(), storage, new IdCardApplicationContentService(), speech as never);
   const user = await pool.query<{ id: string }>('SELECT id FROM auth.users WHERE email=$1', [email]);
   assert.equal(user.rowCount, 1, 'the supplied account must already exist');
   const userId = user.rows[0]!.id;

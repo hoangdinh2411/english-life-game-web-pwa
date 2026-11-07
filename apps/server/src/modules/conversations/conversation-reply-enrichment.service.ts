@@ -111,7 +111,8 @@ export class ConversationReplyEnrichmentService {
 
     if (!metadata.seller && farewell.response) {
       responseText = farewell.response.text;
-      metadata = { ...metadata, farewellStage: farewell.response.stage };
+      metadata = { ...metadata, farewellStage: farewell.response.stage,
+        ...(farewell.response.closeConversation ? { closeConversation: true as const } : {}) };
     }
 
     if (!farewell.response) {

@@ -3,8 +3,8 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
-Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.6;
-T39.1–T39.5; S2–S7.
+Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.6; T39.1–T39.5;
+S2–S7.
 
 ## How to work
 
@@ -28,8 +28,34 @@ T39.1–T39.5; S2–S7.
   not start the following task automatically.
 - Keep this board short: when a task is done, collapse it into one line under
   DONE. Git keeps the history.
-
-Example task request:
+- Do not read `docs/art-direction/` for tasks that do not create, edit, name,
+  review, integrate, or upload art/audio assets. When an asset task does require
+  it, first read `docs/art-direction/STYLE.md`, then open only the reference
+  images and supporting files relevant to that specific asset; do not scan the
+  whole directory. Follow the selected references exactly and do not invent
+  missing visual details. Generate only drafts first, display every result in
+  chat, and wait for explicit visual approval. Then ask separately for
+  permission to use the approved asset. Only after that second approval may the
+  AI move it into the reviewed source location or update content, code,
+  manifests, generation scripts, loaders, tests, and maintained docs that
+  reference it.
+- Asset approval is not production-upload approval. After local integration,
+  generate and inspect the runtime pack, run relevant verification, then run
+  `pnpm assets:upload -- --dry-run --target production <mapId>`. Report the
+  exact target, logical keys, upload/update/skip counts, proposed versions and
+  failures, and ask for explicit permission to perform the production upload.
+  Only after that approval may the AI run
+  `pnpm assets:upload -- --target production <mapId>`. Upload through the NestJS
+  content API using deployment-provided credentials; never write directly to
+  production PostgreSQL or Storage, never expose credentials, never overwrite
+  immutable bytes, and never delete unexpected remote assets.
+- For every approved new asset, update only the files actually required by its
+  ownership and runtime path: reviewed source, content/catalog entry, typed
+  asset manifest when present, generator/exporter, map loader or scene,
+  focused tests, and durable documentation. A new map folder additionally
+  requires its supported-map registration and server location/content data.
+  Do not create empty folders or speculative production configuration.
+  Example task request:
 
 ```text
 Read docs/MASTER_PROMPT.md and implement task T4 from docs/TASKS.md.
@@ -44,7 +70,7 @@ Please test using the account I provided. Don’t create a new user for each tes
 test@gmail.com / 12341234.
 client: localhost:8082
 backend: localhost:3000
-database: localhost:54323
+database: https://wedjinchhlybabstcchp.supabase.co
 ```
 
 ## NOW
@@ -143,17 +169,17 @@ database: localhost:54323
   running at 6× server elapsed time. Sleep becomes a five-second rest available
   below 30 energy; it adds 50 energy and never moves world time. Until ONB-01 is
   complete, the current per-player eight-hour sleep remains legacy behavior, not
-  the target contract. Opening hours remain cafés 08:00–21:00,
-  organizations 08:00–16:00, stores 10:00–20:00, supermarkets 07:00–22:00 and
-  workplaces 07:00–17:00 in country-local game time.
+  the target contract. Opening hours remain cafés 08:00–21:00, organizations
+  08:00–16:00, stores 10:00–20:00, supermarkets 07:00–22:00 and workplaces
+  07:00–17:00 in country-local game time.
 - Appearance uses separate hair, shirt and trouser colors, saved with the
   character. The first shop catalog has blue/green/red/yellow shirts at $30
   each.
 - **Mobile HUD (2026-10-14, T28/T29):** below 1024 px there is one menu button
   (top-right). Sound and voice controls live in Settings inside the menu;
-  server-owned safe recasts are always enabled and have no toggle. The
-  profile card is compact. The minimap (show/hide) sits in the top-right column
-  under the menu button.
+  server-owned safe recasts are always enabled and have no toggle. The profile
+  card is compact. The minimap (show/hide) sits in the top-right column under
+  the menu button.
 
 ## NEXT
 
@@ -166,174 +192,197 @@ database: localhost:54323
       art, portraits and voice clips use the existing asset pipeline (T14).
       Reward: the owner decides (default none). Codex must not invent anything
       the owner has not given: stop and ask.
-  - [x] **a. Tax office and staff.**
-      Inspect what exists. The tax office is a map with an entrance from Town
-      Street and **two named staff NPCs**; either one can run the whole flow.
-      Three emotion portraits each. Opening hours from the shared check
-      (organizations 08:00–16:00); a closed office says its hours. Check: the
-      player can walk in and chat with both staff.
-  - [x] **b. Services Q&A.**
-      Staff open with “Hello! How can I help you?” and wait for the player to
-      ask. When asked what they can help with, staff list their services: **register
-      an ID card** (works now) and **update ID card information** at the tax
-      office. Cards cannot be lost or damaged in the game, never expire and
-      remain valid permanently, so they do not need re-issue or renewal flows.
-      The service list is content, so more services can be added later without
-      code. A player who says they do not have an ID card is routed to
-      registration. Check: each question gets the right scripted answer; AI never answers
-      service questions. - [x] **c. Application conversation.** The staff member
-      asks four questions, one at a time: **name**, **date of birth**,
-      **address**, and **where you come from**. Gender comes from the immutable
-      character choice and is never asked again. Then the photo (step
-      d). Then the staff member reads everything back, photo included: "Is this
-      correct?". **Nothing is saved to the card until the player says yes.**
-      Until then the four entered answers wait in a server-owned pending state;
-      character gender is copied from the saved character (the
-      photo is not part of it, see d), so leaving and returning during the same
-      running game resumes at the saved step, while closing/reloading the game
-      clears the unfinished application and starts it from the beginning. "No"
-      lets the player fix any entered answer. The pending answers
-      are removed when the card is issued or the application is cancelled.
-      Address rule: there is no literal "skip" command. If the player naturally
-      explains that they do not have an address yet, will provide it later, or
-      are in temporary accommodation, the address is `null` using conservative,
-      server-owned authored intent phrases; unclear wording gets a retry rather
-      than an AI guess. Any other text of 1
-      to 120 characters is stored as the address. A bad answer gets a friendly
-      retry (date of birth: a real date, not in the future, year 1900 or later;
-      name and origin: plain text of 1 to
-      60 characters). Safe server recasts remain always enabled. Check: answers kept in
-      order; resume after reload; natural no-address explanations give `null`,
-      literal "skip" gets a retry, character gender is copied server-side, and
-      "12 Maple Street" is stored. - [x] **d. Photo (upload or camera)**: kept in
-      the browser until the player confirms.** After the four questions the
-      staff member asks for a photo. The chat panel offers **Upload photo**,
-      **Take photo** and **Use my character picture** (skips the photo). Use a
-      file input (`accept="image/*"`, with `capture` for the camera) so it works
-      in the phone PWA and falls back to the file picker on desktop. The client
-      shows a preview from local memory (`URL.createObjectURL`) with "Use this"
-      and "Choose another", and scales the picture down in the browser (longest
-      side about 1200 px), which also keeps the upload small. **Nothing is sent
-      to the server and nothing is stored anywhere until the player confirms.**
-      The photo is held in memory only: never in localStorage, IndexedDB, Cache
-      Storage or the service worker. It is cleared when the player cancels,
-      leaves the office, signs out, or the card is issued. A reload loses it,
-      and the staff member simply asks for the photo again. When the player says
-      yes (typed, or the "Yes, issue my card" button, which sends the same
-      message), the server recognizes the confirmation and tells the client to
-      submit. The client then sends **one request**: `POST /me/id-card`
-      (authenticated, rate limited, multipart: conversation id, idempotency key,
-      optional photo). In that request the server checks that the conversation
-      is at the confirmed step with all answers, validates and processes the
-      photo **before any write** (accepts JPEG, PNG or WebP by content, not by
-      file name, up to 5 MB and a maximum pixel count; rejects SVG, GIF and
-      other types; auto-rotates, strips all metadata (EXIF and GPS), crops to a
-      3:4 portrait, resizes to about 300×400 and re-encodes; use a small,
-      well-known library, suggested `sharp`, and report the choice), stores the
-      photo in a **private** Storage bucket (never the public `game-assets`
-      bucket) at one fixed path per player (`<userId>/id-photo`), creates the
-      card and completes the quest step. If the database step fails, the stored
-      photo is removed in the same request, and a retry overwrites the same
-      path, so no orphan files pile up and no cleanup job is needed. After a
-      network failure the player retries with the same idempotency key (no
-      duplicate card). The photo is shown only to its owner through a
-      short-lived signed URL created by the server, is never cached by the
-      service worker, never sent to the AI, and never visible to other players
-      or in NPC chats. Check: nothing reaches the server or storage before the
-      confirmation (a test watches the network); "no" and leaving the office
-      send nothing; wrong file types, a renamed file, an oversized file and a
-      huge-pixel image are rejected before anything is stored; a photo with GPS
-      data comes out without any metadata; a failed database step leaves no
-      stored photo; a retry with the same key creates one card and one photo;
-      another player cannot read the photo; the signed URL expires; a reload
-      asks for the photo again; a camera-permission denial falls back to the
-      file picker with a clear message. - [ ] **e. ID number.** Shown as
-      **`YYYYMMDD-XXXX`**: the date of birth, a hyphen, and 4 random digits.
-      Stored as 12 digits without the hyphen (text, leading zeros count); the
-      hyphen is added only for display by one shared function. The 4 random
-      digits are unique: a unique index on the whole number, secure random
-      source, generated inside the issuing transaction, retry on a collision (up
-      to 20 times), then a friendly "please try again later". The **last digit
-      is odd for male and even for female** (default position, owner confirms).
-      One card per player: a replayed confirm returns the same card and creates
-      nothing. Check: format, parity, hyphen display, uniqueness under forced
-      collisions, two simultaneous applications with the same birth date and
-      gender get different numbers. - [ ] **f. Storage, API and updates.**
-      Table `player_id_card` (one row per user: `number` unique, `fullName`,
-      `birthDate`, `address` nullable, `gender`, `origin`, `photoPath` nullable,
-      `issuedAt`, `updatedAt`). The card remains valid permanently. `GET
-      /me/id-card` returns the card and a signed photo URL. Updating card
-      information is allowed only through the Tax Office conversation flow.
-      Server functions for later quests: `hasIdCard(userId)`, `hasAddress(userId)`, and
-      `setIdCardAddress(userId, address | null)` for the future "rent a flat"
-      quest. Check: ownership; plain-text storage; `<script>` stays text; the
-      card remains valid as the game clock advances; direct client attempts to
-      update it outside the Tax Office flow are rejected. - [ ] **g. ID card icon and info panel.** A small ID card icon
-      sits on the compact profile card, shown only once the player has a card.
-      Tapping it opens a panel with the photo (or the character picture), the
-      number as `YYYYMMDD-XXXX`, name, date of birth, gender, origin, the
-      address or "Not set", the issue date and the status "Valid permanently".
-      Read-only. An `!` information icon on the card shows “Go to the Tax Office
-      to update your information.” on hover and keyboard focus. The ID card icon
-      is a 44px target; if it cannot fit on the
-      card at 320 px without making the card wider than half the screen, put it
-      in the first row of the profile section opened from the card. Plain-text
-      rendering, a text alternative for the photo, keyboard and screen-reader
-      use. Check: hidden before the card, shown after; the panel persists after
-      reload, remains valid when the clock is moved forward, and exposes the
-      update hint to pointer and keyboard users; no overlap at
-      320, 375 and 1024 px. - [ ] **h. Quest wiring.** The quest completes when
-      the card is issued; the reward (if any) is given once; progress survives
-      reload and sign-in; the NPC of the current step gets the yellow `!` tag
-      and the minimap marks it. Out-of-order attempts get a friendly scripted
-      hint and change nothing. Check: replay, two simultaneous requests,
-      reload. - [ ] **i. Privacy and final checks\*\* Name, date of birth,
-      address, origin, the ID number and the photo are never sent to the AI
-      prompt and never logged in production; account deletion removes the card
-      and the photo. The flow, the photo step and the card panel say: "Use your
-      character's details, not your real personal data." The privacy note (P3)
-      must also mention the photo before the playtest. Browser check with the
-      existing account at 320, 375 and 1024 px: map, both staff, the full flow
-      with an upload and with the camera, confirmation, the card icon and panel,
-      Goals, no overlap, no horizontal scroll. Done when a to i are ticked,
-      content validation fails for a missing step or an unknown NPC, and the AI
-      evaluation shows no ID card data in any prompt.
+  - [x] **a. Tax office and staff.** Inspect what exists. The tax office is a
+        map with an entrance from Town Street and **two named staff NPCs**;
+        either one can run the whole flow. Three emotion portraits each. Opening
+        hours from the shared check (organizations 08:00–16:00); a closed office
+        says its hours. Check: the player can walk in and chat with both staff.
+  - [x] **b. Services Q&A.** Staff open with “Hello! How can I help you?” and
+        wait for the player to ask. When asked what they can help with, staff
+        list their services: **register an ID card** (works now) and **update ID
+        card information** at the tax office. Cards cannot be lost or damaged in
+        the game, never expire and remain valid permanently, so they do not need
+        re-issue or renewal flows. The service list is content, so more services
+        can be added later without code. A player who says they do not have an
+        ID card is routed to registration. Check: each question gets the right
+        scripted answer; AI never answers service questions. - [x] **c.
+        Application conversation.** The staff member asks four questions, one at
+        a time: **name**, **date of birth**, **address**, and **where you come
+        from**. Gender comes from the immutable character choice and is never
+        asked again. Then the photo (step d). Then the staff member reads
+        everything back, photo included: "Is this correct?". **Nothing is saved
+        to the card until the player says yes.** Until then the four entered
+        answers wait in a server-owned pending state; character gender is copied
+        from the saved character (the photo is not part of it, see d), so
+        leaving and returning during the same running game resumes at the saved
+        step, while closing/reloading the game clears the unfinished application
+        and starts it from the beginning. "No" lets the player fix any entered
+        answer. The pending answers are removed when the card is issued or the
+        application is cancelled. Address rule: there is no literal "skip"
+        command. If the player naturally explains that they do not have an
+        address yet, will provide it later, or are in temporary accommodation,
+        the address is `null` using conservative, server-owned authored intent
+        phrases; unclear wording gets a retry rather than an AI guess. Any other
+        text of 1 to 120 characters is stored as the address. A bad answer gets
+        a friendly retry (date of birth: a real date, not in the future, year
+        1900 or later; name and origin: plain text of 1 to 60 characters). Safe
+        server recasts remain always enabled. Check: answers kept in order;
+        resume after reload; natural no-address explanations give `null`,
+        literal "skip" gets a retry, character gender is copied server-side, and
+        "12 Maple Street" is stored. - [x] **d. Photo (upload or camera)**: kept
+        in the browser until the player confirms.** After the four questions the
+        staff member asks for a photo. The chat panel offers **Upload photo**,
+        **Take photo** and **Use my character picture** (skips the photo). Use a
+        file input (`accept="image/*"`) for uploads. **Take photo** opens a live
+        `getUserMedia` camera preview on supported browsers with explicit
+        Capture and Cancel controls; it never silently falls back to the file
+        picker. The client shows a preview from local memory (`URL.createObjectURL`) with
+        "Use this" and "Choose another", and scales the picture down in the
+        browser (longest side about 1200 px), which also keeps the upload small.
+        **Nothing is sent to the server and nothing is stored anywhere until the
+        player confirms.** The photo is held in memory only: never in
+        localStorage, IndexedDB, Cache Storage or the service worker. It is
+        cleared when the player cancels, leaves the office, signs out, or the
+        card is issued. A reload loses it, and the staff member simply asks for
+        the photo again. When the player types a confirmation such as "Yes,
+        issue my card", the server recognizes it and tells
+        the client to submit. The NPC displays the answers as a list with the
+        selected photo beside them, then speaks only the confirmation question
+        asking whether the player wants to edit something or issue the card; no
+        separate issue button is shown. The player photo-selection bubble shows
+        the preview instead of the internal option label. Confirmation returns
+        the NPC acknowledgement with its speech without streaming it. Once that
+        message has finished presenting, a spinner appears beneath it while the
+        client sends **one request**:
+        `POST /me/id-card` (authenticated, rate limited, multipart:
+        conversation id, idempotency key, optional photo). In that request the
+        server checks that the conversation is at the confirmed step with all
+        answers, validates and processes the photo **before any write** (accepts
+        JPEG, PNG or WebP by content, not by file name, up to 5 MB and a maximum
+        pixel count; rejects SVG, GIF and other types; auto-rotates, strips all
+        metadata (EXIF and GPS), crops to a 3:4 portrait, resizes to about
+        300×400 and re-encodes; use a small, well-known library, suggested
+        `sharp`, and report the choice), stores the photo in a **private**
+        Storage bucket (never the public `game-assets` bucket) at one fixed path
+        per player (`<userId>/id-photo`), creates the card and completes the
+        quest step. If the database step fails, the stored photo is removed in
+        the same request, and a retry overwrites the same path, so no orphan
+        files pile up and no cleanup job is needed. After a network failure the
+        player retries with the same idempotency key (no duplicate card). The
+        spinner stops and the NPC's issued message is shown and spoken only after
+        that request returns `issued: true`, giving the player an explicit final
+        result. If the committed result must be recovered after a lost response,
+        the NPC appends a fresh completion message instead of reusing the earlier
+        acknowledgement. Once a card exists, Tax Office registration requests
+        offer only updates; the player can name the field to edit and a successful
+        update ends with an explicit updated message and another offer of help.
+        Having a card never replaces the Tax Office's normal opening greeting;
+        the NPC mentions the existing card only after an ID-card request. Editing
+        an existing text field saves immediately, clears the edit flow and ends
+        with the NPC's updated message and offer of further help. Editing a photo
+        uploads immediately after the player selects it, skips the application
+        summary and confirmation question, then refreshes the visible player
+        portrait from the returned signed photo URL. The photo is
+        shown only to its owner through a short-lived signed URL
+        created by the server, is never cached by the service worker, never sent
+        to the AI, and never visible to other players or in NPC chats. Check:
+        nothing reaches the server or storage before the confirmation (a test
+        watches the network); "no" and leaving the office send nothing; wrong
+        file types, a renamed file, an oversized file and a huge-pixel image are
+        rejected before anything is stored; a photo with GPS data comes out
+        without any metadata; a failed database step leaves no stored photo; a
+        retry with the same key creates one card and one photo; another player
+        cannot read the photo; the signed URL expires; a reload asks for the
+        photo again; a camera-permission denial falls back to the file picker
+        with a clear message. - [ ] **e. ID number.** Shown as
+        **`YYYYMMDD-XXXX`**: the date of birth, a hyphen, and 4 random digits.
+        Stored as 12 digits without the hyphen (text, leading zeros count); the
+        hyphen is added only for display by one shared function. The 4 random
+        digits are unique: a unique index on the whole number, secure random
+        source, generated inside the issuing transaction, retry on a collision
+        (up to 20 times), then a friendly "please try again later". The **last
+        digit is odd for male and even for female** (default position, owner
+        confirms). One card per player: a replayed confirm returns the same card
+        and creates nothing. Check: format, parity, hyphen display, uniqueness
+        under forced collisions, two simultaneous applications with the same
+        birth date and gender get different numbers. - [ ] **f. Storage, API and
+        updates.** Table `player_id_card` (one row per user: `number` unique,
+        `fullName`, `birthDate`, `address` nullable, `gender`, `origin`,
+        `photoPath` nullable, `issuedAt`, `updatedAt`). The card remains valid
+        permanently. `GET   /me/id-card` returns the card and a signed photo
+        URL. Updating card information is allowed only through the Tax Office
+        conversation flow. Server functions for later quests:
+        `hasIdCard(userId)`, `hasAddress(userId)`, and
+        `setIdCardAddress(userId, address | null)` for the future "rent a flat"
+        quest. Check: ownership; plain-text storage; `<script>` stays text; the
+        card remains valid as the game clock advances; direct client attempts to
+        update it outside the Tax Office flow are rejected. - [ ] **g. ID card
+        icon and info panel.** A small ID card icon sits on the compact profile
+        card, shown only once the player has a card. Tapping it opens a panel
+        with the photo (or the character picture), the number as
+        `YYYYMMDD-XXXX`, name, date of birth, gender, origin, the address or
+        "Not set", the issue date and the status "Valid permanently". Read-only.
+        An `!` information icon on the card shows “Go to the Tax Office to
+        update your information.” on hover and keyboard focus. The ID card icon
+        is a 44px target; if it cannot fit on the card at 320 px without making
+        the card wider than half the screen, put it in the first row of the
+        profile section opened from the card. Plain-text rendering, a text
+        alternative for the photo, keyboard and screen-reader use. Check: hidden
+        before the card, shown after; the panel persists after reload, remains
+        valid when the clock is moved forward, and exposes the update hint to
+        pointer and keyboard users; no overlap at 320, 375 and 1024 px. - [ ]
+        **h. Quest wiring.** The quest completes when the card is issued; the
+        reward (if any) is given once; progress survives reload and sign-in; the
+        NPC of the current step gets the yellow `!` tag and the minimap marks
+        it. Out-of-order attempts get a friendly scripted hint and change
+        nothing. Check: replay, two simultaneous requests, reload. - [ ] **i.
+        Privacy and final checks\*\* Name, date of birth, address, origin, the
+        ID number and the photo are never sent to the AI prompt and never logged
+        in production; account deletion removes the card and the photo. The
+        flow, the photo step and the card panel say: "Use your character's
+        details, not your real personal data." The privacy note (P3) must also
+        mention the photo before the playtest. Browser check with the existing
+        account at 320, 375 and 1024 px: map, both staff, the full flow with an
+        upload and with the camera, confirmation, the card icon and panel,
+        Goals, no overlap, no horizontal scroll. Done when a to i are ticked,
+        content validation fails for a missing step or an unknown NPC, and the
+        AI evaluation shows no ID card data in any prompt.
 
 - [ ] **T40 — Shared contextual intent detection.** Replace feature-owned
       sentence lists and ad-hoc confirmation regexes with one small,
       deterministic intent layer reused by stateful conversations. Build on the
-      existing dialogue pipeline and `normalizeDialogue`; do not create a
-      second dialogue framework or one rules engine per store. Complete the
-      slices in order and stop after each requested slice. Finish T40 before
-      implementing the T37 CV interview so that flow does not copy the current
-      ID-card matching approach.
+      existing dialogue pipeline and `normalizeDialogue`; do not create a second
+      dialogue framework or one rules engine per store. Complete the slices in
+      order and stop after each requested slice. Finish T40 before implementing
+      the T37 CV interview so that flow does not copy the current ID-card
+      matching approach.
   - [ ] **a. Contract and characterization.** Inventory the existing shared,
         seller and ID-card intent seams and add tests that preserve their
-        current state transitions. Define one strict result contract:
-        `matched` has one `primary` intent plus zero or more ordered
-        `modifiers`; `unclear` has a reason (`no_match`, `ambiguous` or
-        `conflicting`). Initial reusable intents are `confirm`, `deny`,
-        `cancel`, `unknown`, `not_available` and `provide_later`. Intent names
-        describe language only; they never grant rewards or mutate state.
-        Check: the contract rejects unknown intents, duplicate modifiers and a
-        modifier equal to the primary intent.
+        current state transitions. Define one strict result contract: `matched`
+        has one `primary` intent plus zero or more ordered `modifiers`;
+        `unclear` has a reason (`no_match`, `ambiguous` or `conflicting`).
+        Initial reusable intents are `confirm`, `deny`, `cancel`, `unknown`,
+        `not_available` and `provide_later`. Intent names describe language
+        only; they never grant rewards or mutate state. Check: the contract
+        rejects unknown intents, duplicate modifiers and a modifier equal to the
+        primary intent.
   - [ ] **b. Deterministic contextual detector.** Implement one pure detector
         using normalized authored patterns and the current question/context.
         Optional politeness, determiners and time phrases must not require a
         complete sentence entry. It recognizes a primary intent and compatible
-        modifiers, while contradictory or unsupported wording returns
-        `unclear` instead of guessing. Check at least: “yes”, “no”, cancellation,
-        “I don't know”, “Sorry, I don't have any address right now”, and “I
-        don't have one, but I'll provide it later”; also prove that the same
-        words can resolve differently under two different question contexts.
+        modifiers, while contradictory or unsupported wording returns `unclear`
+        instead of guessing. Check at least: “yes”, “no”, cancellation, “I don't
+        know”, “Sorry, I don't have any address right now”, and “I don't have
+        one, but I'll provide it later”; also prove that the same words can
+        resolve differently under two different question contexts.
   - [ ] **c. Domain-owned decisions and authored clarification.** Migrate the
         ID-card application and one existing seller confirmation path to the
         shared detector as the reuse proof. Each domain explicitly allowlists
         accepted intents for its current state and remains solely responsible
         for validation, persistence and transitions. Responses and simple
-        clarification questions stay in validated content JSON. Remove only
-        the superseded feature-owned phrase lists/regexes. Check: no-address
-        answers store `null`; unclear input changes nothing and asks again;
+        clarification questions stay in validated content JSON. Remove only the
+        superseded feature-owned phrase lists/regexes. Check: no-address answers
+        store `null`; unclear input changes nothing and asks again;
         confirm/deny/cancel preserve existing seller behavior; replay remains
         idempotent.
   - [ ] **d. Constrained AI fallback policy.** Rules run first. AI intent
@@ -343,9 +392,9 @@ database: localhost:54323
         only from that state's fixed intent allowlist, its output is schema
         validated, and invalid, unavailable, conflicting or low-confidence
         output becomes `unclear`. AI output never directly writes data or grants
-        progress: the domain must still validate and execute the action. ID-card,
-        economy, quest rewards and purchases use deterministic matching plus
-        clarification only. Check with a mocked provider: rules bypass AI;
+        progress: the domain must still validate and execute the action.
+        ID-card, economy, quest rewards and purchases use deterministic matching
+        plus clarification only. Check with a mocked provider: rules bypass AI;
         allowed low-risk fallback resolves; unknown output fails closed; no
         sensitive/state payload reaches the provider.
   - [ ] **e. Verification and extension guide.** Run focused detector and domain
@@ -369,21 +418,54 @@ database: localhost:54323
 
 ## LATER — only when explicitly requested and policies are decided
 
+- [ ] **UI-01 — Implement the approved UI component art direction.** Apply
+      `docs/art-direction/refs/ui-components-reference.png` to the existing web
+      UI in small, reviewable slices; this reference defines visual direction,
+      not exact screen layout or permission to replace working behavior. First
+      inventory the real shared primitives and feature-owned components, then
+      implement only the slice explicitly requested. Reuse the semantic palette
+      and existing CSS/Tailwind infrastructure; add a semantic token only when
+      a genuinely new role is required. Do not introduce hard-coded component
+      colors, generated bitmap buttons/panels, a parallel design system, new UI
+      libraries or a whole-app rewrite.
+  - [ ] **UI-01.1 — Foundations and shared primitives.** Map the reference to
+        documented semantic roles for primary, secondary and disabled buttons;
+        compact information panels; dialogue panels; tooltip bubbles;
+        information and quest markers; inventory slots; and ID-card icons.
+        Update the smallest existing shared primitives first and preserve their
+        public APIs where practical. Cover hover, active, focus-visible,
+        disabled, loading and error states. Check: component tests prove state
+        behavior and keyboard operation; contrast and focus indicators remain
+        accessible; no feature flow changes.
+  - [ ] **UI-01.2 — Feature adoption.** Migrate one explicitly requested feature
+        at a time to the approved primitives, starting with components that are
+        already shared rather than duplicating styles inside feature folders.
+        Preserve copy, authorization, server-owned state and responsive layout.
+        Check each slice at 320, 375 and 1024 px with no overlap, clipping or
+        horizontal scroll, and verify its existing focused tests still pass.
+  - [ ] **UI-01.3 — Cleanup and final consistency audit.** Only after all
+        requested feature slices are adopted, remove styles proven unused and
+        search for accidental hard-coded colors or duplicate primitives. Do not
+        delete legacy styles still used by an unmigrated feature. Done when the
+        approved component categories have one maintained implementation,
+        accessibility checks pass, relevant screenshots are owner-approved,
+        and game tests, typecheck, lint and production build pass.
 - [ ] **DOC-01 — Split maintained game and technical references by domain.**
       Defer until `docs/GAME.md` or `docs/TECH.md` becomes difficult to navigate
       (default trigger: either file exceeds about 300 lines, or one section owns
       multiple independently changing domains). Keep `GAME.md` and `TECH.md` as
       short entry points and move detail into cohesive `docs/game/` and
-      `docs/tech/` files. Product behavior belongs under `game/`; implementation,
-      interfaces and operations belong under `tech/`. Start with the smallest
-      justified domain set; do not create one file per feature, quest, NPC or
-      venue. Update `AGENTS.md` with domain-based reading routes and repair all
-      affected links. This is a documentation-only refactor: preserve every
-      current rule, source-of-truth boundary and task reference without changing
-      product behavior. Check: every moved section has exactly one canonical
-      location, both index files link to all domain files, repository references
-      resolve, searches find no obsolete anchors or duplicated normative rules,
-      and a before/after section inventory proves no maintained content was lost.
+      `docs/tech/` files. Product behavior belongs under `game/`;
+      implementation, interfaces and operations belong under `tech/`. Start with
+      the smallest justified domain set; do not create one file per feature,
+      quest, NPC or venue. Update `AGENTS.md` with domain-based reading routes
+      and repair all affected links. This is a documentation-only refactor:
+      preserve every current rule, source-of-truth boundary and task reference
+      without changing product behavior. Check: every moved section has exactly
+      one canonical location, both index files link to all domain files,
+      repository references resolve, searches find no obsolete anchors or
+      duplicated normative rules, and a before/after section inventory proves no
+      maintained content was lost.
 - [ ] **T37 — Library and CV (start only after T36).** One task, done in order a
       to g. Tick each step when it passes its own check. Art, portraits and
       voice clips use the existing asset pipeline (T14). - [ ] **a. Library
@@ -399,10 +481,10 @@ database: localhost:54323
       speak (owner approves the wording). The pending state lives on the server,
       so leaving and returning resumes at the saved question. "I don't know"
       gets a short example answer, never a skip. At the end: "Shall I save it?".
-      If a CV exists she offers to update it. Safe server recasts remain always enabled.
-      Check: the five answers are kept in order, and the flow resumes after a
-      reload. - [ ] **d. CV storage and API.** Table `player_cv` (one row per
-      user: `name`, `desiredJob`, `skills`, `experience`, `languages`,
+      If a CV exists she offers to update it. Safe server recasts remain always
+      enabled. Check: the five answers are kept in order, and the flow resumes
+      after a reload. - [ ] **d. CV storage and API.** Table `player_cv` (one
+      row per user: `name`, `desiredJob`, `skills`, `experience`, `languages`,
       `updatedAt`). `GET/PUT /me/cv`. Plain text, trimmed, at most 300
       characters per field, no control characters, every field required. A
       player reads and edits only their own CV. Check: a replayed confirm
@@ -432,6 +514,10 @@ database: localhost:54323
       portrait or sprite artwork during deploy, never overwrite a different
       checksum under the same version, and never delete unexpected assets.
       Implement only one slice per request.
+      This infrastructure does not bypass the art approval contract: static art
+      must pass visual approval, permission-to-use approval, reviewed local
+      integration and a production dry run before a separately approved
+      production mutation.
   - [ ] **OPS-01.1 — Canonical manifest and read-only reconciliation.** Define a
         typed manifest for required map backgrounds, portraits, spritesheets,
         atlases, fixed NPC audio and the five tutorial narration pages. Add
@@ -496,9 +582,9 @@ database: localhost:54323
 
 - ID card (T36): which digit carries the gender parity (default: the last
   digit); gender options beyond male and female (none for now, as specified);
-  the quest reward (default none); the two staff names; the text for the
-  whether the photo is required or optional (default
-  optional, with the character picture as the fallback).
+  the quest reward (default none); the two staff names; the text for the whether
+  the photo is required or optional (default optional, with the character
+  picture as the fallback).
 - Is AI free chat in the MVP, or after the first playtest?
 - Does an AI chat message cost 1 energy, like a normal NPC message?
 - AI chat audience and provider: adults 18+ only (paid tier), or a provider that

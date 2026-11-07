@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { isVenueOpenAtLocalMinute, npcPresenceResponseSchema, npcProfileSchema, SHOP_NPC_IDS, TOWN_STREET_NPC_IDS,
+import { isVenueOpenAtLocalMinute, npcPresenceResponseSchema, npcProfileSchema, SHOP_NPC_IDS,
+  TOWN_STREET_NPC_IDS,
   type NpcPresenceResponse, type NpcProfile } from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';

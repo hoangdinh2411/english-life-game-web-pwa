@@ -27,7 +27,7 @@ export class QuestsService {
 
   private advance(userId: string, intent: string | null, connection?: PoolClient): Promise<ArrivalState> {
     const work = async (client: PoolClient): Promise<ArrivalState> => {
-      const snapshot = await this.quests.load(client, userId);
+      const snapshot = await this.quests.load(client, userId, true);
       const { quest } = snapshot;
       this.validate(snapshot);
       const progress: ArrivalProgress = snapshot.progress ?? { status: 'not_started', current_step_id: orderedSteps[0],

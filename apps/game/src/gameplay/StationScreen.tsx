@@ -14,6 +14,7 @@ import {
 } from "./arrival-hud";
 import { usePwa } from "../pwa/PwaProvider";
 import { PlayerProfileDialogue } from "../features/life/PlayerProfileDialogue";
+import { restartGame } from "../features/life/restart-game";
 import { ShopConversation } from "../features/shops/ShopConversation";
 import { isShopNpc, type ShopNpcId } from "../features/shops/shop-npcs";
 import { VenueClosedDialogue } from "../features/location/VenueClosedDialogue";
@@ -482,11 +483,11 @@ export default function StationScreen({
       ) : null}
       {life?.error && !menu ? (
         <div
-          className="life-hud-error absolute bottom-20 left-2 right-2 p-2 bg-card text-[var(--color-warning)] z-[20]"
+          className="life-hud-error absolute bottom-4 left-1/2 z-[20] flex w-[min(calc(100%_-_1rem),35rem)] -translate-x-1/2 flex-col gap-3 rounded-xl border-2 border-[var(--color-warning)] bg-card p-3 text-sm leading-snug text-[var(--color-warning)] shadow-[0_8px_24px_var(--color-shadow)] sm:flex-row sm:items-center sm:justify-between"
           role="alert"
         >
-          {life.error}
-          <button onClick={() => setMenu(true)}>Open menu</button>
+          <span className="min-w-0">{life.error}</span>
+          <GameButton label="Restart" onClick={() => restartGame()} />
         </div>
       ) : null}
     </main>

@@ -12,8 +12,8 @@ export class ConversationsController {
 
   @Post()
   create(@CurrentUser() userId: string,
-    @Body(new SchemaValidationPipe(createConversationSchema)) request: { npcId: string }): Promise<Conversation> {
-    return this.conversations.create(userId, request.npcId);
+    @Body(new SchemaValidationPipe(createConversationSchema)) request: { npcId: string; includeSpeech: boolean }): Promise<Conversation> {
+    return this.conversations.create(userId, request.npcId, request.includeSpeech);
   }
 
   @Delete('transient')

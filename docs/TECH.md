@@ -542,6 +542,11 @@ Mia.
   requires authentication, and returns a short-lived URL for cached Azure Neural
   audio generated from server-trusted tutorial copy. The client never sends free
   text or Azure credentials. Signed-out local practice makes no speech request.
+- `pnpm db:seed` also pre-generates every fixed tax-office dialogue and ID-card
+  prompt for both staff voices and supported speech styles when Azure and the
+  private Supabase speech bucket are configured. The operation is idempotent
+  through the runtime fixed-speech cache; environments without those credentials
+  seed content normally and report that speech pre-generation was skipped.
 
 ## Remote game assets
 
