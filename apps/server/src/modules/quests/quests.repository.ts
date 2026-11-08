@@ -36,17 +36,17 @@ export class QuestsRepository {
     return parsed.data;
   }
 
-  async load(client: PoolClient, userId: string): Promise<ArrivalSnapshot> {
-    // Every arrival operation locks the same existing character, including first requests.
+  async load(client: PoolClient, userId: string, lock = false): Promise<ArrivalSnapshot> {
+    const lockClause = lock ? ' FOR UPDATE' : '';
     const character = await client.query<{ current_city_id: string; current_location_id: string | null }>(
-      'SELECT current_city_id,current_location_id FROM public.characters WHERE user_id=$1 FOR UPDATE', [userId]);
+      `SELECT current_city_id,current_location_id FROM public.characters WHERE user_id=$1${lockClause}`, [userId]);
     const player = character.rows[0];
     if (!player) throw new ConflictException('Create a character before starting the arrival quest');
     const quest = await this.content(client, ARRIVAL_QUEST_ID);
     const location = await client.query<{ city_id: string }>('SELECT city_id FROM public.locations WHERE id=$1', [STATION_LOCATION_ID]);
     if (location.rows[0]?.city_id !== player.current_city_id) throw new ConflictException('Character is not in the arrival city');
     const progress = await client.query<ArrivalProgress>(
-      'SELECT status,current_step_id,bus_ticket_issued_at,bus_ticket_used_at,rewards_granted_at FROM public.player_quests WHERE user_id=$1 AND quest_id=$2 FOR UPDATE',
+      `SELECT status,current_step_id,bus_ticket_issued_at,bus_ticket_used_at,rewards_granted_at FROM public.player_quests WHERE user_id=$1 AND quest_id=$2${lockClause}`,
       [userId, ARRIVAL_QUEST_ID]);
     return { quest, progress: progress.rows[0], locationId: player.current_location_id ?? STATION_LOCATION_ID };
   }

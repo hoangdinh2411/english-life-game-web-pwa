@@ -39,6 +39,17 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
     assert.match(await service.opening(client, userId) ?? '', /address/i, 'a reopened conversation resumes the saved field');
     assert.match((await service.reply(client, userId, '12 Maple Street', arrival))!.responseText, /where are you from/i);
     assert.match((await service.reply(client, userId, 'Vietnam', arrival))!.responseText, /photo/i);
+    const prematureConfirmation = await service.reply(client, userId, 'Yes, issue my card', arrival);
+    assert.equal(prematureConfirmation?.metadata.idCardSubmit, undefined);
+    assert.match(prematureConfirmation!.responseText, /photo/i);
+    const review = await service.reply(client, userId, 'Use my character picture', arrival);
+    assert.match(review!.responseText, /Name: Test Learner/);
+    assert.match(review!.responseText, /Date of birth: 1995-02-28/);
+    assert.match(review!.responseText, /Address: 12 Maple Street/);
+    assert.match(review!.responseText, new RegExp(`Gender: ${user.rows[0]!.gender}`));
+    assert.match(review!.responseText, /Where you come from: Vietnam/);
+    assert.match(review!.responseText, /Photo: character picture\./);
+    assert.match(review!.responseText, /change anything.*issue the ID card/i);
     const confirmation = await service.reply(client, userId, 'Yes, issue my card', arrival);
     assert.equal(confirmation?.metadata.intent, 'confirm_id_card_application');
     assert.equal(confirmation?.metadata.idCardSubmit, true);
@@ -47,18 +58,11 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
       address: string | null; gender: string; origin: string }>(`SELECT current_field,name,date_of_birth,address,gender,origin
       FROM (SELECT current_field,name,date_of_birth::text,address,gender,origin
         FROM public.id_card_applications WHERE user_id=$1) application`, [userId]);
-    assert.equal(saved.rows[0]!.current_field, 'photo');
+    assert.equal(saved.rows[0]!.current_field, 'review');
     assert.deepEqual({ name: saved.rows[0]!.name, address: saved.rows[0]!.address,
       gender: saved.rows[0]!.gender, origin: saved.rows[0]!.origin },
     { name: 'Test Learner', address: '12 Maple Street', gender: user.rows[0]!.gender, origin: 'Vietnam' });
     assert.equal(saved.rows[0]!.date_of_birth, '1995-02-28');
-    const review = await service.review(client, userId, 'character picture', arrival);
-    assert.match(review.responseText, /Name: Test Learner/);
-    assert.match(review.responseText, /Date of birth: 1995-02-28/);
-    assert.match(review.responseText, /Address: 12 Maple Street/);
-    assert.match(review.responseText, new RegExp(`Gender: ${user.rows[0]!.gender}`));
-    assert.match(review.responseText, /Where you come from: Vietnam/);
-    assert.match(review.responseText, /Photo: character picture\. Is this correct\?$/);
     assert.match((await service.reply(client, userId, 'no', arrival))!.responseText, /What would you like to change/i);
     assert.match((await service.reply(client, userId, 'address', arrival))!.responseText, /What’s your address/i);
 

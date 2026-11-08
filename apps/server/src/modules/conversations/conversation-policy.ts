@@ -3,6 +3,7 @@ import {
   detectIntent,
   farewellClosing,
   isDirectQuestion,
+  serviceContinuationIntent,
   type ConversationMessage,
 } from '@life-abroad/shared';
 
@@ -34,6 +35,7 @@ export interface FarewellPolicyResult {
   response?: {
     text: string;
     stage: 'question' | 'confirm';
+    closeConversation?: true;
   };
 }
 
@@ -61,12 +63,19 @@ export function evaluateFarewell(
   }
 
   const currentIsGoodbye = detectIntent(currentText)?.id === 'goodbye';
+  const answeringMoreHelpQuestion = priorNpcMessage !== undefined &&
+    /(?:anything|something) else(?: i can help you with)?\?$/i.test(priorNpcMessage.text.trim());
   const answeringFarewellQuestion =
     priorGoodbyes > 0 &&
     priorNpcIndex > lastGoodbyeIndex &&
     priorNpcMessage !== undefined &&
     isDirectQuestion(priorNpcMessage.text);
 
+  if (answeringMoreHelpQuestion && serviceContinuationIntent(currentText) === 'finish') {
+    return { currentIsGoodbye, response: {
+      text: 'You’re welcome. Goodbye!', stage: 'confirm', closeConversation: true,
+    } };
+  }
   if (currentIsGoodbye && priorGoodbyes === 0) {
     return {
       currentIsGoodbye,

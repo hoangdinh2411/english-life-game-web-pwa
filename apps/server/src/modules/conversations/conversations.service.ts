@@ -24,7 +24,7 @@ export class ConversationsService {
     private readonly replies: ConversationReplyService, private readonly speech: ConversationSpeechService,
     private readonly presence: NpcPresenceService, private readonly idCardApplications: IdCardApplicationService) {}
 
-  async create(userId: string, npcId: string = ARRIVAL_NPC_ID): Promise<Conversation> {
+  async create(userId: string, npcId: string = ARRIVAL_NPC_ID, includeSpeech = true): Promise<Conversation> {
     const conversation = await this.conversations.transaction(async client => {
       const arrival = await this.quests.getArrival(userId, client);
       await this.presence.assertCanStart(client, userId, npcId);
@@ -71,7 +71,8 @@ export class ConversationsService {
       const greeting = transientOpening(id, opening.text);
       return { id, npcId: ARRIVAL_NPC_ID, messages: [greeting], arrival };
     });
-    return this.speech.conversation(userId, { ...conversation, npcId: conversationNpcSchema.parse(conversation.npcId) });
+    const parsed = { ...conversation, npcId: conversationNpcSchema.parse(conversation.npcId) };
+    return includeSpeech ? this.speech.conversation(userId, parsed) : parsed;
   }
 
   async get(userId: string, id: string): Promise<Conversation> {

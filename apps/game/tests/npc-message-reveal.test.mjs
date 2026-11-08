@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { preserveCompletedReveal, textAtProgress, selectAutomaticReveal, shouldAutomaticallyRevealNpcMessage, shouldUseTypingFallback } from '../src/features/dialogue/use-npc-message-reveal.ts';
+import { preserveCompletedReveal, textAtProgress, selectAutomaticReveal, shouldAutomaticallyRevealNpcMessage, shouldRevealEntireNpcMessage, shouldUseTypingFallback } from '../src/features/dialogue/use-npc-message-reveal.ts';
 import { DialogueMessage } from '../src/gameplay/DialogueMessage.tsx';
 
 test('restored history stays complete and only a newly observed NPC message is selected', () => {
@@ -26,6 +26,12 @@ test('missing narration uses typing instead of leaving a new NPC message blank',
   assert.equal(shouldUseTypingFallback(true, false, ''), true);
   assert.equal(shouldUseTypingFallback(true, true, ''), false);
   assert.equal(shouldUseTypingFallback(true, true, 'Playback failed'), true);
+});
+
+test('a summary stays fully visible when its audio contains only the confirmation question', () => {
+  assert.equal(shouldRevealEntireNpcMessage('Full summary and question', 'Question only'), false);
+  assert.equal(shouldRevealEntireNpcMessage('Same text', 'Same text'), true);
+  assert.equal(shouldRevealEntireNpcMessage('Same text', undefined), true);
 });
 
 test('a scripted reply already shown by streaming is not revealed a second time', () => {
@@ -84,4 +90,22 @@ test('player messages place the avatar on the right while NPC avatars stay on th
   }));
   assert.match(player, /dialogue-message-row[^"]*flex-row-reverse/);
   assert.doesNotMatch(npc, /dialogue-message-row[^"]*flex-row-reverse/);
+});
+
+test('an in-memory review photo renders inside the NPC message bubble', () => {
+  const html = renderToStaticMarkup(createElement(DialogueMessage, {
+    name: 'Marcus', portrait: '/marcus.png', text: 'Here is your application.',
+    attachment: createElement('img', { src: 'blob:test-photo', alt: 'Uploaded ID card photo preview' }),
+  }));
+  assert.match(html, /message-bubble[^>]*>[\s\S]*Uploaded ID card photo preview/);
+  assert.match(html, /src="blob:test-photo"/);
+});
+
+test('a custom NPC review body keeps its Azure replay control', () => {
+  const html = renderToStaticMarkup(createElement(DialogueMessage, {
+    name: 'Marcus', portrait: 'marcus.png', text: '', body: createElement('section', null, 'Application review'),
+    onReplay: () => undefined, replayVisible: true,
+  }));
+  assert.match(html, /Application review/);
+  assert.match(html, /Replay message from Marcus/);
 });

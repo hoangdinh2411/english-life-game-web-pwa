@@ -1,4 +1,4 @@
-import type { ArrivalState, Conversation, ConversationHistoryPage, ConversationTurn, SendMessageRequest } from '@life-abroad/shared';
+import type { ArrivalState, Conversation, ConversationHistoryPage, ConversationMessage, ConversationTurn, SendMessageRequest } from '@life-abroad/shared';
 
 export interface ConversationApi {
   load: () => Promise<ArrivalState>;
@@ -22,6 +22,27 @@ export interface ConversationSnapshot {
   farewellStage?: ConversationTurn['farewellStage'];
   historyLoading: boolean;
   idCardSubmitReady: boolean;
+  closeRequested: boolean;
+}
+export interface ConversationSendOptions { stream?: boolean }
+
+interface ConversationStartup {
+  start: () => Promise<boolean>;
+  dispose: () => void;
+}
+
+export function scheduleConversationStart(
+  controller: ConversationStartup,
+  schedule: (callback: () => void) => void = queueMicrotask,
+): () => void {
+  let cancelled = false;
+  schedule(() => {
+    if (!cancelled) void controller.start();
+  });
+  return () => {
+    cancelled = true;
+    controller.dispose();
+  };
 }
 
 const typingPause = (milliseconds: number): Promise<void> =>
@@ -37,11 +58,29 @@ export async function revealStreamChunk(text: string, emit: (piece: string) => v
   }
 }
 
+export function isPhotoSelectionInput(text: string): boolean {
+  return ['Use this photo', 'Use my character picture'].includes(text);
+}
+
+export function displayConversationInput(text: string): string {
+  return isPhotoSelectionInput(text) ? 'Review' : text;
+}
+
+export function shouldCloseAfterNpcPresentation(
+  snapshot: ConversationSnapshot,
+  presentedMessageId: string,
+): boolean {
+  const finalNpcMessage = snapshot.conversation?.messages.findLast(
+    message => message.sender === 'npc',
+  );
+  return snapshot.closeRequested && finalNpcMessage?.id === presentedMessageId;
+}
+
 // Private state lives only in memory. All mutations come from authenticated API responses.
 export function createConversationController(api: ConversationApi) {
   let state: ConversationSnapshot = { arrival: null, conversation: null, pending: false, error: '', retryMessage: null,
     streaming: false, streamedReply: '', streamedMessageId: null, announcement: '', farewellStage: undefined, historyLoading: false,
-    idCardSubmitReady: false };
+    idCardSubmitReady: false, closeRequested: false };
   let epoch = 0;
   let disposed = false;
   let retry: SendMessageRequest | null = null;
@@ -76,10 +115,14 @@ export function createConversationController(api: ConversationApi) {
       disposed = false;
       return run(async () => ({ arrival: await api.load() }));
     },
-    start: () => run(async () => {
-      const started = await api.start();
-      return { conversation: started, arrival: started.arrival, farewellStage: undefined, idCardSubmitReady: false };
-    }),
+    start: () => {
+      disposed = false;
+      return run(async () => {
+        const started = await api.start();
+        return { conversation: started, arrival: started.arrival, farewellStage: undefined, idCardSubmitReady: false,
+          closeRequested: false };
+      });
+    },
     loadOlder: async () => {
       const conversation = state.conversation;
       const cursor = conversation?.historyCursor;
@@ -103,7 +146,7 @@ export function createConversationController(api: ConversationApi) {
         if (!disposed) update({ historyLoading: false });
       }
     },
-    send: (input: string) => {
+    send: (input: string, options?: ConversationSendOptions) => {
       const text = input.trim();
       const conversation = state.conversation;
       if (!conversation || !text || state.pending || disposed) return Promise.resolve(false);
@@ -118,7 +161,7 @@ export function createConversationController(api: ConversationApi) {
         let turn: ConversationTurn;
         let receivedStreamText = false;
         try {
-          if (api.stream) {
+          if (api.stream && options?.stream !== false) {
             streamCancellation = new AbortController();
             update({ streaming: true, streamedReply: '', streamedMessageId: null, announcement: '' });
             let revealQueue = Promise.resolve();
@@ -138,14 +181,20 @@ export function createConversationController(api: ConversationApi) {
         const arrival = turn.arrival;
         retry = null;
         const messages = [...conversation.messages];
-        for (const message of [turn.playerMessage, turn.npcMessage]) if (!messages.some((item) => item.id === message.id)) messages.push(message);
+        const playerMessage = { ...turn.playerMessage, text: displayConversationInput(turn.playerMessage.text) };
+        const visibleTurnMessages = [playerMessage, turn.npcMessage];
+        for (const message of visibleTurnMessages) if (!messages.some((item) => item.id === message.id)) messages.push(message);
         const seller = turn.seller;
         const coffeeQuest = turn.coffeeQuest;
-        return { conversation: { ...conversation, messages, arrival, ...(seller ? { seller } : {}),
+        const conversationWithoutIdCardApplication = { ...conversation };
+        delete conversationWithoutIdCardApplication.idCardApplication;
+        const nextConversation = turn.idCardApplicationCleared ? conversationWithoutIdCardApplication : conversation;
+        return { conversation: { ...nextConversation, messages, arrival, ...(seller ? { seller } : {}),
           ...(turn.idCardApplication ? { idCardApplication: turn.idCardApplication } : {}),
           ...(coffeeQuest ? { coffeeQuest } : {}) }, arrival, retryMessage: null,
           farewellStage: turn.farewellStage, streaming: false, streamedReply: '',
           idCardSubmitReady: turn.idCardSubmit === true,
+          closeRequested: turn.closeConversation === true,
           streamedMessageId: receivedStreamText ? turn.npcMessage.id : null };
       }).finally(() => {
         streamCancellation = null;
@@ -162,7 +211,15 @@ export function createConversationController(api: ConversationApi) {
         return { arrival };
       });
     },
-    clearIdCardSubmit: () => update({ idCardSubmitReady: false }),
+    completeIdCardIssue: (npcMessage: ConversationMessage) => {
+      const conversation = state.conversation;
+      if (!conversation) return;
+      const withoutApplication = { ...conversation };
+      delete withoutApplication.idCardApplication;
+      const messages = conversation.messages.some(message => message.id === npcMessage.id)
+        ? conversation.messages : [...conversation.messages, npcMessage];
+      update({ conversation: { ...withoutApplication, messages }, idCardSubmitReady: false });
+    },
     dispose: () => { disposed = true; epoch++; streamCancellation?.abort(); streamCancellation = null;
       state = { ...state, pending: false, streaming: false, streamedReply: '' }; listeners.clear(); },
   };

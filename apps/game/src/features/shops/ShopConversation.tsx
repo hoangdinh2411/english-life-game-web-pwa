@@ -3,7 +3,7 @@ import { CAFE_SELLER_NPC_IDS, type CoffeeQuestState, type PlayerGender } from '@
 import { useSession } from '../../session/session-provider';
 import { usePwa } from '../../pwa/PwaProvider';
 import { discardConversation, loadArrival, loadOlderConversationMessages, openConversation, sendArrivalMessage } from '../../api/client';
-import { createConversationController } from '../dialogue/conversation-controller';
+import { createConversationController, scheduleConversationStart } from '../dialogue/conversation-controller';
 import { SavedConversation } from '../dialogue/SavedConversation';
 import { DialogueFrame } from '../../gameplay/DialogueFrame';
 import { SHOP_NPCS, type ShopNpcId } from './shop-npcs';
@@ -12,6 +12,7 @@ import { ShopMenuPanel } from './ShopMenuPanel';
 import { sellerPanelVisibility } from './seller-panel-visibility';
 import { streamChat } from '../dialogue/chat-stream';
 import { NPC_PORTRAIT_GRID, npcPortrait, npcPortraitPosition } from '../npcs/npc-portraits';
+import { ConversationOpeningIndicator } from '../dialogue/ConversationOpeningIndicator';
 
 export function ShopConversation({ gender, npcId, sound, onClose, onRefresh }: {
   gender?: PlayerGender | undefined; npcId: ShopNpcId; sound: boolean; onClose: () => void; onRefresh: () => Promise<void>;
@@ -23,7 +24,7 @@ export function ShopConversation({ gender, npcId, sound, onClose, onRefresh }: {
   const dismissQuestToast = useCallback(() => setQuestToast(null), []);
   const [controller] = useState(() => createConversationController({
     load: () => run(loadArrival),
-    start: () => run(token => openConversation(token, npcId)),
+    start: () => run(token => openConversation(token, npcId, sound)),
     loadOlder: (conversationNpcId, before) => run(token => loadOlderConversationMessages(token, conversationNpcId, before)),
     send: async (id, body) => {
       const turn = await run(token => sendArrivalMessage(token, id, body));
@@ -54,10 +55,7 @@ export function ShopConversation({ gender, npcId, sound, onClose, onRefresh }: {
     }
     return sent;
   };
-  useEffect(() => {
-    void controller.load().then(loaded => { if (loaded) void controller.start(); });
-    return controller.dispose;
-  }, [controller]);
+  useEffect(() => scheduleConversationStart(controller), [controller]);
   const npc = SHOP_NPCS.find(npc => npc.id === npcId)!;
   const panelVisibility = sellerPanelVisibility(state.conversation?.messages ?? []);
   const confirmationOnly = state.farewellStage === 'confirm';
@@ -70,6 +68,10 @@ export function ShopConversation({ gender, npcId, sound, onClose, onRefresh }: {
   const details = <>
     {isCafeSeller ? <ShopMenuPanel refreshKey={ordersRefreshKey} showMenu={panelVisibility.menu} showOrders={panelVisibility.orders} /> : null}
   </>;
+  if (!state.conversation && !state.error) return <ConversationOpeningIndicator
+    npcName={npc.name}
+    portrait={npcPortrait(npc.id)}
+  />;
   return <>
     <DialogueFrame soundControl={!confirmationOnly} confirmationOnly={confirmationOnly}>
       {!confirmationOnly ? <div className="dialogue-header"><h2>{npc.name}</h2></div> : null}

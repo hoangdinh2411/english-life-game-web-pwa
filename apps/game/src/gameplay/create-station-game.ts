@@ -8,7 +8,7 @@ import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../features/ass
 import { authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetArrivalForLocation, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
-import { canEnterLocation, closedVenueExit, moveInShop, shopCanWalk, shouldDeferClosedVenueExit } from '../features/shops/shop-navigation';
+import { canEnterLocation, closedVenueExit, moveInShop, shopCanWalk, shouldCloseActiveVenue, shouldDeferClosedVenueExit } from '../features/shops/shop-navigation';
 import { npcNameplateOffset, scaleNpcNameplates, setNpcActorVisibility, updateNpcActors, type NpcActor } from '../features/npcs/npc-actors';
 import { npcNeedsTalk } from './arrival-hud';
 import type { MinimapSnapshot } from '../features/minimap/model';
@@ -125,7 +125,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const exit = closedVenueExit(activeLocation);
         const gameTime = callbacks.getGameTime?.() ?? null;
         const timeZone = callbacks.getTimeZone?.() ?? null;
-        if (!exit || this.transitionPending || canEnterLocation(activeLocation, gameTime, timeZone)) return;
+        if (!exit || this.transitionPending || !shouldCloseActiveVenue(activeLocation, gameTime, timeZone)) return;
         this.previousLocation = exit.closedLocation;
         callbacks.onVenueClosed?.(exit.closedLocation, conversationNpcId);
         if (shouldDeferClosedVenueExit(conversationNpcId)) return;

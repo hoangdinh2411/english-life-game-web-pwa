@@ -28,7 +28,10 @@ export const TRANSIENT_SERVICE_NPC_IDS = [
   ...TAX_OFFICE_NPC_IDS,
 ] as const;
 export const conversationNpcSchema = z.enum([ARRIVAL_NPC_ID, ...SHOP_NPC_IDS, ...TOWN_STREET_NPC_IDS, ...TAX_OFFICE_NPC_IDS]);
-export const createConversationSchema = z.object({ npcId: conversationNpcSchema }).strict();
+export const createConversationSchema = z.object({
+  npcId: conversationNpcSchema,
+  includeSpeech: z.boolean().default(true),
+}).strict();
 export const pendingOrderSchema = z.object({
   orderId: z.string().uuid(), itemId: z.string(), quantity: z.number().int().min(1).max(3),
   unitPrice: z.number().int().positive(), total: z.number().int().positive(),
@@ -48,7 +51,10 @@ export const chatStreamRequestSchema = z.object({
   text: z.string().trim().min(1).max(300),
 }).strict();
 export const conversationIdSchema = z.string().uuid();
-export const conversationSpeechSchema = z.object({ url: z.string().url() }).strict();
+export const conversationSpeechSchema = z.object({
+  url: z.string().url(),
+  text: z.string().min(1).optional(),
+}).strict();
 export const relationshipStageSchema = z.enum(['strained', 'stranger', 'acquaintance', 'friendly', 'friend', 'close_friend']);
 export const npcRelationshipSchema = z.object({
   familiarity: z.number().int().min(0).max(100), affinity: z.number().int().min(-100).max(100),
@@ -58,17 +64,21 @@ export const npcRelationshipSchema = z.object({
 export const conversationMessageSchema = z.object({
   id: z.string().uuid(), sender: z.enum(['player', 'npc']), text: z.string(),
   createdAt: z.string().datetime(), ai: z.literal(true).optional(), speech: conversationSpeechSchema.optional(),
+  speechText: z.string().min(1).optional(),
 }).strict();
 export const turnMetadataSchema = z.object({
   intent: z.string().nullable(), misunderstood: z.boolean(), arrival: arrivalStateSchema,
   farewellStage: z.enum(['question', 'confirm']).optional(),
+  closeConversation: z.literal(true).optional(),
   seller: sellerStateSchema.optional(),
   coffeeQuest: coffeeQuestStateSchema.optional(),
   ai: z.literal(true).optional(),
   relationship: npcRelationshipSchema.optional(),
   effectiveMood: moodIdSchema.optional(),
   idCardApplication: idCardApplicationSummarySchema.optional(),
+  idCardApplicationCleared: z.literal(true).optional(),
   idCardSubmit: z.literal(true).optional(),
+  speechText: z.string().min(1).optional(),
 }).strict();
 export const conversationTurnSchema = turnMetadataSchema.extend({
   playerMessage: conversationMessageSchema, npcMessage: conversationMessageSchema,

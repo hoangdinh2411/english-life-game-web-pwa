@@ -15,10 +15,23 @@ export const idCardApplicationContentSchema = z.object({
     name: authoredText,
     dateOfBirth: authoredText,
     address: authoredText,
+    addressNotProvided: authoredText,
     origin: authoredText,
     photo: authoredText,
     review: authoredText,
     correction: authoredText,
+    issued: authoredText,
+    updated: authoredText,
+    updating: authoredText,
+    alreadyIssued: authoredText,
+    existing: authoredText,
+  }).strict(),
+  correctionPrompts: z.object({
+    name: authoredText,
+    dateOfBirth: authoredText,
+    address: authoredText,
+    origin: authoredText,
+    photo: authoredText,
   }).strict(),
   reviewTemplate: authoredText,
   retries: z.object({
@@ -36,6 +49,7 @@ export type IdCardApplicationContent = z.infer<typeof idCardApplicationContentSc
 
 export const idCardApplicationSummarySchema = z.object({
   step: z.enum(['photo', 'review']),
+  mode: z.enum(['create', 'edit']),
   name: z.string().min(1).max(60),
   dateOfBirth: z.string().date(),
   address: z.string().min(1).max(120).nullable(),
@@ -51,6 +65,10 @@ export const issueIdCardBodySchema = z.object({
 export const idCardIssueResponseSchema = z.object({
   issued: z.literal(true),
   photoUrl: z.string().url().nullable(),
+  npcMessage: z.object({
+    id: z.string().uuid(), sender: z.literal('npc'), text: z.string(), createdAt: z.string().datetime(),
+    speech: z.object({ url: z.string().url() }).strict().optional(),
+  }).strict(),
 }).strict();
 
 export type IdCardApplicationSummary = z.infer<typeof idCardApplicationSummarySchema>;

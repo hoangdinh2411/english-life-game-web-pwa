@@ -46,6 +46,8 @@ export interface DialogueMessageProps {
   onReplay?: () => void;
   replayVisible?: boolean;
   replayDisabled?: boolean;
+  body?: ReactNode;
+  attachment?: ReactNode;
 }
 export interface ConversationPanelProps {
   gender?: import("@life-abroad/shared").PlayerGender | undefined;

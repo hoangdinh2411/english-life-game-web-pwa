@@ -40,6 +40,17 @@ test('NPC-05 fails closed for unscheduled street NPCs and constrains store fallb
   assert.equal(npcIsPresent(clothes, 'loc_clothes', local('mon', 20 * 60)), false);
 });
 
+test('Tax Office staff follow their authored opening-hours schedule', () => {
+  const clerk = { id: 'npc_tax_clerk_nadia', location_id: 'loc_tax_office',
+    profile: scheduled([{ days: ['mon'], start: '08:00', end: '16:00', locationId: 'loc_tax_office' }]) };
+  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('mon', 7 * 60 + 59)), false);
+  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('mon', 8 * 60)), true);
+  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('mon', 15 * 60 + 59)), true);
+  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('mon', 16 * 60)), false);
+  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('sun', 23 * 60)), false);
+  assert.equal(npcIsPresent(clerk, 'loc_town_street', local('sun', 23 * 60)), false);
+});
+
 test('NPC-05 next boundary follows country-local DST and weekday rollover', () => {
   const profile = scheduled([{ days: ['sun'], start: '03:00', end: '04:00', locationId: 'loc_town_street' }]);
   const row = street(profile);

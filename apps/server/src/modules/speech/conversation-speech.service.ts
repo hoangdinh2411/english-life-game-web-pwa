@@ -23,13 +23,16 @@ export class ConversationSpeechService {
   async message(userId: string, npcId: Conversation['npcId'], message: ConversationMessage,
     mood: MoodId = 'neutral'): Promise<ConversationMessage> {
     if (message.sender !== 'npc') return message;
+    const { speechText, ...visibleMessage } = message;
+    const spokenText = speechText ?? message.text;
     try {
       const identity = await this.profiles.identity(npcId, mood);
       const generated = await withinSpeechReplyBudget(message.ai
         ? this.ai.get(userId, message.id, identity)
-        : this.fixed.get({ ...identity, text: message.text }));
-      return { ...message, speech: { url: generated.url } };
-    } catch { return message; }
+        : this.fixed.get({ ...identity, text: spokenText }));
+      return { ...visibleMessage, speech: { url: generated.url,
+        ...(spokenText !== message.text ? { text: spokenText } : {}) } };
+    } catch { return visibleMessage; }
   }
 
   async conversation(userId: string, conversation: Conversation): Promise<Conversation> {

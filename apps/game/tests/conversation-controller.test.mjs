@@ -5,7 +5,25 @@ import { createServer } from 'vite';
 const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: 'custom' });
 
 try {
-  const { createConversationController, revealStreamChunk } = await server.ssrLoadModule('/src/features/dialogue/conversation-controller.ts');
+  const { createConversationController, revealStreamChunk, scheduleConversationStart, shouldCloseAfterNpcPresentation } = await server.ssrLoadModule('/src/features/dialogue/conversation-controller.ts');
+
+  test('Strict Mode cleanup cancels the obsolete conversation startup', () => {
+    const scheduled = [];
+    let starts = 0;
+    let disposals = 0;
+    const controller = {
+      start: async () => { starts += 1; return true; },
+      dispose: () => { disposals += 1; },
+    };
+    const firstCleanup = scheduleConversationStart(controller, callback => scheduled.push(callback));
+    firstCleanup();
+    const secondCleanup = scheduleConversationStart(controller, callback => scheduled.push(callback));
+    for (const callback of scheduled) callback();
+    assert.equal(starts, 1);
+    assert.equal(disposals, 1);
+    secondCleanup();
+    assert.equal(disposals, 2);
+  });
 
   test('safe sentence chunks are revealed as paced characters for a visible typing animation', async () => {
     const pieces = [];
@@ -132,24 +150,66 @@ try {
     assert.equal(controller.getSnapshot().conversation?.messages.at(-1)?.speech?.url, 'https://storage.test/speech.mp3');
   });
 
+  test('a requested close waits for the final NPC message to finish presenting', async () => {
+    const arrival = { questId: 'q_station_arrival', status: 'done', currentStepId: null,
+      ticket: { issued: true, used: true }, canEnterTownStreet: true, locationId: 'loc_tax_office', rewardsGranted: true };
+    const playerMessage = { id: globalThis.crypto.randomUUID(), sender: 'player', text: 'No, thank you.', createdAt: new Date().toISOString() };
+    const npcMessage = { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'You’re welcome. Goodbye!',
+      createdAt: new Date().toISOString(), speech: { url: 'https://storage.test/goodbye.mp3' } };
+    const conversation = { id: globalThis.crypto.randomUUID(), npcId: 'npc_tax_clerk_marcus', messages: [], arrival };
+    const controller = createConversationController({ load: async () => arrival, start: async () => conversation,
+      send: async () => ({ playerMessage, npcMessage, intent: 'goodbye', misunderstood: false, arrival, closeConversation: true }) });
+
+    await controller.start();
+    assert.equal(await controller.send(playerMessage.text, { stream: false }), true);
+    const snapshot = controller.getSnapshot();
+    assert.equal(snapshot.closeRequested, true);
+    assert.equal(shouldCloseAfterNpcPresentation(snapshot, playerMessage.id), false);
+    assert.equal(shouldCloseAfterNpcPresentation(snapshot, npcMessage.id), true);
+  });
+
   test('T36.d exposes the server confirmation signal only after the saved yes turn', async () => {
     const arrival = { questId: 'q_station_arrival', status: 'done', currentStepId: null,
       ticket: { issued: true, used: true }, canEnterTownStreet: true, locationId: 'loc_tax_office', rewardsGranted: true };
     const application = { step: 'photo', name: 'Test Learner', dateOfBirth: '1995-02-28', address: null,
       gender: 'female', origin: 'Vietnam' };
     const conversation = { id: globalThis.crypto.randomUUID(), npcId: 'npc_tax_clerk_nadia', messages: [], arrival, idCardApplication: application };
+    let streamed = false;
     const controller = createConversationController({ load: async () => arrival, start: async () => conversation,
       send: async (_id, body) => ({
         playerMessage: { id: globalThis.crypto.randomUUID(), sender: 'player', text: body.text, createdAt: new Date().toISOString() },
         npcMessage: { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'I will issue it now.', createdAt: new Date().toISOString() },
         intent: 'confirm_id_card_application', misunderstood: false, arrival, idCardApplication: application, idCardSubmit: true,
-      }) });
+      }), stream: async () => { streamed = true; throw new Error('Confirmation must not stream'); } });
     await controller.start();
     assert.equal(controller.getSnapshot().idCardSubmitReady, false);
-    assert.equal(await controller.send('Yes, issue my card'), true);
+    assert.equal(await controller.send('Yes, issue my card', { stream: false }), true);
+    assert.equal(streamed, false);
     assert.equal(controller.getSnapshot().idCardSubmitReady, true);
-    controller.clearIdCardSubmit();
+    assert.equal(controller.getSnapshot().conversation?.messages.at(-1)?.sender, 'npc');
+    assert.match(controller.getSnapshot().conversation?.messages.at(-1)?.text ?? '', /I will issue it now/);
+    const issuedMessage = { id: globalThis.crypto.randomUUID(), sender: 'npc',
+      text: 'Your ID card has been issued. Is there anything else I can help you with?', createdAt: new Date().toISOString(),
+      speech: { url: 'https://storage.test/id-card-issued.mp3' } };
+    controller.completeIdCardIssue(issuedMessage);
     assert.equal(controller.getSnapshot().idCardSubmitReady, false);
+    assert.equal(controller.getSnapshot().conversation?.idCardApplication, undefined);
+    assert.deepEqual(controller.getSnapshot().conversation?.messages.at(-1), issuedMessage);
+  });
+
+  test('ID-card photo choices render as one neutral Review action', async () => {
+    const arrival = { questId: 'q_station_arrival', status: 'done', currentStepId: null,
+      ticket: { issued: true, used: true }, canEnterTownStreet: true, locationId: 'loc_tax_office', rewardsGranted: true };
+    const conversation = { id: globalThis.crypto.randomUUID(), npcId: 'npc_tax_clerk_nadia', messages: [], arrival };
+    const controller = createConversationController({ load: async () => arrival, start: async () => conversation,
+      send: async (_id, body) => ({
+        playerMessage: { id: globalThis.crypto.randomUUID(), sender: 'player', text: body.text, createdAt: new Date().toISOString() },
+        npcMessage: { id: globalThis.crypto.randomUUID(), sender: 'npc', text: 'Here is your application.', createdAt: new Date().toISOString() },
+        intent: 'review_id_card_application', misunderstood: false, arrival,
+      }) });
+    await controller.start();
+    assert.equal(await controller.send('Use this photo'), true);
+    assert.equal(controller.getSnapshot().conversation?.messages[0]?.text, 'Review');
   });
 } finally {
   await server.close();

@@ -62,3 +62,19 @@ test('a goodbye without a later NPC question does not confirm the farewell', () 
     currentIsGoodbye: false,
   });
 });
+
+for (const reply of ['No, thanks.', 'Nothing else.', "That's all.", "I'm done.", 'Thank you.']) {
+  test(`a completed service closes for: ${reply}`, () => {
+    const history = [message('npc', 'Your ID card has been updated. Is there anything else I can help you with?', 1)];
+    assert.deepEqual(evaluateFarewell(history, reply), {
+      currentIsGoodbye: false,
+      response: { text: 'You’re welcome. Goodbye!', stage: 'confirm', closeConversation: true },
+    });
+  });
+}
+
+test('a new request continues after the anything-else question', () => {
+  const history = [message('npc', 'Is there anything else I can help you with?', 1)];
+  assert.deepEqual(evaluateFarewell(history, 'I need to change my address.'), { currentIsGoodbye: false });
+  assert.deepEqual(evaluateFarewell(history, 'No, but I need to change my photo.'), { currentIsGoodbye: false });
+});

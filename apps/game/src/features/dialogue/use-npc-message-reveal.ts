@@ -31,6 +31,10 @@ export function shouldAutomaticallyRevealNpcMessage(
   return messageId !== streamedMessageId;
 }
 
+export function shouldRevealEntireNpcMessage(messageText: string, spokenText: string | undefined): boolean {
+  return spokenText === undefined || spokenText === messageText;
+}
+
 export function preserveCompletedReveal(messageId: string | number, progress: number,
   completedMessageId: string | number | null): { progress: number; completedMessageId: string | number | null } {
   if (completedMessageId === messageId) return { progress: 1, completedMessageId };

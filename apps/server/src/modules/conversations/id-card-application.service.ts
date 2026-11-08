@@ -15,6 +15,7 @@ export interface IdCardApplicationRow {
 }
 
 type EditableApplicationField = Exclude<IdCardApplicationField, 'gender' | 'photo' | 'review' | 'correction'>;
+type CorrectionField = EditableApplicationField | 'photo';
 type NextApplicationField = 'dateOfBirth' | 'address' | 'origin' | 'photo';
 
 interface ApplicationReply {
@@ -35,7 +36,7 @@ const plainText = (value: string, maximum: number): string | null => {
 };
 
 const normalized = (value: string): string => normalizeDialogue(value).toLowerCase()
-  .replace(/[’]/g, "'").replace(/[^a-z0-9']+/g, ' ').trim();
+  .replace(/[^a-z0-9]+/g, ' ').trim();
 
 const matchesPhrase = (input: string, phrases: readonly string[]): boolean => {
   const value = normalized(input);
@@ -59,6 +60,14 @@ const containsPhrase = (input: string, phrases: readonly string[]): boolean => {
   });
 };
 
+const addressUnavailable = (input: string, phrases: readonly string[]): boolean => {
+  if (containsPhrase(input, phrases)) return true;
+  const value = normalized(input);
+  const mentionsAddress = /\b(?:address|permanent address|place to live|accommodation)\b/.test(value);
+  const unavailable = /\b(?:dont|do not) (?:currently |still )?have\b|\bhave no\b|\bdont know\b|\bno permanent address\b/.test(value);
+  return mentionsAddress && unavailable;
+};
+
 @Injectable()
 export class IdCardApplicationService {
   constructor(private readonly content: IdCardApplicationContentService) {}
@@ -80,7 +89,7 @@ export class IdCardApplicationService {
     const dateOfBirth = application.date_of_birth instanceof Date
       ? `${application.date_of_birth.getFullYear()}-${String(application.date_of_birth.getMonth() + 1).padStart(2, '0')}-${String(application.date_of_birth.getDate()).padStart(2, '0')}`
       : application.date_of_birth;
-    return { step: application.current_field as 'photo' | 'review', name: application.name, dateOfBirth,
+    return { step: application.current_field as 'photo' | 'review', mode: await this.hasCard(client, userId) ? 'edit' : 'create', name: application.name, dateOfBirth,
       address: application.address, gender: application.gender, origin: application.origin };
   }
 
@@ -88,6 +97,21 @@ export class IdCardApplicationService {
     const content = await this.content.get();
     let application = await this.load(client, userId);
     if (!application) {
+      if (await this.hasCard(client, userId)) {
+        const field = this.correctionField(input);
+        if (field) {
+          await this.startEdit(client, userId, field);
+          return this.result(field, content.correctionPrompts[field], arrival, 'select_id_card_correction');
+        }
+        if (matchesIntentPhrase(input, content.registrationPhrases)) {
+          return this.result('existing', content.prompts.alreadyIssued, arrival, 'id_card_already_issued');
+        }
+        if (/\b(?:edit|update|change)\b/.test(normalized(input))) {
+          await this.startEdit(client, userId, 'correction');
+          return this.result('correction', content.prompts.existing, arrival, 'edit_existing_id_card');
+        }
+        return null;
+      }
       if (!matchesIntentPhrase(input, content.registrationPhrases)) return null;
       application = await this.start(client, userId);
       return this.result(application.current_field, content.prompts.name, arrival, 'register_id_card');
@@ -103,13 +127,25 @@ export class IdCardApplicationService {
     }
     const current = application.current_field;
     if (current === 'photo') {
+      const photo = matchesPhrase(input, ['use my character picture']) ? 'character picture'
+        : matchesPhrase(input, ['use this photo']) ? 'uploaded photo' : null;
+      if (photo && await this.hasCard(client, userId)) {
+        const reply = this.result(current, content.prompts.updating, arrival, 'confirm_id_card_application');
+        return { ...reply, metadata: { ...reply.metadata, idCardSubmit: true } };
+      }
+      if (photo) return this.review(client, userId, photo, arrival);
+      return this.result(current, content.prompts.photo, arrival, 'await_id_card_photo');
+    }
+    if (current === 'review') {
       if (isIdCardConfirmation(input)) {
         const reply = this.result(current, 'Thank you. I will issue your ID card now.', arrival, 'confirm_id_card_application');
         return { ...reply, metadata: { ...reply.metadata, idCardSubmit: true } };
       }
-      return this.result(current, content.prompts.photo, arrival, 'await_id_card_photo');
-    }
-    if (current === 'review') {
+      const field = this.correctionField(input);
+      if (field) {
+        await this.update(client, userId, field, null, null);
+        return this.result(field, content.correctionPrompts[field], arrival, 'select_id_card_correction');
+      }
       if (/^(?:no|nope|not correct|that is wrong)$/i.test(input.trim())) {
         await this.update(client, userId, 'correction', null, null);
         return this.result('correction', content.prompts.correction, arrival, 'correct_id_card_application');
@@ -120,42 +156,58 @@ export class IdCardApplicationService {
       const field = this.correctionField(input);
       if (!field) return this.result(current, content.retries.correction, arrival, null);
       await this.update(client, userId, field, null, null);
-      return this.result(field, content.prompts[field], arrival, 'select_id_card_correction');
+      return this.result(field, content.correctionPrompts[field], arrival, 'select_id_card_correction');
     }
 
     const answerField = current as EditableApplicationField;
+    const hasNoAddress = answerField === 'address' && addressUnavailable(input, content.addressNullPhrases);
     const parsed = answerField === 'name' ? plainText(input, 60)
       : answerField === 'dateOfBirth' ? parseIdCardBirthDate(input)
-        : answerField === 'address' ? (containsPhrase(input, content.addressNullPhrases) ? null : plainText(input, 120))
+        : answerField === 'address' ? (hasNoAddress ? null : plainText(input, 120))
           : plainText(input, 60);
-    const validNullAddress = answerField === 'address' && containsPhrase(input, content.addressNullPhrases);
+    const validNullAddress = answerField === 'address' && hasNoAddress;
     if (answerField === 'address' && normalized(input) === 'skip') {
       return this.result(answerField, content.retries.address, arrival, null);
     }
     if (parsed === null && !validNullAddress) return this.result(answerField, content.retries[answerField], arrival, null);
 
+    if (await this.hasCard(client, userId)) {
+      await this.applyEdit(client, userId, answerField, parsed);
+      const reply = this.result('updated', content.prompts.updated, arrival, `update_id_card_${answerField}`);
+      return { ...reply, metadata: { ...reply.metadata, idCardApplicationCleared: true } };
+    }
+    if (application.origin !== null) {
+      await this.update(client, userId, 'review', answerField, parsed);
+      return this.review(client, userId, 'selected photo', arrival);
+    }
     const next = this.next(answerField);
     await this.update(client, userId, next, answerField, parsed);
-    return this.result(next, content.prompts[next], arrival, `save_id_card_${answerField}`);
+    const responseText = validNullAddress ? content.prompts.addressNotProvided : content.prompts[next];
+    return this.result(next, responseText, arrival, `save_id_card_${answerField}`);
   }
 
-  async review(client: PoolClient, userId: string, photo: 'uploaded photo' | 'character picture',
+  async review(client: PoolClient, userId: string, photo: 'uploaded photo' | 'character picture' | 'selected photo',
     arrival: ArrivalState): Promise<ApplicationReply> {
     const application = await this.load(client, userId);
-    if (!application || application.current_field !== 'photo' || !application.name || !application.date_of_birth ||
+    if (!application || !['photo', 'review'].includes(application.current_field) || !application.name || !application.date_of_birth ||
       !application.gender || !application.origin) {
       throw new ConflictException('Complete the ID card questions before reviewing the application');
     }
     const dateOfBirth = application.date_of_birth instanceof Date
       ? `${application.date_of_birth.getFullYear()}-${String(application.date_of_birth.getMonth() + 1).padStart(2, '0')}-${String(application.date_of_birth.getDate()).padStart(2, '0')}`
       : application.date_of_birth;
+    const content = await this.content.get();
+    if (application.address && addressUnavailable(application.address, content.addressNullPhrases)) {
+      await client.query('UPDATE public.id_card_applications SET address=NULL,updated_at=now() WHERE user_id=$1', [userId]);
+      application.address = null;
+    }
     const values = { name: application.name, dateOfBirth, address: application.address ?? 'Not provided',
       gender: application.gender, origin: application.origin, photo };
-    const content = await this.content.get();
     const responseText = content.reviewTemplate.replace(/\{(name|dateOfBirth|address|gender|origin|photo)\}/g,
       (_, key: keyof typeof values) => values[key]);
     await this.update(client, userId, 'review', null, null);
-    return this.result('review', responseText, arrival, 'review_id_card_application');
+    const result = this.result('review', responseText, arrival, 'review_id_card_application');
+    return { ...result, metadata: { ...result.metadata, speechText: content.prompts.review } };
   }
 
   clear(client: PoolClient, userId: string): Promise<void> {
@@ -177,6 +229,31 @@ export class IdCardApplicationService {
     return result.rows[0]!;
   }
 
+  private async hasCard(client: PoolClient, userId: string): Promise<boolean> {
+    const result = await client.query('SELECT 1 FROM public.player_id_card WHERE user_id=$1', [userId]);
+    return result.rows.length > 0;
+  }
+
+  private async startEdit(client: PoolClient, userId: string, field: CorrectionField | 'correction'): Promise<void> {
+    const result = await client.query(`INSERT INTO public.id_card_applications
+      (user_id,current_field,name,date_of_birth,address,gender,origin)
+      SELECT user_id,$2,full_name,birth_date,address,gender,origin
+      FROM public.player_id_card WHERE user_id=$1
+      ON CONFLICT (user_id) DO UPDATE SET current_field=excluded.current_field,name=excluded.name,
+        date_of_birth=excluded.date_of_birth,address=excluded.address,gender=excluded.gender,
+        origin=excluded.origin,updated_at=now()`, [userId, field]);
+    if (result.rowCount !== 1) throw new ConflictException('ID card is unavailable');
+  }
+
+  private async applyEdit(client: PoolClient, userId: string, field: EditableApplicationField,
+    value: string | null): Promise<void> {
+    const columns: Record<EditableApplicationField, string> = {
+      name: 'full_name', dateOfBirth: 'birth_date', address: 'address', origin: 'origin',
+    };
+    await client.query(`UPDATE public.player_id_card SET ${columns[field]}=$2,updated_at=now() WHERE user_id=$1`, [userId, value]);
+    await this.clear(client, userId);
+  }
+
   private async update(client: PoolClient, userId: string, next: IdCardApplicationField,
     field: EditableApplicationField | null, value: string | null): Promise<void> {
     const columns: Record<EditableApplicationField, string> = {
@@ -194,8 +271,9 @@ export class IdCardApplicationService {
     return ({ name: 'dateOfBirth', dateOfBirth: 'address', address: 'origin', origin: 'photo' } as const)[field];
   }
 
-  private correctionField(input: string): EditableApplicationField | null {
+  private correctionField(input: string): CorrectionField | null {
     const value = normalized(input);
+    if (value.includes('photo') || value.includes('picture') || value.includes('image')) return 'photo';
     if (value.includes('date of birth') || value === 'birth date' || value.includes('birthday')) return 'dateOfBirth';
     if (value.includes('where') && value.includes('come from') || value === 'origin' || value.includes('country')) return 'origin';
     for (const field of ['name', 'address'] as const) if (value.includes(field)) return field;

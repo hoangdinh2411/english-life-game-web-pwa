@@ -1,5 +1,5 @@
 import type { CreateCharacterRequest, IdCardIssueResponse, IssueIdCardBody, MovementTutorialPageId, NpcPresenceResponse, OnboardingOptions, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState, TutorialSpeechResponse } from '@life-abroad/shared';
-import { parseOnboardingOptions, arrivalStateSchema, conversationHistoryPageSchema, conversationSchema, conversationTurnSchema, idCardIssueResponseSchema, npcPresenceResponseSchema, playerPreferencesReadSchema, playerPreferencesSchema, tutorialSpeechResponseSchema, ARRIVAL_NPC_ID, type Conversation, type ConversationHistoryPage, type SendMessageRequest } from '@life-abroad/shared';
+import { parseOnboardingOptions, arrivalStateSchema, conversationHistoryPageSchema, conversationSchema, conversationTurnSchema, idCardIssueResponseSchema, npcPresenceResponseSchema, playerPreferencesReadSchema, playerPreferencesSchema, tutorialSpeechResponseSchema, ARRIVAL_NPC_ID, TRANSIENT_SERVICE_NPC_IDS, type Conversation, type ConversationHistoryPage, type SendMessageRequest } from '@life-abroad/shared';
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
 
@@ -63,10 +63,13 @@ export const discardConversation = (token: string, id: string): Promise<void> =>
 export const discardTransientConversations = (token: string): Promise<void> =>
   deleteAuthenticated('conversations/transient', token, 'Could not clear previous service conversations.');
 export const enterTownStreet = async (token: string) => arrivalStateSchema.parse(await request('quests/arrival/enter-town-street', {}, token));
-export async function openConversation(token: string, npcId: Conversation['npcId']): Promise<Conversation> {
+export async function openConversation(token: string, npcId: Conversation['npcId'], includeSpeech = true): Promise<Conversation> {
+  if ((TRANSIENT_SERVICE_NPC_IDS as readonly string[]).includes(npcId)) {
+    return conversationSchema.parse(await request('conversations', { npcId, includeSpeech }, token));
+  }
   const history = conversationHistoryPageSchema.parse(await request(
     `conversations/history/${encodeURIComponent(npcId)}`, undefined, token));
-  const created = conversationSchema.parse(await request('conversations', { npcId }, token));
+  const created = conversationSchema.parse(await request('conversations', { npcId, includeSpeech }, token));
   return conversationSchema.parse({ ...created,
     messages: [...history.messages, ...created.messages],
     historyCursor: { npcId, beforeMessageId: history.beforeMessageId, hasMore: history.hasMore },

@@ -15,6 +15,10 @@ export function canEnterLocation(location: MapLocation, gameTime: Date | null, t
     isVenueOpenAtLocalMinute(venueKind, localWorldMinutes(gameTime, timeZone)));
 }
 
+export function shouldCloseActiveVenue(location: MapLocation, gameTime: Date | null, timeZone: string | null): boolean {
+  return gameTime !== null && timeZone !== null && !canEnterLocation(location, gameTime, timeZone);
+}
+
 export const shouldDeferClosedVenueExit = (conversationNpcId: string | null): boolean => conversationNpcId !== null;
 
 export function closedVenueExit(location: MapLocation): {

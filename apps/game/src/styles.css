@@ -78,21 +78,11 @@ body,
   -ms-overflow-style: none !important;
 }
 .conversation-history {
-  scrollbar-width: thin !important;
-  scrollbar-color: var(--color-border) var(--color-cream-muted) !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none;
 }
 .conversation-history::-webkit-scrollbar {
-  display: block !important;
-  width: 10px !important;
-}
-.conversation-history::-webkit-scrollbar-track {
-  background: var(--color-cream-muted);
-  border-radius: 8px;
-}
-.conversation-history::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border: 2px solid var(--color-cream-muted);
-  border-radius: 8px;
+  display: none !important;
 }
 /* Preserve browser form defaults; importing Preflight would change existing controls. */
 @layer base {

@@ -19,7 +19,6 @@ export class LifeService {
 
   get(userId: string): Promise<LifeState> {
     return this.database.transaction(async client => {
-      await this.repository.lock(client, userId);
       return this.repository.state(client, userId, await this.worldClock.read(userId, client));
     });
   }
