@@ -186,7 +186,8 @@ export function createConversationController(api: ConversationApi) {
         for (const message of visibleTurnMessages) if (!messages.some((item) => item.id === message.id)) messages.push(message);
         const seller = turn.seller;
         const coffeeQuest = turn.coffeeQuest;
-        const { idCardApplication: _idCardApplication, ...conversationWithoutIdCardApplication } = conversation;
+        const conversationWithoutIdCardApplication = { ...conversation };
+        delete conversationWithoutIdCardApplication.idCardApplication;
         const nextConversation = turn.idCardApplicationCleared ? conversationWithoutIdCardApplication : conversation;
         return { conversation: { ...nextConversation, messages, arrival, ...(seller ? { seller } : {}),
           ...(turn.idCardApplication ? { idCardApplication: turn.idCardApplication } : {}),
@@ -213,7 +214,8 @@ export function createConversationController(api: ConversationApi) {
     completeIdCardIssue: (npcMessage: ConversationMessage) => {
       const conversation = state.conversation;
       if (!conversation) return;
-      const { idCardApplication: _application, ...withoutApplication } = conversation;
+      const withoutApplication = { ...conversation };
+      delete withoutApplication.idCardApplication;
       const messages = conversation.messages.some(message => message.id === npcMessage.id)
         ? conversation.messages : [...conversation.messages, npcMessage];
       update({ conversation: { ...withoutApplication, messages }, idCardSubmitReady: false });

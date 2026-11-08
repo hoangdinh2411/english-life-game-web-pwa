@@ -41,5 +41,5 @@ test('composer stays visually compact without shrinking its touch targets', () =
 test('conversation history hides its scrollbar without disabling scrolling', () => {
   const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
   assert.match(css, /\.conversation-history\s*\{[^}]*scrollbar-width:\s*none/s);
-  assert.match(css, /\.conversation-history::\-webkit-scrollbar\s*\{[^}]*display:\s*none/s);
+  assert.match(css, /\.conversation-history::-webkit-scrollbar\s*\{[^}]*display:\s*none/s);
 });
