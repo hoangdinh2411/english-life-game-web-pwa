@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { generateIdCardNumber } from './id-card-number';
 import type { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
-import type { IdCardIssueResponse, IssueIdCardBody } from '@life-abroad/shared';
+import { formatIdCardNumber, type IdCardIssueResponse, type IdCardResponse, type IssueIdCardBody } from '@life-abroad/shared';
 import { IdCardImageService } from './id-card-image.service';
 import { SupabaseIdCardPhotoStorage } from './id-card-photo.storage';
 import { IdCardApplicationContentService } from '../conversations/id-card-application-content.service';
@@ -16,6 +16,17 @@ interface ApplicationRow {
 }
 
 interface IssuedMessageRow { id: string; sender: 'npc'; text: string; created_at: Date }
+interface CardRow {
+  number: string;
+  full_name: string;
+  birth_date: Date;
+  address: string | null;
+  gender: 'male' | 'female';
+  origin: string;
+  photo_path: string | null;
+  issued_at: Date;
+  updated_at: Date;
+}
 
 @Injectable()
 export class IdCardService {
@@ -26,6 +37,52 @@ export class IdCardService {
   resetApplication(userId: string): Promise<void> {
     return this.database.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId])
       .then(() => undefined);
+  }
+
+  async get(userId: string): Promise<IdCardResponse> {
+    const result = await this.database.query<CardRow>(`SELECT number,full_name,birth_date,address,gender,origin,
+      photo_path,issued_at,updated_at FROM public.player_id_card WHERE user_id=$1`, [userId]);
+    const card = result.rows[0];
+    if (!card) throw new NotFoundException('ID card not found');
+    return {
+      number: formatIdCardNumber(card.number),
+      fullName: card.full_name,
+      birthDate: this.dateOnly(card.birth_date),
+      address: card.address,
+      gender: card.gender,
+      origin: card.origin,
+      photoUrl: card.photo_path ? await this.storage.signedUrl(card.photo_path) : null,
+      issuedAt: card.issued_at.toISOString(),
+      updatedAt: card.updated_at.toISOString(),
+    };
+  }
+
+  async hasIdCard(userId: string): Promise<boolean> {
+    const result = await this.database.query('SELECT 1 FROM public.player_id_card WHERE user_id=$1', [userId]);
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async hasAddress(userId: string): Promise<boolean> {
+    const result = await this.database.query(
+      'SELECT 1 FROM public.player_id_card WHERE user_id=$1 AND address IS NOT NULL', [userId]);
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async setIdCardAddress(userId: string, address: string | null): Promise<void> {
+    if (address !== null) {
+      const trimmed = address.trim();
+      const hasControlCharacter = Array.from(trimmed).some(character => {
+        const code = character.charCodeAt(0);
+        return code <= 31 || code === 127;
+      });
+      if (!trimmed || trimmed.length > 120 || hasControlCharacter) {
+        throw new ConflictException('Address must be plain text up to 120 characters.');
+      }
+      address = trimmed;
+    }
+    const result = await this.database.query(
+      'UPDATE public.player_id_card SET address=$2,updated_at=now() WHERE user_id=$1', [userId, address]);
+    if (result.rowCount !== 1) throw new NotFoundException('ID card not found');
   }
 
   async issue(userId: string, body: IssueIdCardBody, file: { buffer: Buffer; size: number } | undefined): Promise<IdCardIssueResponse> {
@@ -103,6 +160,10 @@ export class IdCardService {
     }
   }
 
+  private dateOnly(value: Date): string {
+    return value.toISOString().slice(0, 10);
+  }
+
   private async uniqueNumber(client: PoolClient, birthDate: Date, gender: 'male' | 'female'): Promise<string> {
     for (let attempt = 0; attempt < 20; attempt += 1) {
       const number = generateIdCardNumber(birthDate, gender);
@@ -142,4 +203,3 @@ export class IdCardService {
     return row;
   }
 }
-

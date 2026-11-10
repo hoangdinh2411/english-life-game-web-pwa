@@ -3,8 +3,8 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
-Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T38.1–T38.6; T39.1–T39.5;
-S2–S7.
+Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36f; T38.1–T38.6;
+T39.1–T39.5; S2–S7.
 
 ## How to work
 
@@ -305,7 +305,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         confirms). One card per player: a replayed confirm returns the same card
         and creates nothing. Check: format, parity, hyphen display, uniqueness
         under forced collisions, two simultaneous applications with the same
-        birth date and gender get different numbers. - [ ] **f. Storage, API and
+        birth date and gender get different numbers. - [x] **f. Storage, API and
         updates.** Table `player_id_card` (one row per user: `number` unique,
         `fullName`, `birthDate`, `address` nullable, `gender`, `origin`,
         `photoPath` nullable, `issuedAt`, `updatedAt`). The card remains valid

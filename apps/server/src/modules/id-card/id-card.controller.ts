@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, HttpCode, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { issueIdCardBodySchema, type IdCardIssueResponse, type IssueIdCardBody } from '@life-abroad/shared';
+import { issueIdCardBodySchema, type IdCardIssueResponse, type IdCardResponse, type IssueIdCardBody } from '@life-abroad/shared';
 import { SchemaValidationPipe } from '../../common/pipes/schema-validation.pipe';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -19,6 +19,11 @@ export class IdCardController {
     return this.idCards.resetApplication(userId);
   }
 
+  @Get()
+  get(@CurrentUser() userId: string): Promise<IdCardResponse> {
+    return this.idCards.get(userId);
+  }
+
   @Post()
   @UseInterceptors(FileInterceptor('photo', { limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 2, parts: 3 } }))
   issue(@CurrentUser() userId: string,
@@ -27,4 +32,3 @@ export class IdCardController {
     return this.idCards.issue(userId, body, photo);
   }
 }
-

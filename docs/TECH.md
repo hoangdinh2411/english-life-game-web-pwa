@@ -409,6 +409,11 @@ shares its peer-IP bucket.
   and current question across conversations; either clerk resumes it. The row
   is removed on cancellation and remains separate from the future issued card
   and browser-only photo flow.
+- `GET /me/id-card` returns the authenticated player's permanent card with its
+  formatted number and a short-lived signed photo URL when a photo exists.
+  `player_id_card` is server-owned; address updates are exposed only as an
+  internal ID-card service function for future quest flows, not as a client
+  write endpoint.
 - `POST /conversations/:id/messages` with `{ clientMessageId: <UUID>, text }`:
   trimmed text of 1–2000 characters. Returns
   `{ playerMessage, npcMessage, intent, misunderstood, arrival }`; messages

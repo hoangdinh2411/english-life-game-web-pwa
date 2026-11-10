@@ -144,3 +144,55 @@ test('confirming an edit updates the existing card and returns an explicit updat
   assert.equal(setup.counts().updates, 1);
 });
 
+test('T36.f reads the owner card with a formatted number and signed photo URL', async () => {
+  const queries: Array<{ sql: string; values: unknown[] }> = [];
+  const database = {
+    query: async (sql: string, values: unknown[] = []) => {
+      queries.push({ sql, values });
+      if (sql.includes('SELECT number,full_name')) {
+        return { rows: [{
+          number: '199502280007', full_name: 'Test Learner', birth_date: new Date('1995-02-28T00:00:00.000Z'),
+          address: null, gender: 'female', origin: 'Vietnam', photo_path: 'user-1/id-photo',
+          issued_at: new Date('2026-11-05T12:00:00.000Z'), updated_at: new Date('2026-11-05T12:00:00.000Z'),
+        }], rowCount: 1 };
+      }
+      if (sql.includes('SELECT 1 FROM public.player_id_card')) return { rows: [{ '?column?': 1 }], rowCount: 1 };
+      return { rows: [], rowCount: 1 };
+    },
+  } as unknown as DatabaseService;
+  const storage = { signedUrl: async (path: string) => `https://storage.test/${path}` } as unknown as SupabaseIdCardPhotoStorage;
+  const service = new IdCardService(database, {} as IdCardImageService, storage,
+    new IdCardApplicationContentService(), {} as never);
+
+  assert.deepEqual(await service.get('user-1'), {
+    number: '19950228-0007', fullName: 'Test Learner', birthDate: '1995-02-28', address: null,
+    gender: 'female', origin: 'Vietnam', photoUrl: 'https://storage.test/user-1/id-photo',
+    issuedAt: '2026-11-05T12:00:00.000Z', updatedAt: '2026-11-05T12:00:00.000Z',
+  });
+  assert.equal(await service.hasIdCard('user-1'), true);
+  assert.equal(await service.hasAddress('user-1'), true);
+  assert.match(queries[0]!.sql, /WHERE user_id=\$1/);
+});
+
+test('T36.f updates an address only through the internal service function', async () => {
+  let updatedAddress: unknown;
+  const database = {
+    query: async (sql: string, values: unknown[] = []) => {
+      if (sql.startsWith('UPDATE public.player_id_card')) {
+        updatedAddress = values[1];
+        return { rows: [], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    },
+  } as unknown as DatabaseService;
+  const service = new IdCardService(database, {} as IdCardImageService, {} as SupabaseIdCardPhotoStorage,
+    new IdCardApplicationContentService(), {} as never);
+
+  await service.setIdCardAddress('user-1', '12 Maple Street');
+  assert.equal(updatedAddress, '12 Maple Street');
+  await service.setIdCardAddress('user-1', '<script>');
+  assert.equal(updatedAddress, '<script>');
+  await service.setIdCardAddress('user-1', null);
+  assert.equal(updatedAddress, null);
+  await assert.rejects(service.setIdCardAddress('user-1', '   '), /plain text/);
+});

@@ -71,13 +71,25 @@ export const idCardIssueResponseSchema = z.object({
   }).strict(),
 }).strict();
 
+export const idCardResponseSchema = z.object({
+  number: z.string().regex(/^\d{8}-\d{4}$/),
+  fullName: z.string().min(1).max(60),
+  birthDate: z.string().date(),
+  address: z.string().min(1).max(120).nullable(),
+  gender: z.enum(['male', 'female']),
+  origin: z.string().min(1).max(60),
+  photoUrl: z.string().url().nullable(),
+  issuedAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+}).strict();
+
 export type IdCardApplicationSummary = z.infer<typeof idCardApplicationSummarySchema>;
 export type IssueIdCardBody = z.infer<typeof issueIdCardBodySchema>;
 export type IdCardIssueResponse = z.infer<typeof idCardIssueResponseSchema>;
+export type IdCardResponse = z.infer<typeof idCardResponseSchema>;
 
 export function isIdCardConfirmation(input: string): boolean {
   const normalized = input.trim().toLowerCase().replace(/[’]/g, "'")
     .replace(/[^a-z0-9']+/g, ' ').trim();
   return ['yes', 'yes please', 'yes issue my card', 'correct', 'that is correct'].includes(normalized);
 }
-
