@@ -1,5 +1,5 @@
-import type { CreateCharacterRequest, IdCardIssueResponse, IssueIdCardBody, MovementTutorialPageId, NpcPresenceResponse, OnboardingOptions, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState, TutorialSpeechResponse } from '@life-abroad/shared';
-import { parseOnboardingOptions, arrivalStateSchema, conversationHistoryPageSchema, conversationSchema, conversationTurnSchema, idCardIssueResponseSchema, npcPresenceResponseSchema, playerPreferencesReadSchema, playerPreferencesSchema, tutorialSpeechResponseSchema, ARRIVAL_NPC_ID, TRANSIENT_SERVICE_NPC_IDS, type Conversation, type ConversationHistoryPage, type SendMessageRequest } from '@life-abroad/shared';
+import type { CreateCharacterRequest, IdCardIssueResponse, IdCardResponse, IssueIdCardBody, MovementTutorialPageId, NpcPresenceResponse, OnboardingOptions, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState, TutorialSpeechResponse } from '@life-abroad/shared';
+import { parseOnboardingOptions, arrivalStateSchema, conversationHistoryPageSchema, conversationSchema, conversationTurnSchema, idCardIssueResponseSchema, idCardResponseSchema, npcPresenceResponseSchema, playerPreferencesReadSchema, playerPreferencesSchema, tutorialSpeechResponseSchema, ARRIVAL_NPC_ID, TRANSIENT_SERVICE_NPC_IDS, type Conversation, type ConversationHistoryPage, type SendMessageRequest } from '@life-abroad/shared';
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
 
@@ -41,6 +41,8 @@ export const loadTutorialSpeech = async (token: string, pageId: MovementTutorial
   tutorialSpeechResponseSchema.parse(await request(`tutorial/speech/${encodeURIComponent(pageId)}`, undefined, token));
 
 export const loadArrival = async (token: string) => arrivalStateSchema.parse(await request('quests/arrival', undefined, token));
+export const loadIdCard = async (token: string): Promise<IdCardResponse> =>
+  idCardResponseSchema.parse(await request('me/id-card', undefined, token));
 export async function resetIdCardApplication(token: string): Promise<void> {
   if (!navigator.onLine) throw new Error('Reconnect to restart your unfinished ID card application.');
   const response = await fetch(`${baseUrl}/me/id-card/application`, {
@@ -99,4 +101,3 @@ export async function issueIdCard(token: string, body: IssueIdCardBody, photo: B
   }
   return idCardIssueResponseSchema.parse(await response.json());
 }
-
