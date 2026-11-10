@@ -21,3 +21,4 @@ export * from './player-preferences';
 export * from './world-clock';
 export * from './tutorial';
 export * from './id-card';
+export * from './id-card-number';

@@ -294,7 +294,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         retry with the same key creates one card and one photo; another player
         cannot read the photo; the signed URL expires; a reload asks for the
         photo again; a camera-permission denial falls back to the file picker
-        with a clear message. - [ ] **e. ID number.** Shown as
+        with a clear message. - [x] **e. ID number.** Shown as
         **`YYYYMMDD-XXXX`**: the date of birth, a hyphen, and 4 random digits.
         Stored as 12 digits without the hyphen (text, leading zeros count); the
         hyphen is added only for display by one shared function. The 4 random

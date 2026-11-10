@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { createHash } from 'node:crypto';
+import { generateIdCardNumber } from './id-card-number';
 import type { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import type { IdCardIssueResponse, IssueIdCardBody } from '@life-abroad/shared';
@@ -45,7 +46,7 @@ export class IdCardService {
         if (replay.rows[0] && (replay.rows[0].conversation_id !== body.conversationId || replay.rows[0].photo_hash !== photoHash)) {
           throw new ConflictException('Idempotency key was already used for a different request');
         }
-        const existing = await client.query<{ photo_path: string | null }>('SELECT photo_path FROM public.player_id_card WHERE user_id=$1', [userId]);
+        const existing = await client.query<{ photo_path: string | null; number: string }>('SELECT photo_path,number FROM public.player_id_card WHERE user_id=$1', [userId]);
         if (existing.rows[0]) {
           if (replay.rows[0]) {
             const message = await this.issuedMessage(client, replay.rows[0].conversation_id, body.idempotencyKey);
@@ -77,10 +78,12 @@ export class IdCardService {
         }
         const application = await this.application(client, userId, body.conversationId);
         if (image && photoPath) { await this.storage.upload(photoPath, image); uploaded = true; }
+        if (!application.date_of_birth || !application.gender) throw new ConflictException('Complete the ID card application first');
+        const number = await this.uniqueNumber(client, application.date_of_birth, application.gender);
         await client.query(`INSERT INTO public.player_id_card
-          (user_id,full_name,birth_date,address,gender,origin,photo_path)
-          VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-        [userId, application.name, application.date_of_birth, application.address, application.gender, application.origin, photoPath]);
+          (user_id,number,full_name,birth_date,address,gender,origin,photo_path)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [userId, number, application.name, application.date_of_birth, application.address, application.gender, application.origin, photoPath]);
         await client.query(`INSERT INTO public.id_card_issue_requests
           (user_id,idempotency_key,conversation_id,photo_hash) VALUES ($1,$2,$3,$4)`,
         [userId, body.idempotencyKey, body.conversationId, photoHash]);
@@ -98,6 +101,16 @@ export class IdCardService {
       if (uploaded && photoPath) await this.storage.remove(photoPath).catch(() => undefined);
       throw error;
     }
+  }
+
+  private async uniqueNumber(client: PoolClient, birthDate: Date, gender: 'male' | 'female'): Promise<string> {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const number = generateIdCardNumber(birthDate, gender);
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`id-card-number:${number}`]);
+      const result = await client.query('SELECT 1 FROM public.player_id_card WHERE number=$1', [number]);
+      if (!result.rows[0]) return number;
+    }
+    throw new ConflictException('Please try again later.');
   }
 
   private async issuedMessage(client: PoolClient, conversationId: string, idempotencyKey: string | null): Promise<IssuedMessageRow> {

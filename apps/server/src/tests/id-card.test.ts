@@ -7,27 +7,35 @@ import type { IdCardImageService } from '../modules/id-card/id-card-image.servic
 import type { SupabaseIdCardPhotoStorage } from '../modules/id-card/id-card-photo.storage';
 import { IdCardService } from '../modules/id-card/id-card.service';
 import { IdCardApplicationContentService } from '../modules/conversations/id-card-application-content.service';
+import { formatIdCardNumber } from '@life-abroad/shared';
+import { generateIdCardNumber } from '../modules/id-card/id-card-number';
 
 function fixture(failCardInsert = false) {
-  let card: { photo_path: string | null } | undefined;
+  let card: { photo_path: string | null; number: string } | undefined;
   let request: { idempotency_key: string; conversation_id: string; photo_hash: string } | undefined;
   let uploads = 0, removals = 0;
   let updates = 0;
   let issuedMessages = 0;
   let applicationExists = true;
   let issuedMessage: { id: string; sender: 'npc'; text: string; created_at: Date } | undefined;
+  let forcedCollisions = 0;
+  let numberChecks = 0;
   const conversationId = randomUUID();
   const client = { query: async (sql: string, values: unknown[] = []) => {
     if (sql.includes('SELECT npc_id FROM public.conversations')) return { rows: [{ npc_id: 'npc_tax_clerk_nadia' }] };
-    if (sql.includes('SELECT photo_path FROM public.player_id_card')) return { rows: card ? [card] : [] };
+    if (sql.includes('FROM public.player_id_card WHERE user_id=$1')) return { rows: card ? [card] : [] };
+    if (sql.includes('SELECT 1 FROM public.player_id_card WHERE number=$1')) {
+      numberChecks += 1;
+      return { rows: numberChecks <= forcedCollisions ? [{ '?column?': 1 }] : [] };
+    }
     if (sql.includes('SELECT conversation_id,photo_hash')) return { rows: request?.idempotency_key === values[1] ? [request] : [] };
     if (sql.includes('AS confirmed')) return { rows: [{ confirmed: values[0] === conversationId }] };
     if (sql.includes('DELETE FROM public.id_card_applications')) { applicationExists = false; return { rows: [] }; }
     if (sql.includes('SELECT 1 FROM public.id_card_applications')) return { rows: applicationExists ? [{ '?column?': 1 }] : [] };
     if (sql.includes('FROM public.id_card_applications')) return { rows: applicationExists ? [{ current_field: 'photo', name: 'Test Learner',
-      date_of_birth: new Date(1995, 1, 28), address: null, gender: 'female', origin: 'Vietnam' }] : [] };
+      date_of_birth: new Date('1995-02-28T00:00:00.000Z'), address: null, gender: 'female', origin: 'Vietnam' }] : [] };
     if (sql.includes('INSERT INTO public.player_id_card')) {
-      if (failCardInsert) throw new Error('injected database failure'); card = { photo_path: values[6] as string | null }; return { rows: [] };
+      if (failCardInsert) throw new Error('injected database failure'); card = { number: values[1] as string, photo_path: values[7] as string | null }; return { rows: [] };
     }
     if (sql.includes('UPDATE public.player_id_card')) { updates += 1; return { rows: [] }; }
     if (sql.includes('INSERT INTO public.id_card_issue_requests')) {
@@ -50,7 +58,8 @@ function fixture(failCardInsert = false) {
     speech: { url: 'https://storage.test/id-card-issued.mp3' } }) };
   return { service: new IdCardService(database, images, storage, new IdCardApplicationContentService(), speech as never), conversationId,
     restoreApplication: () => { applicationExists = true; },
-    counts: () => ({ uploads, removals, updates, issuedMessages, card, request }) };
+    forceCollisions: (count: number) => { forcedCollisions = count; },
+    counts: () => ({ uploads, removals, updates, issuedMessages, numberChecks, card, request }) };
 }
 
 test('T36.d issues one card/photo and exact retries do not upload or insert again', async () => {
@@ -71,6 +80,41 @@ test('T36.d issues one card/photo and exact retries do not upload or insert agai
   assert.equal(setup.counts().card?.photo_path, 'user-1/id-photo');
 });
 
+test('T36.e generates date-prefixed numbers with parity and shared display formatting', () => {
+  const birthDate = new Date('1995-02-28T00:00:00.000Z');
+  const male = generateIdCardNumber(birthDate, 'male');
+  const female = generateIdCardNumber(birthDate, 'female');
+  assert.match(male, /^19950228\d{4}$/);
+  assert.match(female, /^19950228\d{4}$/);
+  assert.equal(Number(male.at(-1)) % 2, 1);
+  assert.equal(Number(female.at(-1)) % 2, 0);
+  assert.equal(formatIdCardNumber('199502280007'), '19950228-0007');
+  assert.throws(() => formatIdCardNumber('199502287'), /exactly 12 digits/);
+});
+
+test('T36.e retries number collisions, stores text digits and preserves the assigned number on replay', async () => {
+  const setup = fixture();
+  setup.forceCollisions(3);
+  const body = { conversationId: setup.conversationId, idempotencyKey: randomUUID() };
+  const first = await setup.service.issue('user-1', body, undefined);
+  const firstNumber = setup.counts().card?.number;
+  assert.match(firstNumber ?? '', /^19950228\d{4}$/);
+  assert.equal(Number(firstNumber?.at(-1)) % 2, 0);
+  assert.equal(setup.counts().numberChecks, 4);
+  const replay = await setup.service.issue('user-1', body, undefined);
+  assert.equal(setup.counts().card?.number, firstNumber);
+  assert.deepEqual(replay, first);
+});
+
+test('T36.e reports a friendly retry after twenty number collisions', async () => {
+  const setup = fixture();
+  setup.forceCollisions(20);
+  await assert.rejects(setup.service.issue('user-1',
+    { conversationId: setup.conversationId, idempotencyKey: randomUUID() }, undefined), /Please try again later/);
+  assert.equal(setup.counts().numberChecks, 20);
+  assert.equal(setup.counts().card, undefined);
+});
+
 test('an already committed card still returns a new completion message after the original response is lost', async () => {
   const setup = fixture();
   const file = { buffer: Buffer.from('source'), size: 6 };
@@ -86,7 +130,7 @@ test('T36.d removes an uploaded photo when the database write fails', async () =
   const setup = fixture(true);
   await assert.rejects(setup.service.issue('user-1', { conversationId: setup.conversationId, idempotencyKey: randomUUID() },
     { buffer: Buffer.from('source'), size: 6 }), /injected database failure/);
-  assert.deepEqual(setup.counts(), { uploads: 1, removals: 1, updates: 0, issuedMessages: 0, card: undefined, request: undefined });
+  assert.deepEqual(setup.counts(), { uploads: 1, removals: 1, updates: 0, issuedMessages: 0, numberChecks: 1, card: undefined, request: undefined });
 });
 
 test('confirming an edit updates the existing card and returns an explicit updated message', async () => {
