@@ -352,39 +352,74 @@ database: https://wedjinchhlybabstcchp.supabase.co
       sentence lists and ad-hoc confirmation regexes with one small,
       deterministic intent layer reused by stateful conversations. Build on the
       existing dialogue pipeline and `normalizeDialogue`; do not create a second
-      dialogue framework or one rules engine per store. Complete the slices in
+      dialogue framework or one rules engine per store. Design: one shared
+      authored lexicon (small phrase DSL, no raw regex in content), data-only
+      context profiles per question/state, and domain handlers that own every
+      decision. A future store or building must need only profile data plus a
+      handler, never a new regex or a change to the detector core. It applies to
+      every stateful, service-style NPC: tax office, clothes shop, cafe and
+      station receptionist, plus future places. T40 proves it on the tax office
+      (ID card) and the cafe; the clothes shop, receptionist and the rest move
+      in T41. Scope: language intents only. T40 owns the six initial intents;
+      entity extraction (quantities, items, dates, addresses) stays
+      domain-owned, and the remaining legacy matching is migrated by T41. Complete the slices in
       order and stop after each requested slice. Finish T40 before implementing
       the T37 CV interview so that flow does not copy the current ID-card
       matching approach.
-  - [ ] **a. Contract and characterization.** Inventory the existing shared,
-        seller and ID-card intent seams and add tests that preserve their
-        current state transitions. Define one strict result contract: `matched`
+  - [ ] **a. Contract and characterization.** Inventory the existing seams:
+        `detectIntent`, `serviceContinuationIntent` and `farewellClosing` in
+        `packages/shared/src/dialogue/language.ts` (including station and
+        conversation-policy callers); `isIdCardConfirmation` (used by the
+        server application service and the client `use-id-card-photo-flow`);
+        the phrase lists in `content/id-card/application.json`; and the cafe and
+        clothes seller regexes in `seller.service.ts`. Add tests that preserve
+        their current state transitions, including the station/policy behavior
+        T41 will migrate later. Define one strict result contract: `matched`
         has one `primary` intent plus zero or more ordered `modifiers`;
         `unclear` has a reason (`no_match`, `ambiguous` or `conflicting`).
         Initial reusable intents are `confirm`, `deny`, `cancel`, `unknown`,
-        `not_available` and `provide_later`. Intent names describe language
-        only; they never grant rewards or mutate state. Check: the contract
-        rejects unknown intents, duplicate modifiers and a modifier equal to the
-        primary intent.
-  - [ ] **b. Deterministic contextual detector.** Implement one pure detector
-        using normalized authored patterns and the current question/context.
-        Optional politeness, determiners and time phrases must not require a
-        complete sentence entry. It recognizes a primary intent and compatible
-        modifiers, while contradictory or unsupported wording returns `unclear`
-        instead of guessing. Check at least: “yes”, “no”, cancellation, “I don't
+        `not_available` and `provide_later`. Define the data-only
+        `ContextProfile`: id, allowed intents, optional bare-word readings
+        (e.g. a bare "no" means `deny` for a yes/no question but
+        `not_available` for a field question), optional topic aliases (e.g.
+        address) and an AI opt-in flag that defaults to off. Intent names
+        describe language only; they never grant rewards or mutate state.
+        Check: the contract rejects unknown intents, duplicate modifiers, a
+        modifier equal to the primary intent, and profiles with no or unknown
+        allowed intents.
+  - [ ] **b. Shared lexicon and deterministic detector.** Implement one pure
+        detector (no I/O, no state) plus one shared authored lexicon. Phrases
+        use a minimal DSL: words, optional parts `(please)`, alternatives `a|b`
+        and `{topic}` placeholders; the DSL is compiled once and validated by
+        `pnpm content:validate` (syntax, empty or duplicate phrases, unknown
+        intents or topics). Politeness, determiners and time phrases ("sorry",
+        "please", "right now") are declared once as filler, so they never
+        require a complete sentence entry. The input is split into clauses
+        (`but`, `and`, commas) and negation is resolved per clause; the first
+        clause gives the primary intent and compatible later clauses become
+        modifiers. Contradictory or unsupported wording returns `unclear`
+        instead of guessing. Include a few common learner-error variants (e.g.
+        "I no have address"). Check at least: “yes”, “no”, cancellation, “I don't
         know”, “Sorry, I don't have any address right now”, and “I don't have
-        one, but I'll provide it later”; also prove that the same words can
-        resolve differently under two different question contexts.
+        one, but I'll provide it later”; also prove that the same words resolve
+        differently under two different profiles, and that a test-only profile
+        works with data alone.
   - [ ] **c. Domain-owned decisions and authored clarification.** Migrate the
-        ID-card application and one existing seller confirmation path to the
-        shared detector as the reuse proof. Each domain explicitly allowlists
-        accepted intents for its current state and remains solely responsible
-        for validation, persistence and transitions. Responses and simple
-        clarification questions stay in validated content JSON. Remove only the
-        superseded feature-owned phrase lists/regexes. Check: no-address answers
-        store `null`; unclear input changes nothing and asks again;
-        confirm/deny/cancel preserve existing seller behavior; replay remains
-        idempotent.
+        ID-card application (server service and the client photo-review
+        confirmation, using the same pure shared detector) and one seller path:
+        the cafe pending-order confirm/cancel. Each domain provides a profile
+        and explicitly allowlists the intents accepted in its current state; it
+        remains solely responsible for validation, persistence and transitions.
+        Responses and simple clarification questions stay in validated content
+        JSON. Remove only what is superseded: `isIdCardConfirmation`,
+        `addressUnavailable`, the cancellation/correction/address phrase lists
+        in `content/id-card/application.json` with their schema, and the migrated
+        seller regexes. Keep `registrationPhrases` (it starts the flow and is
+        not one of the six intents) and leave other seller paths and
+        `detectIntent` for T41. Check: no-address answers store `null`; unclear
+        input changes nothing and asks again; confirm/deny/cancel preserve
+        existing seller behavior; replay remains idempotent; the client photo
+        review still confirms and rejects as before.
   - [ ] **d. Constrained AI fallback policy.** Rules run first. AI intent
         classification is allowed only for low-risk, non-sensitive conversation
         where the domain explicitly opts in; it receives no ID-card fields,
@@ -394,17 +429,94 @@ database: https://wedjinchhlybabstcchp.supabase.co
         output becomes `unclear`. AI output never directly writes data or grants
         progress: the domain must still validate and execute the action.
         ID-card, economy, quest rewards and purchases use deterministic matching
-        plus clarification only. Check with a mocked provider: rules bypass AI;
-        allowed low-risk fallback resolves; unknown output fails closed; no
+        plus clarification only. No production domain has to opt in during T40;
+        prove the policy with a test-only profile. Update the `docs/TECH.md`
+        statement “AI text never becomes a gameplay intent” to describe this
+        exact exception. Check with a mocked provider: rules bypass AI; allowed
+        low-risk fallback resolves; unknown output fails closed; no
         sensitive/state payload reaches the provider.
   - [ ] **e. Verification and extension guide.** Run focused detector and domain
         tests, content validation, typecheck, lint and the relevant integration
         tests. Update `docs/TECH.md` with one short extension route showing how
         a future domain supplies context, allowlisted intents, authored patterns
-        and clarification copy without adding a new detector. Check: repository
+        and clarification copy without adding a new detector. Write it as an
+        agent-executable checklist for adding a new store/building conversation:
+        the inputs the owner must provide (states and questions, accepted
+        intents per state, topic aliases, authored replies and clarification
+        copy), the exact files to add or edit (profile data, content JSON,
+        domain handler, tests), the forbidden shortcuts (no new regex, no
+        detector change, no AI opt-in for sensitive domains) and the commands
+        that must pass. The route covers every service-style NPC (tax office,
+        shops, cafe, station receptionist and any future place). Its checklist
+        is: (1) pick or add the conversation states that need a typed answer;
+        (2) for each state add one `ContextProfile` (allowed intents, bare-word
+        readings, topic aliases); (3) add only the missing phrases to the shared
+        lexicon, never to the domain; (4) add authored replies and clarification
+        copy to the NPC's content JSON and run `pnpm content:validate`; (5) write
+        the domain handler that maps accepted intents to its own validated
+        transitions, with `unclear` leaving state unchanged and asking again;
+        (6) add tests (profile resolves, unclear is a no-op, replay is
+        idempotent); (7) run typecheck, lint, tests and content validation.
+        Also put this copy-paste request in `docs/TECH.md` and show it to the
+        owner at the end of the slice:
+
+        ```text
+        Add the conversation for <PLACE / NPC id> following the shared intent
+        extension route in docs/TECH.md. Do not add regex or change the
+        detector core. Owner inputs:
+        - States and the question asked in each: <...>
+        - Accepted intents per state: <confirm/deny/cancel/unknown/
+          not_available/provide_later>
+        - Topic aliases (if any): <...>
+        - Authored replies and clarification copy: <...>
+        - What each accepted intent does in this place: <...>
+        Plan first, wait for my OK, implement only that place, run the checks,
+        and stop.
+        ```
+
+        Check: repository
         search finds no duplicate migrated matchers, both migrated domains pass,
         and adding a test-only context requires data plus a domain handler—not
-        changes to the detector core.
+        changes to the detector core. Confirm T41 below still lists every
+        remaining legacy matcher.
+
+- [ ] **T41 — Migrate remaining legacy intent matching to the shared lexicon.**
+      Start only after T40 is verified. Finish what T40 deliberately left so
+      each language meaning has exactly one source. Same rules as T40: reuse the
+      shared detector, add data (profiles, lexicon entries) instead of regexes,
+      and keep every domain responsible for its own decisions. Complete the
+      slices in order and stop after each requested slice.
+  - [ ] **a. Inventory and characterization.** List every remaining caller:
+        `confirm`/`deny` and the `confirmation` flag in `detectIntent` and
+        `intents.common.json`; the yes/no checks in `farewellClosing` and
+        `serviceContinuationIntent`; station use (`station.ts`,
+        `use-station-conversation.ts`); goodbye detection in
+        `conversation-policy.ts`; the remaining cafe and clothes seller regexes;
+        the station ticket refusal and ID-card topic regexes in
+        `modules/dialogue/dialogue.service.ts`; the greeting/thanks/apology
+        checks in `modules/npcs/social-signal.ts`; and quest `doneWhen` intent
+        ids. Classify each as a reusable language intent (migrate), an entity
+        or topic check (stays in its domain) or a safety filter (stays in
+        `ai-safety.ts`, out of scope). Add tests that preserve current
+        behavior before any change. Check: tests pass unchanged on the current
+        code.
+  - [ ] **b. Confirm, deny and cancel consumers.** Move the remaining
+        yes/no/cancel handling (station, farewell and service-continuation
+        decisions, remaining seller paths) to profiles plus the shared detector.
+        Remove `confirm`/`deny` from `detectIntent`, the `confirmation` flag
+        and `intents.common.json`. Check: behavior from slice a is unchanged
+        and repository search finds no yes/no matcher outside the lexicon.
+  - [ ] **c. Greet, thank and goodbye.** Move these into the shared lexicon with
+        profiles for the contexts that use them, keeping existing quest
+        `doneWhen` intent ids and authored content working. Check: station,
+        conversation-policy and quest completion tests are unchanged.
+  - [ ] **d. Retire legacy detection and verify.** Delete the old `detectIntent`
+        rule matching and `intents.common.json` once no caller remains; keep
+        domain-specific station intents only if still valid and documented.
+        Run content validation, lint, typecheck, unit, integration and PWA
+        checks; update the `docs/TECH.md` extension guide. Check: repository
+        search finds one lexicon as the only source of reusable language
+        intents.
 
 ## BLOCKED — start only after the Open decisions below are answered
 
