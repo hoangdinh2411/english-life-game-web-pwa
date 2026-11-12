@@ -46,5 +46,7 @@ Break down into sequential independent steps labeled `a, b, c...`:
   - Provide a concise 1-line `Task prompt:` directly underneath each step so the user can copy it into a fresh chat if splitting the task.
 
 ## 4. Completion Gate
-Always stop after outputting the plan and prompt the user:
-> "Reply **OK** or **Approve** to proceed with Stage 2 (`coder`)."
+Check the mode defined in the root `AGENTS.md`:
+- **Interactive mode (default)**: stop after the plan and prompt the user:
+  > "Reply **OK** or **Approve** to proceed with Stage 2 (`coder`)."
+- **Task-driven mode** (prompt references `docs/MASTER_PROMPT.md` and/or a task ID): the prompt is the approval. Output the brief plan, do **not** stop, and continue to Stage 2 (`coder`). Skip Challenge Mode's "wait for approach choice" unless there is a critical ambiguity or an unapproved player flow; then stop and ask.

@@ -85,19 +85,29 @@ Client: Vite + React + TS + Phaser 4 + PWA (no Expo/React Native/WebView). Main 
   - `dialogue/content/` — Dialogue content models and schema validators
 
 ## Git Guardian Rule
-Before starting any task, check `git branch --show-current`. If currently on `main` or `master`, automatically create and switch to a new branch `feat/<feature-name>` before making any changes. Never work directly on `main`, `master`, or `dev`.
+Before starting any task, check `git branch --show-current`. If currently on `main`, `master` or `dev`, automatically create and switch to a new branch `feat/<feature-name>` (from `dev`) before making any changes. Never work directly on `main`, `master`, or `dev`.
+Never create commits, tags, PRs, merges or pushes; the user owns them. Suggest a commit message instead.
 
 ## 3-Stage Sequential Pipeline
-Follow this strict order for every task — never skip steps:
-1. **Stage 1 (`planner`)**: Analyze request, identify edge cases, produce standardized plan. **Stop and wait for explicit user approval.**
-2. **Stage 2 (`coder`)**: Run **ONLY** after the user explicitly replies "OK" or "Approve". Implement minimal coherent changes strictly following the approved plan (`a, b, c...` sequence).
-3. **Stage 3 (`reviewer`)**: Runs automatically right after `coder` completes. Execute `pnpm typecheck` and inspect `git diff`. Auto-fix any errors up to 3 iterations until 0 errors remain before reporting completion.
+Order is always `planner` → `coder` → `reviewer`. **Stage 3 (`reviewer`) is mandatory in every mode** and runs automatically right after `coder`, with no user prompt needed. Two modes decide only how Stage 1 ends:
+- **Interactive mode (default)**: Stage 1 stops and waits for the user's explicit "OK" or "Approve" before Stage 2.
+- **Task-driven mode** (the prompt references `docs/MASTER_PROMPT.md` and/or a task ID such as `T40.a`): the user's prompt counts as approval. State a brief plan in chat (no stop), then run `coder` → `reviewer` to completion. Stop early only for a critical ambiguity, a blocker, or an unapproved player flow (see `docs/MASTER_PROMPT.md` §3).
+1. **Stage 1 (`planner`)**: Analyze request, identify edge cases, produce standardized plan (stop for approval only in Interactive mode).
+2. **Stage 2 (`coder`)**: Implement minimal coherent changes strictly following the approved plan (`a, b, c...` sequence). Hand off to `reviewer` automatically.
+3. **Stage 3 (`reviewer`)**: Inspect `git diff`, run `pnpm typecheck` (plus lint/tests/acceptance checks when the task requires them). Do not edit code itself.
+
+## Coder ↔ Reviewer Exchange
+If `reviewer` finds any problem, `reviewer` and `coder` must talk it through **visibly to the user**:
+1. `Reviewer → Coder`: list each issue (file, line, error/rule violated, suggested fix).
+2. `Coder → Reviewer`: say what was fixed (or why it disagrees); only `coder` edits code.
+3. `Reviewer` re-runs checks. Repeat up to 3 rounds until 0 errors.
+Show each message in the reply as a short log (`Round N`). If errors remain after round 3, stop and report the blocking issues to the user; never claim a check passed unless it ran and passed.
 
 ## Work Loop & Reply Guidelines
 1. **Branch**: Enforce the Git Guardian Rule.
 2. **Execute**: Follow the 3-Stage Sequential Pipeline (`planner` -> `coder` -> `reviewer`).
 3. **Verify**: Run `pnpm typecheck` and `git diff` via reviewer. Never claim unrun tests passed.
-4. **Reply**: State changes, check status (`pnpm typecheck`: pass/fail/not run), and a focused user-testing checklist split into Client and Backend/API (Precondition, Input/Action, Expected output).
+4. **Reply**: Use the `docs/MASTER_PROMPT.md` §8 format (Task / Implemented / Files / Verification / User testing checklist / Status / Notes), plus the Coder ↔ Reviewer log if any issue was found. Never claim unrun checks passed. The checklist is split into Client and Backend/API (Precondition, Input/Action, Expected output).
 
 ## Root Commands
 `pnpm dev` · `pnpm dev:game` · `pnpm dev:server` · `pnpm typecheck` · `pnpm lint` · `pnpm test` · `pnpm content:validate` · `pnpm build` · `pnpm check:pwa` · `pnpm test:integration`

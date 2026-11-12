@@ -366,7 +366,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
       order and stop after each requested slice. Finish T40 before implementing
       the T37 CV interview so that flow does not copy the current ID-card
       matching approach.
-  - [ ] **a. Contract and characterization.** Inventory the existing seams:
+  - [x] **a. Contract and characterization.** Inventory the existing seams:
         `detectIntent`, `serviceContinuationIntent` and `farewellClosing` in
         `packages/shared/src/dialogue/language.ts` (including station and
         conversation-policy callers); `isIdCardConfirmation` (used by the
