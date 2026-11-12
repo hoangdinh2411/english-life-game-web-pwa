@@ -3,7 +3,7 @@
 Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
-Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36f; T38.1–T38.6;
+Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36f–T36g; T38.1–T38.6;
 T39.1–T39.5; S2–S7.
 
 ## How to work
@@ -160,7 +160,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
   conversation for every NPC. Pending orders and quest steps remain scripted; AI
   never changes money, items or quest state.
 - Item lists and prices live in content (`content/seed/shops.json`), never in
-  code. Codex must not invent prices: the owner supplies or approves them.
+  code. The agent must not invent prices: the owner supplies or approves them.
 - Energy is 0–100; each player message to an NPC costs 1 point, with retries
   charged once. Drinks restore 20, food/snacks 50, drink + food 80 total
   (10-point bonus), capped at 100. Consumables apply immediately without
@@ -190,7 +190,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
       ordered-step quest system; do not build a new quest framework. One task,
       done in order a to i. Tick each step when it passes its own check. New
       art, portraits and voice clips use the existing asset pipeline (T14).
-      Reward: the owner decides (default none). Codex must not invent anything
+      Reward: the owner decides (default none). The agent must not invent anything
       the owner has not given: stop and ask.
   - [x] **a. Tax office and staff.** Inspect what exists. The tax office is a
         map with an entrance from Town Street and **two named staff NPCs**;
@@ -316,18 +316,18 @@ database: https://wedjinchhlybabstcchp.supabase.co
         `setIdCardAddress(userId, address | null)` for the future "rent a flat"
         quest. Check: ownership; plain-text storage; `<script>` stays text; the
         card remains valid as the game clock advances; direct client attempts to
-        update it outside the Tax Office flow are rejected. - [ ] **g. ID card
+        update it outside the Tax Office flow are rejected. - [x] **g. ID card
         icon and info panel.** A small ID card icon sits on the compact profile
         card, shown only once the player has a card. Tapping it opens a panel
         with the photo (or the character picture), the number as
-        `YYYYMMDD-XXXX`, name, date of birth, gender, origin, the address or
-        "Not set", the issue date and the status "Valid permanently". Read-only.
-        An `!` information icon on the card shows “Go to the Tax Office to
-        update your information.” on hover and keyboard focus. The ID card icon
-        is a 44px target; if it cannot fit on the card at 320 px without making
-        the card wider than half the screen, put it in the first row of the
-        profile section opened from the card. Plain-text rendering, a text
-        alternative for the photo, keyboard and screen-reader use. Check: hidden
+        `YYYYMMDD-XXXX`, name, date of birth, gender, origin, and the address.
+        A null address renders as `N/A` with an inline `!` affordance that shows
+        “Go to the Tax Office to update.” on hover and keyboard focus. Read-only,
+        with no permanent-validity text. The ID card icon is a 44px target; if
+        it cannot fit on the card at 320 px without making the card wider than
+        half the screen, put it in the first row of the profile section opened
+        from the card. Plain-text rendering, a text alternative for the photo,
+        keyboard and screen-reader use. Check: hidden
         before the card, shown after; the panel persists after reload, remains
         valid when the clock is moved forward, and exposes the update hint to
         pointer and keyboard users; no overlap at 320, 375 and 1024 px. - [ ]

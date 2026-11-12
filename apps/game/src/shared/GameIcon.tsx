@@ -1,7 +1,7 @@
 import type { ReactNode, SVGProps } from 'react';
 
 export type GameIconName =
-  | 'arrow-left' | 'book' | 'check' | 'clock' | 'compass' | 'goals'
+  | 'arrow-left' | 'book' | 'check' | 'clock' | 'compass' | 'goals' | 'id-card' | 'info'
   | 'logout' | 'map' | 'menu' | 'play' | 'refresh' | 'settings'
   | 'sound-off' | 'sound-on' | 'x';
 
@@ -16,6 +16,12 @@ const paths: Record<GameIconName, ReactNode> = {
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
   compass: <><circle cx="12" cy="12" r="9" /><path d="m15.5 8.5-2 5-5 2 2-5Z" /></>,
   goals: <><path d="M6 4h12v17l-6-3-6 3Z" /><path d="M9 8h6M9 12h4" /></>,
+  'id-card': <>
+    <rect x="2.75" y="4.25" width="18.5" height="15.5" rx="3" />
+    <circle cx="8" cy="10" r="2.15" />
+    <path d="M4.9 16c.65-1.65 1.7-2.45 3.1-2.45s2.45.8 3.1 2.45M13.75 9h4.4M13.75 12.5h4.4M13.75 16h2.8" />
+  </>,
+  info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>,
   logout: <><path d="M10 5H5v14h5" /><path d="M13 8l4 4-4 4M17 12H9" /></>,
   map: <><path d="m3 6 5-3 8 3 5-3v15l-5 3-8-3-5 3Z" /><path d="M8 3v15M16 6v15" /></>,
   menu: <path d="M5 7h14M5 12h14M5 17h14" />,

@@ -1,6 +1,6 @@
 import type { StationScreenProps } from "../types/ui/gameplay";
-import { useCallback, useState } from "react";
-import { GAME_TIME_RATE, type StationSpeaker } from "@life-abroad/shared";
+import { useCallback, useEffect, useState } from "react";
+import { GAME_TIME_RATE, type IdCardResponse, type StationSpeaker } from "@life-abroad/shared";
 import GameCanvas from "./GameCanvas";
 import ConversationPanel from "./ConversationPanel";
 import { DialogueFrame } from "./DialogueFrame";
@@ -51,6 +51,7 @@ import {
 } from "../features/tax-office/tax-office-staff";
 import { GameIcon } from "../shared/GameIcon";
 import { OverlayButton } from "./OverlayButton";
+import { loadIdCard } from "../api/client";
 
 type ClosedVenueNotice = Readonly<{
   location: ClosedVenueLocation;
@@ -82,6 +83,9 @@ export default function StationScreen({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [idCard, setIdCard] = useState<IdCardResponse | null | undefined>(
+    practice ? null : undefined,
+  );
   const [closedVenue, setClosedVenue] = useState<ClosedVenueNotice | null>(null);
   const [closedVenueExitSignal, setClosedVenueExitSignal] = useState(0);
   const [activeMapId, setActiveMapId] = useState<string>(
@@ -102,6 +106,17 @@ export default function StationScreen({
   const [exitReminder, setExitReminder] = useState(false);
   const pwa = usePwa();
   const { runAuthenticated } = useSession();
+  const refreshIdCard = useCallback(async () => {
+    if (practice) return;
+    try {
+      setIdCard(await runAuthenticated(loadIdCard));
+    } catch {
+      setIdCard(current => current ?? null);
+    }
+  }, [practice, runAuthenticated]);
+  useEffect(() => {
+    void refreshIdCard();
+  }, [refreshIdCard]);
   const loadTutorialSpeechAudio = useCallback(
     (pageId: Parameters<typeof loadTutorialSpeech>[1]) =>
       runAuthenticated((token) => loadTutorialSpeech(token, pageId)),
@@ -195,7 +210,7 @@ export default function StationScreen({
         }}
       />
       <div
-        className="station-hud pointer-events-none absolute left-[max(8px,env(safe-area-inset-left))] right-[max(8px,env(safe-area-inset-right))] top-[max(8px,env(safe-area-inset-top))] flex items-start justify-between gap-2"
+        className="station-hud pointer-events-none absolute inset-x-0 top-[max(8px,env(safe-area-inset-top))] flex items-start justify-between gap-2 px-[max(8px,env(safe-area-inset-left))] pr-[max(8px,env(safe-area-inset-right))]"
         inert={Boolean(life?.sleepTransition)}
       >
         <div className="flex flex-col items-start gap-1">
@@ -204,6 +219,7 @@ export default function StationScreen({
             playerName={playerName}
             cityName={displayedCountryName}
             coins={coins}
+            idCard={idCard}
             onOpenProfile={() => setProfileOpen(true)}
             visible={!overlayOpen || profileOpen}
           />
@@ -231,15 +247,15 @@ export default function StationScreen({
           ) : null}
         </div>
 
-        <aside className="pointer-events-auto flex h-8 items-center rounded-lg border border-border/60 bg-dialogue px-2 text-left shadow-sm sm:h-9">
+        <aside className="pointer-events-auto absolute left-1/2 top-0 flex h-8 -translate-x-1/2 items-center rounded-lg border border-border/60 bg-dialogue px-1.5 text-left shadow-sm sm:h-9 sm:px-2">
           <span
-            className="shrink-0 text-xs tabular-nums text-ink"
+            className="shrink-0 text-[11px] tabular-nums text-ink sm:text-xs"
             aria-label={`Game time ${timeLabel}`}
           >
             <span className="inline-flex items-center gap-1">
               <GameIcon
                 name="clock"
-                className="size-3.5"
+                className="size-3 sm:size-3.5"
               />
               {timeLabel}
             </span>
@@ -320,6 +336,7 @@ export default function StationScreen({
           cityName={displayedCountryName}
           xp={xp}
           coins={coins}
+          idCard={idCard}
           {...(life ? { life } : {})}
           online={arrival?.online ?? pwa.online}
           practice={practice}
@@ -353,6 +370,7 @@ export default function StationScreen({
           countryName={countryName}
           onClose={() => setNpcId(null)}
           onRefresh={async () => {
+            await refreshIdCard();
             await life?.refresh();
             await worldClock.refresh();
             await presence.refresh();
