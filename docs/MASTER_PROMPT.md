@@ -33,7 +33,8 @@ Before changing code:
 3. Read `docs/TECH.md` and `docs/GAME.md` only to the extent relevant to the
    selected task.
 4. Read any applicable nested `AGENTS.md` files.
-5. Work on a new branch checked out from dev and merge into dev when completed.
+5. Work on a new `feat/<name>` branch checked out from `dev`. Never commit, merge
+   or push; the user owns that (see §7).
 6. Inspect the relevant existing source code, tests, contracts, and data
    structures.
 
@@ -46,9 +47,6 @@ in the current session.
 ## 2. Select the Task
 
 - If I specify a task ID, implement that task only.
-
-  the dev branch and merge into the dev branch when the task is completed
-
 - Otherwise, select the highest-priority uncompleted, unblocked task from the
   `NOW` section of `docs/TASKS.md`.
 - Check the task's acceptance criteria, dependencies, and affected features.
@@ -88,10 +86,15 @@ Perform a brief impact assessment:
 - What contracts, data models, or tests need updates?
 - What risks or regressions need checking?
 
-For simple tasks, implement directly.
+This file is the **Task-driven mode** entry point defined in the root `AGENTS.md`:
+my prompt counts as plan approval, so do not stop for "OK". The mandatory
+`planner` → `coder` → `reviewer` pipeline still applies.
+
+For simple tasks, the plan is one or two lines in chat; implement directly.
 
 For complex tasks, communicate a concise implementation plan before coding. Keep
-the plan in the conversation, not in a new file.
+the plan in the conversation, not in a new file. Do not wait for approval unless
+there is a critical ambiguity.
 
 Ask questions only when a critical ambiguity prevents a safe implementation.
 Otherwise, use the simplest approach consistent with existing architecture and
@@ -164,7 +167,10 @@ Follow these principles:
 
 ## 6. Verification and Quality
 
-After implementation:
+After implementation, the `reviewer` stage (see `AGENTS.md` and
+`.agents/skills/reviewer`) is **mandatory** and runs automatically. If it finds
+problems, the reviewer and coder exchange messages (max 3 rounds) and the
+exchange is shown to me. Checks:
 
 1. Review the diff for unintended changes.
 2. Run relevant type checks, lint checks, and tests supported by the project.
@@ -216,6 +222,8 @@ Report results concisely using this format:
 
 **Verification:** Checks run and their results.
 
+**Coder ↔ Reviewer log:** Issues exchanged per round, or "No issues found".
+
 **User testing checklist:** Separate **Client** browser/UI checks from
 **Backend/API** checks. For each applicable test, give its **Precondition**,
 exact **Input/Action** and observable **Expected output**. Omit only fields that
@@ -248,4 +256,5 @@ Prioritize, in order:
 5. Efficient use of time, context, and resources
 
 **Start now: identify the next eligible task in `docs/TASKS.md`, implement it,
-verify it, update its status if complete, report briefly, and stop.**
+run the reviewer stage, verify it, update its status if complete (only after the
+reviewer passes), report briefly, and stop.**
