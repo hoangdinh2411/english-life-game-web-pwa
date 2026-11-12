@@ -28,6 +28,14 @@ interface CardRow {
   updated_at: Date;
 }
 
+function normalizeAddress(address: string | null): string | null {
+  if (address === null) return null;
+  const value = address.trim();
+  return /^(?:i\s+)?(?:don['’]?t|do\s+not)\s+have(?:\s+any)?\s+(?:an?\s+)?(?:permanent\s+)?address(?:\s+(?:right\s+now|yet))?$/i.test(value)
+    ? null
+    : value;
+}
+
 @Injectable()
 export class IdCardService {
   constructor(private readonly database: DatabaseService, private readonly images: IdCardImageService,
@@ -48,7 +56,7 @@ export class IdCardService {
       number: formatIdCardNumber(card.number),
       fullName: card.full_name,
       birthDate: this.dateOnly(card.birth_date),
-      address: card.address,
+      address: normalizeAddress(card.address),
       gender: card.gender,
       origin: card.origin,
       photoUrl: card.photo_path ? await this.storage.signedUrl(card.photo_path) : null,
@@ -123,7 +131,7 @@ export class IdCardService {
           if (image && photoPath) { await this.storage.upload(photoPath, image); uploaded = true; }
           await client.query(`UPDATE public.player_id_card SET full_name=$2,birth_date=$3,address=$4,
             gender=$5,origin=$6,photo_path=COALESCE($7,photo_path),updated_at=now() WHERE user_id=$1`,
-          [userId, application.name, application.date_of_birth, application.address, application.gender, application.origin, photoPath]);
+          [userId, application.name, application.date_of_birth, normalizeAddress(application.address), application.gender, application.origin, photoPath]);
           await client.query(`INSERT INTO public.id_card_issue_requests
             (user_id,idempotency_key,conversation_id,photo_hash) VALUES ($1,$2,$3,$4)`,
           [userId, body.idempotencyKey, body.conversationId, photoHash]);
@@ -140,7 +148,7 @@ export class IdCardService {
         await client.query(`INSERT INTO public.player_id_card
           (user_id,number,full_name,birth_date,address,gender,origin,photo_path)
           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-        [userId, number, application.name, application.date_of_birth, application.address, application.gender, application.origin, photoPath]);
+        [userId, number, application.name, application.date_of_birth, normalizeAddress(application.address), application.gender, application.origin, photoPath]);
         await client.query(`INSERT INTO public.id_card_issue_requests
           (user_id,idempotency_key,conversation_id,photo_hash) VALUES ($1,$2,$3,$4)`,
         [userId, body.idempotencyKey, body.conversationId, photoHash]);

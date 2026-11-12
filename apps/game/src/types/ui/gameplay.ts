@@ -1,4 +1,5 @@
 import type { PlayerLocation, StationSpeaker } from "@life-abroad/shared";
+import type { IdCardResponse } from "@life-abroad/shared";
 import type { ReactNode } from "react";
 import type { ArrivalGoal } from "../gameplay/goals";
 import type { LifeControls } from "../../features/life/useLife";
@@ -29,8 +30,8 @@ export interface PlayerInfoCardProps {
   playerName: string;
   cityName: string;
   coins: number;
+  idCard?: IdCardResponse | null | undefined;
   visible?: boolean;
-
   onOpenProfile: () => void;
 }
 export interface DialogueMessageProps {
