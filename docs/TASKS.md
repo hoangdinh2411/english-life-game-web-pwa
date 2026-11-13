@@ -384,7 +384,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         state. Check: the contract rejects unknown intents, duplicate modifiers,
         a modifier equal to the primary intent, and profiles with no or unknown
         allowed intents.
-  - [ ] **b. Shared lexicon and deterministic detector.** Implement one pure
+  - [x] **b. Shared lexicon and deterministic detector.** Implement one pure
         detector (no I/O, no state) plus one shared authored lexicon. Phrases
         use a minimal DSL: words, optional parts `(please)`, alternatives `a|b`
         and `{topic}` placeholders; the DSL is compiled once and validated by

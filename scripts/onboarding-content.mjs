@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
-import { dialogueSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, practiceDialogueNodeSchema, VENUE_HOURS, voicePoolsSchema } from '../packages/shared/dist/index.js';
+import { compileIntentLexicon, dialogueSchema, moodCatalogSchema, npcCatalogSchema, questCatalogSchema, SHOP_NPC_IDS, shopCatalogSchema, streetNpcContentSchema, practiceDialogueNodeSchema, VENUE_HOURS, voicePoolsSchema } from '../packages/shared/dist/index.js';
 
 async function readJson(file) {
   try {
@@ -70,4 +70,10 @@ for (const [id, node] of Object.entries(station.nodes)) {
   const result = practiceDialogueNodeSchema.safeParse(node);
   if (!result.success) throw new Error(`station.json: ${id}: ${result.error.message}`);
 }
-process.stdout.write('Validated NPCs, quests, shop items, authored dialogue and station practice nodes.\n');
+const intentLexicon = await readJson('packages/shared/src/dialogue/content/intent-lexicon.json');
+try {
+  compileIntentLexicon(intentLexicon);
+} catch (error) {
+  throw new Error(`intent-lexicon.json:\n${error.message}`);
+}
+process.stdout.write('Validated NPCs, quests, shop items, authored dialogue, station practice nodes and intent lexicon.\n');

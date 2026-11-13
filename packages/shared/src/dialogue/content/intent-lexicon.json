@@ -1,0 +1,129 @@
+{
+  "fillers": [
+    "sorry", "please", "kindly", "right now", "now", "well", "um", "uh", "oh", "just", "actually",
+    "thanks", "thank you", "sir", "madam", "miss", "excuse me", "a", "an", "the", "any", "my"
+  ],
+  "negations": ["not", "no", "never", "without"],
+  "negationAuxiliaries": ["do", "does", "did", "can", "could", "will", "would"],
+  "clauseSeparators": ["but", "and"],
+  "contractions": {
+    "cannot": "can not", "dont": "do not", "cant": "can not", "wont": "will not",
+    "won't": "will not", "can't": "can not", "i'll": "i will", "i'm": "i am", "i've": "i have",
+    "it's": "it is", "that's": "that is"
+  },
+  "topics": {
+    "address": ["address", "home address", "street address", "home", "house", "flat", "apartment", "place to live"],
+    "phone": ["phone", "phone number", "telephone", "mobile", "mobile number"],
+    "email": ["email", "email address", "mail"]
+  },
+  "compatible": [
+    ["deny", "not_available"],
+    ["deny", "unknown"],
+    ["deny", "provide_later"],
+    ["deny", "cancel"],
+    ["confirm", "provide_later"],
+    ["not_available", "provide_later"],
+    ["unknown", "provide_later"],
+    ["not_available", "unknown"]
+  ],
+  "phrases": [
+    {
+      "intent": "confirm",
+      "mode": "literal",
+      "patterns": [
+        "yes|yeah|yep|yup|sure|ok|okay|exactly|correct|right|definitely|absolutely",
+        "(yes) go ahead",
+        "(yes) confirm|confirmed",
+        "(yes) do it",
+        "(yes) (it|that) is right|correct|fine|good",
+        "looks good|sounds good|all good",
+        "(yes) issue (it|card|id card)"
+      ]
+    },
+    {
+      "intent": "deny",
+      "mode": "literal",
+      "patterns": [
+        "no|nope|nah",
+        "no way",
+        "not really",
+        "(no) change|redo (it|this)"
+      ]
+    },
+    {
+      "intent": "deny",
+      "mode": "negated",
+      "patterns": [
+        "(i) need|want|like (it|that|id card|this)",
+        "that (is) right|correct"
+      ]
+    },
+    {
+      "intent": "cancel",
+      "mode": "literal",
+      "patterns": [
+        "cancel",
+        "cancel it|this|that|order",
+        "(i) (want|would like) to cancel",
+        "(i) (want|would like) to cancel it|this|that|order",
+        "stop",
+        "never mind|nevermind",
+        "forget it",
+        "(i) changed mind"
+      ]
+    },
+    {
+      "intent": "unknown",
+      "mode": "literal",
+      "patterns": [
+        "no idea|clue",
+        "i (really) have no idea|clue"
+      ]
+    },
+    {
+      "intent": "unknown",
+      "mode": "negated",
+      "patterns": [
+        "(i) know",
+        "(i) (am) sure",
+        "(i) remember",
+        "(i) (have) idea|clue",
+        "(i) understand"
+      ]
+    },
+    {
+      "intent": "not_available",
+      "mode": "negated",
+      "patterns": [
+        "(i) (have) one",
+        "(i) (have) {topic}",
+        "(i) have it|that (with me)",
+        "there is {topic}",
+        "(it) (is) available"
+      ]
+    },
+    {
+      "intent": "not_available",
+      "mode": "literal",
+      "patterns": [
+        "none",
+        "nothing",
+        "(i) (am) homeless"
+      ]
+    },
+    {
+      "intent": "provide_later",
+      "mode": "literal",
+      "patterns": [
+        "(i) will|can provide|give|bring|send|tell (it|that|this|them|{topic}) later|tomorrow",
+        "(i) will|can provide|give|bring|send|tell (it|that|this|them|{topic}) next time",
+        "(i) will|can provide|give|bring|send|tell (it|that|this|them|{topic}) another time",
+        "later|tomorrow",
+        "next time",
+        "another time",
+        "(i) (will) come|be back later|tomorrow",
+        "(i) (will) come|be back with (it|that|this|{topic}) later|tomorrow"
+      ]
+    }
+  ]
+}
