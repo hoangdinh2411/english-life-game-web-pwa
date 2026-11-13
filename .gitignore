@@ -11,3 +11,5 @@ coverage/
 /local-assets/
 /supabase/.temp/
 /supabase/.branches/
+.antigravity/plan.md
+.antigravity/current-task.md
