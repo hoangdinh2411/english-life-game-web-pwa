@@ -49,7 +49,8 @@ test('ID-card address question: unavailable answers store null and advance to or
   for (const input of [
     "I don't have any address right now", "Sorry, I don't have any address right now",
     "I don't have one, but I'll provide it later", 'I do not have an address yet', "I'll update it later",
-    'I am staying at a hotel', 'I have no permanent address',
+    'I am staying at a hotel', 'I am in temporary accommodation right now.', "I don't know my address yet",
+    'I have no permanent address', 'I no have address', "I don't know", 'nothing', 'no',
   ]) {
     const { state, say } = idCardFixture({ current_field: 'address', origin: null, address: null });
     const reply = await say(input);
@@ -59,41 +60,32 @@ test('ID-card address question: unavailable answers store null and advance to or
   }
 });
 
-test('ID-card address question: a real address is stored; skip asks again and changes nothing', async () => {
+test('ID-card address question: a real address is stored; skip and mixed wording ask again and change nothing', async () => {
   const stored = idCardFixture({ current_field: 'address', origin: null, address: null });
   await stored.say('12 Maple Street');
   assert.deepEqual([stored.state.row?.address, stored.state.row?.current_field], ['12 Maple Street', 'origin']);
 
-  const skipped = idCardFixture({ current_field: 'address', origin: null, address: null });
-  const retry = await skipped.say('skip');
-  assert.deepEqual([skipped.state.row?.address, skipped.state.row?.current_field], [null, 'address']);
-  assert.match(retry!.responseText, /Sorry, what’s your address/);
-});
-
-test('ID-card address question: current gaps — unlisted wordings are stored as the address text', async () => {
-  // These literals are saved today; T40.b/c replace this with intent detection.
-  for (const input of ['I no have address', "I don't know", 'nothing']) {
-    const { state, say } = idCardFixture({ current_field: 'address', origin: null, address: null });
-    await say(input);
-    assert.equal(state.row?.address, input);
-    assert.equal(state.row?.current_field, 'origin');
+  for (const input of ['skip', 'no, cancel']) {
+    const skipped = idCardFixture({ current_field: 'address', origin: null, address: null });
+    const retry = await skipped.say(input);
+    assert.deepEqual([skipped.state.row?.address, skipped.state.row?.current_field], [null, 'address'], input);
+    assert.match(retry!.responseText, /Sorry, what’s your address/, input);
   }
 });
 
-test('ID-card cancellation: only the exact application phrases cancel; bare "cancel" is a field answer', async () => {
-  for (const input of ['cancel my application', 'Stop the application', 'Cancel the application.']) {
-    const { state, say } = idCardFixture({ current_field: 'dateOfBirth' });
-    const reply = await say(input);
-    assert.equal(state.row, null, input);
-    assert.equal(reply?.metadata.intent, 'cancel_id_card_application');
+test('ID-card cancellation: cancel intents clear the application in any question state', async () => {
+  for (const input of ['cancel my application', 'Stop the application', 'Cancel the application.', 'cancel']) {
+    for (const current_field of ['dateOfBirth', 'address', 'review'] as const) {
+      const { state, say } = idCardFixture({ current_field });
+      const reply = await say(input);
+      assert.equal(state.row, null, `${current_field}: ${input}`);
+      assert.equal(reply?.metadata.intent, 'cancel_id_card_application');
+    }
   }
-  const bare = idCardFixture({ current_field: 'name', origin: null });
-  await bare.say('cancel');
-  assert.deepEqual([bare.state.row?.name, bare.state.row?.current_field], ['cancel', 'dateOfBirth']);
 });
 
 test('ID-card review: yes-like answers submit, no-like answers open corrections, other answers re-ask', async () => {
-  for (const input of ['yes', 'Yes, please', 'yes issue my card', 'correct', 'That is correct']) {
+  for (const input of ['yes', 'Yes, please', 'yes issue my card', 'correct', 'That is correct', 'Sure', 'ok', 'Exactly']) {
     const { state, say } = idCardFixture({ current_field: 'review' });
     const reply = await say(input);
     assert.equal(reply?.metadata.idCardSubmit, true, input);
@@ -105,7 +97,7 @@ test('ID-card review: yes-like answers submit, no-like answers open corrections,
     assert.equal(reply?.metadata.intent, 'correct_id_card_application', input);
     assert.equal(state.row?.current_field, 'correction', input);
   }
-  for (const input of ['Sure', 'ok', 'Exactly', 'maybe', 'yes, but change it']) {
+  for (const input of ['maybe', 'yes, but change it', 'yes, later', 'yes and no']) {
     const { state, say } = idCardFixture({ current_field: 'review' });
     const reply = await say(input);
     assert.equal(reply?.metadata.idCardSubmit, undefined, input);
@@ -207,6 +199,9 @@ test('cafe confirm: affirmatives mixed with extra words, negation or a change ne
   const refused = await say('I do not want it', order);
   assert.equal(refused.intent, 'clarify');
   assert.equal(refused.seller.pendingOrder?.orderId, order.orderId);
+  const later = await say('yes, later', order);
+  assert.equal(later.intent, 'clarify');
+  assert.equal(later.seller.pendingOrder?.orderId, order.orderId);
   assert.deepEqual(calls.fulfilled, []);
 });
 

@@ -33,7 +33,8 @@ const configs = [
   { locationId: 'cafe', serviceNpcIds: ['npc_mia', 'npc_cafe_waiter'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_cafe_customer'], ambientCount: { min: 0, max: 1 }, spawnZoneIds: ['cafe_customers'], exclusionZoneIds: ['cafe_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
   { locationId: 'corner_cafe', serviceNpcIds: ['npc_corner_cup_seller', 'npc_corner_cup_assistant'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_corner_cup_customer_1', 'npc_corner_cup_customer_2', 'npc_corner_cup_customer_3'], ambientCount: { min: 1, max: 2 }, spawnZoneIds: ['corner_cafe_customers_left', 'corner_cafe_customers_right'], exclusionZoneIds: ['corner_cafe_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
   { locationId: 'clothes', serviceNpcIds: ['npc_clothes_seller', 'npc_clothes_assistant'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_clothes_customer'], ambientCount: { min: 0, max: 1 }, spawnZoneIds: ['clothes_customers'], exclusionZoneIds: ['clothes_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
-  { locationId: 'tax_office', serviceNpcIds: ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia'], optionalStaffNpcIds: [], ambientNpcPool: [], ambientCount: { min: 0, max: 0 }, spawnZoneIds: [], exclusionZoneIds: [], timeBuckets: ['morning', 'daytime'] },
+  // TODO(undo-24h-tax-office): restore `timeBuckets: ['morning', 'daytime']` when reverting 24/24 hours.
+  { locationId: 'tax_office', serviceNpcIds: ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia'], optionalStaffNpcIds: [], ambientNpcPool: [], ambientCount: { min: 0, max: 0 }, spawnZoneIds: [], exclusionZoneIds: [], timeBuckets: ['morning', 'daytime', 'evening'] },
 ] as const satisfies readonly VenueNpcConfig[];
 
 const registry = new Map(configs.map(config => [config.locationId, validateVenueNpcConfig(config, catalog)]));

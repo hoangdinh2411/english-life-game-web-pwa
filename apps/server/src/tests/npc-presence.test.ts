@@ -40,14 +40,15 @@ test('NPC-05 fails closed for unscheduled street NPCs and constrains store fallb
   assert.equal(npcIsPresent(clothes, 'loc_clothes', local('mon', 20 * 60)), false);
 });
 
-test('Tax Office staff follow their authored opening-hours schedule', () => {
+test('Tax Office staff are present 24/24 for testing while remaining absent on other maps', () => {
   const clerk = { id: 'npc_tax_clerk_nadia', location_id: 'loc_tax_office',
     profile: scheduled([{ days: ['mon'], start: '08:00', end: '16:00', locationId: 'loc_tax_office' }]) };
-  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('mon', 7 * 60 + 59)), false);
+  // TODO(undo-24h-tax-office): restore `false` at mon 07:59, mon 16:00, and sun 23:00 on loc_tax_office.
+  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('mon', 7 * 60 + 59)), true);
   assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('mon', 8 * 60)), true);
   assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('mon', 15 * 60 + 59)), true);
-  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('mon', 16 * 60)), false);
-  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('sun', 23 * 60)), false);
+  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('mon', 16 * 60)), true);
+  assert.equal(npcIsPresent(clerk, 'loc_tax_office', local('sun', 23 * 60)), true);
   assert.equal(npcIsPresent(clerk, 'loc_town_street', local('sun', 23 * 60)), false);
 });
 

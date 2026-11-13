@@ -7,7 +7,7 @@ const source = await readFile(new URL('../src/features/id-card/use-id-card-photo
 test('ID-card review is conversational and has no separate issue button', () => {
   assert.match(source, /send\(label === 'uploaded photo' \? 'Use this photo' : 'Use my character picture',/);
   assert.match(source, /application\?\.mode === 'edit'/);
-  assert.match(source, /phase === 'review' && isIdCardConfirmation\(text\)/);
+  assert.match(source, /phase === 'review' \? detectContextIntent\(text, ID_CARD_REVIEW_PROFILE\) : null/);
   assert.match(source, /send\(text, \{ stream: false \}\)/);
   assert.match(source, /await waitForAcknowledgement\(\)/);
   assert.match(source, /setPhase\('reviewing'\)/);
