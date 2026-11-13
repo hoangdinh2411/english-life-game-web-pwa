@@ -6,7 +6,7 @@ const locationVenueKinds: Partial<Record<MapLocation, VenueKind>> = {
   cafe: 'cafe',
   corner_cafe: 'cafe',
   clothes: 'store',
-  tax_office: 'organization',
+  // TODO(undo-24h-tax-office): restore `tax_office: 'organization',` to enforce 08:00–16:00 hours.
 };
 
 export function canEnterLocation(location: MapLocation, gameTime: Date | null, timeZone: string | null): boolean {

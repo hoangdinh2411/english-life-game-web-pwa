@@ -1,5 +1,8 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { isIdCardConfirmation, normalizeDialogue, type IdCardApplicationField, type IdCardApplicationSummary, type TurnMetadata } from '@life-abroad/shared';
+import {
+  detectContextIntent, ID_CARD_ADDRESS_PROFILE, ID_CARD_FIELD_PROFILE, ID_CARD_REVIEW_PROFILE, normalizeDialogue,
+  type IdCardApplicationField, type IdCardApplicationSummary, type TurnMetadata,
+} from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
 import type { ArrivalState } from '@life-abroad/shared';
 import { IdCardApplicationContentService } from './id-card-application-content.service';
@@ -52,21 +55,8 @@ const matchesIntentPhrase = (input: string, phrases: readonly string[]): boolean
   });
 };
 
-const containsPhrase = (input: string, phrases: readonly string[]): boolean => {
-  const value = normalized(input);
-  return phrases.some(phrase => {
-    const target = normalized(phrase);
-    return value === target || value.includes(` ${target} `) || value.startsWith(`${target} `) || value.endsWith(` ${target}`);
-  });
-};
-
-const addressUnavailable = (input: string, phrases: readonly string[]): boolean => {
-  if (containsPhrase(input, phrases)) return true;
-  const value = normalized(input);
-  const mentionsAddress = /\b(?:address|permanent address|place to live|accommodation)\b/.test(value);
-  const unavailable = /\b(?:dont|do not) (?:currently |still )?have\b|\bhave no\b|\bdont know\b|\bno permanent address\b/.test(value);
-  return mentionsAddress && unavailable;
-};
+const profileFor = (field: IdCardApplicationField) => field === 'review' ? ID_CARD_REVIEW_PROFILE
+  : field === 'address' ? ID_CARD_ADDRESS_PROFILE : ID_CARD_FIELD_PROFILE;
 
 @Injectable()
 export class IdCardApplicationService {
@@ -116,7 +106,9 @@ export class IdCardApplicationService {
       application = await this.start(client, userId);
       return this.result(application.current_field, content.prompts.name, arrival, 'register_id_card');
     }
-    if (matchesPhrase(input, content.cancellationPhrases)) {
+    const intent = detectContextIntent(input, profileFor(application.current_field));
+    const singleIntent = intent.status === 'matched' && intent.modifiers.length === 0 ? intent.primary : null;
+    if (singleIntent === 'cancel') {
       await this.clear(client, userId);
       return this.result('cancelled', content.cancelled, arrival, 'cancel_id_card_application');
     }
@@ -137,7 +129,7 @@ export class IdCardApplicationService {
       return this.result(current, content.prompts.photo, arrival, 'await_id_card_photo');
     }
     if (current === 'review') {
-      if (isIdCardConfirmation(input)) {
+      if (singleIntent === 'confirm') {
         const reply = this.result(current, 'Thank you. I will issue your ID card now.', arrival, 'confirm_id_card_application');
         return { ...reply, metadata: { ...reply.metadata, idCardSubmit: true } };
       }
@@ -146,7 +138,7 @@ export class IdCardApplicationService {
         await this.update(client, userId, field, null, null);
         return this.result(field, content.correctionPrompts[field], arrival, 'select_id_card_correction');
       }
-      if (/^(?:no|nope|not correct|that is wrong)$/i.test(input.trim())) {
+      if (singleIntent === 'deny') {
         await this.update(client, userId, 'correction', null, null);
         return this.result('correction', content.prompts.correction, arrival, 'correct_id_card_application');
       }
@@ -160,7 +152,11 @@ export class IdCardApplicationService {
     }
 
     const answerField = current as EditableApplicationField;
-    const hasNoAddress = answerField === 'address' && addressUnavailable(input, content.addressNullPhrases);
+    // Clear "no address" wording stores null; mixed or contradictory wording asks again.
+    if (answerField === 'address' && intent.status === 'unclear' && intent.reason !== 'no_match') {
+      return this.result(answerField, content.retries.address, arrival, null);
+    }
+    const hasNoAddress = answerField === 'address' && intent.status === 'matched';
     const parsed = answerField === 'name' ? plainText(input, 60)
       : answerField === 'dateOfBirth' ? parseIdCardBirthDate(input)
         : answerField === 'address' ? (hasNoAddress ? null : plainText(input, 120))
@@ -197,7 +193,8 @@ export class IdCardApplicationService {
       ? `${application.date_of_birth.getFullYear()}-${String(application.date_of_birth.getMonth() + 1).padStart(2, '0')}-${String(application.date_of_birth.getDate()).padStart(2, '0')}`
       : application.date_of_birth;
     const content = await this.content.get();
-    if (application.address && addressUnavailable(application.address, content.addressNullPhrases)) {
+    const savedAddress = application.address ? detectContextIntent(application.address, ID_CARD_ADDRESS_PROFILE) : null;
+    if (savedAddress?.status === 'matched' && savedAddress.primary !== 'cancel') {
       await client.query('UPDATE public.id_card_applications SET address=NULL,updated_at=now() WHERE user_id=$1', [userId]);
       application.address = null;
     }

@@ -82,10 +82,13 @@ test('T36.d issues one card/photo and exact retries do not upload or insert agai
 
 test('T36.e generates date-prefixed numbers with parity and shared display formatting', () => {
   const birthDate = new Date('1995-02-28T00:00:00.000Z');
+  const localMidnight = new Date(1992, 10, 24);
   const male = generateIdCardNumber(birthDate, 'male');
   const female = generateIdCardNumber(birthDate, 'female');
+  const localNumber = generateIdCardNumber(localMidnight, 'male');
   assert.match(male, /^19950228\d{4}$/);
   assert.match(female, /^19950228\d{4}$/);
+  assert.match(localNumber, /^19921124\d{4}$/);
   assert.equal(Number(male.at(-1)) % 2, 1);
   assert.equal(Number(female.at(-1)) % 2, 0);
   assert.equal(formatIdCardNumber('199502280007'), '19950228-0007');

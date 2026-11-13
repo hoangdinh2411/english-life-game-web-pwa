@@ -47,12 +47,14 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
     assert.match(review!.responseText, /Date of birth: 1995-02-28/);
     assert.match(review!.responseText, /Address: 12 Maple Street/);
     assert.match(review!.responseText, new RegExp(`Gender: ${user.rows[0]!.gender}`));
-    assert.match(review!.responseText, /Where you come from: Vietnam/);
-    assert.match(review!.responseText, /Photo: character picture\./);
+    assert.match(review!.responseText, /Country of origin: Vietnam/);
+    assert.doesNotMatch(review!.responseText, /Photo:/);
     assert.match(review!.responseText, /change anything.*issue the ID card/i);
     const confirmation = await service.reply(client, userId, 'Yes, issue my card', arrival);
+    const replayConfirmation = await service.reply(client, userId, 'Yes, issue my card', arrival);
     assert.equal(confirmation?.metadata.intent, 'confirm_id_card_application');
     assert.equal(confirmation?.metadata.idCardSubmit, true);
+    assert.deepEqual(replayConfirmation, confirmation);
 
     const saved = await client.query<{ current_field: string; name: string; date_of_birth: string;
       address: string | null; gender: string; origin: string }>(`SELECT current_field,name,date_of_birth,address,gender,origin
@@ -63,14 +65,18 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
       gender: saved.rows[0]!.gender, origin: saved.rows[0]!.origin },
     { name: 'Test Learner', address: '12 Maple Street', gender: user.rows[0]!.gender, origin: 'Vietnam' });
     assert.equal(saved.rows[0]!.date_of_birth, '1995-02-28');
+    assert.match((await service.reply(client, userId, 'maybe', arrival))!.responseText, /change anything.*issue the ID card/i);
     assert.match((await service.reply(client, userId, 'no', arrival))!.responseText, /What would you like to change/i);
-    assert.match((await service.reply(client, userId, 'address', arrival))!.responseText, /What’s your address/i);
+    assert.match((await service.reply(client, userId, 'address', arrival))!.responseText, /What address should I use/i);
 
     const phrases = [
       "I don't have an address yet",
+      "Sorry, I don't have any address right now",
+      "I don't have one, but I'll provide it later",
       "I'll add it later",
-      'I just arrived and I am staying at a hotel while I look for a flat.',
+      'I am staying at a hotel',
       'I am in temporary accommodation right now.',
+      'I no have address',
     ];
     for (const phrase of phrases) {
       await client.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId]);

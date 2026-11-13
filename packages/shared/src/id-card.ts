@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { defineContextProfile } from './dialogue/intent-contract';
 
 const authoredText = z.string().trim().min(1);
 
@@ -9,8 +10,6 @@ export const idCardApplicationFieldSchema = z.enum([
 export const idCardApplicationContentSchema = z.object({
   version: z.literal(1),
   registrationPhrases: z.array(authoredText).min(1),
-  cancellationPhrases: z.array(authoredText).min(1),
-  addressNullPhrases: z.array(authoredText).min(1),
   prompts: z.object({
     name: authoredText,
     dateOfBirth: authoredText,
@@ -88,8 +87,12 @@ export type IssueIdCardBody = z.infer<typeof issueIdCardBodySchema>;
 export type IdCardIssueResponse = z.infer<typeof idCardIssueResponseSchema>;
 export type IdCardResponse = z.infer<typeof idCardResponseSchema>;
 
-export function isIdCardConfirmation(input: string): boolean {
-  const normalized = input.trim().toLowerCase().replace(/[’]/g, "'")
-    .replace(/[^a-z0-9']+/g, ' ').trim();
-  return ['yes', 'yes please', 'yes issue my card', 'correct', 'that is correct'].includes(normalized);
-}
+// Data-only state profiles for the ID-card application flow (T40.c).
+export const ID_CARD_REVIEW_PROFILE = defineContextProfile({
+  id: 'id_card_review', allowedIntents: ['confirm', 'deny', 'cancel', 'provide_later'],
+});
+export const ID_CARD_ADDRESS_PROFILE = defineContextProfile({
+  id: 'id_card_address', allowedIntents: ['cancel', 'not_available', 'unknown', 'provide_later'],
+  bareWords: { no: 'not_available' },
+});
+export const ID_CARD_FIELD_PROFILE = defineContextProfile({ id: 'id_card_field', allowedIntents: ['cancel'] });

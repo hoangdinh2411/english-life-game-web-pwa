@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { isIdCardConfirmation, type IdCardApplicationSummary, type PlayerGender } from '@life-abroad/shared';
+import { detectContextIntent, ID_CARD_REVIEW_PROFILE, type IdCardApplicationSummary, type PlayerGender } from '@life-abroad/shared';
 import { GameButton } from '../../gameplay/GameButton';
 import { playerPortraitPresentation } from '../../gameplay/portraits';
 import { prepareIdPhoto } from './photo-processing';
@@ -67,7 +67,8 @@ export function useIdCardPhotoFlow({ application, gender, send, waitForAcknowled
     setPhase('review');
   };
   const wrappedSend = async (text: string): Promise<boolean> => {
-    if (phase === 'review' && isIdCardConfirmation(text)) {
+    const decision = phase === 'review' ? detectContextIntent(text, ID_CARD_REVIEW_PROFILE) : null;
+    if (decision?.status === 'matched' && decision.primary === 'confirm' && decision.modifiers.length === 0) {
       if (!confirmationSaved) {
         const sent = await send(text, { stream: false }); if (!sent) return false;
         setConfirmationSaved(true);

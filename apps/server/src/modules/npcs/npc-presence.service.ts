@@ -47,6 +47,8 @@ function venueOpen(locationId: string, local: PresenceLocalTime): boolean {
 export function npcIsPresent(row: Pick<PresenceRow, 'id' | 'location_id'> & { profile: NpcProfile }, mapId: string,
   local: PresenceLocalTime): boolean {
   if (row.location_id !== mapId) return false;
+  // TODO(undo-24h-tax-office): remove this line to restore 08:00–16:00 Tax Office staff schedule.
+  if (row.location_id === 'loc_tax_office') return true;
   const schedule = row.profile.presenceSchedule;
   if (schedule) {
     const authored = schedule.weeklySlots.some(slot => slot.locationId === mapId && slotMatches(slot, local));

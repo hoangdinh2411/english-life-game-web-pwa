@@ -401,7 +401,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         have one, but I'll provide it later”; also prove that the same words
         resolve differently under two different profiles, and that a test-only
         profile works with data alone.
-  - [ ] **c. Domain-owned decisions and authored clarification.** Migrate the
+  - [x] **c. Domain-owned decisions and authored clarification.** Migrate the
         ID-card application (server service and the client photo-review
         confirmation, using the same pure shared detector) and one seller path:
         the cafe pending-order confirm/cancel. Each domain provides a profile

@@ -1,10 +1,16 @@
 import { randomUUID } from 'node:crypto';
 import { ConflictException, Injectable } from '@nestjs/common';
-import { normalizeDialogue, type PendingOrder, type SellerState, type ShopItem } from '@life-abroad/shared';
+import { defineContextProfile, detectContextIntent, normalizeDialogue, type PendingOrder, type SellerState, type ShopItem } from '@life-abroad/shared';
 import { PoolClient } from 'pg';
 import { DialogueService, type DialogueContext } from '../dialogue/dialogue.service';
 import { LifeService } from '../life/life.service';
 import { ConversationsRepository, sellerState, type ConversationRow } from './conversations.repository';
+
+// Intents the cafe accepts while an order is pending. A bare "no" cancels the order.
+const CAFE_ORDER_PROFILE = defineContextProfile({
+  id: 'cafe_pending_order', allowedIntents: ['confirm', 'deny', 'cancel', 'provide_later'],
+  bareWords: { no: 'cancel', nope: 'cancel', 'not now': 'cancel' },
+});
 
 interface SellerReply { text: string; intent: string; misunderstood: boolean; seller: SellerState; nodeId?: string; drinkPaid?: boolean; drinkOrdered?: boolean; greeted?: boolean }
 
@@ -54,8 +60,10 @@ export class SellerService {
     const items = catalog.rows;
     const matches = namedItems(text, items);
     const start = await this.dialogue.node(context, 'seller_start');
-    // Authored keywords route dialogue; confirmation additionally requires a
-    // complete affirmative phrase so "yes, but change it" cannot spend money.
+    // Authored keywords route dialogue; confirm/cancel come from the shared intent
+    // detector, and a confirmation with any extra wording ("yes, later") never pays.
+    const decision = detectContextIntent(input, CAFE_ORDER_PROFILE);
+    const answer = decision.status === 'matched' && decision.modifiers.length === 0 ? decision.primary : null;
     const route = start.node.intents?.find(intent => intent.keywords.some(keyword => contains(text, keyword)))?.name;
     const greeted = start.node.intents?.find(intent => intent.name === 'greet')?.keywords.some(keyword => contains(text, keyword)) ?? false;
     if (!route && !matches.length && !/\b(?:want|order|buy|change|make|instead|would like|can i have)\b/.test(text)) {
@@ -70,7 +78,7 @@ export class SellerService {
     const values: Record<string, string> = {};
     if (route === 'directions') intent = 'directions';
     else if (route === 'goodbye') { intent = 'goodbye'; order = null; closed = true; }
-    else if (route === 'cancel' || /^(?:no|no thanks|no thank you|not now)(?: please)?$/.test(text)) {
+    else if (route === 'cancel' || answer === 'cancel') {
       intent = 'cancel'; order = null;
     } else if (route === 'ask_menu') {
       intent = 'ask_menu'; values.menu = items.map(item => `${item.name}: $${item.price}`).join('; ');
@@ -78,8 +86,8 @@ export class SellerService {
       intent = matches.length === 1 ? 'ask_price' : 'ask_menu';
       if (matches.length === 1) { values.item = matches[0]!.name; values.price = String(matches[0]!.price); }
       else values.menu = items.map(item => `${item.name}: $${item.price}`).join('; ');
-    } else if (/\b(?:don't|do not|not|never)\b/.test(text)) intent = 'clarify';
-    else if (/^(?:yes|yes please|yes thank you|ok|okay|sure|confirm|confirm my order|please confirm|that is correct|that's correct|go ahead|i confirm)$/.test(text)) {
+    } else if (answer === 'deny' || /\b(?:don't|do not|not|never)\b/.test(text)) intent = 'clarify';
+    else if (answer === 'confirm') {
       intent = 'no_order';
       if (!order && ['seller_start', 'seller_greet'].includes(row.current_node_id ?? '')) {
         intent = 'ask_menu'; values.menu = items.map(item => `${item.name}: $${item.price}`).join('; ');

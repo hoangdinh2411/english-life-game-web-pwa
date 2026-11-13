@@ -1,6 +1,6 @@
 {
   "fillers": [
-    "sorry", "please", "kindly", "right now", "now", "well", "um", "uh", "oh", "just", "actually",
+    "sorry", "please", "kindly", "right now", "now", "yet", "well", "um", "uh", "oh", "just", "actually",
     "thanks", "thank you", "sir", "madam", "miss", "excuse me", "a", "an", "the", "any", "my"
   ],
   "negations": ["not", "no", "never", "without"],
@@ -12,7 +12,7 @@
     "it's": "it is", "that's": "that is"
   },
   "topics": {
-    "address": ["address", "home address", "street address", "home", "house", "flat", "apartment", "place to live"],
+    "address": ["address", "home address", "permanent address", "street address", "home", "house", "flat", "apartment", "place to live"],
     "phone": ["phone", "phone number", "telephone", "mobile", "mobile number"],
     "email": ["email", "email address", "mail"]
   },
@@ -33,7 +33,7 @@
       "patterns": [
         "yes|yeah|yep|yup|sure|ok|okay|exactly|correct|right|definitely|absolutely",
         "(yes) go ahead",
-        "(yes) confirm|confirmed",
+        "(yes|i) confirm|confirmed (it|that|this|order)",
         "(yes) do it",
         "(yes) (it|that) is right|correct|fine|good",
         "looks good|sounds good|all good",
@@ -47,7 +47,8 @@
         "no|nope|nah",
         "no way",
         "not really",
-        "(no) change|redo (it|this)"
+        "(no) change|redo (it|this)",
+        "(that|it) (is) wrong|incorrect"
       ]
     },
     {
@@ -55,7 +56,8 @@
       "mode": "negated",
       "patterns": [
         "(i) need|want|like (it|that|id card|this)",
-        "that (is) right|correct"
+        "that (is) right|correct",
+        "correct|right"
       ]
     },
     {
@@ -64,6 +66,8 @@
       "patterns": [
         "cancel",
         "cancel it|this|that|order",
+        "cancel|stop application",
+        "(i) (want|would like) to cancel|stop application",
         "(i) (want|would like) to cancel",
         "(i) (want|would like) to cancel it|this|that|order",
         "stop",
@@ -84,7 +88,7 @@
       "intent": "unknown",
       "mode": "negated",
       "patterns": [
-        "(i) know",
+        "(i) know (it|that|this|{topic})",
         "(i) (am) sure",
         "(i) remember",
         "(i) (have) idea|clue",
@@ -108,7 +112,11 @@
       "patterns": [
         "none",
         "nothing",
-        "(i) (am) homeless"
+        "(i) (am) homeless",
+        "(i) (am) staying|living at|in|with hotel|friends|family",
+        "(i) (am|have) (in) temporary accommodation",
+        "(i) (am) between homes",
+        "(i) (am) looking for {address}"
       ]
     },
     {
@@ -119,6 +127,7 @@
         "(i) will|can provide|give|bring|send|tell (it|that|this|them|{topic}) next time",
         "(i) will|can provide|give|bring|send|tell (it|that|this|them|{topic}) another time",
         "later|tomorrow",
+        "(i) will|can update|add (it|that|this|{topic}) later|tomorrow",
         "next time",
         "another time",
         "(i) (will) come|be back later|tomorrow",

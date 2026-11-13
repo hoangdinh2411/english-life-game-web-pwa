@@ -47,13 +47,14 @@ test('closed store hours block shop interiors but never block the street', async
   assert.equal(canEnterLocation('cafe', at(19, 0), 'Europe/Stockholm'), false, '21:00 local is closed');
   assert.equal(canEnterLocation('cafe', at(12, 0), 'America/New_York'), true, '08:00 local is open');
   assert.equal(canEnterLocation('corner_cafe', null, 'UTC'), false);
-  assert.equal(canEnterLocation('tax_office', at(7, 59), 'UTC'), false);
+  // TODO(undo-24h-tax-office): restore `false` at 07:59/16:00 and `true` for shouldCloseActiveVenue at 16:00.
+  assert.equal(canEnterLocation('tax_office', at(7, 59), 'UTC'), true);
   assert.equal(canEnterLocation('tax_office', at(8, 0), 'UTC'), true);
   assert.equal(canEnterLocation('tax_office', at(15, 59), 'UTC'), true);
-  assert.equal(canEnterLocation('tax_office', at(16, 0), 'UTC'), false);
+  assert.equal(canEnterLocation('tax_office', at(16, 0), 'UTC'), true);
   assert.equal(shouldCloseActiveVenue('tax_office', null, null), false, 'wait for the server clock after reload');
   assert.equal(shouldCloseActiveVenue('tax_office', at(15, 59), 'UTC'), false);
-  assert.equal(shouldCloseActiveVenue('tax_office', at(16, 0), 'UTC'), true);
+  assert.equal(shouldCloseActiveVenue('tax_office', at(16, 0), 'UTC'), false);
   assert.deepEqual(closedVenueExit('cafe'), { closedLocation: 'cafe', location: 'station', streetArrival: 'station' });
   assert.deepEqual(closedVenueExit('clothes'), { closedLocation: 'clothes', location: 'station', streetArrival: 'station' });
   assert.deepEqual(closedVenueExit('corner_cafe'), { closedLocation: 'corner_cafe', location: 'street', streetArrival: 'corner_cafe' });

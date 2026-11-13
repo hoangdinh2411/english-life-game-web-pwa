@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  CONTEXT_INTENT_IDS, contextProfileSchema, defineContextProfile, detectIntent, farewellClosing,
-  intentResultSchema, isIdCardConfirmation, serviceContinuationIntent, stationReply,
+  CONTEXT_INTENT_IDS, contextProfileSchema, defineContextProfile, detectContextIntent, detectIntent, farewellClosing,
+  ID_CARD_ADDRESS_PROFILE, ID_CARD_FIELD_PROFILE, ID_CARD_REVIEW_PROFILE, intentResultSchema, serviceContinuationIntent, stationReply,
 } from '../dist/index.js';
 
 // T40.a characterization: records today's behavior of the legacy matchers so the
@@ -50,12 +50,36 @@ test('farewellClosing: yes-like, no-like and any other answer', () => {
   assert.equal(farewellClosing('maybe'), other);
 });
 
-test('isIdCardConfirmation: exact phrases only, no negation, no partial matches', () => {
-  for (const input of ['yes', 'Yes, please', 'Yes issue my card!', 'Yes, issue my card', 'correct', 'That is correct']) {
-    assert.equal(isIdCardConfirmation(input), true, input);
+test('ID-card review confirmation (T40.c): clear confirmations only, never with extra wording or negation', () => {
+  const confirms = (input) => {
+    const result = detectContextIntent(input, ID_CARD_REVIEW_PROFILE);
+    return result.status === 'matched' && result.primary === 'confirm' && result.modifiers.length === 0;
+  };
+  for (const input of ['yes', 'Yes, please', 'Yes issue my card!', 'Yes, issue my card', 'correct', 'That is correct', 'Sure', 'ok']) {
+    assert.equal(confirms(input), true, input);
   }
-  for (const input of ['no', 'Sure', 'Exactly', 'ok', 'yes, but change it', 'yes change my name', 'not correct', '']) {
-    assert.equal(isIdCardConfirmation(input), false, input);
+  for (const input of ['no', 'yes, but change it', 'yes change my name', 'yes, later', 'not correct', 'maybe', '']) {
+    assert.equal(confirms(input), false, input);
+  }
+  assert.deepEqual(detectContextIntent('not correct', ID_CARD_REVIEW_PROFILE), { status: 'matched', primary: 'deny', modifiers: [] });
+  assert.deepEqual(detectContextIntent('That is wrong', ID_CARD_REVIEW_PROFILE), { status: 'matched', primary: 'deny', modifiers: [] });
+  assert.deepEqual(detectContextIntent('cancel my application', ID_CARD_REVIEW_PROFILE), { status: 'matched', primary: 'cancel', modifiers: [] });
+  assert.deepEqual(detectContextIntent('Stop the application', ID_CARD_FIELD_PROFILE), { status: 'matched', primary: 'cancel', modifiers: [] });
+  assert.equal(detectContextIntent('William', ID_CARD_FIELD_PROFILE).status, 'unclear');
+});
+
+test('ID-card address intents: unavailable wording is detected, real addresses are not', () => {
+  const unavailable = (input) => {
+    const result = detectContextIntent(input, ID_CARD_ADDRESS_PROFILE);
+    return result.status === 'matched' && result.primary !== 'cancel';
+  };
+  for (const input of ["Sorry, I don't have any address right now", "I don't have one, but I'll provide it later",
+    'I do not have an address yet', "I'll update it later", 'I have no permanent address', 'I am staying at a hotel',
+    'I am in temporary accommodation right now.', "I don't know my address yet", 'no', "I don't know", 'I no have address']) {
+    assert.equal(unavailable(input), true, input);
+  }
+  for (const input of ['12 Maple Street', 'cancel', 'yes', 'I live at Flat 5']) {
+    assert.equal(unavailable(input), false, input);
   }
 });
 

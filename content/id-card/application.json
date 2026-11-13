@@ -13,37 +13,6 @@
     "without an id card",
     "new id card"
   ],
-  "cancellationPhrases": [
-    "cancel my application",
-    "cancel the application",
-    "stop my application",
-    "stop the application"
-  ],
-  "addressNullPhrases": [
-    "i don't have an address yet",
-    "i do not have an address yet",
-    "i don't have any address right now",
-    "i do not have any address right now",
-    "i don't have an address right now",
-    "i do not have an address right now",
-    "i don't know my address yet",
-    "i have no permanent address",
-    "i don't have a permanent address",
-    "i'll update it later",
-    "i will update it later",
-    "i'll add it later",
-    "i will add it later",
-    "i'll provide it later",
-    "i will provide it later",
-    "i am staying with friends",
-    "i am staying with family",
-    "i am staying at a hotel",
-    "i am living in a hotel",
-    "i am in temporary accommodation",
-    "i have temporary accommodation",
-    "i am looking for a place to live",
-    "i am between homes"
-  ],
   "prompts": {
     "name": "Of course. I can help you with that. What’s your full name?",
     "dateOfBirth": "Thanks. When were you born?",
