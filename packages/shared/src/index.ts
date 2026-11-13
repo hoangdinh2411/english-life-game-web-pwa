@@ -9,6 +9,7 @@ export * from './auth';
 export * from './station';
 export * from './dialogue/language';
 export * from './dialogue/intent-contract';
+export * from './dialogue/intent-detector';
 export * from './dialogue/metadata';
 export * from './dialogue/questions';
 export * from './content';
