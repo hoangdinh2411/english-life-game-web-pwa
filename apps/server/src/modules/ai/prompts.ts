@@ -1,4 +1,12 @@
-import { AiReplyRequest } from './ai-provider';
+import {
+  DEFAULT_INTENT_LEXICON, intentResultSchema,
+  type CompiledIntentLexicon, type ContextIntentId, type ContextProfile, type IntentResult,
+} from '@life-abroad/shared';
+import { AiPrompt, AiReplyRequest } from './ai-provider';
+
+export const AI_INTENT_CONFIDENCE_THRESHOLD = 0.75;
+
+const ALLOWED_AI_INTENT_KEYS = new Set(['status', 'primary', 'modifiers', 'reason', 'confidence']);
 
 export const NPC_SYSTEM_PROMPT = [
   'You are an NPC in Life Abroad, an English-learning game.',
@@ -28,4 +36,87 @@ export function npcSystemPrompt(responseLevel: string, store: boolean): string {
 
 export function npcUserPrompt(request: AiReplyRequest): string {
   return request.prompt ? request.text : `Resident: ${request.npcId}\nPlayer message: ${request.text}`;
+}
+
+function areCompatible(
+  intents: readonly ContextIntentId[],
+  lexicon: CompiledIntentLexicon,
+): boolean {
+  for (let i = 0; i < intents.length; i += 1) {
+    for (let j = i + 1; j < intents.length; j += 1) {
+      const a = intents[i]!;
+      const b = intents[j]!;
+      if (!lexicon.source.compatible.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+export function intentClassificationPrompt(
+  profile: Pick<ContextProfile, 'id' | 'allowedIntents' | 'topicAliases'>,
+): AiPrompt {
+  const allowed = profile.allowedIntents.join(', ');
+  const topics = profile.topicAliases && Object.keys(profile.topicAliases).length > 0
+    ? ` Topic aliases: ${JSON.stringify(profile.topicAliases)}.`
+    : '';
+  return {
+    system: [
+      'Classify the learner message for a low-risk Life Abroad conversation state.',
+      `Context profile: ${profile.id}.`,
+      `Allowed intents: [${allowed}].${topics}`,
+      'Choose only from the allowed intents. Never invent intents, state changes, prices, rewards or personal data.',
+      'Return strict JSON only: {"status":"matched","primary":"<allowed_intent>","modifiers":[],"confidence":0.0} or {"status":"unclear","reason":"no_match"|"ambiguous"|"conflicting","confidence":0.0}.',
+    ].join(' '),
+    history: [],
+  };
+}
+
+export function validateAiIntentOutput(
+  rawOutput: unknown,
+  profile: Pick<ContextProfile, 'allowedIntents'>,
+  lexicon: CompiledIntentLexicon = DEFAULT_INTENT_LEXICON,
+): IntentResult {
+  if (typeof rawOutput !== 'string' || !rawOutput.trim()) {
+    return { status: 'unclear', reason: 'no_match' };
+  }
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(rawOutput);
+  } catch {
+    return { status: 'unclear', reason: 'no_match' };
+  }
+  if (typeof decoded !== 'object' || decoded === null || Array.isArray(decoded)) {
+    return { status: 'unclear', reason: 'no_match' };
+  }
+  const record = decoded as Record<string, unknown>;
+  if (Object.keys(record).some(key => !ALLOWED_AI_INTENT_KEYS.has(key))) {
+    return { status: 'unclear', reason: 'no_match' };
+  }
+  const { confidence, ...candidate } = record;
+  if (confidence !== undefined && (typeof confidence !== 'number' || !Number.isFinite(confidence) || confidence < 0 || confidence > 1)) {
+    return { status: 'unclear', reason: 'no_match' };
+  }
+  const parsed = intentResultSchema.safeParse(candidate);
+  if (!parsed.success) {
+    return { status: 'unclear', reason: 'no_match' };
+  }
+  if (parsed.data.status === 'unclear') {
+    return parsed.data;
+  }
+  if (typeof confidence !== 'number') {
+    return { status: 'unclear', reason: 'no_match' };
+  }
+  if (confidence < AI_INTENT_CONFIDENCE_THRESHOLD) {
+    return { status: 'unclear', reason: 'ambiguous' };
+  }
+  const intents = [parsed.data.primary, ...parsed.data.modifiers];
+  if (intents.some(intent => !profile.allowedIntents.includes(intent))) {
+    return { status: 'unclear', reason: 'no_match' };
+  }
+  if (!areCompatible(intents, lexicon)) {
+    return { status: 'unclear', reason: 'conflicting' };
+  }
+  return parsed.data;
 }
