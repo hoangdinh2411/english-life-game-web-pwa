@@ -27,6 +27,7 @@ test('T36.c keeps ordered answers in server state, resumes, and maps approved ad
     assert.equal(user.rowCount, 1, 'the supplied test account must already exist');
     const userId = user.rows[0]!.id;
     await client.query('DELETE FROM public.id_card_applications WHERE user_id=$1', [userId]);
+    await client.query('DELETE FROM public.player_id_card WHERE user_id=$1', [userId]);
 
     const registration = await service.reply(client, userId, 'I need to register an ID card', arrival);
     assert.equal(registration?.nodeId, 'tax_office_application_name');
