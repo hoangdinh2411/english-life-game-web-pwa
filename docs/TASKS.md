@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36f–T36g; T38.1–T38.6;
-T39.1–T39.5; S2–S7.
+T39.1–T39.5; T40.a–T40.e; S2–S7.
 
 ## How to work
 
@@ -346,7 +346,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         validation fails for a missing step or an unknown NPC, and the AI
         evaluation shows no ID card data in any prompt.
 
-- [ ] **T40 — Shared contextual intent detection.** Replace feature-owned
+- [x] **T40 — Shared contextual intent detection.** Replace feature-owned
       sentence lists and ad-hoc confirmation regexes with one small,
       deterministic intent layer reused by stateful conversations. Build on the
       existing dialogue pipeline and `normalizeDialogue`; do not create a second
@@ -432,7 +432,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         exact exception. Check with a mocked provider: rules bypass AI; allowed
         low-risk fallback resolves; unknown output fails closed; no
         sensitive/state payload reaches the provider.
-  - [ ] **e. Verification and extension guide.** Run focused detector and domain
+  - [x] **e. Verification and extension guide.** Run focused detector and domain
         tests, content validation, typecheck, lint and the relevant integration
         tests. Update `docs/TECH.md` with one short extension route showing how
         a future domain supplies context, allowlisted intents, authored patterns

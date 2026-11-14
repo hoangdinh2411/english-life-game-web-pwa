@@ -255,6 +255,64 @@ storage used by streamed AI chat.
 consumed across client/server. Authored quest/NPC/dialogue content stays in
 `content/`; don't hide it in TypeScript components or controllers.
 
+### Adding a stateful NPC conversation (shared contextual intents)
+
+Service-style NPCs (tax office, café, clothes shop, station receptionist and
+future stores or buildings) share one deterministic intent layer in
+`packages/shared/src/dialogue/intent-contract.ts` (`defineContextProfile`) and
+`packages/shared/src/dialogue/intent-detector.ts` (`detectContextIntent`),
+backed by `packages/shared/src/dialogue/content/intent-lexicon.json`. Entity
+extraction (quantities, catalog items, dates, addresses) remains domain-owned.
+
+- **Owner inputs required:** conversation states and the question asked in each;
+  accepted intents per state (`confirm`, `deny`, `cancel`, `unknown`,
+  `not_available`, `provide_later`); optional bare-word readings and topic
+  aliases; authored replies and clarification copy; and the domain transition
+  each accepted intent performs.
+- **Files to add or edit:**
+  - Profile data: `packages/shared/src/<domain>.ts` (when shared with the
+    client) or `apps/server/src/modules/conversations/<domain>.service.ts`.
+  - Shared lexicon (only for missing reusable phrases or topics):
+    `packages/shared/src/dialogue/content/intent-lexicon.json`.
+  - Authored replies and clarification copy: `content/dialogue/*.json` or
+    `content/<domain>/*.json`.
+  - Domain handler: `apps/server/src/modules/conversations/<domain>.service.ts`
+    (plus a client hook under `apps/game/src/features/<feature>/` only when
+    browser-local confirmation is required).
+  - Focused tests: `packages/shared/tests/intent-detector.test.mjs` and
+    `apps/server/src/tests/<domain>.test.ts`.
+- **Forbidden shortcuts:** no new regexes or feature-owned phrase lists for
+  reusable intents; no detector-core changes (`intent-contract.ts`,
+  `intent-detector.ts`) for a new venue; no `aiFallback: true` on ID-card,
+  economy, quest-reward or purchase states.
+- **Agent checklist:**
+  1. Pick or add the conversation states that need a typed answer.
+  2. For each state add one `ContextProfile` (`allowedIntents`, optional
+     `bareWords` readings, optional `topicAliases`).
+  3. Add only the missing phrases to the shared lexicon, never to the domain.
+  4. Add authored replies and clarification copy to the NPC's content JSON and
+     run `pnpm content:validate`.
+  5. Write the domain handler that maps accepted intents to its own validated
+     transitions, with `unclear` leaving state unchanged and asking again.
+  6. Add tests (profile resolves, `unclear` is a no-op, replay is idempotent).
+  7. Run `pnpm typecheck`, `pnpm lint`, `pnpm test` and `pnpm content:validate`.
+
+Copy-paste request for adding a new place/NPC conversation:
+
+```text
+Add the conversation for <PLACE / NPC id> following the shared intent
+extension route in docs/TECH.md. Do not add regex or change the
+detector core. Owner inputs:
+- States and the question asked in each: <...>
+- Accepted intents per state: <confirm/deny/cancel/unknown/
+  not_available/provide_later>
+- Topic aliases (if any): <...>
+- Authored replies and clarification copy: <...>
+- What each accepted intent does in this place: <...>
+Plan first, wait for my OK, implement only that place, run the checks,
+and stop.
+```
+
 ## Trust and data boundaries
 
 - Sound mute/volume remains device-local under `life-abroad.sound`; the legacy
