@@ -203,7 +203,18 @@ line. `AI_ENABLED` defaults off; set it to `true` only for intentional
 development tests. All supported NPCs check server scripts first. Pending
 orders/active NPC quests stay scripted. Unmatched messages reach the provider
 for every NPC, extending the available conversation topics after scripted
-dialogue has had priority. AI text never becomes a gameplay intent.
+dialogue has had priority. Free-form AI reply text never becomes a gameplay
+intent; the only exception is `AiService.classifyIntent`, which runs after
+deterministic rules (`detectContextIntent`) fail to match and only when a
+low-risk, non-sensitive `ContextProfile` explicitly sets `aiFallback: true`.
+That fallback sends only the scrubbed learner input, profile ID, fixed
+`allowedIntents` allowlist and optional `topicAliases` (never ID-card fields,
+private profile data, payment data or reward state), schema-validates the model
+JSON against the state's allowlist, modifier compatibility and confidence
+threshold (`>= 0.75`), and fails closed to `unclear` on invalid, unavailable,
+conflicting or low-confidence output; AI output never directly writes data or
+grants progress, and ID-card, economy, quest rewards and purchases use
+deterministic matching plus clarification only.
 `NpcPromptService.build` validates the strict authored NPC profile, then sends
 only an explicit personal-fact allowlist, place/city/country, opening status,
 effective mood, relationship stage and a bounded response level. The level

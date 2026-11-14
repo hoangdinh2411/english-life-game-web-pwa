@@ -417,7 +417,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         input changes nothing and asks again; confirm/deny/cancel preserve
         existing seller behavior; replay remains idempotent; the client photo
         review still confirms and rejects as before.
-  - [ ] **d. Constrained AI fallback policy.** Rules run first. AI intent
+  - [x] **d. Constrained AI fallback policy.** Rules run first. AI intent
         classification is allowed only for low-risk, non-sensitive conversation
         where the domain explicitly opts in; it receives no ID-card fields,
         private profile data, payment data or reward state. The model may choose

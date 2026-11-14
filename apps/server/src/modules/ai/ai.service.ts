@@ -1,10 +1,57 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import {
+  contextProfileSchema, DEFAULT_INTENT_LEXICON, detectContextIntent,
+  type CompiledIntentLexicon, type ContextProfile, type ContextProfileInput, type IntentResult,
+} from '@life-abroad/shared';
 import { DialogueContext, DialogueService } from '../dialogue/dialogue.service';
 import { AI_PROVIDER, AiProvider, AiPrompt } from './ai-provider';
 import { isSafeAiOutput, safeAiInput } from './ai-safety';
+import { intentClassificationPrompt, validateAiIntentOutput } from './prompts';
 
 export const AI_REPLY_TIMEOUT_MS = 20_000;
+
+const SENSITIVE_INTENT_PROFILE = /^(?:id_card|cafe|clothes|seller|shop|economy|payment|purchase|reward|quest)(?:_|$)/;
+const SAFE_CONTEXT_KEYS = new Set(['npcId', 'roleId', 'personality']);
+
+export interface AiIntentContext {
+  readonly npcId: string;
+  readonly privateNames?: readonly string[];
+  readonly [key: string]: unknown;
+}
+
+function collectRedactedTerms(context: AiIntentContext): string[] {
+  const terms = new Set<string>();
+  for (const name of context.privateNames ?? []) {
+    if (typeof name === 'string' && name.trim().length >= 2) terms.add(name.trim());
+  }
+  const visit = (value: unknown): void => {
+    if (typeof value === 'string') {
+      if (value.trim().length >= 2) terms.add(value.trim());
+    } else if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+    } else if (typeof value === 'object' && value !== null) {
+      for (const item of Object.values(value)) visit(item);
+    }
+  };
+  for (const [key, value] of Object.entries(context)) {
+    if (!SAFE_CONTEXT_KEYS.has(key) && key !== 'privateNames') visit(value);
+  }
+  return [...terms];
+}
+
+function scrubIntentInput(text: string, privateNames: readonly string[] = []): string {
+  let clean = text
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[private]')
+    .replace(/\b[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\b/gi, '[private]')
+    .replace(/\b\d{8}-?\d{4}\b/g, '[private]')
+    .replace(/\b(?:19|20)\d{2}-\d{2}-\d{2}\b/g, '[private]');
+  for (const name of privateNames.filter(candidate => candidate.trim())) {
+    const escaped = name.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    clean = clean.replace(new RegExp(escaped, 'gi'), '[private]');
+  }
+  return clean;
+}
 
 export interface AiReplyResult {
   text: string;
@@ -142,5 +189,53 @@ export class AiService {
   private streamResult(text: string, provider: string, model: string, inputTokens: number): AiReplyResult {
     const clean = text.trim();
     return { text: clean, provider, model, inputTokens, outputTokens: estimatedTokens(clean), fallback: false, usedProvider: true };
+  }
+
+  async classifyIntent(
+    context: string | AiIntentContext,
+    text: string,
+    profileInput: ContextProfile | ContextProfileInput,
+    signal?: AbortSignal,
+    lexicon: CompiledIntentLexicon = DEFAULT_INTENT_LEXICON,
+  ): Promise<IntentResult> {
+    const profile = contextProfileSchema.parse(profileInput);
+    const ruleResult = detectContextIntent(text, profile, lexicon);
+    if (ruleResult.status === 'matched' || ruleResult.reason === 'conflicting') {
+      return ruleResult;
+    }
+    if (!profile.aiFallback || !this.enabled || SENSITIVE_INTENT_PROFILE.test(profile.id)) {
+      return ruleResult;
+    }
+    const safeRaw = safeAiInput(text);
+    if (!safeRaw) return { status: 'unclear', reason: 'no_match' };
+    const npcId = typeof context === 'string' ? context : context.npcId;
+    const redactedTerms = typeof context === 'string' ? [] : collectRedactedTerms(context);
+    const safeText = safeAiInput(scrubIntentInput(safeRaw, redactedTerms));
+    if (!safeText) return { status: 'unclear', reason: 'no_match' };
+    if (signal?.aborted) throw signal.reason instanceof Error ? signal.reason : new Error('AI intent classification cancelled.');
+    const controller = new AbortController();
+    const cancel = (): void => controller.abort(signal?.reason);
+    signal?.addEventListener('abort', cancel, { once: true });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const timeout = new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => {
+          reject(new Error('AI intent classification timed out.'));
+          controller.abort();
+        }, AI_REPLY_TIMEOUT_MS);
+      });
+      const prompt = intentClassificationPrompt(profile);
+      const reply = await Promise.race([
+        this.provider.reply({ npcId, text: safeText, prompt }, controller.signal),
+        timeout,
+      ]);
+      return validateAiIntentOutput(reply, profile, lexicon);
+    } catch {
+      if (signal?.aborted) throw signal.reason instanceof Error ? signal.reason : new Error('AI intent classification cancelled.');
+      return { status: 'unclear', reason: 'no_match' };
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', cancel);
+    }
   }
 }
