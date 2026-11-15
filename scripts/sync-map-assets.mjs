@@ -59,6 +59,29 @@ export function assertUniqueAssetIdentities(assets) {
   }
 }
 
+export function deduplicateIdenticalAssets(assets) {
+  const uniqueAssets = [];
+  const firstAssetByIdentity = new Map();
+  for (const asset of assets) {
+    const identity = `${asset.npcId ?? ''}:${asset.key}`;
+    const existing = firstAssetByIdentity.get(identity);
+    if (!existing) {
+      firstAssetByIdentity.set(identity, asset);
+      uniqueAssets.push(asset);
+      continue;
+    }
+
+    const identical = existing.sha256 && existing.sha256 === asset.sha256
+      && existing.filename === asset.filename
+      && existing.mime === asset.mime
+      && existing.type === asset.type
+      && existing.bytes === asset.bytes;
+    if (!identical) uniqueAssets.push(asset);
+  }
+  assertUniqueAssetIdentities(uniqueAssets);
+  return uniqueAssets;
+}
+
 export async function syncMapAssets({ mapId, baseUrl, serviceKey, dryRun = false, fetcher = fetch }) {
   if (!supportedMaps.has(mapId)) throw new Error(`Unsupported map: ${mapId}`);
   const directory = join(assetRoot, mapId);
@@ -71,10 +94,10 @@ export async function syncMapAssets({ mapId, baseUrl, serviceKey, dryRun = false
     const bytes = await readFile(source.path);
     return { ...asset, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') };
   }));
-  assertUniqueAssetIdentities(localAssets);
+  const uniqueLocalAssets = deduplicateIdenticalAssets(localAssets);
   const response = await fetcher(`${baseUrl}/content/maps/${mapId}`, { signal: AbortSignal.timeout(15000) });
   const remoteAssets = response.status === 404 ? [] : response.ok ? (await response.json()).assets : (() => { throw new Error(`Asset metadata failed (${response.status})`); })();
-  const plan = planAssetSync(localAssets, remoteAssets);
+  const plan = planAssetSync(uniqueLocalAssets, remoteAssets);
   const changed = plan.filter(asset => asset.action !== 'skip');
   if (!dryRun) for (const asset of changed) {
     const data = await readFile(asset.path);

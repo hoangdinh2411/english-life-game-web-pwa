@@ -1,6 +1,6 @@
 import type { MapLocation, Point, StationCallbacks, StationGame, StationPortal } from '../types/gameplay/world';
 import Phaser from 'phaser';
-import { practiceStationAtlases, savedPlayerAtlas, stationAtlases, stationBackground } from './station-assets';
+import { practiceStationAtlases, savedPlayerAtlas, stationBackground } from './station-assets';
 import type { MapAsset, MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
@@ -162,7 +162,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         packRequest?.abort();
         if (currentPack) { unloadPack(currentPack, this, packAnimations); currentPack = null; packAnimations = []; }
         if (stationOwned && callbacks.practice) {
-          for (const atlas of stationAtlases) {
+          for (const atlas of practiceStationAtlases) {
             for (let row = 0; row < 4; row++) this.anims.remove(atlas.key === 'player' ? `walk-${row}` : `${atlas.key}-walk-${row}`);
             this.textures.remove(atlas.key);
           }
@@ -252,13 +252,13 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       if (activeLocation === 'station' && callbacks.practice && (!this.textures.exists('station')
         || practiceStationAtlases.some((atlas) => !this.textures.exists(atlas.key))
         || PRACTICE_REMOTE_NPCS.some(npc => !unavailableAmbientNpcIds.has(npc.id) && !this.textures.exists(npc.assetKey)))) return;
-      this.playerTexture = resources?.player ?? (callbacks.practice ? 'player' : savedPlayerTexture);
-      this.walkPrefix = resources?.walkPrefix ?? (callbacks.practice ? 'walk' : `${savedPlayerTexture}-walk`);
+      const usePackedPlayer = Boolean(currentPack && resources?.walkPrefix && !callbacks.practice && savedPlayerGender === 'male');
+      const fallbackPlayerTexture = callbacks.practice ? 'player' : savedPlayerTexture;
+      const fallbackWalkPrefix = callbacks.practice ? 'walk' : `${savedPlayerTexture}-walk`;
+      this.playerTexture = usePackedPlayer ? resources?.player ?? fallbackPlayerTexture : fallbackPlayerTexture;
+      this.walkPrefix = usePackedPlayer ? resources?.walkPrefix ?? fallbackWalkPrefix : fallbackWalkPrefix;
       this.sourcePlayerTexture = this.playerTexture;
       this.sourceWalkPrefix = this.walkPrefix;
-      if (!callbacks.practice && savedPlayerGender === 'male') {
-        this.textures.get(this.sourcePlayerTexture).setFilter(P.Textures.FilterMode.NEAREST);
-      }
       packAnimations = resources?.animationKeys ?? [];
       this.transitionPending = false;
       this.labels = [];
@@ -283,11 +283,11 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       }
       this.marker = this.add.circle(0, 0, 16, 0xf6df9e, 0.5).setStrokeStyle(3, 0x426f61).setVisible(false);
       // Station animation frames stay bundled; destination definitions come from Storage.
-      if (!currentPack || !callbacks.practice) for (let row = 0; row < 4; row++) {
+      if (!usePackedPlayer) for (let row = 0; row < 4; row++) {
         const key = `${this.walkPrefix}-${row}`;
         if (!this.anims.exists(key)) this.anims.create({ key, frames: Array.from({ length: 4 }, (_, column) => ({
           key: this.playerTexture,
-          frame: playerWalkFrame(row, column, Boolean(callbacks.practice && currentPack)),
+          frame: playerWalkFrame(row, column, usePackedPlayer),
         })), frameRate: 7, repeat: -1 });
       }
       if (appearance) this.applyAppearance();
@@ -391,7 +391,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         fontFamily: 'sans-serif', fontSize: '32px', fontStyle: 'bold', color: UI_COLORS.creamTextBright,
         backgroundColor: UI_COLORS.greenStrong, padding: { x: 18, y: 8 },
       }).setOrigin(0.5).setDepth(1500);
-      this.player = this.add.sprite(position.x, position.y, this.playerTexture, currentPack ? 0 : '0-0').setOrigin(0.5, 1).setScale(callbacks.practice ? 2 : savedPlayerScale);
+      this.player = this.add.sprite(position.x, position.y, this.playerTexture, usePackedPlayer ? 0 : '0-0').setOrigin(0.5, 1).setScale(callbacks.practice ? 2 : savedPlayerScale);
       this.keys = this.input.keyboard?.createCursorKeys();
       if (this.input.keyboard) {
         // Do not capture browser input: the text composer must retain normal typing.
@@ -623,7 +623,6 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     applyAppearance() {
       if (!this.textures.exists(this.sourcePlayerTexture)) return;
       this.playerTexture = paintPlayerTexture(this, this.sourcePlayerTexture, 'player:appearance', appearance, false);
-      if (savedPlayerGender === 'male') this.textures.get(this.playerTexture).setFilter(P.Textures.FilterMode.NEAREST);
       for (let row = 0; row < 4; row++) {
         const key = `appearance:walk-${row}`;
         if (!this.anims.exists(key)) {

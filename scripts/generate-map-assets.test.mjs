@@ -14,7 +14,7 @@ test('saveMapAssets packages existing artwork without replacing it with SVG plac
     assert.equal(directory, join(rootDirectory, 'loc_cafe'));
     assert.equal((await readdir(directory)).length, 13);
     assert.deepEqual(await readFile(join(directory, 'background.png')), await readFile(new URL('../apps/game/assets/locations/location_cafe_interior.png', import.meta.url)));
-    assert.deepEqual(await readFile(join(directory, 'player.png')), await readFile(new URL('../apps/game/assets/runtime/player.png', import.meta.url)));
+    assert.deepEqual(await readFile(join(directory, 'player.png')), await readFile(new URL('../apps/game/assets/runtime/player-male.png', import.meta.url)));
     const actors = JSON.parse(await readFile(join(directory, 'actors.json'), 'utf8')).actors;
     assert.equal(actors.length, 3);
     assert.equal(actors.find(actor => actor.npcId === 'npc_mia').texture, 'npc-npc_mia');

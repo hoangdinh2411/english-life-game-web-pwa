@@ -38,5 +38,17 @@
         "DY":  215,
         "DX":  200,
         "H":  220
+    },
+    {
+        "Y":  35,
+        "X":  120,
+        "DX":  210,
+        "FrameHeight":  192,
+        "DY":  270,
+        "W":  155,
+        "FrameWidth":  128,
+        "Name":  "player-male",
+        "H":  255,
+        "File":  "characters/character_newcomer_transparent.png"
     }
 ]

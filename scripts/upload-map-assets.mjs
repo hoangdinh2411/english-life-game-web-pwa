@@ -22,14 +22,22 @@ const [mapId = 'loc_town_street', extra] = positionalArgs;
 if (extra) throw new Error('Versions are assigned automatically from SHA-256 metadata.');
 const baseUrl = target === 'local'
   ? process.env.CONTENT_API_URL ?? 'http://127.0.0.1:3000/api/v1'
-  : target === 'staging' ? process.env.CONTENT_API_URL : process.env.PRODUCTION_CONTENT_API_URL;
+  : target === 'staging' ? process.env.STAGING_CONTENT_API_URL : process.env.PRODUCTION_CONTENT_API_URL;
 const serviceKey = target === 'local'
   ? process.env.SUPABASE_SERVICE_ROLE_KEY
-  : target === 'staging' ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.PRODUCTION_SUPABASE_SERVICE_ROLE_KEY;
-if (!baseUrl || (!dryRun && !serviceKey)) {
+  : target === 'staging' ? process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY : process.env.PRODUCTION_SUPABASE_SERVICE_ROLE_KEY;
+const urlVariable = target === 'local' ? 'CONTENT_API_URL'
+  : target === 'staging' ? 'STAGING_CONTENT_API_URL' : 'PRODUCTION_CONTENT_API_URL';
+const keyVariable = target === 'local' ? 'SUPABASE_SERVICE_ROLE_KEY'
+  : target === 'staging' ? 'STAGING_SUPABASE_SERVICE_ROLE_KEY' : 'PRODUCTION_SUPABASE_SERVICE_ROLE_KEY';
+const missingVariables = [
+  ...(!baseUrl ? [urlVariable] : []),
+  ...(!dryRun && !serviceKey ? [keyVariable] : []),
+];
+if (missingVariables.length > 0) {
   throw new Error(target === 'local'
-    ? `Local CONTENT_API_URL${dryRun ? '' : ' and SUPABASE_SERVICE_ROLE_KEY'} ${dryRun ? 'is' : 'are'} required. Start local Supabase and run supabase:env.`
-    : `${target === 'staging' ? 'STAGING' : 'PRODUCTION'}_CONTENT_API_URL and ${target === 'staging' ? 'STAGING' : 'PRODUCTION'}_SUPABASE_SERVICE_ROLE_KEY must be supplied through the deployment environment.`);
+    ? `Local ${missingVariables.join(' and ')} required. Start local Supabase and run supabase:env.`
+    : `${missingVariables.join(' and ')} must be supplied through the deployment environment.`);
 }
 
 const parsedUrl = new URL(baseUrl);

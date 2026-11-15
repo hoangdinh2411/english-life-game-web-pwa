@@ -112,7 +112,7 @@ async function mapAssets(mapId) {
   const source = sourceAsset;
   const assets = [
     { name: 'background.png', type: 'map', mime: 'image/png', data: await source(`locations/${backgrounds[mapId]}`) },
-    { name: 'player.png', type: 'spritesheet', mime: 'image/png', data: await source('runtime/player.png') },
+    { name: 'player.png', type: 'spritesheet', mime: 'image/png', data: await source('runtime/player-male.png') },
     { name: 'animations.json', type: 'animation', mime: 'application/json', data: JSON.stringify({ animations: Array.from({ length: 4 }, (_, row) => ({ key: `walk-${row}`, texture: 'player', frames: Array.from({ length: 4 }, (_, column) => row * 4 + column), frameRate: 7, repeat: -1 })) }) },
   ];
   if (mapId === 'loc_station') {

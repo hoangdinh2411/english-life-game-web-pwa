@@ -646,7 +646,12 @@ files, and automatically assigns the next immutable version. It never writes
 back to local files or deletes remote objects. `SUPABASE_SERVICE_ROLE_KEY` comes from ignored local server
 configuration; `CONTENT_API_URL` optionally overrides
 `http://127.0.0.1:3000/api/v1` and must remain on localhost for the local
-target. For an intentional production upload, run
+target. For the remote development environment, first inspect with
+`pnpm assets:upload -- --target staging --dry-run loc_town_street`, then publish
+with `pnpm assets:upload -- --target staging loc_town_street`. Supply
+`STAGING_CONTENT_API_URL` and `STAGING_SUPABASE_SERVICE_ROLE_KEY` through the
+deployment environment; the URL must be HTTPS and non-local. For an intentional
+production upload, run
 `pnpm assets:upload -- --target production loc_town_street` with
 `PRODUCTION_CONTENT_API_URL` and `PRODUCTION_SUPABASE_SERVICE_ROLE_KEY` supplied
 by the deployment environment. The URL must be HTTPS and non-local; the API must

@@ -1,8 +1,10 @@
 import station from '../../assets/locations/location_station_map_labeled.png';
 import player from '../../assets/runtime/player.png';
+import malePlayer from '../../assets/runtime/player-male.png';
 import femalePlayer from '../../assets/runtime/player-female-smooth.png';
 import receptionist from '../../assets/runtime/receptionist.png';
 import playerAtlas from '../../assets/runtime/player.json';
+import malePlayerAtlas from '../../assets/runtime/player-male.json';
 import receptionistAtlas from '../../assets/runtime/receptionist.json';
 import type { PlayerGender } from '@life-abroad/shared';
 
@@ -14,11 +16,11 @@ function assetUrl(asset: unknown): string {
 export const stationBackground = assetUrl(station);
 export const stationAtlases = [
   { key: 'player', url: assetUrl(player), data: playerAtlas },
-  { key: 'player-male', url: assetUrl(player), data: playerAtlas },
+  { key: 'player-male', url: assetUrl(malePlayer), data: malePlayerAtlas },
   { key: 'player-female', url: assetUrl(femalePlayer), data: playerAtlas },
   { key: 'receptionist', url: assetUrl(receptionist), data: receptionistAtlas },
 ];
-export const practiceStationAtlases = stationAtlases;
+export const practiceStationAtlases = stationAtlases.filter(atlas => atlas.key !== 'player-male');
 
 export function savedPlayerAtlas(gender: PlayerGender) {
   const atlas = stationAtlases.find(candidate => candidate.key === `player-${gender}`);
