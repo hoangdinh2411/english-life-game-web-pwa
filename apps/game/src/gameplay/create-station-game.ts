@@ -1,6 +1,6 @@
 import type { MapLocation, Point, StationCallbacks, StationGame, StationPortal } from '../types/gameplay/world';
 import Phaser from 'phaser';
-import { practiceStationAtlases, savedPlayerAtlas, stationAtlases, stationBackground } from './station-assets';
+import { practiceStationAtlases, savedPlayerAtlas, stationBackground } from './station-assets';
 import type { MapAsset, MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
