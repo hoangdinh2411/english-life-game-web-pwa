@@ -5,6 +5,10 @@ import { readFile } from 'node:fs/promises';
 import { inflateSync } from 'node:zlib';
 import { createServer } from 'vite';
 
+// Golden median bounds measured from the reviewed Nadia atlas in the Tax Office pack.
+// Keep these measurements in Git because local-assets/ is intentionally ignored.
+const NADIA_REFERENCE_BOUNDS = { width: 98, height: 156 };
+
 function pngSize(bytes) {
   assert.equal(bytes.toString('ascii', 1, 4), 'PNG');
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
@@ -79,24 +83,20 @@ try {
 
   test('male frame height and width align with Nadia after rendering at the NPC scale', async () => {
     const playerBytes = await readFile(new URL('../assets/runtime/player-male.png', import.meta.url));
-    const nadiaBytes = await readFile(new URL('../../../local-assets/maps/loc_tax_office/npc-npc_tax_clerk_nadia.png', import.meta.url));
     const { width, height } = pngSize(playerBytes);
     const { frame } = playerAssets('male');
     assert.deepEqual({ width, height }, { width: frame.width * 4, height: frame.height * 4 });
     const playerImage = decodeRgbaPng(playerBytes);
-    const nadiaImage = decodeRgbaPng(nadiaBytes);
-    assert.deepEqual({ width: nadiaImage.width, height: nadiaImage.height }, { width: frame.width * 4, height: frame.height * 4 });
     const playerFrames = visibleFrameBounds(playerImage, frame.width, frame.height);
-    const nadiaFrames = visibleFrameBounds(nadiaImage, frame.width, frame.height);
     const displayScale = playerAssets('male').displayScale;
-    assert.equal(median(nadiaFrames.map(frameBounds => frameBounds.height)), NPC_VISIBLE_HEIGHT);
+    assert.equal(NADIA_REFERENCE_BOUNDS.height, NPC_VISIBLE_HEIGHT);
     for (const [index, bounds] of playerFrames.entries()) {
       const displayedHeight = bounds.height * displayScale;
       assert.ok(Math.abs(displayedHeight - WORLD_NPC_VISIBLE_HEIGHT) <= 2,
         `male frame ${index} should match NPC height, received ${displayedHeight}`);
     }
     const playerWidth = median(playerFrames.map(bounds => bounds.width)) * displayScale;
-    const nadiaWidth = median(nadiaFrames.map(bounds => bounds.width)) * NPC_DISPLAY_SCALE;
+    const nadiaWidth = NADIA_REFERENCE_BOUNDS.width * NPC_DISPLAY_SCALE;
     assert.ok(Math.abs(playerWidth - nadiaWidth) / nadiaWidth <= 0.12,
       `expected player width to stay within 12% of Nadia, got ${playerWidth} versus ${nadiaWidth}`);
   });
