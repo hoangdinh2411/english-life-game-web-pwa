@@ -33,8 +33,54 @@ foreach ($sheet in $sheets) {
   @{ frames=$frames; meta=@{image=$sheet.Name+'.png';size=@{w=128;h=192};scale='1'} } | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $outputRoot $atlasJson)
   $graphics.Dispose(); $atlas.Dispose(); $source.Dispose()
 }
-$sheets | ConvertTo-Json | Set-Content (Join-Path $runtimeRoot 'extraction.json')
-Write-Output 'Exported four station atlases (16 frames each, 32x48).'
+$maleSheet = $sheets[0]
+$maleSource = [System.Drawing.Bitmap]::new((Resolve-SourcePath $maleSheet.File))
+$rawMaleAtlas = [System.Drawing.Bitmap]::new(512,768,[System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$rawMaleGraphics = [System.Drawing.Graphics]::FromImage($rawMaleAtlas)
+$rawMaleGraphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+$maleAtlas = [System.Drawing.Bitmap]::new(512,768,[System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$maleGraphics = [System.Drawing.Graphics]::FromImage($maleAtlas)
+$maleGraphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+$maleFrames = [ordered]@{}
+for ($row=0; $row -lt 4; $row++) { for ($column=0; $column -lt 4; $column++) {
+  $rect = [System.Drawing.Rectangle]::new($maleSheet.X+$column*$maleSheet.DX,$maleSheet.Y+$row*$maleSheet.DY,$maleSheet.W,$maleSheet.H)
+  $destination = [System.Drawing.Rectangle]::new($column*128,$row*192,128,192)
+  $rawMaleGraphics.DrawImage($maleSource,$destination,$rect,[System.Drawing.GraphicsUnit]::Pixel)
+} }
+for ($row=0; $row -lt 4; $row++) {
+  $bounds = @()
+  for ($column=0; $column -lt 4; $column++) {
+    $left=128; $right=-1; $top=192; $bottom=-1
+    for ($y=0; $y -lt 192; $y++) { for ($x=0; $x -lt 128; $x++) {
+      if ($rawMaleAtlas.GetPixel($column*128+$x,$row*192+$y).A -lt 16) { continue }
+      $left=[Math]::Min($left,$x); $right=[Math]::Max($right,$x)
+      $top=[Math]::Min($top,$y); $bottom=[Math]::Max($bottom,$y)
+    } }
+    if ($bottom -lt 0) { throw "Male player frame $row,$column has no visible pixels." }
+    $bounds += @{ Left=$left; Right=$right; Top=$top; Bottom=$bottom; Height=$bottom-$top+1 }
+  }
+  $heights = @($bounds | ForEach-Object { $_.Height } | Sort-Object)
+  $bottoms = @($bounds | ForEach-Object { $_.Bottom } | Sort-Object)
+  $medianHeight = ($heights[1]+$heights[2])/2
+  $medianBottom = ($bottoms[1]+$bottoms[2])/2
+  $rowScale = 156/$medianHeight
+  for ($column=0; $column -lt 4; $column++) {
+    $targetWidth=[Math]::Round(128*$rowScale)
+    $targetHeight=[Math]::Round(192*$rowScale)
+    $targetX=$column*128+[Math]::Round((128-$targetWidth)/2)
+    $targetY=$row*192+[Math]::Round(184-$medianBottom*$rowScale)
+    $sourceRect=[System.Drawing.Rectangle]::new($column*128,$row*192,128,192)
+    $targetRect=[System.Drawing.Rectangle]::new($targetX,$targetY,$targetWidth,$targetHeight)
+    $maleGraphics.DrawImage($rawMaleAtlas,$targetRect,$sourceRect,[System.Drawing.GraphicsUnit]::Pixel)
+  $maleFrames["$row-$column"] = @{ frame=@{x=$column*128;y=$row*192;w=128;h=192}; rotated=$false; trimmed=$false; spriteSourceSize=@{x=0;y=0;w=128;h=192}; sourceSize=@{w=128;h=192} }
+  }
+}
+$maleAtlas.Save((Join-Path $runtimeRoot 'player-male.png'),[System.Drawing.Imaging.ImageFormat]::Png)
+@{ frames=$maleFrames; meta=@{image='player-male.png';size=@{w=512;h=768};scale='1'} } | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $runtimeRoot 'player-male.json')
+$maleGraphics.Dispose(); $maleAtlas.Dispose(); $rawMaleGraphics.Dispose(); $rawMaleAtlas.Dispose(); $maleSource.Dispose()
+$maleExport = @{ Name='player-male'; File=$maleSheet.File; X=$maleSheet.X; Y=$maleSheet.Y; W=$maleSheet.W; H=$maleSheet.H; DX=$maleSheet.DX; DY=$maleSheet.DY; FrameWidth=128; FrameHeight=192 }
+@($sheets) + @($maleExport) | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $runtimeRoot 'extraction.json')
+Write-Output 'Exported four compact station atlases and the 128x192 saved male atlas.'
 $portraits = @(
   @{ Name='player'; File='characters/character_newcomer_transparent.png'; X=20; Y=1115; W=320; H=380 },
   @{ Name='backpack'; File='local-assets/maps/loc_station/source/npcs/npc_passenger_backpack_transparent.png'; X=15; Y=1115; W=315; H=380 },

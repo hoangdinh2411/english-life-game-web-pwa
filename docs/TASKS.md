@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36f–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; S2–S7.
+T39.1–T39.5; T40.a–T40.e; T41.a; S2–S7.
 
 ## How to work
 
@@ -483,7 +483,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
       shared detector, add data (profiles, lexicon entries) instead of regexes,
       and keep every domain responsible for its own decisions. Complete the
       slices in order and stop after each requested slice.
-  - [ ] **a. Inventory and characterization.** List every remaining caller:
+  - [x] **a. Inventory and characterization.** List every remaining caller:
         `confirm`/`deny` and the `confirmation` flag in `detectIntent` and
         `intents.common.json`; the yes/no checks in `farewellClosing` and
         `serviceContinuationIntent`; station use (`station.ts`,

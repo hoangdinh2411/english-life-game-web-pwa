@@ -24,6 +24,26 @@ test('Train Station pack prepares without a venue actor manifest', () => {
   assert.equal(result.background, 'pack:loc_station:map:background:v1');
 });
 
+test('legacy 32x48 remote player packs fall back without blocking map entry', () => {
+  const assets = [
+    { key: 'background', type: 'map', version: 1, npcId: null },
+    { key: 'player', type: 'spritesheet', version: 1, npcId: null },
+    { key: 'animations', type: 'animation', version: 1, npcId: null },
+  ];
+  const scene = {
+    cache: { json: { get: () => ({ animations: [0, 1, 2, 3].map(row => ({
+      key: `walk-${row}`, texture: 'player', frames: Array.from({ length: 4 }, (_, column) => row * 4 + column), frameRate: 7, repeat: -1,
+    })) }) } },
+    textures: { get: key => ({ has: frame => key.includes(':player:') && frame === '0' }) },
+    anims: { create: () => assert.fail('legacy player animations must fall back to the bundled atlas') },
+  };
+
+  const result = preparePack(scene, { mapId: 'loc_station', assets });
+  assert.equal(result.walkPrefix, undefined);
+  assert.deepEqual(result.animationKeys, []);
+  assert.equal(result.background, 'pack:loc_station:map:background:v1');
+});
+
 // Catches loading the six-character sheet as one giant NPC instead of an atlas.
 test('pack loader pairs an NPC image with its atlas JSON', async () => {
   const calls = [], events = new Map();
@@ -40,6 +60,23 @@ test('pack loader pairs an NPC image with its atlas JSON', async () => {
   ] };
   await loadPack({ load }, pack, () => {}, new AbortController().signal);
   assert.deepEqual(calls, [['atlas', 'pack:loc_cafe:map:shop-npcs:v2', 'http://fixture/npcs.png', 'http://fixture/atlas.json']]);
+});
+
+test('map player spritesheets load the normalized 128x192 frame size', async () => {
+  const calls = [], events = new Map();
+  const load = {
+    on: () => {}, off: () => {}, once: (name, fn) => events.set(name, fn), reset: () => {},
+    start: () => events.get('complete')(), image: () => {}, atlas: () => {}, json: () => {},
+    spritesheet: (...args) => calls.push(['spritesheet', ...args]),
+  };
+  const pack = { mapId: 'loc_cafe', assets: [
+    { key: 'background', type: 'map', url: 'http://fixture/map.png', version: 1, npcId: null },
+    { key: 'player', type: 'spritesheet', url: 'http://fixture/player.png', version: 1, npcId: null },
+  ] };
+  await loadPack({ load }, pack, () => {}, new AbortController().signal);
+  assert.deepEqual(calls, [[
+    'spritesheet', 'pack:loc_cafe:map:player:v1', 'http://fixture/player.png', { frameWidth: 128, frameHeight: 192 },
+  ]]);
 });
 
 test('Town Street defers resident atlases until their actors are near', async () => {

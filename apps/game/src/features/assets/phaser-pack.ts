@@ -9,6 +9,7 @@ import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES } from '../shops/venue-npc-con
 import { ambientNpcSpawnPoints } from '../npcs/controlled-presence';
 import { NPC_DISPLAY_SCALE } from '../npcs/actor-display';
 import { TAX_OFFICE_STAFF } from '../tax-office/tax-office-staff';
+import { SAVED_PLAYER_FRAME } from '../appearance/player-frame';
 
 type Diagnostic = (message: string) => void;
 
@@ -75,7 +76,7 @@ export function loadPack(
         item.type === 'json' && item.key === `${asset.key}-atlas` && item.npcId === asset.npcId && item.version === asset.version) : undefined;
       if (asset.type === 'audio') scene.load.audio(key, asset.url);
       else if (asset.type === 'json' || asset.type === 'animation') scene.load.json(key, asset.url);
-      else if (asset.type === 'spritesheet') scene.load.spritesheet(key, asset.url, { frameWidth: 32, frameHeight: 48 });
+      else if (asset.type === 'spritesheet') scene.load.spritesheet(key, asset.url, { frameWidth: SAVED_PLAYER_FRAME.width, frameHeight: SAVED_PLAYER_FRAME.height });
       else if (atlas) scene.load.atlas(key, asset.url, atlas.url);
       else scene.load.image(key, asset.url);
     }
@@ -95,6 +96,7 @@ export function preparePack(
   const playerAnimations = pack.assets.find((asset) => asset.type === 'animation' && asset.npcId === null);
   if (!background || !player || !playerAnimations) throw new Error('Map pack needs a background, player spritesheet and animations.');
   const definitions: { key: string; frames: { key: string; frame: number }[]; frameRate: number; repeat: number }[] = [];
+  let playerFramesAvailable = true;
   for (const asset of pack.assets.filter((item) => item.type === 'animation')) {
     const data = packAnimationsSchema.parse(scene.cache.json.get(packKey(pack, asset)));
     for (const animation of data.animations) {
@@ -102,13 +104,19 @@ export function preparePack(
       if (!texture) throw new Error('Animation texture is missing from this pack.');
       const key = `${packKey(pack, asset)}:${animation.key}`;
       const textureKey = packKey(pack, texture);
-      if (animation.frames.some((frame) => !scene.textures.get(textureKey).has(String(frame)))) throw new Error('Animation frame is missing from this pack.');
+      if (animation.frames.some((frame) => !scene.textures.get(textureKey).has(String(frame)))) {
+        if (animation.texture === player.key) {
+          playerFramesAvailable = false;
+          continue;
+        }
+        throw new Error('Animation frame is missing from this pack.');
+      }
       definitions.push({ key, frames: animation.frames.map((frame) => ({ key: textureKey, frame })), frameRate: animation.frameRate, repeat: animation.repeat });
     }
   }
-  const walkPrefix = `${packKey(pack, playerAnimations)}:walk`;
+  const walkPrefix = playerFramesAvailable ? `${packKey(pack, playerAnimations)}:walk` : undefined;
   const animationKeys = definitions.map((definition) => definition.key);
-  if ([0, 1, 2, 3].some((row) => !animationKeys.includes(`${walkPrefix}-${row}`))) {
+  if (walkPrefix && [0, 1, 2, 3].some((row) => !animationKeys.includes(`${walkPrefix}-${row}`))) {
     throw new Error('Map pack needs all four player walking animations.');
   }
   for (const definition of definitions) scene.anims.create(definition);

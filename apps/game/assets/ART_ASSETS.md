@@ -8,6 +8,11 @@ each with sixteen 32×48 frames. `runtime/extraction.json` and
 source-cell exports. Source sheets remain intact. The station now loads its
 labeled background and these small atlases at runtime; tax-office art is deferred.
 
+The saved male character also has a separate `runtime/player-male` atlas with
+128×192 frames, exported directly from the high-resolution character source.
+Generated map packs use this atlas for saved male players; the compact
+`runtime/player` atlas remains in use for offline practice mode.
+
 ## Arrival tutorial additions (2026-10-07)
 
 Generated with the built-in ImageGen tool using the existing station and information-officer images as style references, using the warm chibi style references and prompt records in this asset folder.
