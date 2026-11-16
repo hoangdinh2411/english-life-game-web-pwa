@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36a–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.b; S2–S7.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.c; S2–S7.
 
 ## How to work
 
@@ -91,7 +91,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         `locations`; seed airport places into `town.json`, `npc_airport_agent`
         into `npcs.json`, prologue quest `q_airport_prologue` into `quests.json`,
         and check-in dialogue into `dialogues.json`.
-  - [ ] **T42.c — Asset Pipeline Scripts & Map Pack Registration.** Extend
+  - [x] **T42.c — Asset Pipeline Scripts & Map Pack Registration.** Extend
         `scripts/generate-map-assets.mjs` and `scripts/sync-map-assets.mjs`
         to include `loc_airport_departure` and `loc_airport_arrival` in
         supported maps and background definitions using the 128×192 player atlas.
