@@ -61,15 +61,13 @@ export function serviceContinuationIntent(input: string): 'continue' | 'finish' 
   return 'continue';
 }
 
+// Domain-specific station entity/topic extraction only; reusable language intents use detectContextIntent.
 export function detectIntent(input: string, domainIntents: readonly IntentDefinition[] = []): IntentMatch | undefined {
+  if (domainIntents.length === 0) return undefined;
   const normalized = normalizeDialogue(input);
   const { greeting: hasGreeting, body } = splitGreeting(normalized);
   const text = hasGreeting ? body : normalized;
-  const social = detectContextIntent(text || normalized, SOCIAL_INTENT_PROFILE);
-  if (social.status === 'matched') {
-    const id = social.modifiers.includes('goodbye') ? 'goodbye' : social.primary;
-    return { id, slots: {} };
-  }
+  if (!text) return undefined;
   for (const rule of domainIntents) {
     if (!new RegExp(rule.pattern, 'i').test(text)) continue;
     if (!rule.entities || !rule.slot) return { id: rule.id, slots: {} };
@@ -77,7 +75,6 @@ export function detectIntent(input: string, domainIntents: readonly IntentDefini
       if (aliases?.some((alias) => new RegExp(`\\b${alias}\\b`, 'i').test(text))) return { id: rule.id, slots: { [rule.slot]: entity } };
     }
   }
-  if (hasGreeting && !text) return { id: 'greet', slots: {} };
   return undefined;
 }
 

@@ -1,11 +1,20 @@
 import { createHash } from 'node:crypto';
 import {
-  detectIntent,
+  detectContextIntent,
+  FAREWELL_PROFILE,
   farewellClosing,
   isDirectQuestion,
   serviceContinuationIntent,
   type ConversationMessage,
 } from '@life-abroad/shared';
+
+function isGoodbye(text: string): boolean {
+  const decision = detectContextIntent(text, FAREWELL_PROFILE);
+  return (
+    decision.status === 'matched' &&
+    (decision.primary === 'goodbye' || decision.modifiers.includes('goodbye'))
+  );
+}
 
 export function openingMessageId(conversationId: string): string {
   const bytes = createHash('sha256')
@@ -51,7 +60,7 @@ export function evaluateFarewell(
   for (const [index, message] of history.entries()) {
     if (
       message.sender === 'player' &&
-      detectIntent(message.text)?.id === 'goodbye'
+      isGoodbye(message.text)
     ) {
       priorGoodbyes += 1;
       lastGoodbyeIndex = index;
@@ -62,7 +71,7 @@ export function evaluateFarewell(
     }
   }
 
-  const currentIsGoodbye = detectIntent(currentText)?.id === 'goodbye';
+  const currentIsGoodbye = isGoodbye(currentText);
   const answeringMoreHelpQuestion = priorNpcMessage !== undefined &&
     /(?:anything|something) else(?: i can help you with)?\?$/i.test(priorNpcMessage.text.trim());
   const answeringFarewellQuestion =

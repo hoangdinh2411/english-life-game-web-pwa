@@ -1,16 +1,27 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  CONTEXT_INTENT_IDS, contextProfileSchema, defineContextProfile, detectContextIntent, detectIntent, farewellClosing,
-  ID_CARD_ADDRESS_PROFILE, ID_CARD_FIELD_PROFILE, ID_CARD_REVIEW_PROFILE, intentResultSchema, serviceContinuationIntent,
-  STATION_OPEN_PROFILE, STATION_QUESTION_PROFILE, stationReply,
+  CONTEXT_INTENT_IDS, contextProfileSchema, defineContextProfile, detectContextIntent, detectIntent,
+  FAREWELL_PROFILE, farewellClosing, ID_CARD_ADDRESS_PROFILE, ID_CARD_FIELD_PROFILE, ID_CARD_REVIEW_PROFILE,
+  intentResultSchema, serviceContinuationIntent, SOCIAL_INTENT_PROFILE, STATION_OPEN_PROFILE,
+  STATION_QUESTION_PROFILE, stationReply,
 } from '../dist/index.js';
 
 // T40.a characterization: records today's behavior of the legacy matchers so the
 // later migration (T40.c, T41) must change each transition deliberately.
 
-test('detectIntent & station profiles (T41.c): confirm/deny/greet/thank/goodbye resolve via ContextProfiles and shared lexicon', () => {
+test('detectIntent & station profiles (T41.d): reusable intents resolve only via ContextProfiles and shared lexicon', () => {
   const plain = (input) => detectIntent(input)?.id;
+  const social = (input) => {
+    const decision = detectContextIntent(input, SOCIAL_INTENT_PROFILE);
+    return decision.status === 'matched'
+      ? (decision.modifiers.includes('goodbye') ? 'goodbye' : decision.primary)
+      : undefined;
+  };
+  const farewell = (input) => {
+    const decision = detectContextIntent(input, FAREWELL_PROFILE);
+    return decision.status === 'matched' && (decision.primary === 'goodbye' || decision.modifiers.includes('goodbye'));
+  };
   const openStation = (input) => {
     const decision = detectContextIntent(input, STATION_OPEN_PROFILE);
     return decision.status === 'matched' && decision.modifiers.every((m) => m === 'thank' || m === 'goodbye')
@@ -35,13 +46,17 @@ test('detectIntent & station profiles (T41.c): confirm/deny/greet/thank/goodbye 
   }
   assert.equal(openStation('cancel'), 'cancel');
   assert.equal(askedStation('cancel'), 'cancel');
-  assert.equal(plain('Hello'), 'greet');
+  assert.equal(plain('Hello'), undefined);
+  assert.equal(social('Hello'), 'greet');
   assert.equal(openStation('Hello'), 'greet');
   assert.equal(askedStation('Hello'), 'greet');
-  assert.equal(plain('thanks'), 'thank');
+  assert.equal(plain('thanks'), undefined);
+  assert.equal(social('thanks'), 'thank');
   assert.equal(openStation('thanks'), 'thank');
   assert.equal(askedStation('thanks'), 'thank');
-  assert.equal(plain('Goodbye'), 'goodbye');
+  assert.equal(plain('Goodbye'), undefined);
+  assert.equal(social('Goodbye'), 'goodbye');
+  assert.equal(farewell('Goodbye'), true);
   assert.equal(openStation('Goodbye'), 'goodbye');
   assert.equal(askedStation('Goodbye'), 'goodbye');
   for (const input of ["I don't know", 'maybe', 'yes, but change it', 'No, but I need to change my photo',

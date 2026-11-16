@@ -261,14 +261,20 @@ Service-style NPCs (tax office, café, clothes shop, station receptionist and
 future stores or buildings) share one deterministic intent layer in
 `packages/shared/src/dialogue/intent-contract.ts` (`defineContextProfile`) and
 `packages/shared/src/dialogue/intent-detector.ts` (`detectContextIntent`),
-backed by `packages/shared/src/dialogue/content/intent-lexicon.json`. Entity
-extraction (quantities, catalog items, dates, addresses) remains domain-owned.
+backed by `packages/shared/src/dialogue/content/intent-lexicon.json` as the
+single source of reusable language intents (`confirm`, `deny`, `cancel`,
+`unknown`, `not_available`, `provide_later`, `greet`, `thank`, `goodbye`).
+Entity extraction (quantities, catalog items, dates, addresses) remains
+domain-owned; `detectIntent` in `packages/shared/src/dialogue/language.ts` and
+`packages/shared/src/dialogue/content/intents.station.json` are retained solely
+for offline station practice entity/topic extraction (`request_document`,
+`ask_location`, `introduce`, `describe_journey`).
 
 - **Owner inputs required:** conversation states and the question asked in each;
   accepted intents per state (`confirm`, `deny`, `cancel`, `unknown`,
-  `not_available`, `provide_later`); optional bare-word readings and topic
-  aliases; authored replies and clarification copy; and the domain transition
-  each accepted intent performs.
+  `not_available`, `provide_later`, `greet`, `thank`, `goodbye`); optional
+  bare-word readings and topic aliases; authored replies and clarification copy;
+  and the domain transition each accepted intent performs.
 - **Files to add or edit:**
   - Profile data: `packages/shared/src/<domain>.ts` (when shared with the
     client) or `apps/server/src/modules/conversations/<domain>.service.ts`.
@@ -305,7 +311,7 @@ extension route in docs/TECH.md. Do not add regex or change the
 detector core. Owner inputs:
 - States and the question asked in each: <...>
 - Accepted intents per state: <confirm/deny/cancel/unknown/
-  not_available/provide_later>
+  not_available/provide_later/greet/thank/goodbye>
 - Topic aliases (if any): <...>
 - Authored replies and clarification copy: <...>
 - What each accepted intent does in this place: <...>
