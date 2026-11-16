@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import test from 'node:test';
@@ -10,11 +10,13 @@ import {
   detectIntent,
   endsWithFarewell,
   FAREWELL_CLOSING_PROFILE,
+  FAREWELL_PROFILE,
   farewellClosing,
   isDirectQuestion,
   normalizeDialogue,
   SERVICE_CONTINUATION_PROFILE,
   serviceContinuationIntent,
+  SOCIAL_INTENT_PROFILE,
   STATION_OPEN_PROFILE,
   STATION_QUESTION_PROFILE,
   stationGreeting,
@@ -22,7 +24,6 @@ import {
 } from '../dist/index.js';
 
 const require = createRequire(import.meta.url);
-const commonIntents = require('../src/dialogue/content/intents.common.json');
 const stationIntents = require('../src/dialogue/content/intents.station.json');
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url));
 
@@ -174,27 +175,27 @@ export const LEGACY_INTENT_INVENTORY = Object.freeze([
   },
 ]);
 
-test('T41.a inventory lists every remaining caller with a valid classification', async () => {
+test('T41.a-d inventory lists every caller with a valid classification and confirms intents.common.json is retired', async () => {
   const validClassifications = new Set(['reusable_language_intent', 'domain_entity_or_topic', 'safety_filter']);
   const ids = new Set();
   for (const entry of LEGACY_INTENT_INVENTORY) {
     assert.equal(ids.has(entry.id), false, `Duplicate inventory id: ${entry.id}`);
     ids.add(entry.id);
     assert.equal(validClassifications.has(entry.classification), true, entry.id);
+    if (entry.file === 'packages/shared/src/dialogue/content/intents.common.json') {
+      await assert.rejects(() => access(resolve(repoRoot, entry.file)), 'intents.common.json must be deleted in T41.d');
+      continue;
+    }
     const content = await readFile(resolve(repoRoot, entry.file), 'utf8');
     assert.ok(content.length > 0, `Empty or missing file: ${entry.file}`);
   }
-  assert.deepEqual(
-    commonIntents.intents.map((rule) => rule.id),
-    ['goodbye', 'thank', 'greet'],
-  );
   assert.deepEqual(
     stationIntents.intents.map((rule) => rule.id),
     ['request_document', 'ask_location', 'introduce', 'describe_journey'],
   );
 });
 
-test('detectIntent & station profiles (T41.b): confirm/deny removed from detectIntent; station profiles resolve confirm/deny/cancel via lexicon', () => {
+test('detectIntent & station profiles (T41.b-d): detectIntent handles only domain rules; station & social profiles resolve reusable intents via lexicon', () => {
   for (const input of ['yes', 'yeah', 'yep', 'sure', 'exactly', 'of course', "that's right", 'that is right', 'i need it', 'i want it']) {
     assert.equal(detectIntent(input), undefined, `detectIntent should no longer match confirm: ${input}`);
     assert.equal(detectContextIntent(input, STATION_OPEN_PROFILE).status, 'unclear', `STATION_OPEN_PROFILE should ignore: ${input}`);
@@ -217,20 +218,22 @@ test('detectIntent & station profiles (T41.b): confirm/deny removed from detectI
   assert.equal(FAREWELL_CLOSING_PROFILE.id, 'farewell_closing');
   assert.equal(SERVICE_CONTINUATION_PROFILE.id, 'service_continuation');
   for (const input of ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 'Hello!']) {
-    assert.equal(detectIntent(input)?.id, 'greet', input);
-    for (const profile of [STATION_OPEN_PROFILE, STATION_QUESTION_PROFILE]) {
+    assert.equal(detectIntent(input), undefined, input);
+    for (const profile of [SOCIAL_INTENT_PROFILE, STATION_OPEN_PROFILE, STATION_QUESTION_PROFILE]) {
       const matched = detectContextIntent(input, profile);
       assert.equal(matched.status === 'matched' ? matched.primary : undefined, 'greet', input);
     }
   }
   for (const input of ['thanks', 'thank you', 'Hello, thank you!']) {
-    assert.equal(detectIntent(input)?.id, 'thank', input);
+    assert.equal(detectIntent(input), undefined, input);
+    const matched = detectContextIntent(input, SOCIAL_INTENT_PROFILE);
+    assert.equal(matched.status === 'matched' && (matched.primary === 'thank' || matched.modifiers.includes('thank')), true, input);
   }
   for (const input of ['bye', 'goodbye', 'see you later', 'take care', 'have a nice day', 'I have to go now', "that's all for now"]) {
-    assert.equal(detectIntent(input)?.id, 'goodbye', input);
-    for (const profile of [STATION_OPEN_PROFILE, STATION_QUESTION_PROFILE]) {
+    assert.equal(detectIntent(input), undefined, input);
+    for (const profile of [FAREWELL_PROFILE, SOCIAL_INTENT_PROFILE, STATION_OPEN_PROFILE, STATION_QUESTION_PROFILE]) {
       const matched = detectContextIntent(input, profile);
-      assert.equal(matched.status === 'matched' ? matched.primary : undefined, 'goodbye', input);
+      assert.equal(matched.status === 'matched' && (matched.primary === 'goodbye' || matched.modifiers.includes('goodbye')), true, input);
     }
   }
   assert.equal(endsWithFarewell('Thanks for the help. See you tomorrow!'), true);
@@ -308,11 +311,15 @@ test('station.ts & use-station-conversation.ts: preserves stationReply and clien
   assert.equal(stationReply('npc_passenger_backpack', 0, 'I am new here.').aiFallback, undefined);
 
   // Client use-station-conversation farewell sequence (mirrors useStationConversation)
+  const isGoodbye = (value) => {
+    const decision = detectContextIntent(value, FAREWELL_PROFILE);
+    return decision.status === 'matched' && (decision.primary === 'goodbye' || decision.modifiers.includes('goodbye'));
+  };
   const simulateStationTurn = (messages, input) => {
     const text = input.trim();
-    const priorGoodbyes = messages.filter((m) => m.speaker === 'player' && detectIntent(m.text)?.id === 'goodbye').length;
-    const currentIsGoodbye = detectIntent(text)?.id === 'goodbye';
-    const lastGoodbyeIndex = messages.findLastIndex((m) => m.speaker === 'player' && detectIntent(m.text)?.id === 'goodbye');
+    const priorGoodbyes = messages.filter((m) => m.speaker === 'player' && isGoodbye(m.text)).length;
+    const currentIsGoodbye = isGoodbye(text);
+    const lastGoodbyeIndex = messages.findLastIndex((m) => m.speaker === 'player' && isGoodbye(m.text));
     const lastNpcIndex = messages.findLastIndex((m) => m.speaker === 'npc');
     const lastNpcMessage = messages[lastNpcIndex];
     const answeringFarewellQuestion =
@@ -342,22 +349,33 @@ test('station.ts & use-station-conversation.ts: preserves stationReply and clien
   });
 });
 
-test('conversation-policy.ts: preserves evaluateFarewell goodbye, follow-up, and anything-else transitions', async () => {
+test('conversation-policy.ts: preserves evaluateFarewell goodbye, follow-up, and anything-else transitions via detectContextIntent', async () => {
   const policySource = await readFile(
     resolve(repoRoot, 'apps/server/src/modules/conversations/conversation-policy.ts'),
     'utf8',
   );
-  assert.match(policySource, /detectIntent\(message\.text\)\?\.id === 'goodbye'/);
+  const stationHookSource = await readFile(
+    resolve(repoRoot, 'apps/game/src/gameplay/use-station-conversation.ts'),
+    'utf8',
+  );
+  assert.doesNotMatch(policySource, /\bdetectIntent\b/);
+  assert.match(policySource, /detectContextIntent\(text, FAREWELL_PROFILE\)/);
   assert.match(policySource, /serviceContinuationIntent\(currentText\) === 'finish'/);
   assert.match(policySource, /farewellClosing\(currentText\)/);
+  assert.doesNotMatch(stationHookSource, /\bdetectIntent\b/);
+  assert.match(stationHookSource, /detectContextIntent\(text, FAREWELL_PROFILE\)/);
 
+  const isGoodbye = (value) => {
+    const decision = detectContextIntent(value, FAREWELL_PROFILE);
+    return decision.status === 'matched' && (decision.primary === 'goodbye' || decision.modifiers.includes('goodbye'));
+  };
   const evaluatePolicy = (history, currentText) => {
     let priorGoodbyes = 0;
     let lastGoodbyeIndex = -1;
     let priorNpcIndex = -1;
     let priorNpcMessage;
     for (const [index, message] of history.entries()) {
-      if (message.sender === 'player' && detectIntent(message.text)?.id === 'goodbye') {
+      if (message.sender === 'player' && isGoodbye(message.text)) {
         priorGoodbyes += 1;
         lastGoodbyeIndex = index;
       }
@@ -366,7 +384,7 @@ test('conversation-policy.ts: preserves evaluateFarewell goodbye, follow-up, and
         priorNpcMessage = message;
       }
     }
-    const currentIsGoodbye = detectIntent(currentText)?.id === 'goodbye';
+    const currentIsGoodbye = isGoodbye(currentText);
     const answeringMoreHelpQuestion =
       priorNpcMessage !== undefined &&
       /(?:anything|something) else(?: i can help you with)?\?$/i.test(priorNpcMessage.text.trim());

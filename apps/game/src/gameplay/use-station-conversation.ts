@@ -1,8 +1,14 @@
 import type { ConversationMessage } from '../types/gameplay/dialogue';
 import { useEffect, useRef, useState } from 'react';
-import { detectIntent, farewellClosing, isDirectQuestion, stationGreeting, stationReply, type StationSpeaker, type StationExchange } from '@life-abroad/shared';
+import { detectContextIntent, FAREWELL_PROFILE, farewellClosing, isDirectQuestion, stationGreeting, stationReply, type StationSpeaker, type StationExchange } from '@life-abroad/shared';
 import { appendMessage } from './conversation-history';
 import { notifyAiFallback } from './ai-fallback';
+
+function isGoodbye(text: string): boolean {
+  const decision = detectContextIntent(text, FAREWELL_PROFILE);
+  return decision.status === 'matched' && (decision.primary === 'goodbye' || decision.modifiers.includes('goodbye'));
+}
+
 export function useStationConversation(npcId: StationSpeaker) {
   const [exchange, setExchange] = useState(() => stationGreeting(npcId));
   const [messages, setMessages] = useState<ConversationMessage[]>(() => appendMessage([], 'npc', stationGreeting(npcId).text));
@@ -13,9 +19,9 @@ export function useStationConversation(npcId: StationSpeaker) {
   const send = (input: string) => {
     const text = input.trim();
     if (!text || timer.current) return false;
-    const priorGoodbyes = messages.filter(message => message.speaker === 'player' && detectIntent(message.text)?.id === 'goodbye').length;
-    const currentIsGoodbye = detectIntent(text)?.id === 'goodbye';
-    const lastGoodbyeIndex = messages.findLastIndex(message => message.speaker === 'player' && detectIntent(message.text)?.id === 'goodbye');
+    const priorGoodbyes = messages.filter(message => message.speaker === 'player' && isGoodbye(message.text)).length;
+    const currentIsGoodbye = isGoodbye(text);
+    const lastGoodbyeIndex = messages.findLastIndex(message => message.speaker === 'player' && isGoodbye(message.text));
     const lastNpcIndex = messages.findLastIndex(message => message.speaker === 'npc');
     const lastNpcMessage = messages[lastNpcIndex];
     const answeringFarewellQuestion = priorGoodbyes > 0 && lastNpcIndex > lastGoodbyeIndex

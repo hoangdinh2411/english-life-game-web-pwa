@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36f–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.c; T42.a; S2–S7.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a; S2–S7.
 
 ## How to work
 
@@ -519,7 +519,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         changes to the detector core. Confirm T41 below still lists every
         remaining legacy matcher.
 
-- [ ] **T41 — Migrate remaining legacy intent matching to the shared lexicon.**
+- [x] **T41 — Migrate remaining legacy intent matching to the shared lexicon.**
       Start only after T40 is verified. Finish what T40 deliberately left so
       each language meaning has exactly one source. Same rules as T40: reuse the
       shared detector, add data (profiles, lexicon entries) instead of regexes,
@@ -548,7 +548,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         profiles for the contexts that use them, keeping existing quest
         `doneWhen` intent ids and authored content working. Check: station,
         conversation-policy and quest completion tests are unchanged.
-  - [ ] **d. Retire legacy detection and verify.** Delete the old `detectIntent`
+  - [x] **d. Retire legacy detection and verify.** Delete the old `detectIntent`
         rule matching and `intents.common.json` once no caller remains; keep
         domain-specific station intents only if still valid and documented. Run
         content validation, lint, typecheck, unit, integration and PWA checks;

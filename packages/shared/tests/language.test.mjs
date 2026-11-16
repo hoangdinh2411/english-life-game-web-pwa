@@ -5,6 +5,8 @@ import {
   detectContextIntent,
   detectIntent,
   endsWithFarewell,
+  FAREWELL_PROFILE,
+  SOCIAL_INTENT_PROFILE,
   STATION_OPEN_PROFILE,
   STATION_QUESTION_PROFILE,
   stationReply,
@@ -13,14 +15,16 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const station = require('../src/dialogue/content/intents.station.json');
 
-test('common intents are reusable and confirmation requires context', () => {
+test('common intents are reusable via ContextProfiles and detectIntent handles only domain entity rules', () => {
   assert.equal(detectIntent('Exactly'), undefined);
+  assert.equal(detectIntent('Hello'), undefined);
   assert.equal(detectContextIntent('Exactly', STATION_OPEN_PROFILE).status, 'unclear');
   for (const input of ['Yes, please', 'Exactly', 'Sure', 'That’s right', 'I need it for a bank account']) {
     const decision = detectContextIntent(input, STATION_QUESTION_PROFILE);
     assert.equal(decision.status === 'matched' ? decision.primary : undefined, 'confirm', input);
   }
-  assert.equal(detectIntent('Hello').id, 'greet');
+  const greeted = detectContextIntent('Hello', SOCIAL_INTENT_PROFILE);
+  assert.equal(greeted.status === 'matched' ? greeted.primary : undefined, 'greet');
   const denied = detectContextIntent('I don’t need an ID card', STATION_QUESTION_PROFILE);
   assert.equal(denied.status === 'matched' ? denied.primary : undefined, 'deny');
   assert.deepEqual(detectIntent('Where is the cafe?', station.intents).slots, { place: 'cafe' });
@@ -29,6 +33,10 @@ test('common intents are reusable and confirmation requires context', () => {
 });
 
 test('farewell intent recognizes natural endings without matching questions about farewells', () => {
+  const isFarewell = (input) => {
+    const decision = detectContextIntent(input, FAREWELL_PROFILE);
+    return decision.status === 'matched' && (decision.primary === 'goodbye' || decision.modifiers.includes('goodbye'));
+  };
   for (const input of [
     'Bye', 'Good bye!', 'Goodbye', 'Bye bye', 'See you later', 'See you soon',
     'Talk to you later', 'Catch you later', 'Take care', 'Have a nice day',
@@ -36,10 +44,10 @@ test('farewell intent recognizes natural endings without matching questions abou
     'I need to go now', 'I should get going', 'Let’s talk later',
     'We talk later', "We'll talk later", 'We can talk later',
     'Nice talking to you', 'It was nice talking to you', 'Thanks for chatting',
-  ]) assert.equal(detectIntent(input)?.id, 'goodbye', input);
+  ]) assert.equal(isFarewell(input), true, input);
 
   for (const input of ['How do I say goodbye?', 'Will you see your friend later?', 'I need to go to the bank']) {
-    assert.notEqual(detectIntent(input)?.id, 'goodbye', input);
+    assert.equal(isFarewell(input), false, input);
   }
   assert.equal(endsWithFarewell('Okay, no thanks. Goodbye:'), true);
   assert.equal(endsWithFarewell('Goodbye. Will you come back tomorrow?'), false);
