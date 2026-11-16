@@ -50,5 +50,15 @@
       { "id": "s1", "description": "Explain the problem politely", "doneWhen": { "intent": "report_problem" } },
       { "id": "s2", "description": "Agree on a day for repair", "doneWhen": { "intent": "agree_time" } }
     ]
+  },
+  {
+    "id": "q_airport_prologue", "title": "Departure & Arrival", "requiredLevel": "A1", "npcId": "npc_airport_agent",
+    "rewards": { "xp": 25, "coins": 0 },
+    "steps": [
+      { "id": "airport_greet", "description": "Greet the airport check-in agent", "doneWhen": { "intent": "greet" } },
+      { "id": "airport_check_in", "description": "Check in your luggage and state your destination country", "doneWhen": { "intent": "check_in_luggage", "alternativeIntents": ["state_destination_country"] } },
+      { "id": "airport_board_flight", "description": "Proceed through the departure gate to board your flight", "doneWhen": { "intent": "board_flight" } },
+      { "id": "airport_claim_baggage", "description": "Claim your suitcase at baggage claim", "doneWhen": { "intent": "claim_baggage" } }
+    ]
   }
 ]

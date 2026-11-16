@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "scope": "npc",
+  "npcId": "npc_airport_agent",
+  "nodes": [
+    {
+      "id": "airport_agent_start",
+      "text": {
+        "default": "Hello! Welcome to the check-in desk. Where are you flying today?",
+        "cheerful": "Hello! Welcome to the departure terminal! Where are you flying today?"
+      },
+      "intents": [
+        {
+          "name": "check_in_luggage",
+          "keywords": [
+            "check in",
+            "check in my luggage",
+            "check in my bag",
+            "check in my suitcase",
+            "luggage",
+            "suitcase",
+            "baggage"
+          ],
+          "next": "airport_agent_destination"
+        },
+        {
+          "name": "state_destination_country",
+          "keywords": [
+            "flying to",
+            "going to",
+            "traveling to",
+            "travelling to",
+            "flight to",
+            "ticket to",
+            "destination is"
+          ],
+          "next": "airport_agent_checked_in"
+        },
+        {
+          "name": "greet",
+          "keywords": [
+            "hello",
+            "hi",
+            "hey",
+            "good morning",
+            "good afternoon"
+          ],
+          "next": "airport_agent_welcome"
+        }
+      ],
+      "fallback": "airport_agent_repeat"
+    },
+    {
+      "id": "airport_agent_welcome",
+      "text": {
+        "default": "Welcome! Please tell me your destination country and place your suitcase on the scale to check in.",
+        "cheerful": "Welcome! Where are you flying today? Let's get your suitcase checked in!"
+      },
+      "intents": [
+        {
+          "name": "check_in_luggage",
+          "keywords": [
+            "check in",
+            "check in my luggage",
+            "check in my bag",
+            "check in my suitcase",
+            "luggage",
+            "suitcase",
+            "baggage"
+          ],
+          "next": "airport_agent_destination"
+        },
+        {
+          "name": "state_destination_country",
+          "keywords": [
+            "flying to",
+            "going to",
+            "traveling to",
+            "travelling to",
+            "flight to",
+            "ticket to",
+            "destination is"
+          ],
+          "next": "airport_agent_checked_in"
+        }
+      ],
+      "fallback": "airport_agent_repeat",
+      "completesStep": "airport_greet"
+    },
+    {
+      "id": "airport_agent_destination",
+      "text": {
+        "default": "I can check in your suitcase right away. Which country are you flying to today?"
+      },
+      "intents": [
+        {
+          "name": "state_destination_country",
+          "keywords": [
+            "flying to",
+            "going to",
+            "traveling to",
+            "travelling to",
+            "flight to",
+            "ticket to",
+            "destination is"
+          ],
+          "next": "airport_agent_checked_in"
+        }
+      ],
+      "fallback": "airport_agent_repeat",
+      "completesStep": "airport_check_in"
+    },
+    {
+      "id": "airport_agent_checked_in",
+      "text": {
+        "default": "Your suitcase is checked in and here is your boarding pass to {countryName}. Please proceed to the departure gate!",
+        "cheerful": "All set! Your suitcase is checked in for {countryName}. Here is your boarding pass—have a wonderful flight!"
+      },
+      "completesStep": "airport_check_in",
+      "end": true
+    },
+    {
+      "id": "airport_agent_repeat",
+      "text": {
+        "default": "Sorry, I didn't catch that. You can say: 'I would like to check in my luggage' or 'I am flying to Sweden.'"
+      }
+    }
+  ]
+}

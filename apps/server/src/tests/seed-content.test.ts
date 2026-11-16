@@ -9,7 +9,7 @@ import { SHOP_NPC_IDS, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS } from '@life-abr
 
 test('T2 committed content and all scope references validate', async () => {
   const content = await loadSeedContent(resolve('../../content'));
-  assert.equal(content.npcs.length, 31);
+  assert.equal(content.npcs.length, 32);
   assert.equal(content.streetNpcs.npcs.length, 15);
   assert.ok(content.streetNpcs.npcs.every(npc => npc.profile.presenceSchedule));
   assert.equal(content.moods.length, 10);
@@ -20,7 +20,7 @@ test('T2 committed content and all scope references validate', async () => {
   const portraits = content.npcs.filter(npc => npc.portrait);
   assert.equal(portraits.length, SHOP_NPC_IDS.length + TOWN_STREET_NPC_IDS.length + TAX_OFFICE_NPC_IDS.length);
   assert.equal(new Set(portraits.map(npc => `${npc.portrait!.imageUrl}:${npc.portrait!.index}`)).size, portraits.length);
-  assert.equal(content.quests.length, 6);
+  assert.equal(content.quests.length, 7);
   assert.deepEqual(new Set(content.dialogues.map(file => file.scope)), new Set(['global', 'npc', 'role']));
 });
 

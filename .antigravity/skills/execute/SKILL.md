@@ -33,7 +33,9 @@ Execute the task card defined in `.antigravity/current-task.md` safely and rigor
    - If UI/API testing is required, test using the fixed credentials (`test@gmail.com` / `12341234`) on `http://localhost:8082` / `http://localhost:3000`.
    - Inspect `git diff` to confirm zero unintended modifications or scope creep.
 5. **Update Status & Report:**
-   - If all acceptance criteria pass, mark the completed slice as `[x]` in `docs/TASKS.md`.
+   - If all acceptance criteria pass:
+     1. **Sub-task / slice (task nhỏ):** Mark the completed slice as `[x]` in `docs/TASKS.md` and update the `Done:` summary line at the top of `docs/TASKS.md`. Keep the slice in `docs/TASKS.md` while its parent task still has unfinished slices.
+     2. **Parent task (task to):** Only when **all** child slices of a parent task (or a standalone task) are `[x]`, remove the entire parent task block from `docs/TASKS.md` and append the completed entries to `docs/DONE.md` (`- <ID> | <title> | YYYY-MM-DD | <one-line result>`).
    - Output a concise report using the standard format from `docs/MASTER_PROMPT.md`:
      - **Task**
      - **Implemented**

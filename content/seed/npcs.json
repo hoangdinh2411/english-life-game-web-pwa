@@ -172,5 +172,16 @@
     "gender": "female",
     "walkImageUrl": "npcs/npc_tax_clerk_nadia/walk.png",
     "portrait": { "imageUrl": "npcs/npc_tax_clerk_nadia/portraits.png", "index": 0, "columns": 3, "rows": 1 }
+  },
+  {
+    "id": "npc_airport_agent",
+    "name": "Claire",
+    "role": "airport_check_in_agent",
+    "personality": "cheerful",
+    "speakingLevel": "A1",
+    "locationId": "loc_airport_departure",
+    "bio": "Helps departing passengers check in their luggage and confirm their destination country.",
+    "profile": { "profileVersion": 1, "conversationTopics": ["flight check-in", "luggage", "international travel"], "temperament": "Helpful and efficient" },
+    "gender": "female"
   }
 ]
