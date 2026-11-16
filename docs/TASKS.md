@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36f–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a; S2–S7.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.b; S2–S7.
 
 ## How to work
 
@@ -496,7 +496,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         topic check (stays in its domain) or a safety filter (stays in
         `ai-safety.ts`, out of scope). Add tests that preserve current behavior
         before any change. Check: tests pass unchanged on the current code.
-  - [ ] **b. Confirm, deny and cancel consumers.** Move the remaining
+  - [x] **b. Confirm, deny and cancel consumers.** Move the remaining
         yes/no/cancel handling (station, farewell and service-continuation
         decisions, remaining seller paths) to profiles plus the shared detector.
         Remove `confirm`/`deny` from `detectIntent`, the `confirmation` flag and

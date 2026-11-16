@@ -30,3 +30,4 @@
 - T38.5 | Five-page tutorial behavior | 2026-10-25 | Added page navigation, first-run persistence, menu replay, keyboard controls, and non-pausing world behavior.
 - T36f | ID card storage, API and updates | 2026-11-10 | Added authenticated card reads, signed photo URLs, and server-owned address helpers.
 - T41.a | Inventory and characterization of remaining legacy intent matching | 2026-11-14 | Inventoried and classified all remaining legacy intent callers and added baseline characterization tests in `packages/shared/tests/intent-legacy-characterization.test.mjs`.
+- T41.b | Confirm, deny and cancel consumers | 2026-11-15 | Migrated farewellClosing, serviceContinuationIntent, stationReply, and clothes seller order confirm/cancel to ContextProfiles and detectContextIntent, and removed confirm/deny and the confirmation flag from detectIntent and intents.common.json.

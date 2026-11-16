@@ -32,12 +32,18 @@
       "mode": "literal",
       "patterns": [
         "yes|yeah|yep|yup|sure|ok|okay|exactly|correct|right|definitely|absolutely",
+        "of course",
+        "i think so",
+        "i will",
+        "(i) will come|be back",
         "(yes) go ahead",
         "(yes|i) confirm|confirmed (it|that|this|order)",
         "(yes) do it",
         "(yes) (it|that) is right|correct|fine|good",
-        "looks good|sounds good|all good",
-        "(yes) issue (it|card|id card)"
+        "looks|sounds|all good",
+        "(yes) issue (it|card|id card)",
+        "i need|want it",
+        "i need|want it (to open|for) bank account"
       ]
     },
     {
@@ -47,6 +53,10 @@
         "no|nope|nah",
         "no way",
         "not really",
+        "no more",
+        "not today",
+        "that is all",
+        "i am done",
         "(no) change|redo (it|this)",
         "(that|it) (is) wrong|incorrect"
       ]
@@ -55,7 +65,12 @@
       "intent": "deny",
       "mode": "negated",
       "patterns": [
-        "(i) need|want|like (it|that|id card|this)",
+        "(i) need|want|like (it|that|id card|this|anything|something)",
+        "(i) need|want anything|something else|more",
+        "(i) mean|meant (it|that|this)",
+        "that (is) what i mean|meant",
+        "probably",
+        "(i) come|be back (tomorrow)",
         "that (is) right|correct",
         "correct|right"
       ]
@@ -71,7 +86,8 @@
         "(i) (want|would like) to cancel",
         "(i) (want|would like) to cancel it|this|that|order",
         "stop",
-        "never mind|nevermind",
+        "never mind",
+        "nevermind",
         "forget it",
         "(i) changed mind"
       ]
@@ -111,7 +127,7 @@
       "mode": "literal",
       "patterns": [
         "none",
-        "nothing",
+        "nothing (else|more)",
         "(i) (am) homeless",
         "(i) (am) staying|living at|in|with hotel|friends|family",
         "(i) (am|have) (in) temporary accommodation",

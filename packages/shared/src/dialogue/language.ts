@@ -1,11 +1,24 @@
 import grammar from './content/grammar.common.json';
 import common from './content/intents.common.json';
+import { defineContextProfile } from './intent-contract';
+import { detectContextIntent } from './intent-detector';
 import { splitGreeting } from './questions';
 
 export interface IntentMatch { id: string; slots: Readonly<Record<string, string>> }
 export interface IntentDefinition { id: string; pattern: string; slot?: string; entities?: Readonly<Record<string, readonly string[] | undefined>> }
 export interface GrammarFeedback { original: string; improved: string; reason: string; question: string }
 export function normalizeDialogue(input: string): string { return input.trim().replace(/[’]/g, "'").replace(/\s+/g, ' '); }
+
+export const FAREWELL_CLOSING_PROFILE = defineContextProfile({
+  id: 'farewell_closing',
+  allowedIntents: ['confirm', 'deny'],
+});
+
+export const SERVICE_CONTINUATION_PROFILE = defineContextProfile({
+  id: 'service_continuation',
+  allowedIntents: ['confirm', 'deny', 'cancel', 'not_available'],
+  bareWords: { 'all good': 'deny', nope: 'confirm' },
+});
 
 export function endsWithFarewell(input: string): boolean {
   const finalSentence = normalizeDialogue(input).split(/[.!?]\s+/).at(-1)?.replace(/:+$/, '').trim() ?? '';
@@ -14,37 +27,41 @@ export function endsWithFarewell(input: string): boolean {
 }
 
 export function farewellClosing(input: string): string {
-  const reply = normalizeDialogue(input).toLowerCase();
-  if (/^(?:yes|yeah|yep|sure|definitely|of course|i(?:'ll| will) be back|i think so)\b/.test(reply)) {
-    return 'That would be lovely. I hope to see you tomorrow. Goodbye!';
-  }
-  if (/^(?:no|nope|probably not|i(?: won't| will not) come back)\b/.test(reply)) {
-    return 'I understand. It was nice talking with you. Goodbye!';
+  const decision = detectContextIntent(input, FAREWELL_CLOSING_PROFILE);
+  if (decision.status === 'matched' && decision.modifiers.length === 0) {
+    if (decision.primary === 'confirm') {
+      return 'That would be lovely. I hope to see you tomorrow. Goodbye!';
+    }
+    if (decision.primary === 'deny') {
+      return 'I understand. It was nice talking with you. Goodbye!';
+    }
   }
   return 'I hope to see you again. It was nice talking with you. Goodbye!';
 }
 
 export function serviceContinuationIntent(input: string): 'continue' | 'finish' | 'unclear' {
   const normalized = normalizeDialogue(input).toLowerCase().replace(/[.!?,]+$/g, '').trim();
+  if (!normalized) return 'unclear';
   const hasNewRequest = /\b(?:i|we) (?:also )?(?:need|want|would like|have to)\b/.test(normalized)
     && !/\b(?:i|we) (?:do not|don't|dont|no longer) (?:need|want|have to)\b/.test(normalized);
   if (hasNewRequest) return 'continue';
+  const decision = detectContextIntent(normalized, SERVICE_CONTINUATION_PROFILE);
+  if (decision.status === 'matched' && decision.modifiers.length === 0) {
+    return decision.primary === 'confirm' ? 'continue' : 'finish';
+  }
   const intent = detectIntent(normalized);
-  if (intent?.id === 'deny' || intent?.id === 'goodbye') return 'finish';
-  if (intent?.id === 'confirm') return 'continue';
+  if (intent?.id === 'goodbye') return 'finish';
   if (intent?.id === 'thank' && /^(?:thanks|thank you)(?: very much| so much)?$/.test(normalized)) return 'finish';
-  if (/^(?:nothing else|that(?:'s| is) all|i(?:'m| am) done|no more|not today|all good)$/.test(normalized)) return 'finish';
-  return normalized ? 'continue' : 'unclear';
+  return 'continue';
 }
 
-export function detectIntent(input: string, confirmation = false, domainIntents: readonly IntentDefinition[] = []): IntentMatch | undefined {
+export function detectIntent(input: string, domainIntents: readonly IntentDefinition[] = []): IntentMatch | undefined {
   const normalized = normalizeDialogue(input);
   const { greeting: hasGreeting, body } = splitGreeting(normalized);
   const text = hasGreeting ? body : normalized;
   if (!text && hasGreeting) return { id: 'greet', slots: {} };
   for (const rule of common.intents) {
     if (rule.id === 'greet') continue;
-    if (rule.id === 'confirm' && !confirmation) continue;
     if (new RegExp(rule.pattern, 'i').test(text)) return { id: rule.id, slots: {} };
   }
   for (const rule of domainIntents) {
