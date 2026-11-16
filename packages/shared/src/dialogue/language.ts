@@ -1,5 +1,4 @@
 import grammar from './content/grammar.common.json';
-import common from './content/intents.common.json';
 import { defineContextProfile } from './intent-contract';
 import { detectContextIntent } from './intent-detector';
 import { splitGreeting } from './questions';
@@ -9,6 +8,16 @@ export interface IntentDefinition { id: string; pattern: string; slot?: string; 
 export interface GrammarFeedback { original: string; improved: string; reason: string; question: string }
 export function normalizeDialogue(input: string): string { return input.trim().replace(/[’]/g, "'").replace(/\s+/g, ' '); }
 
+export const FAREWELL_PROFILE = defineContextProfile({
+  id: 'farewell',
+  allowedIntents: ['goodbye', 'thank', 'confirm', 'deny'],
+});
+
+export const SOCIAL_INTENT_PROFILE = defineContextProfile({
+  id: 'social_intent',
+  allowedIntents: ['greet', 'thank', 'goodbye'],
+});
+
 export const FAREWELL_CLOSING_PROFILE = defineContextProfile({
   id: 'farewell_closing',
   allowedIntents: ['confirm', 'deny'],
@@ -16,19 +25,19 @@ export const FAREWELL_CLOSING_PROFILE = defineContextProfile({
 
 export const SERVICE_CONTINUATION_PROFILE = defineContextProfile({
   id: 'service_continuation',
-  allowedIntents: ['confirm', 'deny', 'cancel', 'not_available'],
+  allowedIntents: ['confirm', 'deny', 'cancel', 'not_available', 'thank', 'goodbye'],
   bareWords: { 'all good': 'deny', nope: 'confirm' },
 });
 
 export function endsWithFarewell(input: string): boolean {
   const finalSentence = normalizeDialogue(input).split(/[.!?]\s+/).at(-1)?.replace(/:+$/, '').trim() ?? '';
-  const goodbye = common.intents.find((rule) => rule.id === 'goodbye');
-  return goodbye ? new RegExp(goodbye.pattern, 'i').test(finalSentence) : false;
+  const decision = detectContextIntent(finalSentence, FAREWELL_PROFILE);
+  return decision.status === 'matched' && (decision.primary === 'goodbye' || decision.modifiers.includes('goodbye'));
 }
 
 export function farewellClosing(input: string): string {
   const decision = detectContextIntent(input, FAREWELL_CLOSING_PROFILE);
-  if (decision.status === 'matched' && decision.modifiers.length === 0) {
+  if (decision.status === 'matched' && decision.modifiers.every((modifier) => modifier === 'thank')) {
     if (decision.primary === 'confirm') {
       return 'That would be lovely. I hope to see you tomorrow. Goodbye!';
     }
@@ -46,12 +55,9 @@ export function serviceContinuationIntent(input: string): 'continue' | 'finish' 
     && !/\b(?:i|we) (?:do not|don't|dont|no longer) (?:need|want|have to)\b/.test(normalized);
   if (hasNewRequest) return 'continue';
   const decision = detectContextIntent(normalized, SERVICE_CONTINUATION_PROFILE);
-  if (decision.status === 'matched' && decision.modifiers.length === 0) {
+  if (decision.status === 'matched' && decision.modifiers.every((modifier) => modifier === 'thank' || modifier === 'goodbye')) {
     return decision.primary === 'confirm' ? 'continue' : 'finish';
   }
-  const intent = detectIntent(normalized);
-  if (intent?.id === 'goodbye') return 'finish';
-  if (intent?.id === 'thank' && /^(?:thanks|thank you)(?: very much| so much)?$/.test(normalized)) return 'finish';
   return 'continue';
 }
 
@@ -59,10 +65,10 @@ export function detectIntent(input: string, domainIntents: readonly IntentDefini
   const normalized = normalizeDialogue(input);
   const { greeting: hasGreeting, body } = splitGreeting(normalized);
   const text = hasGreeting ? body : normalized;
-  if (!text && hasGreeting) return { id: 'greet', slots: {} };
-  for (const rule of common.intents) {
-    if (rule.id === 'greet') continue;
-    if (new RegExp(rule.pattern, 'i').test(text)) return { id: rule.id, slots: {} };
+  const social = detectContextIntent(text || normalized, SOCIAL_INTENT_PROFILE);
+  if (social.status === 'matched') {
+    const id = social.modifiers.includes('goodbye') ? 'goodbye' : social.primary;
+    return { id, slots: {} };
   }
   for (const rule of domainIntents) {
     if (!new RegExp(rule.pattern, 'i').test(text)) continue;
@@ -71,6 +77,7 @@ export function detectIntent(input: string, domainIntents: readonly IntentDefini
       if (aliases?.some((alias) => new RegExp(`\\b${alias}\\b`, 'i').test(text))) return { id: rule.id, slots: { [rule.slot]: entity } };
     }
   }
+  if (hasGreeting && !text) return { id: 'greet', slots: {} };
   return undefined;
 }
 

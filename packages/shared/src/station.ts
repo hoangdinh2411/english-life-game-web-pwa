@@ -11,12 +11,12 @@ const HINT = 'Ask about an ID card, or say goodbye.';
 
 export const STATION_QUESTION_PROFILE = defineContextProfile({
   id: 'station_question',
-  allowedIntents: ['confirm', 'deny', 'cancel'],
+  allowedIntents: ['confirm', 'deny', 'cancel', 'greet', 'thank', 'goodbye'],
 });
 
 export const STATION_OPEN_PROFILE = defineContextProfile({
   id: 'station_open',
-  allowedIntents: ['deny', 'cancel'],
+  allowedIntents: ['deny', 'cancel', 'greet', 'thank', 'goodbye'],
 });
 
 export function stationGreeting(npc: StationSpeaker): StationExchange {
@@ -31,7 +31,9 @@ export function stationReply(npc: StationSpeaker, step: number, input: string, f
     hasGreeting && body ? body : input,
     answeringQuestion ? STATION_QUESTION_PROFILE : STATION_OPEN_PROFILE,
   );
-  const contextIntent = decision.status === 'matched' && decision.modifiers.length === 0 ? decision.primary : undefined;
+  const contextIntent = decision.status === 'matched' && decision.modifiers.every((modifier) => modifier === 'thank' || modifier === 'goodbye')
+    ? (decision.modifiers.includes('goodbye') && decision.primary === 'thank' ? 'goodbye' : decision.primary)
+    : undefined;
   const intent: IntentMatch | undefined = contextIntent
     ? { id: contextIntent === 'cancel' ? 'deny' : contextIntent, slots: {} }
     : detectIntent(input, intents.intents);

@@ -1,7 +1,7 @@
 {
   "fillers": [
-    "sorry", "please", "kindly", "right now", "now", "yet", "well", "um", "uh", "oh", "just", "actually",
-    "thanks", "thank you", "sir", "madam", "miss", "excuse me", "a", "an", "the", "any", "my"
+    "sorry", "please", "kindly", "right now", "now", "yet", "well", "alright", "um", "uh", "oh", "just", "actually",
+    "many", "sir", "madam", "miss", "excuse me", "a", "an", "the", "any", "my"
   ],
   "negations": ["not", "no", "never", "without"],
   "negationAuxiliaries": ["do", "does", "did", "can", "could", "will", "would"],
@@ -9,7 +9,8 @@
   "contractions": {
     "cannot": "can not", "dont": "do not", "cant": "can not", "wont": "will not",
     "won't": "will not", "can't": "can not", "i'll": "i will", "i'm": "i am", "i've": "i have",
-    "it's": "it is", "that's": "that is"
+    "i'd": "i had", "it's": "it is", "that's": "that is", "let's": "let us", "lets": "let us",
+    "thanks": "and thanks", "thank": "and thank"
   },
   "topics": {
     "address": ["address", "home address", "permanent address", "street address", "home", "house", "flat", "apartment", "place to live"],
@@ -24,7 +25,21 @@
     ["confirm", "provide_later"],
     ["not_available", "provide_later"],
     ["unknown", "provide_later"],
-    ["not_available", "unknown"]
+    ["not_available", "unknown"],
+    ["confirm", "thank"],
+    ["deny", "thank"],
+    ["cancel", "thank"],
+    ["not_available", "thank"],
+    ["unknown", "thank"],
+    ["provide_later", "thank"],
+    ["greet", "confirm"],
+    ["greet", "deny"],
+    ["greet", "cancel"],
+    ["greet", "thank"],
+    ["greet", "goodbye"],
+    ["thank", "goodbye"],
+    ["confirm", "goodbye"],
+    ["deny", "goodbye"]
   ],
   "phrases": [
     {
@@ -148,6 +163,57 @@
         "another time",
         "(i) (will) come|be back later|tomorrow",
         "(i) (will) come|be back with (it|that|this|{topic}) later|tomorrow"
+      ]
+    },
+    {
+      "intent": "greet",
+      "mode": "literal",
+      "patterns": [
+        "hello|hi|hey (there)",
+        "good morning|afternoon|evening|day"
+      ]
+    },
+    {
+      "intent": "thank",
+      "mode": "literal",
+      "patterns": [
+        "thanks",
+        "thank you",
+        "thanks (very|so) much",
+        "thank you (very|so) much",
+        "thanks lot",
+        "(thanks|thank you) for (your) help"
+      ]
+    },
+    {
+      "intent": "goodbye",
+      "mode": "literal",
+      "patterns": [
+        "bye (bye)",
+        "goodbye",
+        "good bye",
+        "farewell",
+        "thanks bye|goodbye",
+        "thank you bye|goodbye",
+        "okay bye|goodbye",
+        "see you|ya (later|soon|tomorrow)",
+        "(talk to|catch) you later",
+        "take care",
+        "have nice|good|great day|evening|weekend",
+        "until next time",
+        "i have|need|got to go|leave|run",
+        "(i) gotta go|leave|run",
+        "i (better|need to) head out",
+        "i must (go|leave|be going)",
+        "i should (go|get going|be going)",
+        "i am (off|leaving|heading out)",
+        "i had better (go|get going|leave)",
+        "let us talk later",
+        "we (will|can) talk later",
+        "(it was) nice talking (to|with) you",
+        "thanks for chatting",
+        "i have appointment",
+        "that is all for"
       ]
     }
   ]

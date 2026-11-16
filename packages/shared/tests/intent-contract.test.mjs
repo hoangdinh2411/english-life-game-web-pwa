@@ -9,15 +9,19 @@ import {
 // T40.a characterization: records today's behavior of the legacy matchers so the
 // later migration (T40.c, T41) must change each transition deliberately.
 
-test('detectIntent & station profiles (T41.b): confirm/deny moved to station ContextProfiles; greet/thank/goodbye remain in detectIntent until T41.c', () => {
+test('detectIntent & station profiles (T41.c): confirm/deny/greet/thank/goodbye resolve via ContextProfiles and shared lexicon', () => {
   const plain = (input) => detectIntent(input)?.id;
   const openStation = (input) => {
     const decision = detectContextIntent(input, STATION_OPEN_PROFILE);
-    return decision.status === 'matched' && decision.modifiers.length === 0 ? decision.primary : undefined;
+    return decision.status === 'matched' && decision.modifiers.every((m) => m === 'thank' || m === 'goodbye')
+      ? decision.primary
+      : undefined;
   };
   const askedStation = (input) => {
     const decision = detectContextIntent(input, STATION_QUESTION_PROFILE);
-    return decision.status === 'matched' && decision.modifiers.length === 0 ? decision.primary : undefined;
+    return decision.status === 'matched' && decision.modifiers.every((m) => m === 'thank' || m === 'goodbye')
+      ? decision.primary
+      : undefined;
   };
   for (const input of ['yes', 'Yes, please', 'Exactly', 'Sure', 'Yes, issue my card', 'ok', 'okay']) {
     assert.equal(plain(input), undefined, input);
@@ -25,15 +29,21 @@ test('detectIntent & station profiles (T41.b): confirm/deny moved to station Con
     assert.equal(askedStation(input), 'confirm', input);
   }
   for (const input of ['no', 'No thanks', 'nope', 'not really', "I don't need an ID card"]) {
-    assert.equal(plain(input), input === 'No thanks' ? 'thank' : undefined, input);
+    assert.equal(plain(input), undefined, input);
     assert.equal(openStation(input), 'deny', input);
     assert.equal(askedStation(input), 'deny', input);
   }
   assert.equal(openStation('cancel'), 'cancel');
   assert.equal(askedStation('cancel'), 'cancel');
   assert.equal(plain('Hello'), 'greet');
+  assert.equal(openStation('Hello'), 'greet');
+  assert.equal(askedStation('Hello'), 'greet');
   assert.equal(plain('thanks'), 'thank');
+  assert.equal(openStation('thanks'), 'thank');
+  assert.equal(askedStation('thanks'), 'thank');
   assert.equal(plain('Goodbye'), 'goodbye');
+  assert.equal(openStation('Goodbye'), 'goodbye');
+  assert.equal(askedStation('Goodbye'), 'goodbye');
   for (const input of ["I don't know", 'maybe', 'yes, but change it', 'No, but I need to change my photo',
     "Sorry, I don't have any address right now", "I don't have one, but I'll provide it later"]) {
     assert.equal(askedStation(input), undefined, input);
@@ -104,7 +114,10 @@ test('station receptionist follow-up: yes/no to the directions question and uncl
 });
 
 test('intent contract accepts matched and unclear results and rejects malformed ones', () => {
-  assert.deepEqual([...CONTEXT_INTENT_IDS], ['confirm', 'deny', 'cancel', 'unknown', 'not_available', 'provide_later']);
+  assert.deepEqual([...CONTEXT_INTENT_IDS], [
+    'confirm', 'deny', 'cancel', 'unknown', 'not_available', 'provide_later',
+    'greet', 'thank', 'goodbye',
+  ]);
   const ok = intentResultSchema.parse({ status: 'matched', primary: 'not_available', modifiers: ['provide_later'] });
   assert.equal(ok.primary, 'not_available');
   assert.deepEqual(intentResultSchema.parse({ status: 'matched', primary: 'confirm', modifiers: [] }).modifiers, []);
@@ -112,8 +125,8 @@ test('intent contract accepts matched and unclear results and rejects malformed 
     assert.equal(intentResultSchema.parse({ status: 'unclear', reason }).reason, reason);
   }
   for (const bad of [
-    { status: 'matched', primary: 'greet', modifiers: [] },
-    { status: 'matched', primary: 'confirm', modifiers: ['goodbye'] },
+    { status: 'matched', primary: 'apologize', modifiers: [] },
+    { status: 'matched', primary: 'confirm', modifiers: ['farewell'] },
     { status: 'matched', primary: 'deny', modifiers: ['cancel', 'cancel'] },
     { status: 'matched', primary: 'deny', modifiers: ['deny'] },
     { status: 'matched', primary: 'deny' },

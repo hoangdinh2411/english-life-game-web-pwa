@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36f–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.b; S2–S7.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.c; S2–S7.
 
 ## How to work
 
@@ -550,7 +550,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         Remove `confirm`/`deny` from `detectIntent`, the `confirmation` flag and
         `intents.common.json`. Check: behavior from slice a is unchanged and
         repository search finds no yes/no matcher outside the lexicon.
-  - [ ] **c. Greet, thank and goodbye.** Move these into the shared lexicon with
+  - [x] **c. Greet, thank and goodbye.** Move these into the shared lexicon with
         profiles for the contexts that use them, keeping existing quest
         `doneWhen` intent ids and authored content working. Check: station,
         conversation-policy and quest completion tests are unchanged.

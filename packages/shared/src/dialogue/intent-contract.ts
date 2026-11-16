@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 // Contract for the shared contextual intent layer (T40). Intent names describe
 // language only; a domain handler alone decides what an accepted intent does.
-export const CONTEXT_INTENT_IDS = ['confirm', 'deny', 'cancel', 'unknown', 'not_available', 'provide_later'] as const;
+export const CONTEXT_INTENT_IDS = [
+  'confirm', 'deny', 'cancel', 'unknown', 'not_available', 'provide_later',
+  'greet', 'thank', 'goodbye',
+] as const;
 export const contextIntentIdSchema = z.enum(CONTEXT_INTENT_IDS);
 export type ContextIntentId = z.infer<typeof contextIntentIdSchema>;
 
