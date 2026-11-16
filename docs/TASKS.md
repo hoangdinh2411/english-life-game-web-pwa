@@ -73,6 +73,54 @@ database: https://wedjinchhlybabstcchp.supabase.co
 
 ## NOW
 
+- [ ] **T42 — Airport Prologue & English Check-in Flow.** Replace the static
+      country dropdown and immediate $500 balance with an interactive airport
+      prologue. The player sets name and avatar on a Passport card, spawns at the
+      Departure Terminal map, approaches the counter NPC to check in luggage and
+      state their destination country in English, watches a brief airplane flight
+      cutscene, lands at Baggage Claim to locate their suitcase, receives the
+      starter $500 cash upon claiming, and exits to begin their life in town.
+  - [ ] **T42.a — Core Types, Contracts & Location Schema (Shared & UI Props).** Add
+        `loc_airport_departure` and `loc_airport_arrival` to `playerMapIdSchema`
+        and `playerPlaceIdSchema`; define `PassportDraft`, `ClaimBaggageRequest`,
+        `ClaimBaggageResponse`, `AirportPrologueStep`, and `AirportPrologueState`
+        in `packages/shared`, along with client component props (`FlightCutsceneProps`,
+        `BaggageClaimOverlayProps`).
+  - [ ] **T42.b — Airport Locations Migration & Content Seeds.** Add forward
+        migration for `loc_airport_departure` and `loc_airport_arrival` in
+        `locations`; seed airport places into `town.json`, `npc_airport_agent`
+        into `npcs.json`, prologue quest `q_airport_prologue` into `quests.json`,
+        and check-in dialogue into `dialogues.json`.
+  - [ ] **T42.c — Asset Pipeline Scripts & Map Pack Registration.** Extend
+        `scripts/generate-map-assets.mjs` and `scripts/sync-map-assets.mjs`
+        to include `loc_airport_departure` and `loc_airport_arrival` in
+        supported maps and background definitions using the 128×192 player atlas.
+  - [ ] **T42.d — Airport Art Assets Generation & Approval Gates.** Follow
+        `docs/art-direction/STYLE.md` 3-gate contract (visual approval, permission
+        to use, dry-run upload) for airport terminal backgrounds, luggage props,
+        and agent spritesheet/portraits.
+  - [ ] **T42.e — Backend Character Spawn & Idempotent Starter Funds.** Update
+        `players.repository.ts` to spawn new characters at `loc_airport_departure`
+        with 0 initial coins; add idempotent `claimStarterBaggage` endpoint in
+        `economy.service.ts` to grant the $500 starting balance upon claiming luggage.
+  - [ ] **T42.f — Client Passport Card UI.** Redesign `/new-game` to a clean
+        Passport Card collecting player name and avatar before launching into
+        the departure airport scene.
+  - [ ] **T42.g — Phaser Airport Departure Scene & English Check-in Dialogue.**
+        Integrate `loc_airport_departure` in `create-station-game.ts` with walking
+        controls, counter interaction, and English check-in dialogue overlay
+        (stating destination country and luggage check-in).
+  - [ ] **T42.h — Flight Cutscene Transition.** Implement `FlightCutscene.tsx`
+        triggered when boarding through the departure gate, displaying a 3-4 second
+        airplane flight cutscene before transitioning to `loc_airport_arrival`.
+  - [ ] **T42.i — Baggage Carousel Interaction & Starter Funds Claim.** Implement
+        baggage carousel interaction on `loc_airport_arrival`, calling the claim
+        API to receive $500 and unlocking the exit to the town/station.
+  - [ ] **T42.j — Integration Testing & Full Verification.** Update server tests
+        (`players.integration.test.ts`, `first-run.integration.test.ts`), run
+        `pnpm typecheck`, `pnpm test`, and `pnpm content:validate` to verify zero
+        regressions.
+
 - [ ] **ONB-01 — One-page country setup, shared country clocks and quick rest.**
       Replace the multi-screen country/avatar/name flow with one short first-run
       screen. A player chooses one of the 247 authored countries and a valid
