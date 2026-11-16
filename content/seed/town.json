@@ -11,6 +11,8 @@
     { "id": "loc_corner_cafe", "name": "Corner Cup Café", "type": "cafe" },
     { "id": "loc_tax_office", "name": "Tax Office", "type": "office" },
     { "id": "loc_bank", "name": "Bank", "type": "bank" },
-    { "id": "loc_housing", "name": "Brown Housing Office", "type": "housing" }
+    { "id": "loc_housing", "name": "Brown Housing Office", "type": "housing" },
+    { "id": "loc_airport_departure", "name": "Departure Terminal", "type": "airport" },
+    { "id": "loc_airport_arrival", "name": "Baggage Claim", "type": "airport" }
   ]
 }

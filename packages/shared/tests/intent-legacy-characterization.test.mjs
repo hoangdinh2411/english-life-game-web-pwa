@@ -567,6 +567,11 @@ test('quests.json doneWhen & ai-safety.ts: preserves quest intent ids and out-of
     'give_details',
     'report_problem',
     'agree_time',
+    'greet',
+    'check_in_luggage',
+    'state_destination_country',
+    'board_flight',
+    'claim_baggage',
   ]);
 
   const safetySource = await readFile(resolve(repoRoot, 'apps/server/src/modules/ai/ai-safety.ts'), 'utf8');
