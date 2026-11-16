@@ -115,10 +115,10 @@ test('lexicon validation reports syntax, empty, duplicate, unknown intent and to
   fails(withPhrases({ intent: 'confirm', mode: 'literal', patterns: ['(please)'] }), /no required word/);
   fails(withPhrases({ intent: 'confirm', mode: 'literal', patterns: ['yes', 'yes|yeah'] }), /duplicate phrase "yes"/);
   fails(withPhrases({ intent: 'confirm', mode: 'literal', patterns: ['yes'] }, { intent: 'deny', mode: 'literal', patterns: ['yes'] }), /duplicate phrase/);
-  fails(withPhrases({ intent: 'greet', mode: 'literal', patterns: ['hello'] }), /Invalid option/i);
+  fails(withPhrases({ intent: 'apologize', mode: 'literal', patterns: ['hello'] }), /Invalid option/i);
   fails(withPhrases({ intent: 'confirm', mode: 'literal', patterns: ['it is {colour}'] }), /unknown topic \{colour\}/);
   fails(withPhrases({ intent: 'confirm', mode: 'literal', patterns: ['Yes!'] }), /invalid token/);
   fails(withPhrases({ intent: 'confirm', mode: 'literal', patterns: ['please yes'] }), /filler/);
   fails(withPhrases({ intent: 'deny', mode: 'negated', patterns: ['no way'] }), /negation/);
-  fails({ ...lexiconSource, compatible: [['confirm', 'greet']] }, /compatible/);
+  fails({ ...lexiconSource, compatible: [['confirm', 'apologize']] }, /compatible/);
 });

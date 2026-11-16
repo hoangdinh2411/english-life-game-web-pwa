@@ -218,12 +218,20 @@ test('detectIntent & station profiles (T41.b): confirm/deny removed from detectI
   assert.equal(SERVICE_CONTINUATION_PROFILE.id, 'service_continuation');
   for (const input of ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 'Hello!']) {
     assert.equal(detectIntent(input)?.id, 'greet', input);
+    for (const profile of [STATION_OPEN_PROFILE, STATION_QUESTION_PROFILE]) {
+      const matched = detectContextIntent(input, profile);
+      assert.equal(matched.status === 'matched' ? matched.primary : undefined, 'greet', input);
+    }
   }
   for (const input of ['thanks', 'thank you', 'Hello, thank you!']) {
     assert.equal(detectIntent(input)?.id, 'thank', input);
   }
   for (const input of ['bye', 'goodbye', 'see you later', 'take care', 'have a nice day', 'I have to go now', "that's all for now"]) {
     assert.equal(detectIntent(input)?.id, 'goodbye', input);
+    for (const profile of [STATION_OPEN_PROFILE, STATION_QUESTION_PROFILE]) {
+      const matched = detectContextIntent(input, profile);
+      assert.equal(matched.status === 'matched' ? matched.primary : undefined, 'goodbye', input);
+    }
   }
   assert.equal(endsWithFarewell('Thanks for the help. See you tomorrow!'), true);
   assert.equal(endsWithFarewell('See you tomorrow. Do you open at eight?'), false);
