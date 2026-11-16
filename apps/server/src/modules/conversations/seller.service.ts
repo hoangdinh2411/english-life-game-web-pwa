@@ -12,6 +12,11 @@ const CAFE_ORDER_PROFILE = defineContextProfile({
   bareWords: { no: 'cancel', nope: 'cancel', 'not now': 'cancel' },
 });
 
+const CLOTHES_ORDER_PROFILE = defineContextProfile({
+  id: 'clothes_pending_order', allowedIntents: ['confirm', 'deny', 'cancel', 'provide_later'],
+  bareWords: { no: 'cancel', nope: 'cancel', 'not now': 'cancel' },
+});
+
 interface SellerReply { text: string; intent: string; misunderstood: boolean; seller: SellerState; nodeId?: string; drinkPaid?: boolean; drinkOrdered?: boolean; greeted?: boolean }
 
 function words(text: string): string {
@@ -137,8 +142,8 @@ export class SellerService {
       "SELECT id,name,kind,price,shop,color FROM public.shop_items WHERE shop='clothes' AND kind='clothing' ORDER BY id FOR SHARE");
     const items = catalog.rows;
     const matches = namedItems(text, items);
-    const affirmative = /^(?:yes|yes please|yes thank you|ok|okay|sure|confirm|go ahead|i confirm|that is correct|that's correct)$/.test(text);
-    const cancel = /^(?:no|no thanks|no thank you|cancel|cancel my order|never mind|nevermind)(?: please)?$/.test(text);
+    const decision = detectContextIntent(input, CLOTHES_ORDER_PROFILE);
+    const answer = decision.status === 'matched' && decision.modifiers.length === 0 ? decision.primary : null;
     const goodbye = /^(?:goodbye|bye|see you)(?: soon)?$/.test(text);
     let intent = 'clarify';
     let order: PendingOrder | null = state.pendingOrder;
@@ -148,8 +153,8 @@ export class SellerService {
 
     if (/\b(?:leave|exit|bus|town|receptionist)\b/.test(text)) { intent = 'directions'; nodeId = 'clothes_seller_directions'; }
     else if (goodbye) { intent = 'goodbye'; order = null; closed = true; nodeId = 'clothes_seller_goodbye'; }
-    else if (cancel) { intent = 'cancel'; order = null; nodeId = 'clothes_seller_cancel'; }
-    else if (affirmative && order && row.current_node_id === 'clothes_seller_order') {
+    else if (answer === 'cancel') { intent = 'cancel'; order = null; nodeId = 'clothes_seller_cancel'; }
+    else if (answer === 'confirm' && order && row.current_node_id === 'clothes_seller_order') {
       const item = items.find(candidate => candidate.id === order!.itemId);
       if (!item || item.price !== order.unitPrice) { intent = 'price_changed'; order = null; nodeId = 'clothes_seller_price_changed'; }
       else if (await this.life.fulfillClothesOrder(client, userId, item, order.orderId)) {
@@ -157,7 +162,7 @@ export class SellerService {
         order = null; nodeId = 'clothes_seller_paid';
       } else { intent = 'insufficient_funds'; values.total = String(item.price); nodeId = 'clothes_seller_insufficient_funds'; }
     }
-    else if (affirmative && !order) { intent = 'no_order'; nodeId = 'clothes_seller_no_order'; }
+    else if (answer === 'confirm' && !order) { intent = 'no_order'; nodeId = 'clothes_seller_no_order'; }
     else if (matches.length === 1) {
       const item = matches[0]!;
       if (/\b(?:want|like|order|buy|have|would like)\b/.test(text)) {

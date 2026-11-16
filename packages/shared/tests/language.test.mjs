@@ -1,18 +1,31 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { checkGrammar, detectIntent, endsWithFarewell, stationReply } from '../dist/index.js';
+import {
+  checkGrammar,
+  detectContextIntent,
+  detectIntent,
+  endsWithFarewell,
+  STATION_OPEN_PROFILE,
+  STATION_QUESTION_PROFILE,
+  stationReply,
+} from '../dist/index.js';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const station = require('../src/dialogue/content/intents.station.json');
 
 test('common intents are reusable and confirmation requires context', () => {
   assert.equal(detectIntent('Exactly'), undefined);
-  for (const input of ['Yes, please', 'Exactly', 'Sure', 'That’s right', 'I need it for a bank account']) assert.equal(detectIntent(input, true).id, 'confirm');
+  assert.equal(detectContextIntent('Exactly', STATION_OPEN_PROFILE).status, 'unclear');
+  for (const input of ['Yes, please', 'Exactly', 'Sure', 'That’s right', 'I need it for a bank account']) {
+    const decision = detectContextIntent(input, STATION_QUESTION_PROFILE);
+    assert.equal(decision.status === 'matched' ? decision.primary : undefined, 'confirm', input);
+  }
   assert.equal(detectIntent('Hello').id, 'greet');
-  assert.equal(detectIntent('I don’t need an ID card', true, station.intents).id, 'deny');
-  assert.deepEqual(detectIntent('Where is the cafe?', false, station.intents).slots, { place: 'cafe' });
+  const denied = detectContextIntent('I don’t need an ID card', STATION_QUESTION_PROFILE);
+  assert.equal(denied.status === 'matched' ? denied.primary : undefined, 'deny');
+  assert.deepEqual(detectIntent('Where is the cafe?', station.intents).slots, { place: 'cafe' });
   const custom = [{ id: 'order_drink', pattern: '\\bcoffee\\b' }];
-  assert.equal(detectIntent('Coffee, please', false, custom).id, 'order_drink');
+  assert.equal(detectIntent('Coffee, please', custom).id, 'order_drink');
 });
 
 test('farewell intent recognizes natural endings without matching questions about farewells', () => {

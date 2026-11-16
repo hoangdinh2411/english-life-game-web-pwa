@@ -6,12 +6,17 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
   checkGrammar,
+  detectContextIntent,
   detectIntent,
   endsWithFarewell,
+  FAREWELL_CLOSING_PROFILE,
   farewellClosing,
   isDirectQuestion,
   normalizeDialogue,
+  SERVICE_CONTINUATION_PROFILE,
   serviceContinuationIntent,
+  STATION_OPEN_PROFILE,
+  STATION_QUESTION_PROFILE,
   stationGreeting,
   stationReply,
 } from '../dist/index.js';
@@ -181,7 +186,7 @@ test('T41.a inventory lists every remaining caller with a valid classification',
   }
   assert.deepEqual(
     commonIntents.intents.map((rule) => rule.id),
-    ['deny', 'goodbye', 'confirm', 'thank', 'greet'],
+    ['goodbye', 'thank', 'greet'],
   );
   assert.deepEqual(
     stationIntents.intents.map((rule) => rule.id),
@@ -189,15 +194,28 @@ test('T41.a inventory lists every remaining caller with a valid classification',
   );
 });
 
-test('detectIntent & intents.common.json: confirm requires confirmation=true; deny/goodbye/thank/greet do not', () => {
-  for (const input of ['yes', 'yeah', 'yep', 'sure', 'exactly', 'of course', 'please', "that's right", 'that is right', 'i need it', 'i want it']) {
-    assert.equal(detectIntent(input, false), undefined, `confirmation=false should ignore: ${input}`);
-    assert.equal(detectIntent(input, true)?.id, 'confirm', `confirmation=true should match: ${input}`);
+test('detectIntent & station profiles (T41.b): confirm/deny removed from detectIntent; station profiles resolve confirm/deny/cancel via lexicon', () => {
+  for (const input of ['yes', 'yeah', 'yep', 'sure', 'exactly', 'of course', "that's right", 'that is right', 'i need it', 'i want it']) {
+    assert.equal(detectIntent(input), undefined, `detectIntent should no longer match confirm: ${input}`);
+    assert.equal(detectContextIntent(input, STATION_OPEN_PROFILE).status, 'unclear', `STATION_OPEN_PROFILE should ignore: ${input}`);
+    const matched = detectContextIntent(input, STATION_QUESTION_PROFILE);
+    assert.equal(matched.status === 'matched' ? matched.primary : undefined, 'confirm', `STATION_QUESTION_PROFILE should match: ${input}`);
   }
   for (const input of ['no', 'not really', "that's not right", 'that is not what I meant', "I don't need an ID card", 'I do not want it', "I didn't mean that"]) {
-    assert.equal(detectIntent(input, false)?.id, 'deny', input);
-    assert.equal(detectIntent(input, true)?.id, 'deny', input);
+    assert.equal(detectIntent(input), undefined, `detectIntent should no longer match deny: ${input}`);
+    for (const profile of [STATION_OPEN_PROFILE, STATION_QUESTION_PROFILE]) {
+      const matched = detectContextIntent(input, profile);
+      assert.equal(matched.status === 'matched' ? matched.primary : undefined, 'deny', input);
+    }
   }
+  for (const input of ['cancel', 'never mind']) {
+    for (const profile of [STATION_OPEN_PROFILE, STATION_QUESTION_PROFILE]) {
+      const matched = detectContextIntent(input, profile);
+      assert.equal(matched.status === 'matched' ? matched.primary : undefined, 'cancel', input);
+    }
+  }
+  assert.equal(FAREWELL_CLOSING_PROFILE.id, 'farewell_closing');
+  assert.equal(SERVICE_CONTINUATION_PROFILE.id, 'service_continuation');
   for (const input of ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 'Hello!']) {
     assert.equal(detectIntent(input)?.id, 'greet', input);
   }
@@ -403,30 +421,40 @@ test('conversation-policy.ts: preserves evaluateFarewell goodbye, follow-up, and
   );
 });
 
-test('seller.service.ts & dialogue.service.ts: preserves clothes seller regexes, cafe negation, ticket refusal, and ID-card topic checks', async () => {
+test('seller.service.ts & dialogue.service.ts: clothes seller uses CLOTHES_ORDER_PROFILE (T41.b) while goodbye, cafe negation, ticket refusal, and ID-card topic checks remain', async () => {
   const sellerSource = await readFile(resolve(repoRoot, 'apps/server/src/modules/conversations/seller.service.ts'), 'utf8');
   const dialogueSource = await readFile(resolve(repoRoot, 'apps/server/src/modules/dialogue/dialogue.service.ts'), 'utf8');
-  assert.match(sellerSource, /const affirmative =/);
-  assert.match(sellerSource, /const cancel =/);
+  const languageSource = await readFile(resolve(repoRoot, 'packages/shared/src/dialogue/language.ts'), 'utf8');
+  const stationSource = await readFile(resolve(repoRoot, 'packages/shared/src/station.ts'), 'utf8');
+  assert.doesNotMatch(sellerSource, /const affirmative =/);
+  assert.doesNotMatch(sellerSource, /const cancel =/);
+  assert.match(sellerSource, /CLOTHES_ORDER_PROFILE/);
   assert.match(sellerSource, /const goodbye =/);
+  assert.doesNotMatch(languageSource, /confirmation = false/);
+  assert.match(languageSource, /FAREWELL_CLOSING_PROFILE/);
+  assert.match(languageSource, /SERVICE_CONTINUATION_PROFILE/);
+  assert.match(stationSource, /STATION_QUESTION_PROFILE/);
   assert.match(dialogueSource, /function isTaxOfficeServiceTopic/);
   assert.match(dialogueSource, /const refused =/);
 
   const words = (text) => normalizeDialogue(text).toLowerCase().replace(/[^a-z0-9']/g, ' ').replace(/\s+/g, ' ').trim();
-
-  // Clothes seller legacy regexes (seller.service.ts lines 140-142)
-  const clothesAffirmative = (input) =>
-    /^(?:yes|yes please|yes thank you|ok|okay|sure|confirm|go ahead|i confirm|that is correct|that's correct)$/.test(words(input));
-  const clothesCancel = (input) =>
-    /^(?:no|no thanks|no thank you|cancel|cancel my order|never mind|nevermind)(?: please)?$/.test(words(input));
+  const clothesProfile = {
+    id: 'clothes_pending_order',
+    allowedIntents: ['confirm', 'deny', 'cancel', 'provide_later'],
+    bareWords: { no: 'cancel', nope: 'cancel', 'not now': 'cancel' },
+  };
+  const clothesAnswer = (input) => {
+    const decision = detectContextIntent(input, clothesProfile);
+    return decision.status === 'matched' && decision.modifiers.length === 0 ? decision.primary : null;
+  };
   const clothesGoodbye = (input) =>
     /^(?:goodbye|bye|see you)(?: soon)?$/.test(words(input));
 
   for (const input of ['yes', 'Yes please', 'yes thank you', 'ok', 'okay', 'sure', 'confirm', 'go ahead', 'I confirm', "that's correct"]) {
-    assert.equal(clothesAffirmative(input), true, input);
+    assert.equal(clothesAnswer(input), 'confirm', input);
   }
   for (const input of ['no', 'no thanks', 'no thank you', 'cancel', 'cancel my order', 'never mind', 'nevermind', 'cancel please']) {
-    assert.equal(clothesCancel(input), true, input);
+    assert.equal(clothesAnswer(input), 'cancel', input);
   }
   for (const input of ['goodbye', 'bye', 'see you', 'see you soon']) {
     assert.equal(clothesGoodbye(input), true, input);

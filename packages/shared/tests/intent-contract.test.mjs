@@ -2,31 +2,41 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   CONTEXT_INTENT_IDS, contextProfileSchema, defineContextProfile, detectContextIntent, detectIntent, farewellClosing,
-  ID_CARD_ADDRESS_PROFILE, ID_CARD_FIELD_PROFILE, ID_CARD_REVIEW_PROFILE, intentResultSchema, serviceContinuationIntent, stationReply,
+  ID_CARD_ADDRESS_PROFILE, ID_CARD_FIELD_PROFILE, ID_CARD_REVIEW_PROFILE, intentResultSchema, serviceContinuationIntent,
+  STATION_OPEN_PROFILE, STATION_QUESTION_PROFILE, stationReply,
 } from '../dist/index.js';
 
 // T40.a characterization: records today's behavior of the legacy matchers so the
 // later migration (T40.c, T41) must change each transition deliberately.
 
-test('detectIntent: confirm only exists with confirmation context; deny/goodbye/greet/thank do not', () => {
+test('detectIntent & station profiles (T41.b): confirm/deny moved to station ContextProfiles; greet/thank/goodbye remain in detectIntent until T41.c', () => {
   const plain = (input) => detectIntent(input)?.id;
-  const asked = (input) => detectIntent(input, true)?.id;
-  for (const input of ['yes', 'Yes, please', 'Exactly', 'Sure', 'Yes, issue my card', 'yes, but change it']) {
+  const openStation = (input) => {
+    const decision = detectContextIntent(input, STATION_OPEN_PROFILE);
+    return decision.status === 'matched' && decision.modifiers.length === 0 ? decision.primary : undefined;
+  };
+  const askedStation = (input) => {
+    const decision = detectContextIntent(input, STATION_QUESTION_PROFILE);
+    return decision.status === 'matched' && decision.modifiers.length === 0 ? decision.primary : undefined;
+  };
+  for (const input of ['yes', 'Yes, please', 'Exactly', 'Sure', 'Yes, issue my card', 'ok', 'okay']) {
     assert.equal(plain(input), undefined, input);
-    assert.equal(asked(input), 'confirm', input);
+    assert.equal(openStation(input), undefined, input);
+    assert.equal(askedStation(input), 'confirm', input);
   }
-  for (const input of ['no', 'No thanks', 'not really', "I don't need an ID card", 'No, but I need to change my photo']) {
-    assert.equal(plain(input), 'deny', input);
-    assert.equal(asked(input), 'deny', input);
+  for (const input of ['no', 'No thanks', 'nope', 'not really', "I don't need an ID card"]) {
+    assert.equal(plain(input), input === 'No thanks' ? 'thank' : undefined, input);
+    assert.equal(openStation(input), 'deny', input);
+    assert.equal(askedStation(input), 'deny', input);
   }
+  assert.equal(openStation('cancel'), 'cancel');
+  assert.equal(askedStation('cancel'), 'cancel');
   assert.equal(plain('Hello'), 'greet');
   assert.equal(plain('thanks'), 'thank');
   assert.equal(plain('Goodbye'), 'goodbye');
-  // Known gaps in the legacy matcher: no cancel, unknown, not_available or provide_later,
-  // and "nope", "ok" and "okay" are not recognised.
-  for (const input of ['nope', 'ok', 'okay', 'cancel', "I don't know", 'maybe',
+  for (const input of ["I don't know", 'maybe', 'yes, but change it', 'No, but I need to change my photo',
     "Sorry, I don't have any address right now", "I don't have one, but I'll provide it later"]) {
-    assert.equal(asked(input), undefined, input);
+    assert.equal(askedStation(input), undefined, input);
   }
 });
 
