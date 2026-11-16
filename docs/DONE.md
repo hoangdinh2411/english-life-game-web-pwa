@@ -28,7 +28,21 @@
 - T38.2 | Client preference synchronization | 2026-10-25 | Synchronized account learning preferences with debounced race-safe saves, visible retry, and device-local Sound.
 - T38.4 | Separate Settings overlay | 2026-10-25 | Added responsive full preference controls, account save feedback, local-practice messaging, and Back-to-menu navigation.
 - T38.5 | Five-page tutorial behavior | 2026-10-25 | Added page navigation, first-run persistence, menu replay, keyboard controls, and non-pausing world behavior.
+- T38.6 | Tutorial artwork and fixed narration | 2026-10-26 | Added approved five-page tutorial illustrations and fixed narration audio integration.
+- ONB-01.8 | Country-first onboarding verification and cleanup | 2026-10-26 | Completed onboarding verification and world-clock synchronization checks.
+- T39.5 | Regression, responsive QA and maintained docs | 2026-10-27 | Verified station, café, and clothes shop NPC presence across viewports and updated maintained docs.
+- T36a | Tax office and staff | 2026-11-05 | Added the Tax Office interior map, Town Street portal, and two staff NPCs with opening hours.
+- T36b | Services Q&A | 2026-11-06 | Added deterministic scripted service Q&A for ID card registration, updates, and permanent validity.
+- T36c | Application conversation | 2026-11-07 | Added server-owned multi-step ID card application conversation with conservative no-address handling and review state.
+- T36d | ID card photo upload, camera and issuance | 2026-11-08 | Added in-memory client photo capture/upload, sharp processing, private Storage upload, and idempotent card issuance.
+- T36e | ID card number generation and parity | 2026-11-08 | Added unique 12-digit `YYYYMMDD-XXXX` ID numbers with gender parity and collision retries.
 - T36f | ID card storage, API and updates | 2026-11-10 | Added authenticated card reads, signed photo URLs, and server-owned address helpers.
+- T36g | ID card icon and info panel | 2026-11-11 | Added compact profile ID card icon and accessible read-only inspection modal with Tax Office update hint.
+- T40.a | Contract and characterization | 2026-11-12 | Defined shared `ContextProfile` and `IntentResult` contracts and characterized legacy intent matchers.
+- T40.b | Shared lexicon and deterministic detector | 2026-11-12 | Implemented pure clause-aware intent detector and validated phrase DSL in `intent-lexicon.json`.
+- T40.c | Domain-owned decisions and authored clarification | 2026-11-13 | Migrated ID-card application and cafe pending-order confirm/cancel to `detectContextIntent` and `ContextProfile`.
+- T40.d | Constrained AI fallback policy | 2026-11-13 | Added opt-in constrained AI intent fallback with strict allowlist validation and privacy guards.
+- T40.e | Verification and extension guide | 2026-11-14 | Verified shared contextual intent detection and documented the store/building extension checklist in `docs/TECH.md`.
 - T41.a | Inventory and characterization of remaining legacy intent matching | 2026-11-14 | Inventoried and classified all remaining legacy intent callers and added baseline characterization tests in `packages/shared/tests/intent-legacy-characterization.test.mjs`.
 - T41.b | Confirm, deny and cancel consumers | 2026-11-15 | Migrated farewellClosing, serviceContinuationIntent, stationReply, and clothes seller order confirm/cancel to ContextProfiles and detectContextIntent, and removed confirm/deny and the confirmation flag from detectIntent and intents.common.json.
 - T41.c | Greet, thank and goodbye in shared lexicon | 2026-11-16 | Added greet, thank, and goodbye to CONTEXT_INTENT_IDS and intent-lexicon.json, defined FAREWELL_PROFILE and SOCIAL_INTENT_PROFILE in language.ts, and updated station profiles and language helpers to resolve social intents via detectContextIntent.
