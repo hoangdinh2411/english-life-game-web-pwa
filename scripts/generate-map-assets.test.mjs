@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -144,6 +145,48 @@ test('Town Street map packages all data-authored residents at their route start 
       assert.deepEqual(atlas.frames['walk-2-1'].frame, { x: 128, y: 384, w: 128, h: 192 });
       assert.ok(Object.values(atlas.frames).every(({ frame: item }) => item.y < image.readUInt32BE(20)), `${npc.id} atlas coordinates fit the image`);
     }
+  } finally {
+    await rm(rootDirectory, { recursive: true, force: true });
+  }
+});
+
+test('Airport Departure and Arrival maps package 128x192 player atlas, backgrounds, and check-in agent actors', async () => {
+  const rootDirectory = await mkdtemp(join(tmpdir(), 'life-abroad-airport-assets-test-'));
+  try {
+    const playerAtlasPng = await readFile(new URL('../apps/game/assets/runtime/player-male.png', import.meta.url));
+    const requestedPaths = [];
+    const mockSource = async (path) => {
+      requestedPaths.push(path);
+      if (path === 'runtime/player-male.png') return playerAtlasPng;
+      return Buffer.from(`asset:${path}`);
+    };
+
+    const departureDir = await generator.saveMapAssets('loc_airport_departure', rootDirectory, { source: mockSource });
+    assert.equal(departureDir, join(rootDirectory, 'loc_airport_departure'));
+    assert.deepEqual(await readFile(join(departureDir, 'background.png')), Buffer.from('asset:locations/location_airport_departure.png'));
+    const savedPlayer = await readFile(join(departureDir, 'player.png'));
+    assert.deepEqual(savedPlayer, playerAtlasPng);
+    assert.deepEqual([savedPlayer.readUInt32BE(16), savedPlayer.readUInt32BE(20)], [512, 768]);
+
+    const departureActors = JSON.parse(await readFile(join(departureDir, 'actors.json'), 'utf8')).actors;
+    assert.deepEqual(departureActors, [
+      { npcId: 'npc_airport_agent', x: 768, y: 420, frame: 'walk', texture: 'npc-npc_airport_agent', scale: 0.6 },
+    ]);
+    const agentAtlas = JSON.parse(await readFile(join(departureDir, 'npc-npc_airport_agent-atlas.json'), 'utf8'));
+    assert.equal(Object.keys(agentAtlas.frames).length, 17);
+    assert.deepEqual(agentAtlas.frames['walk-0-0'].frame, { x: 0, y: 0, w: 128, h: 192 });
+    assert.deepEqual(await readFile(join(departureDir, 'npc-npc_airport_agent.png')), Buffer.from('asset:npcs/npc_airport_agent/walk.png'));
+    assert.deepEqual(await readFile(join(departureDir, 'portrait-npc_airport_agent.png')), Buffer.from('asset:npcs/npc_airport_agent/portraits.png'));
+
+    const arrivalDir = await generator.saveMapAssets('loc_airport_arrival', rootDirectory, { source: mockSource });
+    assert.equal(arrivalDir, join(rootDirectory, 'loc_airport_arrival'));
+    assert.deepEqual(await readFile(join(arrivalDir, 'background.png')), Buffer.from('asset:locations/location_airport_arrival.png'));
+    assert.deepEqual(await readFile(join(arrivalDir, 'player.png')), playerAtlasPng);
+    const arrivalActors = JSON.parse(await readFile(join(arrivalDir, 'actors.json'), 'utf8')).actors;
+    assert.deepEqual(arrivalActors, []);
+    assert.equal(JSON.parse(await readFile(join(arrivalDir, 'animations.json'), 'utf8')).animations.length, 4);
+    assert.ok(requestedPaths.includes('locations/location_airport_departure.png'));
+    assert.ok(requestedPaths.includes('locations/location_airport_arrival.png'));
   } finally {
     await rm(rootDirectory, { recursive: true, force: true });
   }

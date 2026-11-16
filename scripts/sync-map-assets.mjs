@@ -5,7 +5,16 @@ import { extname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const assetRoot = fileURLToPath(new URL('../local-assets/maps/', import.meta.url));
-const supportedMaps = new Set(['loc_station', 'loc_town_street', 'loc_cafe', 'loc_corner_cafe', 'loc_clothes', 'loc_tax_office']);
+export const supportedMaps = new Set([
+  'loc_station',
+  'loc_town_street',
+  'loc_cafe',
+  'loc_corner_cafe',
+  'loc_clothes',
+  'loc_tax_office',
+  'loc_airport_departure',
+  'loc_airport_arrival',
+]);
 const supplementalAssets = new Map([
   ['loc_station', [
     { path: 'source/runtime/backpack-portrait.png' },
@@ -82,9 +91,9 @@ export function deduplicateIdenticalAssets(assets) {
   return uniqueAssets;
 }
 
-export async function syncMapAssets({ mapId, baseUrl, serviceKey, dryRun = false, fetcher = fetch }) {
+export async function syncMapAssets({ mapId, baseUrl, serviceKey, dryRun = false, fetcher = fetch, rootDirectory = assetRoot }) {
   if (!supportedMaps.has(mapId)) throw new Error(`Unsupported map: ${mapId}`);
-  const directory = join(assetRoot, mapId);
+  const directory = join(rootDirectory, mapId);
   const sources = [
     ...(await filesBelow(directory)).map(path => ({ path })),
     ...(supplementalAssets.get(mapId) ?? []).map(asset => ({ ...asset, path: join(directory, asset.path) })),

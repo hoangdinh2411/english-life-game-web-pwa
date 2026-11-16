@@ -68,6 +68,8 @@ const migratedSourcePaths = new Map([
   ['npcs/npc_jamal_dog_walker/portraits.png', 'loc_town_street/portrait-npc_jamal_dog_walker.png'],
   ['npcs/npc_tara_musician/walk.png', 'loc_town_street/street-npcs-15.png'],
   ['npcs/npc_tara_musician/portraits.png', 'loc_town_street/portrait-npc_tara_musician.png'],
+  ['npcs/npc_airport_agent/walk.png', 'loc_airport_departure/npc-npc_airport_agent.png'],
+  ['npcs/npc_airport_agent/portraits.png', 'loc_airport_departure/portrait-npc_airport_agent.png'],
 ]);
 
 function sourceAsset(path) {
@@ -99,7 +101,7 @@ async function npcAsset(reference) {
 }
 
 // Package authored artwork byte-for-byte. Never substitute generated placeholders.
-async function mapAssets(mapId) {
+async function mapAssets(mapId, { source = sourceAsset, npcCatalog } = {}) {
   const backgrounds = {
     loc_station: 'location_station_map_labeled.png',
     loc_town_street: 'location_maplewood_street_expanded.png',
@@ -107,9 +109,10 @@ async function mapAssets(mapId) {
     loc_corner_cafe: 'location_cafe_interior.png',
     loc_clothes: 'location_clothes_interior.png',
     loc_tax_office: 'location_tax_office_interior_labeled.png',
+    loc_airport_departure: 'location_airport_departure.png',
+    loc_airport_arrival: 'location_airport_arrival.png',
   };
   if (!Object.hasOwn(backgrounds, mapId)) throw new Error('Unsupported destination map');
-  const source = sourceAsset;
   const assets = [
     { name: 'background.png', type: 'map', mime: 'image/png', data: await source(`locations/${backgrounds[mapId]}`) },
     { name: 'player.png', type: 'spritesheet', mime: 'image/png', data: await source('runtime/player-male.png') },
@@ -170,23 +173,28 @@ async function mapAssets(mapId) {
       { npcId: 'npc_mia', x: 800, y: 390 },
       { npcId: 'npc_cafe_waiter', x: 1000, y: 460 },
       { npcId: 'npc_cafe_customer', x: 430, y: 600 },
+    ] : mapId === 'loc_airport_departure' ? [
+      { npcId: 'npc_airport_agent', x: 768, y: 420 },
+    ] : mapId === 'loc_airport_arrival' ? [
     ] : [
       { npcId: 'npc_clothes_seller', x: 1005, y: 405 },
       { npcId: 'npc_clothes_assistant', x: 550, y: 500 },
       { npcId: 'npc_clothes_customer', x: 970, y: 690 },
     ];
-    const catalog = JSON.parse(await readFile(npcDataUrl, 'utf8'));
+    const catalog = npcCatalog ?? JSON.parse(await readFile(npcDataUrl, 'utf8'));
     const byId = new Map(catalog.map(npc => [npc.id, npc]));
     const actorData = [];
     for (const actor of actors) {
       const npc = byId.get(actor.npcId);
-      if (!npc?.walkImageUrl) throw new Error(`${actor.npcId} is missing its walking asset`);
+      const walkImageUrl = npc?.walkImageUrl ?? (actor.npcId === 'npc_airport_agent' ? 'npcs/npc_airport_agent/walk.png' : undefined);
+      const portraitImageUrl = npc?.portrait?.imageUrl ?? (actor.npcId === 'npc_airport_agent' ? 'npcs/npc_airport_agent/portraits.png' : undefined);
+      if (!npc || !walkImageUrl || !portraitImageUrl) throw new Error(`${actor.npcId} is missing its walking asset`);
       const key = `npc-${actor.npcId}`;
       const filename = `${key}.png`;
       assets.push(
-        { name: filename, type: 'image', mime: 'image/png', data: await source(npc.walkImageUrl) },
+        { name: filename, type: 'image', mime: 'image/png', data: await source(walkImageUrl) },
         { name: `${key}-atlas.json`, type: 'json', mime: 'application/json', data: npcWalkAtlas(filename) },
-        { name: `portrait-${npc.id}.png`, type: 'image', mime: 'image/png', npcId: npc.id, data: await source(npc.portrait.imageUrl) },
+        { name: `portrait-${npc.id}.png`, type: 'image', mime: 'image/png', npcId: npc.id, data: await source(portraitImageUrl) },
       );
       actorData.push({ ...actor, frame: 'walk', texture: key, scale: 0.6 });
     }
@@ -195,8 +203,8 @@ async function mapAssets(mapId) {
   return assets;
 }
 
-export async function saveMapAssets(mapId, outputRoot = localAssetRoot) {
-  const assets = await mapAssets(mapId);
+export async function saveMapAssets(mapId, outputRoot = localAssetRoot, options = {}) {
+  const assets = await mapAssets(mapId, options);
   const directory = join(outputRoot, mapId);
   await mkdir(directory, { recursive: true });
   for (const asset of assets) await writeFile(join(directory, asset.name), asset.data);
