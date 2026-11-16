@@ -102,3 +102,16 @@ export interface MessageComposerProps {
 export interface PwaStatusProps {
   playing: boolean;
 }
+export interface FlightCutsceneProps {
+  destinationCountryName?: string | undefined;
+  durationMs?: number | undefined;
+  onComplete: () => void;
+}
+export interface BaggageClaimOverlayProps {
+  claiming: boolean;
+  claimed: boolean;
+  coinsGranted?: number | undefined;
+  error?: string | undefined;
+  onClaim: () => void;
+  onClose?: (() => void) | undefined;
+}
