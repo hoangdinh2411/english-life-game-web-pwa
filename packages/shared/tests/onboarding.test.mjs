@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseCountryCatalog, parseCreateCharacterRequest, parseOnboardingOptions } from '../dist/onboarding.js';
+import {
+  parseClaimBaggageRequest,
+  parseCountryCatalog,
+  parseCreateCharacterRequest,
+  parseOnboardingOptions,
+  parsePassportDraft,
+} from '../dist/onboarding.js';
 
 // A permissive parser could let clients choose server-owned setup state or save malformed names.
 test('creation normalizes valid Unicode names, requires gender and rejects every server-owned field', () => {
@@ -40,4 +46,22 @@ test('country content validates ISO, IANA time zone and internal starter city', 
   assert.deepEqual(parseCountryCatalog([sweden]), [sweden]);
   assert.throws(() => parseCountryCatalog([{ ...sweden, timeZone: 'Stockholm' }]), /time zone/i);
   assert.throws(() => parseCountryCatalog([{ ...sweden, isoCode: 'SWE' }]), /ISO/i);
+});
+
+test('passport draft validates name, gender, and optional avatarId while rejecting unexpected fields', () => {
+  assert.deepEqual(parsePassportDraft({ name: '  Minh  ', gender: 'male' }), {
+    name: 'Minh', gender: 'male',
+  });
+  assert.deepEqual(parsePassportDraft({ name: 'Ánh', gender: 'female', avatarId: 'avatar_traveler_01' }), {
+    name: 'Ánh', gender: 'female', avatarId: 'avatar_traveler_01',
+  });
+  assert.throws(() => parsePassportDraft({ name: 'Minh', gender: 'male', avatarId: 'bad' }), /avatar/i);
+  assert.throws(() => parsePassportDraft({ name: 'Minh', gender: 'male', countryId: 'country_sweden' }), /unexpected/i);
+});
+
+test('claim baggage request requires a valid UUID idempotency key and rejects extra fields', () => {
+  const key = '550e8400-e29b-41d4-a716-446655440000';
+  assert.deepEqual(parseClaimBaggageRequest({ idempotencyKey: key }), { idempotencyKey: key });
+  assert.throws(() => parseClaimBaggageRequest({ idempotencyKey: 'not-a-uuid' }), /idempotency/i);
+  assert.throws(() => parseClaimBaggageRequest({ idempotencyKey: key, coins: 500 }), /unexpected/i);
 });

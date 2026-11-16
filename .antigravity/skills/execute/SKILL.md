@@ -28,7 +28,8 @@ Execute the task card defined in `.antigravity/current-task.md` safely and rigor
    - Keep changes minimal, coherent, and maintainable.
    - Respect non-negotiable boundaries from `AGENTS.md` (auth, server-owned progression, semantic styling tokens, client/server boundaries).
 4. **Verification & Acceptance Checks:**
-   - Run `pnpm typecheck` and any task-relevant validations (e.g., `pnpm test`, `pnpm content:validate`, integration tests).
+   - Run `pnpm typecheck` and any task-relevant validations (e.g., `pnpm test`, integration tests).
+   - **Auto Content Check:** If any file under `content/` or `packages/shared/src/dialogue/content/` (or content schemas) was modified, automatically run `pnpm content:validate` (`content-check`).
    - If UI/API testing is required, test using the fixed credentials (`test@gmail.com` / `12341234`) on `http://localhost:8082` / `http://localhost:3000`.
    - Inspect `git diff` to confirm zero unintended modifications or scope creep.
 5. **Update Status & Report:**

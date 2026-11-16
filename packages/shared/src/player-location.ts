@@ -1,8 +1,11 @@
 import { z } from 'zod';
 
-export const playerMapIdSchema = z.enum(['loc_station', 'loc_town_street']);
+export const playerMapIdSchema = z.enum([
+  'loc_station', 'loc_town_street', 'loc_airport_departure', 'loc_airport_arrival',
+]);
 export const playerPlaceIdSchema = z.enum([
   'loc_station', 'loc_town_street', 'loc_cafe', 'loc_corner_cafe', 'loc_clothes', 'loc_tax_office',
+  'loc_airport_departure', 'loc_airport_arrival',
 ]);
 
 export const playerLocationSchema = z.object({
@@ -13,7 +16,9 @@ export const playerLocationSchema = z.object({
 }).strict().refine(({ mapId, placeId }) => (
   mapId === 'loc_station'
     ? placeId === 'loc_station' || placeId === 'loc_cafe' || placeId === 'loc_clothes'
-    : placeId === 'loc_town_street' || placeId === 'loc_corner_cafe' || placeId === 'loc_tax_office'
+    : mapId === 'loc_town_street'
+      ? placeId === 'loc_town_street' || placeId === 'loc_corner_cafe' || placeId === 'loc_tax_office'
+      : placeId === mapId
 ), { message: 'Place does not belong to the selected map', path: ['placeId'] })
   .refine(({ mapId, x, y }) => mapId === 'loc_town_street' ? x <= 2304 && y <= 1536 : x <= 1536 && y <= 1024,
     { message: 'Position is outside the selected map', path: ['x'] });

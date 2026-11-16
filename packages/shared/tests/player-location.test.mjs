@@ -13,6 +13,16 @@ test('player location accepts only authored map and place combinations', () => {
   assert.deepEqual(playerLocationSchema.parse({ mapId: 'loc_town_street', placeId: 'loc_tax_office', x: 768, y: 860 }), {
     mapId: 'loc_town_street', placeId: 'loc_tax_office', x: 768, y: 860,
   });
+  assert.deepEqual(playerLocationSchema.parse({ mapId: 'loc_airport_departure', placeId: 'loc_airport_departure', x: 768, y: 512 }), {
+    mapId: 'loc_airport_departure', placeId: 'loc_airport_departure', x: 768, y: 512,
+  });
+  assert.deepEqual(playerLocationSchema.parse({ mapId: 'loc_airport_arrival', placeId: 'loc_airport_arrival', x: 768, y: 512 }), {
+    mapId: 'loc_airport_arrival', placeId: 'loc_airport_arrival', x: 768, y: 512,
+  });
+  assert.throws(() => playerLocationSchema.parse({ mapId: 'loc_airport_departure', placeId: 'loc_airport_arrival', x: 100, y: 100 }));
+  assert.throws(() => playerLocationSchema.parse({ mapId: 'loc_airport_arrival', placeId: 'loc_station', x: 100, y: 100 }));
+  assert.throws(() => playerLocationSchema.parse({ mapId: 'loc_station', placeId: 'loc_airport_departure', x: 100, y: 100 }));
+  assert.throws(() => playerLocationSchema.parse({ mapId: 'loc_airport_departure', placeId: 'loc_airport_departure', x: 1537, y: 512 }));
   assert.throws(() => playerLocationSchema.parse({ mapId: 'loc_station', placeId: 'loc_corner_cafe', x: 1, y: 1 }));
   assert.throws(() => playerLocationSchema.parse({ mapId: 'loc_town_street', placeId: 'loc_clothes', x: 1, y: 1 }));
   assert.throws(() => playerLocationSchema.parse({ mapId: 'loc_station', placeId: 'loc_cafe', x: 700, y: 800, coins: 999 }));

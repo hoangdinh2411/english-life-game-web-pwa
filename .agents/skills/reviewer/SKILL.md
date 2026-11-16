@@ -16,6 +16,7 @@ Responsible for automated quality gate verification, coder feedback, and user-fa
 
 2. **Run Checks**:
    - Always: `pnpm typecheck`.
+   - Automatically run `pnpm content:validate` (via `content-check`) whenever any file in `content/` or `packages/shared/src/dialogue/content/` (or related content schemas) is modified.
    - When relevant to the task (per `docs/MASTER_PROMPT.md` §6): `pnpm lint`, focused tests (`pnpm test`, `pnpm test:integration`), `pnpm content:validate`, and verification of the task's acceptance criteria.
    - Do not start servers if the user said they are already running.
 

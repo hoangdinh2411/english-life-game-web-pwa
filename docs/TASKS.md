@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36f–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.c; S2–S7.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.c; T42.a; S2–S7.
 
 ## How to work
 
@@ -80,12 +80,6 @@ database: https://wedjinchhlybabstcchp.supabase.co
       state their destination country in English, watches a brief airplane flight
       cutscene, lands at Baggage Claim to locate their suitcase, receives the
       starter $500 cash upon claiming, and exits to begin their life in town.
-  - [ ] **T42.a — Core Types, Contracts & Location Schema (Shared & UI Props).** Add
-        `loc_airport_departure` and `loc_airport_arrival` to `playerMapIdSchema`
-        and `playerPlaceIdSchema`; define `PassportDraft`, `ClaimBaggageRequest`,
-        `ClaimBaggageResponse`, `AirportPrologueStep`, and `AirportPrologueState`
-        in `packages/shared`, along with client component props (`FlightCutsceneProps`,
-        `BaggageClaimOverlayProps`).
   - [ ] **T42.b — Airport Locations Migration & Content Seeds.** Add forward
         migration for `loc_airport_departure` and `loc_airport_arrival` in
         `locations`; seed airport places into `town.json`, `npc_airport_agent`

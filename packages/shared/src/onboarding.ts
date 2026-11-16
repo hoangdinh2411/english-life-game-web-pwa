@@ -19,6 +19,37 @@ export interface OnboardingOptions {
 
 export type PlayerGender = 'female' | 'male';
 
+export interface PassportDraft {
+  name: string;
+  gender: PlayerGender;
+  avatarId?: string;
+}
+
+export type AirportPrologueStep =
+  | 'passport'
+  | 'departure_terminal'
+  | 'check_in'
+  | 'flight_cutscene'
+  | 'arrival_baggage'
+  | 'completed';
+
+export interface AirportPrologueState {
+  step: AirportPrologueStep;
+  checkedIn: boolean;
+  destinationCountryId: string | null;
+  baggageClaimed: boolean;
+}
+
+export interface ClaimBaggageRequest {
+  idempotencyKey: string;
+}
+
+export interface ClaimBaggageResponse {
+  claimed: boolean;
+  coinsGranted: number;
+  coins: number;
+}
+
 export interface CreateCharacterRequest {
   name: string;
   countryId: string;
@@ -101,3 +132,33 @@ export function parseOnboardingOptions(value: unknown): OnboardingOptions {
   return { countries };
 }
 export const createCharacterSchema = schemaFromParser(parseCreateCharacterRequest);
+
+export function parsePassportDraft(value: unknown): PassportDraft {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('Invalid passport draft');
+  const draft = value as Record<string, unknown>;
+  if (Object.keys(draft).some(key => !['name', 'gender', 'avatarId'].includes(key))) throw new Error('Unexpected passport draft field');
+  if (typeof draft.name !== 'string') throw new Error('Invalid character name');
+  const name = draft.name.trim().normalize('NFC');
+  const length = [...name].length;
+  if (length < 2 || length > 20 || !/^\p{L}[\p{L}\p{M}]*(?:[ '-]\p{L}[\p{L}\p{M}]*)*$/u.test(name)) {
+    throw new Error('Invalid character name');
+  }
+  if (draft.gender !== 'female' && draft.gender !== 'male') throw new Error('Invalid player gender');
+  if (draft.avatarId !== undefined && (typeof draft.avatarId !== 'string' || !/^avatar_[a-z0-9_]+$/.test(draft.avatarId))) {
+    throw new Error('Invalid avatar id');
+  }
+  return draft.avatarId !== undefined ? { name, gender: draft.gender, avatarId: draft.avatarId } : { name, gender: draft.gender };
+}
+
+export function parseClaimBaggageRequest(value: unknown): ClaimBaggageRequest {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('Invalid claim baggage request');
+  const request = value as Record<string, unknown>;
+  if (Object.keys(request).some(key => key !== 'idempotencyKey')) throw new Error('Unexpected claim baggage request field');
+  if (typeof request.idempotencyKey !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(request.idempotencyKey)) {
+    throw new Error('Invalid idempotency key');
+  }
+  return { idempotencyKey: request.idempotencyKey };
+}
+
+export const passportDraftSchema = schemaFromParser(parsePassportDraft);
+export const claimBaggageRequestSchema = schemaFromParser(parseClaimBaggageRequest);

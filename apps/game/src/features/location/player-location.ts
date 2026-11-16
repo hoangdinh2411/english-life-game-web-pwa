@@ -5,6 +5,8 @@ const PLACE_LOCATIONS: Record<PlayerLocation['placeId'], MapLocation> = {
   loc_station: 'station', loc_town_street: 'street', loc_cafe: 'cafe',
   loc_corner_cafe: 'corner_cafe', loc_clothes: 'clothes',
   loc_tax_office: 'tax_office',
+  loc_airport_departure: 'station',
+  loc_airport_arrival: 'station',
 };
 
 const PLACE_IDS: Record<MapLocation, PlayerLocation['placeId']> = {
