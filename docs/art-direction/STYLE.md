@@ -81,13 +81,13 @@ the non-dry-run production command be executed. Never interpret “looks good”
 
 (Fill once from the refs. Describe only what you can see. Do not invent.)
 
-- Camera angle:
-- Outline:
-- Shading:
-- Palette (hex codes):
-- Light direction:
-- Level of detail:
-- Proportions:
+- Camera angle: Elevated three-quarter top-down orthographic view for interiors and maps; straight-on eye-level front/side/back view for character sprites, portraits, and standalone props.
+- Outline: Clean, consistent dark brown-ink (`#594B45`) outer and inner linework with rounded corners and slightly thicker exterior silhouettes.
+- Shading: Soft cel-shaded and painterly warm gradients with subtle specular highlights and soft contact shadows beneath characters, furniture, and architectural trim.
+- Palette (hex codes): Warm cream (`#F6E7CB`), dark brown ink (`#594B45`), muted terracotta (`#CB8067`), sage green (`#95AB8D`), slate blue (`#789DAA`), and warm brass/gold (`#D8B36A`).
+- Light direction: Warm top-left / overhead ambient illumination supplemented by warm golden wall sconces and desk lamps in interiors.
+- Level of detail: Clean, readable storybook 2D illustration; geometric floor tile patterns, neatly grouped furniture and potted plants, simplified facial features (large expressive eyes, small nose/mouth), and clear uppercase English signage on plaques.
+- Proportions: Chibi characters roughly 2.5 to 3 heads tall with rounded heads, compact torsos, and short limbs; chunky, rounded furniture and props scaled to match the 32x32 tile grid and 128x192 character frames.
 
 ## Technical rules
 

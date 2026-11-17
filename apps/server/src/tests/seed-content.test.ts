@@ -18,7 +18,8 @@ test('T2 committed content and all scope references validate', async () => {
   for (const id of TOWN_STREET_NPC_IDS) assert.ok(content.streetNpcs.npcs.some(npc => npc.id === id));
   for (const id of TAX_OFFICE_NPC_IDS) assert.ok(content.npcs.some(npc => npc.id === id));
   const portraits = content.npcs.filter(npc => npc.portrait);
-  assert.equal(portraits.length, SHOP_NPC_IDS.length + TOWN_STREET_NPC_IDS.length + TAX_OFFICE_NPC_IDS.length);
+  assert.ok(portraits.some(npc => npc.id === 'npc_airport_agent'));
+  assert.equal(portraits.length, SHOP_NPC_IDS.length + TOWN_STREET_NPC_IDS.length + TAX_OFFICE_NPC_IDS.length + 1);
   assert.equal(new Set(portraits.map(npc => `${npc.portrait!.imageUrl}:${npc.portrait!.index}`)).size, portraits.length);
   assert.equal(content.quests.length, 7);
   assert.deepEqual(new Set(content.dialogues.map(file => file.scope)), new Set(['global', 'npc', 'role']));
