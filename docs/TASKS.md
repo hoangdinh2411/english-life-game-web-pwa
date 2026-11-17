@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36a–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.d; S2–S7.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.d; S2–S7; T43.a.
 
 ## How to work
 
@@ -120,6 +120,50 @@ database: https://wedjinchhlybabstcchp.supabase.co
         (`players.integration.test.ts`, `first-run.integration.test.ts`), run
         `pnpm typecheck`, `pnpm test`, and `pnpm content:validate` to verify zero
         regressions.
+
+- [ ] **T43 — Dual-Mode Architecture (Kid & Adult) & Pluggable Job Minigame Framework.**
+      Build an adaptive learning architecture where English is the primary tool to progress,
+      work, and interact. Both modes share the underlying engine while dynamically adapting
+      visuals, navigation, HUD, dialogue inputs, and minigames based on `userMode: 'kid' | 'adult'`.
+      All voice and pronunciation features use the project's studio TTS architecture (Kokoro-82M
+      offline MP3s + Azure Neural TTS via `createProcessedAudio` with `@soundtouchjs/audio-worklet` DSP),
+      strictly eliminating robotic browser Web Speech synthesis.
+  - [x] **T43.a — Core Contracts, userMode Persistence & Dual Input Shell.** Add
+        `userMode` to `playerPreferencesSchema` and database migration; implement CSS
+        theme tokens, settings mode toggle, touch `VirtualJoystick`, `KidDialogueInput`,
+        `AdultDialogueInput`, `GrammarFeedbackTag`, and baseline `JobShellModal` + `AssemblyEngine`.
+  - [ ] **T43.b — Wordbook System (Illustrated Flashcards & CEFR Vocabulary).** Implement
+        the Wordbook HUD icon (`📖`) and modal view: Kid Mode renders illustrated flashcards
+        with picture, phonics and high-fidelity pronunciation audio using the project's Kokoro/Azure
+        audio catalog via `createProcessedAudio`; Adult Mode renders searchable CEFR
+        vocabulary lists (`A1/A2/B1`) with contextual definitions, example sentences, and audio replay.
+  - [ ] **T43.c — Contextual Dynamic Word Cards Tray for Dialogue.** Replace static
+        word cards in `KidDialogueInput` with dynamic vocabulary loaded from active NPC
+        dialogue nodes, questions, and venue catalogs (e.g. food items at café, tickets at station),
+        with tap-to-pronounce audio preview using the project's speech audio engine.
+  - [ ] **T43.d — AI & Authored Dialogue Job Minigame Trigger Bridge.** Connect dialogue
+        parser so that when NPC dialogue confirms an order (`order_confirmed: true`, `items`),
+        it automatically launches `JobShellModal`, and post-minigame shift reports seamlessly
+        return to the conversation and commit server progression.
+  - [ ] **T43.e1 — Job Gameplay Archetype: Sorting & Classification Engine.** Implement
+        `SortingEngine.tsx` for drag/swipe item classification into bins (e.g. mail room postal
+        sorting, airport luggage security scanning).
+  - [ ] **T43.e2 — Job Gameplay Archetype: Matching & Inspection Engine.** Implement
+        `MatchingEngine.tsx` for document/stamp inspection and verification (e.g. airport passport
+        control, tax office document approval).
+  - [ ] **T43.e3 — Job Gameplay Archetype: Precision Gauge & Timing Engine.** Implement
+        `TimingEngine.tsx` for slider/meter precision sweet spots (e.g. barista espresso extraction,
+        milk steaming, clinic lab measurement).
+  - [ ] **T43.e4 — Multi-Industry Job Registry & Sample Shift Scenarios.** Expand
+        `job-registry.ts` with diverse sample jobs across archetypes (Barista, Mail Sorter, Passport Inspector)
+        with customer dialogue tickets and reward configs.
+  - [ ] **T43.f — Overworld Proximity Interaction Bubbles & Themed Mode Signage.** Add
+        floating interactive speech bubbles above NPCs in Phaser when the player approaches;
+        render mode-specific signage overlays (Kid: iconic visual landmark badges; Adult: realistic
+        English street signage like "Hiring Now", "Sushi Bar").
+  - [ ] **T43.g — Full Integration & Verification.** Perform comprehensive end-to-end
+        verification across both modes, PWA offline behavior, mobile touch navigation,
+        and full test suites (`pnpm typecheck`, `pnpm test`, `pnpm content:validate`).
 
 - [ ] **ONB-01 — One-page country setup, shared country clocks and quick rest.**
       Replace the multi-screen country/avatar/name flow with one short first-run
