@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { DialogueMessage } from "../../gameplay/DialogueMessage";
-import { MessageComposer } from "../../gameplay/MessageComposer";
 import { GameButton } from "../../gameplay/GameButton";
 import { npcPortraits, playerPortraitPresentation } from "../../gameplay/portraits";
 import type { PlayerGender } from "@life-abroad/shared";
@@ -8,6 +7,10 @@ import { displayConversationInput, isPhotoSelectionInput, type ConversationSnaps
 import { useSavedConversation } from "./use-saved-conversation";
 import { IdCardApplicationReview } from "../id-card/IdCardApplicationReview";
 import { IdCardIssuingSpinner } from "../id-card/IdCardIssuingSpinner";
+import { usePreferences } from "../hud/usePreferences";
+import { KidDialogueInput } from "./KidDialogueInput";
+import { AdultDialogueInput } from "./AdultDialogueInput";
+import { GrammarFeedbackTag } from "./GrammarFeedbackTag";
 
 export function SavedConversation({
   state,
@@ -53,6 +56,7 @@ export function SavedConversation({
   issuingMessageId?: string;
   playerPortraitUrl?: string;
 }) {
+  const { userMode } = usePreferences();
   const playerPortrait = playerPortraitPresentation(gender);
   const {
     blocked,
@@ -126,49 +130,53 @@ export function SavedConversation({
           </p>
         ) : null}
         {state.conversation?.messages.map((message) => (
-          <DialogueMessage
-            key={message.id}
-            name={
-              message.sender === "player" ? "You" : (displayNpc?.name ?? "Ruth")
-            }
-            text={
-              !message.ai && reveal?.messageId === message.id
-                ? reveal.visibleText
-                : message.text
-            }
-            fullText={message.text}
-            revealing={
-              !message.ai &&
-              reveal?.messageId === message.id &&
-              reveal.revealing
-            }
-            player={message.sender === "player"}
-            portrait={
-              message.sender === "player"
-                ? (playerPortraitUrl ?? playerPortrait.portrait)
-                : (displayNpc?.portrait ?? npcPortraits.npc_station_information)
-            }
-            portraitPosition={
-              message.sender === "player"
-                ? (playerPortraitUrl ? undefined : playerPortrait.portraitPosition)
-                : message.sender === "npc"
-                ? displayNpc?.portraitPosition(message.text)
-                : undefined
-            }
-            portraitGrid={
-              message.sender === "player" ? (playerPortraitUrl ? undefined : playerPortrait.portraitGrid) : displayNpc?.portraitGrid
-            }
-            onReplay={() => voice.listen(message.speech?.text ?? message.text, message.speech?.url)}
-            replayVisible={sound && voice.supported}
-            replayDisabled={
-              !sound || !voice.supported || state.pending || speech.listening
-            }
-            body={message.id === selectedPhotoMessageId ? reviewPhoto
-              : message.id === reviewPhotoMessageId && reviewPhoto
-                ? <IdCardApplicationReview text={message.text} photo={reviewPhoto} />
-                : undefined}
-            attachment={message.id === issuingMessageId ? <IdCardIssuingSpinner /> : undefined}
-          />
+          <div key={message.id}>
+            <DialogueMessage
+              name={
+                message.sender === "player" ? "You" : (displayNpc?.name ?? "Ruth")
+              }
+              text={
+                !message.ai && reveal?.messageId === message.id
+                  ? reveal.visibleText
+                  : message.text
+              }
+              fullText={message.text}
+              revealing={
+                !message.ai &&
+                reveal?.messageId === message.id &&
+                reveal.revealing
+              }
+              player={message.sender === "player"}
+              portrait={
+                message.sender === "player"
+                  ? (playerPortraitUrl ?? playerPortrait.portrait)
+                  : (displayNpc?.portrait ?? npcPortraits.npc_station_information)
+              }
+              portraitPosition={
+                message.sender === "player"
+                  ? (playerPortraitUrl ? undefined : playerPortrait.portraitPosition)
+                  : message.sender === "npc"
+                  ? displayNpc?.portraitPosition(message.text)
+                  : undefined
+              }
+              portraitGrid={
+                message.sender === "player" ? (playerPortraitUrl ? undefined : playerPortrait.portraitGrid) : displayNpc?.portraitGrid
+              }
+              onReplay={() => voice.listen(message.speech?.text ?? message.text, message.speech?.url)}
+              replayVisible={sound && voice.supported}
+              replayDisabled={
+                !sound || !voice.supported || state.pending || speech.listening
+              }
+              body={message.id === selectedPhotoMessageId ? reviewPhoto
+                : message.id === reviewPhotoMessageId && reviewPhoto
+                  ? <IdCardApplicationReview text={message.text} photo={reviewPhoto} />
+                  : undefined}
+              attachment={message.id === issuingMessageId ? <IdCardIssuingSpinner /> : undefined}
+            />
+            {message.sender === "player" && userMode === "adult" ? (
+              <GrammarFeedbackTag text={message.text} />
+            ) : null}
+          </div>
         ))}
         {state.pending && state.retryMessage ? (
           <DialogueMessage
@@ -269,16 +277,30 @@ export function SavedConversation({
         />
       ) : null}
       {!composerHidden ? (
-        <MessageComposer
-          text={text}
-          onChange={setText}
-          onSend={() => void submit()}
-          pending={blocked}
-          voiceSupported={speech.supported}
-          listening={speech.listening}
-          onRecord={toggleRecording}
-          onCancelRecording={cancelRecording}
-        />
+        userMode === "kid" ? (
+          <KidDialogueInput
+            assembledText={text}
+            onChangeText={setText}
+            onSend={() => void submit()}
+            pending={blocked}
+            voiceSupported={speech.supported}
+            listening={speech.listening}
+            onRecord={toggleRecording}
+            onCancelRecording={cancelRecording}
+            onSpeakWord={word => voice.listen(word)}
+          />
+        ) : (
+          <AdultDialogueInput
+            text={text}
+            onChangeText={setText}
+            onSend={() => void submit()}
+            pending={blocked}
+            voiceSupported={speech.supported}
+            listening={speech.listening}
+            onRecord={toggleRecording}
+            onCancelRecording={cancelRecording}
+          />
+        )
       ) : null}
       {speech.listening ? (
         <p className="hint text-muted text-[13px] leading-[1.4]">

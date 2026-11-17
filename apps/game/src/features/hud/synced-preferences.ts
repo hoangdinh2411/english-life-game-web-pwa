@@ -25,12 +25,13 @@ interface SyncOptions {
   debounceMs?: number;
 }
 
-const learningKeys = ['speechRate', 'speechPitch'] as const;
+const learningKeys = ['speechRate', 'speechPitch', 'userMode'] as const;
 
 function learningValues(preferences: Preferences): PlayerPreferencesInitialize {
   return {
     speechRate: preferences.speechRate,
     speechPitch: preferences.speechPitch,
+    userMode: preferences.userMode,
   };
 }
 

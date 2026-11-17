@@ -19,7 +19,7 @@ const stored = { ...DEFAULT_PLAYER_PREFERENCES, updatedAt: '2026-10-22T08:00:00.
 test('preference contracts accept defaults and bounded partial updates', () => {
   assert.deepEqual(playerPreferencesInitializeSchema.parse(DEFAULT_PLAYER_PREFERENCES), DEFAULT_PLAYER_PREFERENCES);
   assert.deepEqual(playerPreferencesSchema.parse(stored), stored);
-  for (const update of [{ speechRate: 0.75 }, { speechRate: 1.5 }, { speechPitch: 0.75 }, { speechPitch: 1.25 }]) {
+  for (const update of [{ speechRate: 0.75 }, { speechRate: 1.5 }, { speechPitch: 0.75 }, { speechPitch: 1.25 }, { userMode: 'kid' }, { userMode: 'adult' }]) {
     assert.deepEqual(playerPreferencesUpdateSchema.parse(update), update);
   }
 });
@@ -30,6 +30,7 @@ test('preference contracts reject empty, unknown, mistyped, non-finite and out-o
     { speechRate: Number.NaN }, { speechRate: Number.POSITIVE_INFINITY },
     { speechRate: 0.749 }, { speechRate: 1.501 },
     { speechPitch: 0.749 }, { speechPitch: 1.251 },
+    { userMode: 'baby' },
   ]) assert.equal(playerPreferencesUpdateSchema.safeParse(value).success, false);
 });
 
