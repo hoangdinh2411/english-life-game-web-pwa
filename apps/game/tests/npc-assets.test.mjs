@@ -7,7 +7,7 @@ import { npcPortraitPosition } from '../src/features/npcs/npc-expression.ts';
 const destinationNpcs = [...npcContent.filter(npc => npc.walkImageUrl), ...streetContent.npcs];
 
 test('every destination NPC declares unique Storage artwork identities', () => {
-  assert.equal(destinationNpcs.length, 28);
+  assert.equal(destinationNpcs.length, 29);
   assert.equal(new Set(destinationNpcs.map(npc => npc.walkImageUrl)).size, destinationNpcs.length);
   assert.equal(new Set(destinationNpcs.map(npc => npc.portrait.imageUrl)).size, destinationNpcs.length);
   for (const npc of destinationNpcs) {
