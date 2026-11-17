@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36a–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.c; S2–S7.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.d; S2–S7.
 
 ## How to work
 
@@ -95,7 +95,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         `scripts/generate-map-assets.mjs` and `scripts/sync-map-assets.mjs`
         to include `loc_airport_departure` and `loc_airport_arrival` in
         supported maps and background definitions using the 128×192 player atlas.
-  - [ ] **T42.d — Airport Art Assets Generation & Approval Gates.** Follow
+  - [x] **T42.d — Airport Art Assets Generation & Approval Gates.** Follow
         `docs/art-direction/STYLE.md` 3-gate contract (visual approval, permission
         to use, dry-run upload) for airport terminal backgrounds, luggage props,
         and agent spritesheet/portraits.
