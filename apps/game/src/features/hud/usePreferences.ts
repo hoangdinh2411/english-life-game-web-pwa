@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import * as api from '../../api/client';
 import type { SessionManager } from '../../types/session';
 import { createPreferences, defaultPreferences } from './preferences';
@@ -32,5 +32,10 @@ export function disablePreferenceSynchronization(): void {
 
 export function usePreferences() {
   const state = useSyncExternalStore(preferences.subscribe, preferences.getSnapshot, () => ({ ...defaultPreferences, status: 'local' as const }));
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.userMode = state.userMode;
+    }
+  }, [state.userMode]);
   return { ...state, set: preferences.set, retry: preferences.retry };
 }

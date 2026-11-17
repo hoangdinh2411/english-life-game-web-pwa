@@ -35,7 +35,7 @@ function SyncFeedback({ status, retry }: Pick<PreferenceControlsProps, 'status' 
 }
 
 export function PreferenceControls({
-  sound, speechRate, speechPitch, status, set, retry, compact, practice,
+  sound, speechRate, speechPitch, userMode, status, set, retry, compact, practice,
 }: PreferenceControlsProps) {
   const [expanded, setExpanded] = useState(false);
   const id = useId();
@@ -49,6 +49,37 @@ export function PreferenceControls({
     {showDetails ? <>
       <div className="grid gap-2">
         <SwitchRow label="Sound" checked={sound} onChange={() => set('sound', !sound)} />
+      </div>
+      <div className="grid gap-1">
+        <span className="text-sm font-bold text-ink">Game Mode</span>
+        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Game Mode">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={userMode === 'kid'}
+            onClick={() => set('userMode', 'kid')}
+            className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border-2 px-3 text-sm font-bold transition-colors ${
+              userMode === 'kid'
+                ? 'border-[var(--color-gold-border)] bg-[var(--color-gold)] text-ink'
+                : 'border-[var(--color-border)] bg-card text-muted hover:text-ink'
+            }`}
+          >
+            <span>⭐ Kid Mode</span>
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={userMode === 'adult'}
+            onClick={() => set('userMode', 'adult')}
+            className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border-2 px-3 text-sm font-bold transition-colors ${
+              userMode === 'adult'
+                ? 'border-[var(--color-green-strong)] bg-[var(--color-success-surface-alt)] text-[var(--color-green-strong)]'
+                : 'border-[var(--color-border)] bg-card text-muted hover:text-ink'
+            }`}
+          >
+            <span>💼 Adult Mode</span>
+          </button>
+        </div>
       </div>
       <div className={`grid gap-3 ${compact ? '' : 'sm:grid-cols-2'}`}>
       <label className="grid min-w-0 gap-1 text-sm" htmlFor={`${id}-speech-rate`}>

@@ -31,6 +31,7 @@ export interface PlayerInfoCardProps {
   cityName: string;
   coins: number;
   idCard?: IdCardResponse | null | undefined;
+  userMode?: import("@life-abroad/shared").UserMode | undefined;
   visible?: boolean;
   onOpenProfile: () => void;
 }

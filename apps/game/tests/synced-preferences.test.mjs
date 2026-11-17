@@ -7,6 +7,7 @@ import { createSyncedPreferences } from '../src/features/hud/synced-preferences.
 const stored = (changes = {}) => ({
   speechRate: 1,
   speechPitch: 1,
+  userMode: 'adult',
   updatedAt: '2026-10-25T08:00:00.000Z',
   ...changes,
 });
@@ -33,7 +34,7 @@ test('authenticated loading uses the server winner without blocking local startu
   resolveLoad({ preferences: stored({ speechRate: 1.3 }) });
   await loading;
   assert.deepEqual(store.getSnapshot(), {
-    sound: true, speechRate: 1.3, speechPitch: 1, status: 'saved',
+    sound: true, speechRate: 1.3, speechPitch: 1, userMode: 'adult', status: 'saved',
   });
 });
 
@@ -47,7 +48,7 @@ test('missing server preferences initialize once from bounded legacy local value
     update: async value => stored(value),
   }, { debounceMs: 10 });
   await store.start();
-  assert.deepEqual(calls, [{ speechRate: 1.4, speechPitch: 0.8 }]);
+  assert.deepEqual(calls, [{ speechRate: 1.4, speechPitch: 0.8, userMode: 'adult' }]);
   assert.equal(store.getSnapshot().speechRate, 1.1);
   assert.equal(store.getSnapshot().sound, false);
 });
@@ -103,6 +104,6 @@ test('failed saves keep the desired value and Retry sends only the latest state'
   assert.equal(store.getSnapshot().status, 'error');
   fail = false;
   await store.retry();
-  assert.deepEqual(calls.at(-1), { speechRate: 1.25, speechPitch: 1 });
+  assert.deepEqual(calls.at(-1), { speechRate: 1.25, speechPitch: 1, userMode: 'adult' });
   assert.equal(store.getSnapshot().status, 'saved');
 });

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import type { CountryOption, PlayerGender } from '@life-abroad/shared';
+import type { CountryOption, PlayerGender, UserMode } from '@life-abroad/shared';
 import { Heading, Screen } from '../../components/onboarding-ui';
 import { playerAssets } from '../../features/appearance/player-assets';
 import { resolveCountryFlag } from '../../onboarding/country-flags';
@@ -8,12 +8,13 @@ import { router } from '../../navigation/router';
 import { useSession } from '../../session/session-provider';
 import type { OnboardingDraft } from '../../types/onboarding';
 import { GameIcon } from '../../shared/GameIcon';
+import { preferences } from '../../features/hud/usePreferences';
 
 interface OnboardingFormProps {
   countries: CountryOption[] | null;
   loadError: string;
   onRetry: () => Promise<void>;
-  onComplete: (draft: OnboardingDraft) => Promise<void>;
+  onComplete: (draft: OnboardingDraft, mode: UserMode) => Promise<void>;
 }
 
 export function OnboardingForm({ countries: availableCountries, loadError, onRetry, onComplete }: OnboardingFormProps) {
@@ -27,6 +28,7 @@ export function OnboardingForm({ countries: availableCountries, loadError, onRet
   const [selected, setSelected] = useState<CountryOption | null>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [touchedName, setTouchedName] = useState(false);
+  const [mode, setMode] = useState<UserMode>('adult');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -71,7 +73,7 @@ export function OnboardingForm({ countries: availableCountries, loadError, onRet
     setBusy(true);
     setMessage('');
     try {
-      await lock.current.run(() => onComplete({ countryId: selected.id, gender, name }));
+      await lock.current.run(() => onComplete({ countryId: selected.id, gender, name }, mode));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not start your life. Please try again.');
     } finally {
@@ -126,7 +128,7 @@ export function OnboardingForm({ countries: availableCountries, loadError, onRet
         })}
       </section> : null}
 
-      {step === 'name' ? <section className="flex flex-col gap-2" aria-labelledby="name-label">
+      {step === 'name' ? <section className="flex flex-col gap-3" aria-labelledby="name-label">
         <label id="name-label" htmlFor="character-name" className="font-extrabold text-ink">Your name</label>
         <input id="character-name" value={name} autoCapitalize="words" autoComplete="name" maxLength={20}
           aria-describedby="name-help" aria-invalid={Boolean(nameError)} placeholder="Enter your name"
@@ -134,6 +136,38 @@ export function OnboardingForm({ countries: availableCountries, loadError, onRet
         <p id="name-help" role={nameError ? 'alert' : undefined} className={`text-sm ${nameError ? 'text-[var(--color-danger)]' : 'text-muted'}`}>
           {nameError ?? 'Use 2–20 letters. Spaces, apostrophes, and hyphens are welcome.'}
         </p>
+
+        <div className="flex flex-col gap-1.5 pt-1">
+          <span className="font-extrabold text-ink text-sm">Game Mode</span>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Game Mode">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mode === 'kid'}
+              onClick={() => setMode('kid')}
+              className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border-2 px-3 text-sm font-bold transition-colors ${
+                mode === 'kid'
+                  ? 'border-[var(--color-gold-border)] bg-[var(--color-gold)] text-ink'
+                  : 'border-[var(--color-border)] bg-card text-muted hover:text-ink'
+              }`}
+            >
+              <span>⭐ Kid Mode</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mode === 'adult'}
+              onClick={() => setMode('adult')}
+              className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border-2 px-3 text-sm font-bold transition-colors ${
+                mode === 'adult'
+                  ? 'border-[var(--color-green-strong)] bg-[var(--color-success-surface-alt)] text-[var(--color-green-strong)]'
+                  : 'border-[var(--color-border)] bg-card text-muted hover:text-ink'
+              }`}
+            >
+              <span>💼 Adult Mode</span>
+            </button>
+          </div>
+        </div>
       </section> : null}
 
       {message || loadError ? <div className="flex flex-col gap-2" role="alert"><p className="text-sm text-[var(--color-danger)]">{message || loadError}</p>
@@ -163,5 +197,10 @@ export default function NewGameScreen() {
   }, [session.refreshOptions]);
   useEffect(() => { if (!session.options) void load(); }, [load, session.options]);
   return <OnboardingForm countries={session.options?.countries ?? null} loadError={loadError} onRetry={load}
-    onComplete={async draft => { session.updateDraft(draft); await session.startLife(draft); router.replace('/home'); }} />;
+    onComplete={async (draft, mode) => {
+      preferences.set('userMode', mode);
+      session.updateDraft(draft);
+      await session.startLife(draft);
+      router.replace('/home');
+    }} />;
 }

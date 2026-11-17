@@ -89,6 +89,21 @@ body,
   :root {
     @apply font-sans text-ink bg-paper [font-synthesis:none];
   }
+  :root[data-user-mode="kid"] {
+    --color-paper: #fffcf5;
+    --color-card: #ffffff;
+    --color-dialogue: #fffef8;
+    --color-green-strong: #2d8a5e;
+    --color-gold: #ffbe0b;
+    --color-gold-border: #f59e0b;
+    font-size: 16px;
+  }
+  :root[data-user-mode="kid"] .mode-adult-only {
+    display: none !important;
+  }
+  :root[data-user-mode="adult"] .mode-kid-only {
+    display: none !important;
+  }
   *,
   *::before,
   *::after {

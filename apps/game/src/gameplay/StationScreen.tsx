@@ -52,6 +52,7 @@ import {
 import { GameIcon } from "../shared/GameIcon";
 import { OverlayButton } from "./OverlayButton";
 import { loadIdCard } from "../api/client";
+import { VirtualJoystick } from "./VirtualJoystick";
 
 type ClosedVenueNotice = Readonly<{
   location: ClosedVenueLocation;
@@ -92,7 +93,7 @@ export default function StationScreen({
     arrival?.initialLocation.placeId ?? "loc_station",
   );
   const [goals, setGoals] = useState(false);
-  const { sound, set: setPreference } = usePreferences();
+  const { sound, userMode, set: setPreference } = usePreferences();
   const closeMenu = useCallback(() => {
     setMenu(false);
     requestAnimationFrame(() => {
@@ -220,6 +221,7 @@ export default function StationScreen({
             cityName={displayedCountryName}
             coins={coins}
             idCard={idCard}
+            userMode={userMode}
             onOpenProfile={() => setProfileOpen(true)}
             visible={!overlayOpen || profileOpen}
           />
@@ -508,6 +510,7 @@ export default function StationScreen({
           <GameButton label="Restart" onClick={() => restartGame()} />
         </div>
       ) : null}
+      <VirtualJoystick userMode={userMode} visible={stationReady && !overlayOpen} />
     </main>
   );
 }
