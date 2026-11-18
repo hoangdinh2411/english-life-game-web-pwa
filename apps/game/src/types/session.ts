@@ -1,4 +1,4 @@
-import type { OnboardingOptions, PlayerResponse, PlayerState } from '@life-abroad/shared';
+import type { OnboardingOptions, PassportDraft, PlayerResponse, PlayerState } from '@life-abroad/shared';
 import type { OnboardingDraft, OnboardingDraftChanges } from './onboarding';
 export interface StoredSession {
   token: string;
@@ -33,4 +33,5 @@ export interface SessionValue {
   refreshOptions: () => Promise<OnboardingOptions>;
   updateDraft: (changes: OnboardingDraftChanges) => void;
   startLife: (draft?: OnboardingDraft) => Promise<PlayerState>;
+  startPassportLife: (draft: PassportDraft) => Promise<PlayerState>;
 }

@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36a–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.e, T42.e2a–T42.e2b; S2–S7; T43.a.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.e, T42.e2a–T42.e2b, T42.f; S2–S7; T43.a.
 
 ## How to work
 
@@ -118,7 +118,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
   - [x] **T42.e2 — Airport Check-in Backend Contract & NPC Registration.** `[Model: Gemini Hydrogen]`
         - [x] **T42.e2a — Shared Contracts & Airport Schemas.** `[Model: Gemini Flash]` Add `npc_airport_agent` to `conversationNpcSchema`, add `setDestinationCountrySchema` (`{ countryId }`), and make `Character.cityId`, `countryId`, `countryName` nullable.
         - [x] **T42.e2b — Airport Check-in Backend Endpoints & Atomic Country Lock.** `[Model: Gemini Hydrogen]` Bridge `PassportDraft` onboarding with existing `countryId`/`world_id` rules: add `createPassportSchema` (`PassportDraft`, optional `countryId`) + `POST /players/passport` and `POST /players/destination-country` (`{ countryId }`) in `players.controller.ts` / `players.service.ts` / `players.repository.ts`; allow `PlayersRepository.getPlayer` and `WorldClockService.read` fallback while `current_map_id = 'loc_airport_departure'` and `country_id IS NULL`; lock `country_id` + `world_id` + `current_city_id` atomically when `POST /players/destination-country` runs during airport departure.
-  - [ ] **T42.f — Client Passport Card UI.** `[Model: Gemini Flash]`
+  - [x] **T42.f — Client Passport Card UI.** `[Model: Gemini Flash]`
         Redesign `apps/game/src/app/new-game/index.tsx` into a 1-page Passport Card collecting `name`, `gender`/`avatarId` (from `content/seed/avatars.json` & `playerAssets`), and preserving the existing `userMode` (`kid`/`adult`) selector. Call `POST /players/passport` via `api/client.ts` & `session-provider.tsx` (`startPassportLife`) without a static country dropdown, then route to `/home` (`loc_airport_departure`).
   - [ ] **T42.g1 — Phaser Airport Departure & Arrival Scene Wiring.** `[Model: Gemini Hydrogen]`
         Extend `MapLocation` in `apps/game/src/types/gameplay/world.ts` (`'airport_departure' | 'airport_arrival'`), map them explicitly in `features/location/player-location.ts`, register both in `features/shops/venue-npc-config.ts` (`airport_departure`: `['npc_airport_agent']`, `airport_arrival`: `[]`), and update `create-station-game.ts` / `station-navigation.ts` with `mapIds`, player spawn `(768, 370)`, `npc_airport_agent` `(768, 420)`, walkable bounds (`1536×1024`), and departure gate portal (`(768, 920)`).

@@ -1,6 +1,6 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
-import type { OnboardingOptions, PlayerResponse, PlayerState } from '@life-abroad/shared';
+import type { OnboardingOptions, PassportDraft, PlayerResponse, PlayerState } from '@life-abroad/shared';
 import * as api from '../api/client';
 import { login, logout, refreshSession, register } from '../api/supabase-auth';
 import { mergeOnboardingDraft } from '../onboarding/onboarding-state';
@@ -97,12 +97,30 @@ export function SessionProvider({ children }: PropsWithChildren) {
     }
   }, [draft, token, manager]);
 
+  const startPassportLife = useCallback(async (passportDraft: PassportDraft) => {
+    if (!token) throw new Error('Please sign in again.');
+    if (!passportDraft.name || !passportDraft.gender) throw new Error('Complete passport details.');
+    try {
+      const result = await manager.run((sessionToken) => api.createPassport(sessionToken, passportDraft));
+      setPlayer(result);
+      return result;
+    } catch (creationError) {
+      const current = await manager.run(api.loadPlayer).catch(() => null);
+      if (current?.character && current.stats) {
+        setPlayer(current);
+        return { user: current.user, character: current.character, stats: current.stats, inventory: [], questProgress: [] };
+      }
+      throw creationError;
+    }
+  }, [token, manager]);
+
   const value = useMemo<SessionValue>(() => ({
     ready, token, player, draft, options, playerError, playerLoading, refreshPlayer, runAuthenticated: manager.run,
     authenticate, signOut, refreshOptions,
     updateDraft: (changes) => setDraft((current) => mergeOnboardingDraft(current, changes)),
     startLife,
-  }), [ready, token, player, draft, options, playerError, playerLoading, refreshPlayer, authenticate, signOut, refreshOptions, startLife]);
+    startPassportLife,
+  }), [ready, token, player, draft, options, playerError, playerLoading, refreshPlayer, authenticate, signOut, refreshOptions, startLife, startPassportLife]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 
