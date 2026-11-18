@@ -28,6 +28,7 @@ export const TRANSIENT_SERVICE_NPC_IDS = [
   'npc_clothes_seller',
   'npc_clothes_assistant',
   ...TAX_OFFICE_NPC_IDS,
+  ...AIRPORT_NPC_IDS,
 ] as const;
 export const conversationNpcSchema = z.enum([ARRIVAL_NPC_ID, ...SHOP_NPC_IDS, ...TOWN_STREET_NPC_IDS, ...TAX_OFFICE_NPC_IDS, ...AIRPORT_NPC_IDS]);
 export const createConversationSchema = z.object({

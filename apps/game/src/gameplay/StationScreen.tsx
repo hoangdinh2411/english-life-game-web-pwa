@@ -24,6 +24,8 @@ import {
   STREET_NPCS,
   type StreetNpcId,
 } from "../features/npcs/street-npcs";
+import { AIRPORT_AGENT_NPC_ID } from "@life-abroad/shared";
+import { AirportConversation } from "../features/npcs/AirportConversation";
 import { TownspersonConversation } from "../features/npcs/TownspersonConversation";
 import { usePreferences } from "../features/hud/usePreferences";
 import { useNpcPresence } from "../features/npcs/use-npc-presence";
@@ -71,7 +73,7 @@ export default function StationScreen({
   life,
 }: StationScreenProps) {
   const [npcId, setNpcId] = useState<
-    StationSpeaker | ShopNpcId | StreetNpcId | TaxOfficeStaffId | null
+    StationSpeaker | ShopNpcId | StreetNpcId | TaxOfficeStaffId | typeof AIRPORT_AGENT_NPC_ID | null
   >(null);
   const [tutorialSource, setTutorialSource] = useState<TutorialSource | null>(
     () => (movementTutorialSeen() ? null : "first-run"),
@@ -184,7 +186,7 @@ export default function StationScreen({
               onPlaceChange: arrival.onPlaceChange,
             }
           : {})}
-        exitUnlocked={arrival?.exitUnlocked ?? exitUnlocked}
+        exitUnlocked={exitUnlocked || Boolean(arrival?.exitUnlocked)}
         onExitBlocked={() => setExitReminder(true)}
         onReadyChange={setStationReady}
         onLocationChange={setLocation}
@@ -208,6 +210,7 @@ export default function StationScreen({
           if (!practice && isShopNpc(id)) setNpcId(id);
           if (!practice && isStreetNpc(id)) setNpcId(id);
           if (!practice && isTaxOfficeStaff(id)) setNpcId(id);
+          if (!practice && id === AIRPORT_AGENT_NPC_ID) setNpcId(id);
         }}
       />
       <div
@@ -373,6 +376,19 @@ export default function StationScreen({
           onClose={() => setNpcId(null)}
           onRefresh={async () => {
             await refreshIdCard();
+            await life?.refresh();
+            await worldClock.refresh();
+            await presence.refresh();
+          }}
+        />
+      ) : npcId === AIRPORT_AGENT_NPC_ID ? (
+        <AirportConversation
+          gender={gender}
+          key={npcId}
+          sound={sound}
+          onClose={() => setNpcId(null)}
+          onDestinationSelected={() => setExitUnlocked(true)}
+          onRefresh={async () => {
             await life?.refresh();
             await worldClock.refresh();
             await presence.refresh();

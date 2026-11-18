@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36a–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.e, T42.e2a–T42.e2b, T42.f, T42.g1; S2–S7; T43.a.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.e, T42.e2a–T42.e2b, T42.f, T42.g1, T42.g2a–T42.g2b; S2–S7; T43.a.
 
 ## How to work
 
@@ -122,8 +122,10 @@ database: https://wedjinchhlybabstcchp.supabase.co
         Redesign `apps/game/src/app/new-game/index.tsx` into a 1-page Passport Card collecting `name`, `gender`/`avatarId` (from `content/seed/avatars.json` & `playerAssets`), and preserving the existing `userMode` (`kid`/`adult`) selector. Call `POST /players/passport` via `api/client.ts` & `session-provider.tsx` (`startPassportLife`) without a static country dropdown, then route to `/home` (`loc_airport_departure`).
   - [x] **T42.g1 — Phaser Airport Departure & Arrival Scene Wiring.** `[Model: Gemini Hydrogen]`
         Extend `MapLocation` in `apps/game/src/types/gameplay/world.ts` (`'airport_departure' | 'airport_arrival'`), map them explicitly in `features/location/player-location.ts`, register both in `features/shops/venue-npc-config.ts` (`airport_departure`: `['npc_airport_agent']`, `airport_arrival`: `[]`), and update `create-station-game.ts` / `station-navigation.ts` with `mapIds`, player spawn `(768, 370)`, `npc_airport_agent` `(768, 420)`, walkable bounds (`1536×1024`), and departure gate portal (`(768, 920)`).
-  - [ ] **T42.g2 — Airport Check-in Dialogue & Destination Country Extraction.** `[Model: Gemini Hydrogen]`
-        Wire `npc_airport_agent` into `StationScreen.tsx` using existing `ConversationPanel` (and `api/client.ts` conversation calls). When the player states a destination country (`state_destination_country` intent or matched against `loadOptions().countries`), call `POST /players/destination-country` and unlock the departure gate portal to start the flight transition.
+  - [x] **T42.g2a — Backend Airport Conversation Wiring.** `[Model: Gemini Hydrogen]`
+        Add `AIRPORT_NPC_IDS` to `TRANSIENT_SERVICE_NPC_IDS`, open `npc_airport_agent` with `airport_agent_start`, and let `ConversationsRepository.context()` work while `country_id IS NULL`.
+  - [x] **T42.g2b — Airport Check-in Dialogue & Destination Country Extraction (Client).** `[Model: Gemini Hydrogen]`
+        Add an airport conversation (wrap `SavedConversation` + `createConversationController` like `TownspersonConversation`; `ConversationPanel` is offline/station-only) wired from `StationScreen.tsx`. Client-side: fuzzy-match the player's text against `loadOptions().countries` (name contains, not exact); on a match call `POST /players/destination-country` BEFORE sending the message (`{countryName}` in `airport_agent_checked_in` needs the country set), then unlock the departure gate portal.
   - [ ] **T42.h — Flight Cutscene Transition.** `[Model: Gemini Flash]`
         Implement `apps/game/src/features/onboarding/FlightCutscene.tsx` strictly matching `FlightCutsceneProps` in `types/ui/gameplay.ts` (3–4s airplane flight CSS animation using semantic `--color-*` tokens, reduced-motion friendly), triggered from `StationScreen.tsx` after boarding the departure gate and transitioning to `loc_airport_arrival`.
   - [ ] **T42.i — Baggage Carousel Interaction & Starter Funds Claim.** `[Model: Gemini Hydrogen]`
