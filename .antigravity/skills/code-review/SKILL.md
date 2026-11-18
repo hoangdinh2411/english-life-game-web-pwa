@@ -10,14 +10,14 @@ description:
 
 ## Steps
 
-1. **Get the changes.** Run `git diff HEAD` to capture all staged and unstaged
-   uncommitted changes. If the output is empty, tell the user "No changes to
-   review." and stop.
+1. **Get the changes (minimal tokens).** Run `git status --short` and `git diff HEAD` to capture staged, unstaged, and new untracked files. If both are empty, tell the user "No changes to review." and stop. Read untracked files only as needed (<=150 lines per read).
 
-2. **Check the project rules.** Read `AGENTS.md` in the project root if present.
-   Compare each changed file against the defined rules (focusing on
-   client/server boundaries, semantic UI patterns, and naming conventions). If
-   the diff is very large, review it file by file.
+2. **Check the project rules.** Compare each changed/new file against `AGENTS.md` (and `apps/game/AGENTS.md` / `apps/server/AGENTS.md` when applicable):
+   - Client/server boundaries (no direct PostgREST/DB in client; no client-owned XP/coins/rewards/quests).
+   - NestJS `AuthGuard` + `SchemaValidationPipe` and forward-only DB migrations.
+   - Semantic color tokens (`var(--color-...)` / `UI_COLORS` — no hex literals in React markup), no `any` or leftover debug logs.
+   - No guessed workarounds, unapproved fallbacks, invented values, or out-of-scope edits (flag any unapproved assumption as a 🔴 Critical Issue for owner review).
+   - If the diff is large, review it file by file without re-reading unchanged files.
 
 3. **Run the typecheck.** Run `pnpm typecheck` in the terminal. If pnpm is not
    present, fall back to `npm run typecheck`. Capture any type or build
