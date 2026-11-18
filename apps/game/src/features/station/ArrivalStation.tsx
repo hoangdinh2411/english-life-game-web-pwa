@@ -104,7 +104,7 @@ export default function ArrivalStation({ onSignOut }: { onSignOut: () => void })
   </Screen>;
   const view = arrivalPresentation(state.arrival);
   return <StationScreen life={life} playerName={session.player?.character?.name ?? ''} gender={session.player?.character?.gender}
-    countryName={session.player?.character?.countryName} xp={stats?.xp ?? 0} coins={life.state?.coins ?? stats?.coins ?? 0}
+    countryName={session.player?.character?.countryName ?? undefined} xp={stats?.xp ?? 0} coins={life.state?.coins ?? stats?.coins ?? 0}
     onSignOut={() => { clearPendingPlayerLocation(session.player!.user.id, localStorage); onSignOut(); }}
     arrival={{ initialLocation, exitUnlocked: state.arrival.canEnterTownStreet, pending: state.pending,
       farewellConfirm: state.farewellStage === 'confirm',

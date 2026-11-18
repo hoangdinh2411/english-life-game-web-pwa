@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36a–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.e; S2–S7; T43.a.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.e, T42.e2a; S2–S7; T43.a.
 
 ## How to work
 
@@ -116,11 +116,8 @@ database: https://wedjinchhlybabstcchp.supabase.co
         with 0 initial coins; add idempotent `claimStarterBaggage` endpoint in
         `economy.service.ts` to grant the $500 starting balance upon claiming luggage.
   - [ ] **T42.e2 — Airport Check-in Backend Contract & NPC Registration.** `[Model: Gemini Hydrogen]`
-        Bridge `PassportDraft` onboarding with existing `countryId`/`world_id` rules without breaking `R4` tests:
-        (1) add `'npc_airport_agent'` to `conversationNpcSchema` in `packages/shared/src/conversations.ts`;
-        (2) add `createPassportSchema` (`PassportDraft`, optional `countryId`) + `POST /players/passport` and `POST /players/destination-country` (`{ countryId }`) in `players.controller.ts` / `players.service.ts` / `players.repository.ts` (keep `POST /characters` strict for `R4`);
-        (3) allow `PlayersRepository.getPlayer` (`needsOnboarding = false`) and `WorldClockService.read` (UTC rate-6 fallback) while `current_map_id = 'loc_airport_departure'` and `country_id IS NULL`;
-        (4) lock `country_id` + `world_id` + `current_city_id` atomically when `POST /players/destination-country` runs during airport departure.
+        - [x] **T42.e2a — Shared Contracts & Airport Schemas.** `[Model: Gemini Flash]` Add `npc_airport_agent` to `conversationNpcSchema`, add `setDestinationCountrySchema` (`{ countryId }`), and make `Character.cityId`, `countryId`, `countryName` nullable.
+        - [ ] **T42.e2b — Airport Check-in Backend Endpoints & Atomic Country Lock.** `[Model: Gemini Hydrogen]` Bridge `PassportDraft` onboarding with existing `countryId`/`world_id` rules: add `createPassportSchema` (`PassportDraft`, optional `countryId`) + `POST /players/passport` and `POST /players/destination-country` (`{ countryId }`) in `players.controller.ts` / `players.service.ts` / `players.repository.ts`; allow `PlayersRepository.getPlayer` and `WorldClockService.read` fallback while `current_map_id = 'loc_airport_departure'` and `country_id IS NULL`; lock `country_id` + `world_id` + `current_city_id` atomically when `POST /players/destination-country` runs during airport departure.
   - [ ] **T42.f — Client Passport Card UI.** `[Model: Gemini Flash]`
         Redesign `apps/game/src/app/new-game/index.tsx` into a 1-page Passport Card collecting `name`, `gender`/`avatarId` (from `content/seed/avatars.json` & `playerAssets`), and preserving the existing `userMode` (`kid`/`adult`) selector. Call `POST /players/passport` via `api/client.ts` & `session-provider.tsx` (`startPassportLife`) without a static country dropdown, then route to `/home` (`loc_airport_departure`).
   - [ ] **T42.g1 — Phaser Airport Departure & Arrival Scene Wiring.** `[Model: Gemini Hydrogen]`

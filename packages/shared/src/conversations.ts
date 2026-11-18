@@ -19,6 +19,8 @@ export const TOWN_STREET_NPC_IDS = [
   'npc_sara_artist', 'npc_jamal_dog_walker', 'npc_tara_musician',
 ] as const;
 export const TAX_OFFICE_NPC_IDS = ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia'] as const;
+export const AIRPORT_AGENT_NPC_ID = 'npc_airport_agent';
+export const AIRPORT_NPC_IDS = [AIRPORT_AGENT_NPC_ID] as const;
 export const TRANSIENT_SERVICE_NPC_IDS = [
   ...CAFE_SELLER_NPC_IDS,
   'npc_cafe_waiter',
@@ -27,7 +29,7 @@ export const TRANSIENT_SERVICE_NPC_IDS = [
   'npc_clothes_assistant',
   ...TAX_OFFICE_NPC_IDS,
 ] as const;
-export const conversationNpcSchema = z.enum([ARRIVAL_NPC_ID, ...SHOP_NPC_IDS, ...TOWN_STREET_NPC_IDS, ...TAX_OFFICE_NPC_IDS]);
+export const conversationNpcSchema = z.enum([ARRIVAL_NPC_ID, ...SHOP_NPC_IDS, ...TOWN_STREET_NPC_IDS, ...TAX_OFFICE_NPC_IDS, ...AIRPORT_NPC_IDS]);
 export const createConversationSchema = z.object({
   npcId: conversationNpcSchema,
   includeSpeech: z.boolean().default(true),

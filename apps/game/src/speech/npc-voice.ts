@@ -9,6 +9,7 @@ const streetNpcVoices = Object.fromEntries(STREET_NPCS.map(npc => [npc.id, npc.v
 export const npcVoice: Record<StationSpeaker | Conversation['npcId'], VoiceGender> = {
   ...Object.fromEntries(STATION_ROSTER.map(npc => [npc.id, npc.voice])) as Record<StationSpeaker, VoiceGender>,
   npc_receptionist: 'female',
+  npc_airport_agent: 'female',
   npc_mia: 'female',
   npc_corner_cup_seller: 'female',
   npc_cafe_waiter: 'male',
@@ -37,7 +38,7 @@ export function npcPlaybackSettings(npcId: string | undefined, speechRate: numbe
   speechPitch: number;
 } {
   const speechPitch = npcId
-    ? Number((0.85 + stableNpcHash(npcId) / 0xffffffff * 0.3).toFixed(4))
+    ? Number((0.85 + stableNpcHash(npcId) / 0xffffffff * 0.3).toFixed(5))
     : 1;
   return { speechRate, speechPitch };
 }
