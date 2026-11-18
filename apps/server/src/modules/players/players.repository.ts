@@ -11,7 +11,6 @@ import type {
 } from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
-import { EconomyService } from '../economy/economy.service';
 
 interface PlayerRow {
   id: string; email: string; display_name: string;
@@ -31,8 +30,9 @@ interface PlayerPreferencesRow {
 interface StarterCountryRow {
   id: string;
   starter_city_id: string;
-  starter_location_id: string;
 }
+
+const AIRPORT_SPAWN_LOCATION_ID = 'loc_airport_departure';
 
 function mapPreferences(row: PlayerPreferencesRow): PlayerPreferences {
   return {
@@ -45,14 +45,14 @@ function mapPreferences(row: PlayerPreferencesRow): PlayerPreferences {
 
 @Injectable()
 export class PlayersRepository {
-  constructor(private readonly database: DatabaseService, private readonly economy: EconomyService) {}
+  constructor(private readonly database: DatabaseService) {}
 
   async createCharacter(userId: string, request: CreateCharacterRequest): Promise<PlayerState> {
     return this.database.transaction(async client => {
-      // Serialize creation and grant the starter money in the same transaction.
+      // Serialize character creation within a transaction; starter funds are claimed at arrival baggage.
       const profile = await client.query('SELECT id FROM public.profiles WHERE id = $1 FOR UPDATE', [userId]);
       if (profile.rowCount !== 1) throw new ServiceUnavailableException('Player profile is unavailable');
-      const countryResult = await client.query<StarterCountryRow>(`SELECT id,starter_city_id,starter_location_id
+      const countryResult = await client.query<StarterCountryRow>(`SELECT id,starter_city_id
         FROM public.countries WHERE id=$1`, [request.countryId]);
       const country = countryResult.rows[0];
       if (!country) throw new BadRequestException('Unknown country');
@@ -77,8 +77,7 @@ export class PlayersRepository {
           current_position_y=excluded.current_position_y
         WHERE characters.country_id IS NULL OR characters.current_city_id IS NULL`,
         [userId, request.name, request.gender, JSON.stringify({ avatarId: 'avatar_traveler_01' }), country.id, worldId,
-          country.starter_city_id, country.starter_location_id]);
-      await this.economy.grantStartingBalance(client, userId);
+          country.starter_city_id, AIRPORT_SPAWN_LOCATION_ID]);
       const player = await this.getPlayer(userId, client);
       if (!player.character) throw new ServiceUnavailableException('Character state is unavailable');
       return { ...player, character: player.character, inventory: [], questProgress: [] };

@@ -80,14 +80,32 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
       character: { id: userId, userId, name: 'Replay Learner', gender: 'male', countryId: request.countryId,
         countryName: options.countries.find(country => country.id === request.countryId)!.name,
         avatarId: 'avatar_traveler_01', cityId: 'city_maplewood',
-        lastLocation: { mapId: 'loc_station', placeId: 'loc_station', x: 768, y: 370 } },
-      stats: { xp: 23, coins: 507 }, inventory: [], questProgress: [],
+        lastLocation: { mapId: 'loc_airport_departure', placeId: 'loc_airport_departure', x: 768, y: 370 } },
+      stats: { xp: 23, coins: 7 }, inventory: [], questProgress: [],
     });
     assert.equal((await call('/characters', request)).status, 201);
     assert.equal((await call('/characters', { ...request, name: 'Other Learner' })).status, 409);
     assert.equal((await database.query('SELECT * FROM characters WHERE user_id = $1', [userId])).rowCount, 1);
     const state = await database.query('SELECT xp, coins, energy, last_energy_update FROM player_stats WHERE user_id = $1', [userId]);
-    assert.deepEqual(state.rows[0], { xp: 23, coins: 507, energy: null, last_energy_update: null });
+    assert.deepEqual(state.rows[0], { xp: 23, coins: 7, energy: null, last_energy_update: null });
+    for (const invalidClaim of [null, {}, { idempotencyKey: 'not-a-uuid' }, { idempotencyKey: randomUUID(), extra: true }]) {
+      assert.equal((await call('/players/claim-baggage', invalidClaim)).status, 400);
+    }
+    const claimKey = randomUUID();
+    const claimResponses = await Promise.all([
+      call('/players/claim-baggage', { idempotencyKey: claimKey }),
+      call('/players/claim-baggage', { idempotencyKey: randomUUID() }),
+    ]);
+    assert.deepEqual(claimResponses.map(response => response.status), [201, 201]);
+    const claimPayloads = await Promise.all(claimResponses.map(response => response.json())) as Array<{ claimed: boolean; coinsGranted: number; coins: number }>;
+    assert.deepEqual(claimPayloads.map(payload => payload.coinsGranted).sort((a, b) => a - b), [0, 500]);
+    for (const payload of claimPayloads) {
+      assert.equal(payload.claimed, true);
+      assert.equal(payload.coins, 507);
+    }
+    assert.deepEqual(await (await call('/players/claim-baggage', { idempotencyKey: randomUUID() })).json(),
+      { claimed: true, coinsGranted: 0, coins: 507 });
+    created.stats.coins = 507;
     const refresh = await auth.auth.refreshSession();
     assert.equal(refresh.error, null);
     assert.ok(refresh.data.session);
@@ -143,8 +161,9 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
     const earned = await database.query<{ rewards: { xp: number; coins: number } }>('SELECT rewards FROM quests WHERE id=$1', ['q_station_arrival']);
     assert.deepEqual(((await (await call('/me')).json()) as { stats: unknown }).stats,
       { xp: 23 + earned.rows[0]!.rewards.xp, coins: 100 + earned.rows[0]!.rewards.coins });
-    for (const path of ['/me', '/characters']) {
-      const response = await fetch(base + path, { method: path === '/me' ? 'GET' : 'POST', headers: { 'Content-Type': 'application/json' }, ...(path === '/me' ? {} : { body: JSON.stringify(request) }) });
+    for (const path of ['/me', '/characters', '/players/claim-baggage']) {
+      const body = path === '/me' ? undefined : path === '/characters' ? request : { idempotencyKey: randomUUID() };
+      const response = await fetch(base + path, { method: path === '/me' ? 'GET' : 'POST', headers: { 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
       assert.equal(response.status, 401);
     }
   } finally {
@@ -154,8 +173,8 @@ test('R4 real onboarding, validation, concurrent creation and account resume', a
   }
 });
 
-// A zero-balance newcomer must get exactly $500 and duplicate creation must not top up.
-test('T15 new character starts with $500 and reload retains it', async () => {
+// A zero-balance newcomer starts at loc_airport_departure with $0 and receives $500 idempotently upon claiming baggage.
+test('T15 new character starts with $0 at airport and idempotent baggage claim grants $500', async () => {
   const url = new URL(process.env.DATABASE_URL ?? '');
   assert.equal(url.hostname, '127.0.0.1');
   assert.equal(url.port, '54322');
@@ -168,10 +187,14 @@ test('T15 new character starts with $500 and reload retains it', async () => {
     const options = await module.get(OnboardingService).getOptions();
     const request = { name: 'Wallet Learner', countryId: options.countries[0]!.id, gender: 'male' as const };
     const players = module.get(PlayersService);
-    assert.deepEqual((await players.createCharacter(userId, request)).stats, { xp: 0, coins: 500 });
-    assert.deepEqual((await players.getPlayer(userId)).stats, { xp: 0, coins: 500 });
-    assert.deepEqual((await players.createCharacter(userId, request)).stats, { xp: 0, coins: 500 });
+    const created = await players.createCharacter(userId, request);
+    assert.deepEqual(created.stats, { xp: 0, coins: 0 });
+    assert.deepEqual(created.character.lastLocation, { mapId: 'loc_airport_departure', placeId: 'loc_airport_departure', x: 768, y: 370 });
+    assert.deepEqual((await players.getPlayer(userId)).stats, { xp: 0, coins: 0 });
+    assert.deepEqual((await players.createCharacter(userId, request)).stats, { xp: 0, coins: 0 });
     await assert.rejects(players.createCharacter(userId, { ...request, name: 'Other Wallet' }), /different character/);
+    assert.deepEqual(await players.claimStarterBaggage(userId, randomUUID()), { claimed: true, coinsGranted: 500, coins: 500 });
+    assert.deepEqual(await players.claimStarterBaggage(userId, randomUUID()), { claimed: true, coinsGranted: 0, coins: 500 });
     assert.deepEqual((await players.getPlayer(userId)).stats, { xp: 0, coins: 500 });
   } finally {
     await database.query('DELETE FROM auth.users WHERE id=$1', [userId]);

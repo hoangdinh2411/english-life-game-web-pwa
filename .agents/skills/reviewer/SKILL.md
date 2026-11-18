@@ -11,8 +11,8 @@ Responsible for automated quality gate verification, coder feedback, and user-fa
 
 1. **Inspect Git Diff**:
    - Run `git diff` (staged and unstaged, plus new untracked files) to inspect all modifications.
-   - Check for type errors, unused imports, leftover debug logs, stray scratch files (e.g. `.probe.mjs`), or logic flaws.
-   - Ensure changes strictly follow the approved plan and adhere to `AGENTS.md` boundaries (no hex colors in React markup, correct client/server separation).
+   - Check for type errors, `any` / unsafe casts, unused imports, leftover debug logs, stray scratch files (e.g. `.probe.mjs`), or logic flaws.
+   - Verify changes strictly follow the approved plan (no out-of-scope edits), contain no guessed workarounds or unapproved fallbacks/invented values (flag any unapproved assumption as a 🔴 Critical Issue for owner review), and adhere to `AGENTS.md` boundaries: no hex color literals in React markup (`var(--color-...)` / `UI_COLORS`), no client-side XP/coin/quest mutations, `AuthGuard` + `SchemaValidationPipe` on NestJS routes, and forward-only DB migrations.
 
 2. **Run Checks**:
    - Always: `pnpm typecheck`.

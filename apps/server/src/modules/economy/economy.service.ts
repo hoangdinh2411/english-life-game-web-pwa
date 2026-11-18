@@ -1,23 +1,38 @@
 import { BadRequestException, ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DatabaseService } from '../../infrastructure/database/database.service';
-import { QuestContent } from '@life-abroad/shared';
+import { type ClaimBaggageResponse, type QuestContent } from '@life-abroad/shared';
 import { PoolClient } from 'pg';
 
 @Injectable()
 export class EconomyService {
   constructor(private readonly database: DatabaseService, private readonly config: ConfigService) {}
 
-  async grantStartingBalance(client: PoolClient, userId: string): Promise<void> {
+  async claimStarterBaggage(userId: string, idempotencyKey: string): Promise<ClaimBaggageResponse> {
     const amount = Number(this.config.get<string>('STARTING_BALANCE') ?? 500);
     if (!Number.isInteger(amount) || amount < 0 || amount > 2147483647) {
       throw new ServiceUnavailableException('Starting balance is invalid');
     }
-    await client.query('SELECT user_id FROM public.player_stats WHERE user_id=$1 FOR UPDATE', [userId]);
-    await client.query(`INSERT INTO public.wallet_ledger (user_id,amount,reason,reference,idempotency_key)
-      VALUES ($1,$2,'starting_balance',$3,'starting_balance')`, [userId, amount, userId]);
-    const result = await client.query('UPDATE public.player_stats SET coins=coins+$2 WHERE user_id=$1', [userId, amount]);
-    if (result.rowCount !== 1) throw new ServiceUnavailableException('Player stats are unavailable');
+    if (!idempotencyKey.trim()) throw new BadRequestException('Invalid idempotency key');
+    return this.database.transaction(async client => {
+      const stats = await client.query<{ coins: number }>(
+        'SELECT coins FROM public.player_stats WHERE user_id=$1 FOR UPDATE',
+        [userId],
+      );
+      const balance = stats.rows[0]?.coins;
+      if (balance === undefined) throw new ServiceUnavailableException('Player stats are unavailable');
+      const claim = await client.query(
+        `INSERT INTO public.wallet_ledger (user_id, amount, reason, reference, idempotency_key)
+         VALUES ($1, $2, 'starting_balance', $3, 'starting_balance')
+         ON CONFLICT (user_id, idempotency_key) DO NOTHING RETURNING id`,
+        [userId, amount, idempotencyKey],
+      );
+      if (claim.rowCount === 0) {
+        return { claimed: true, coinsGranted: 0, coins: balance };
+      }
+      await client.query('UPDATE public.player_stats SET coins=coins+$2 WHERE user_id=$1', [userId, amount]);
+      return { claimed: true, coinsGranted: amount, coins: balance + amount };
+    });
   }
 
   // Server callers supply identity and an order reference; never expose this as a client charge endpoint.

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type {
+  ClaimBaggageResponse,
   CreateCharacterRequest,
   PlayerLocation,
   PlayerPreferences,
@@ -9,11 +10,12 @@ import type {
   PlayerResponse,
   PlayerState,
 } from '@life-abroad/shared';
+import { EconomyService } from '../economy/economy.service';
 import { PlayersRepository } from './players.repository';
 
 @Injectable()
 export class PlayersService {
-  constructor(private readonly players: PlayersRepository) {}
+  constructor(private readonly players: PlayersRepository, private readonly economy: EconomyService) {}
 
   getPlayer(userId: string): Promise<PlayerResponse> { return this.players.getPlayer(userId); }
 
@@ -35,5 +37,9 @@ export class PlayersService {
 
   createCharacter(userId: string, request: CreateCharacterRequest): Promise<PlayerState> {
     return this.players.createCharacter(userId, request);
+  }
+
+  claimStarterBaggage(userId: string, idempotencyKey: string): Promise<ClaimBaggageResponse> {
+    return this.economy.claimStarterBaggage(userId, idempotencyKey);
   }
 }

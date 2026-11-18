@@ -12,7 +12,7 @@ Validate all authored and seeded game content against shared schemas and project
 
 ## Steps
 
-1. **Detect Changes:** Run `git diff --name-only HEAD` focusing on `content/` and `packages/shared/src/dialogue/content/`. If a specific file is targeted, focus on that file.
+1. **Detect Changes:** Run `git status --short` and `git diff --name-only HEAD` focusing on `content/` and `packages/shared/src/dialogue/content/` (including new untracked JSON files). If a specific file is targeted, focus on that file.
 2. **Run Content Validation:** Execute `pnpm content:validate` in the project root.
 3. **Inspect Output:**
    - If the script succeeds with exit code 0: confirm that all dialogue, quests, NPCs, shop items, and station nodes pass schema checks.

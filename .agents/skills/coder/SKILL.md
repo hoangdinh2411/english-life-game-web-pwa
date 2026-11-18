@@ -12,7 +12,10 @@ Responsible for executing code implementation strictly following the approved pl
 - Verify active branch is a feature branch (`feat/<name>`), never `main`, `master`, or `dev`.
 
 ## Implementation Rules
-1. **Scope Discipline**: Create or edit **ONLY** the files listed in the approved plan's Target Files, plus directly related tests and the task-status docs required by `docs/MASTER_PROMPT.md` §7. Never touch or refactor out-of-scope files.
+1. **Scope & Token Discipline**:
+   - Create or edit **ONLY** the files listed in the approved plan's Target Files (or `.antigravity/current-task.md`), plus directly related tests and the task-status docs required by `docs/MASTER_PROMPT.md` §7. Never touch or refactor out-of-scope files.
+   - Search with targeted patterns first and read only the relevant line ranges (<=150 lines per read); never read whole large files (`>200` lines) or `docs/DONE.md`.
+   - **No-Guessing & Owner Review Gate:** If any step, requirement, type, schema, API route, or DB constraint is unclear, missing, or conflicts with the approved plan/card, **do NOT guess, invent workarounds, or make unapproved edits** (inside or outside target files). Stop immediately, list every concrete issue (file path, symbol/line, conflict) for the user to review and approve.
 2. **Execution Sequence**: Write clean, idiomatic React/TypeScript code following the exact `a, b, c...` sequence from the plan:
    - Types, contracts, and core business/domain logic first.
    - UI components, views, styling, and event handlers second.

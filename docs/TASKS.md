@@ -4,12 +4,17 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36a–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.d; S2–S7; T43.a.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.e; S2–S7; T43.a.
 
 ## How to work
 
 - Complete only the task the user requested. If the user explicitly says
   "continue" without a task, select the first unchecked **NOW** item.
+- **No guessing — stop for owner review when unclear:** If any requirement,
+  API/DB contract, schema, coordinate, or target file is missing, ambiguous,
+  or conflicts with existing code, **do not guess, invent workarounds, or edit
+  files on your own**. Stop immediately, list every concrete issue (file paths,
+  symbols, options) for the owner to review, and wait for approval.
 - Inspect code first; change the smallest set of files; test what changed. New
   client features go under `src/features/<feature>`; new server capabilities go
   in NestJS `src/modules/<domain>`. Migrate legacy folders only when needed by
@@ -71,6 +76,13 @@ backend: localhost:3000
 database: https://wedjinchhlybabstcchp.supabase.co
 ```
 
+### Model Tiers (use the lightest eligible tier per slice)
+
+- `[Model: Gemini Flash]` — **Tier 1 (Light):** Pure UI/CSS/Tailwind components from existing props, `JobTicket` minigame engines, static `content/` JSON, small config/doc/test edits.
+- `[Model: Gemini Hydrogen]` — **Tier 2 (Mid):** Multi-file wiring following existing repo patterns, React state + API hooks, NestJS endpoints/repositories using existing guards/transactions, Phaser scene integration, integration tests, CLI scripts, doc refactors.
+- `[Model: Claude Sonnet — Exception only]` — **Tier 3 (Heavy):** New greenfield core architecture with no repo precedent, complex DB concurrency/locking bugs, or audio worklet/PWA sync edge cases.
+- `[Manual]` — Human/device browser verification or external dashboard ops (not an AI coding slice).
+
 ## NOW
 
 - [ ] **T42 — Airport Prologue & English Check-in Flow.** Replace the static
@@ -79,7 +91,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
       Departure Terminal map, approaches the counter NPC to check in luggage and
       state their destination country in English, watches a brief airplane flight
       cutscene, lands at Baggage Claim to locate their suitcase, receives the
-      starter $500 cash upon claiming, and exits to begin their life in town.
+      starter $500 cash upon claiming, and exits to `loc_station` to begin life in town.
   - [x] **T42.a — Core Types, Contracts & Location Schema (Shared & UI Props).** Add
         `loc_airport_departure` and `loc_airport_arrival` to `playerMapIdSchema`
         and `playerPlaceIdSchema`; define `PassportDraft`, `ClaimBaggageRequest`,
@@ -99,27 +111,28 @@ database: https://wedjinchhlybabstcchp.supabase.co
         `docs/art-direction/STYLE.md` 3-gate contract (visual approval, permission
         to use, dry-run upload) for airport terminal backgrounds, luggage props,
         and agent spritesheet/portraits.
-  - [ ] **T42.e — Backend Character Spawn & Idempotent Starter Funds.** Update
+  - [x] **T42.e — Backend Character Spawn & Idempotent Starter Funds.** Update
         `players.repository.ts` to spawn new characters at `loc_airport_departure`
         with 0 initial coins; add idempotent `claimStarterBaggage` endpoint in
         `economy.service.ts` to grant the $500 starting balance upon claiming luggage.
-  - [ ] **T42.f — Client Passport Card UI.** Redesign `/new-game` to a clean
-        Passport Card collecting player name and avatar before launching into
-        the departure airport scene.
-  - [ ] **T42.g — Phaser Airport Departure Scene & English Check-in Dialogue.**
-        Integrate `loc_airport_departure` in `create-station-game.ts` with walking
-        controls, counter interaction, and English check-in dialogue overlay
-        (stating destination country and luggage check-in).
-  - [ ] **T42.h — Flight Cutscene Transition.** Implement `FlightCutscene.tsx`
-        triggered when boarding through the departure gate, displaying a 3-4 second
-        airplane flight cutscene before transitioning to `loc_airport_arrival`.
-  - [ ] **T42.i — Baggage Carousel Interaction & Starter Funds Claim.** Implement
-        baggage carousel interaction on `loc_airport_arrival`, calling the claim
-        API to receive $500 and unlocking the exit to the town/station.
-  - [ ] **T42.j — Integration Testing & Full Verification.** Update server tests
-        (`players.integration.test.ts`, `first-run.integration.test.ts`), run
-        `pnpm typecheck`, `pnpm test`, and `pnpm content:validate` to verify zero
-        regressions.
+  - [ ] **T42.e2 — Airport Check-in Backend Contract & NPC Registration.** `[Model: Gemini Hydrogen]`
+        Bridge `PassportDraft` onboarding with existing `countryId`/`world_id` rules without breaking `R4` tests:
+        (1) add `'npc_airport_agent'` to `conversationNpcSchema` in `packages/shared/src/conversations.ts`;
+        (2) add `createPassportSchema` (`PassportDraft`, optional `countryId`) + `POST /players/passport` and `POST /players/destination-country` (`{ countryId }`) in `players.controller.ts` / `players.service.ts` / `players.repository.ts` (keep `POST /characters` strict for `R4`);
+        (3) allow `PlayersRepository.getPlayer` (`needsOnboarding = false`) and `WorldClockService.read` (UTC rate-6 fallback) while `current_map_id = 'loc_airport_departure'` and `country_id IS NULL`;
+        (4) lock `country_id` + `world_id` + `current_city_id` atomically when `POST /players/destination-country` runs during airport departure.
+  - [ ] **T42.f — Client Passport Card UI.** `[Model: Gemini Flash]`
+        Redesign `apps/game/src/app/new-game/index.tsx` into a 1-page Passport Card collecting `name`, `gender`/`avatarId` (from `content/seed/avatars.json` & `playerAssets`), and preserving the existing `userMode` (`kid`/`adult`) selector. Call `POST /players/passport` via `api/client.ts` & `session-provider.tsx` (`startPassportLife`) without a static country dropdown, then route to `/home` (`loc_airport_departure`).
+  - [ ] **T42.g1 — Phaser Airport Departure & Arrival Scene Wiring.** `[Model: Gemini Hydrogen]`
+        Extend `MapLocation` in `apps/game/src/types/gameplay/world.ts` (`'airport_departure' | 'airport_arrival'`), map them explicitly in `features/location/player-location.ts`, register both in `features/shops/venue-npc-config.ts` (`airport_departure`: `['npc_airport_agent']`, `airport_arrival`: `[]`), and update `create-station-game.ts` / `station-navigation.ts` with `mapIds`, player spawn `(768, 370)`, `npc_airport_agent` `(768, 420)`, walkable bounds (`1536×1024`), and departure gate portal (`(768, 920)`).
+  - [ ] **T42.g2 — Airport Check-in Dialogue & Destination Country Extraction.** `[Model: Gemini Hydrogen]`
+        Wire `npc_airport_agent` into `StationScreen.tsx` using existing `ConversationPanel` (and `api/client.ts` conversation calls). When the player states a destination country (`state_destination_country` intent or matched against `loadOptions().countries`), call `POST /players/destination-country` and unlock the departure gate portal to start the flight transition.
+  - [ ] **T42.h — Flight Cutscene Transition.** `[Model: Gemini Flash]`
+        Implement `apps/game/src/features/onboarding/FlightCutscene.tsx` strictly matching `FlightCutsceneProps` in `types/ui/gameplay.ts` (3–4s airplane flight CSS animation using semantic `--color-*` tokens, reduced-motion friendly), triggered from `StationScreen.tsx` after boarding the departure gate and transitioning to `loc_airport_arrival`.
+  - [ ] **T42.i — Baggage Carousel Interaction & Starter Funds Claim.** `[Model: Gemini Hydrogen]`
+        Add `claimStarterBaggage(token, idempotencyKey)` in `apps/game/src/api/client.ts`, add an interactive baggage claim zone/prop on `loc_airport_arrival` in `create-station-game.ts` + `BaggageClaimOverlay.tsx` (`BaggageClaimOverlayProps`), invoke `POST /players/claim-baggage` with a UUID `idempotencyKey` to grant $500 and refresh `PlayerState`, then unlock the exit portal directly to `loc_station` (entering the existing Train Station arrival flow).
+  - [ ] **T42.j — Integration Testing & Full Verification.** `[Model: Gemini Hydrogen]`
+        Update `apps/server/src/tests/players.integration.test.ts` and `first-run.integration.test.ts` to cover `POST /players/passport`, `POST /players/destination-country`, airport check-in, and baggage claim; run `pnpm typecheck`, `pnpm test`, `pnpm content:validate`, and `pnpm test:integration`.
 
 - [ ] **T43 — Dual-Mode Architecture (Kid & Adult) & Pluggable Job Minigame Framework.**
       Build an adaptive learning architecture where English is the primary tool to progress,
@@ -132,38 +145,28 @@ database: https://wedjinchhlybabstcchp.supabase.co
         `userMode` to `playerPreferencesSchema` and database migration; implement CSS
         theme tokens, settings mode toggle, touch `VirtualJoystick`, `KidDialogueInput`,
         `AdultDialogueInput`, `GrammarFeedbackTag`, and baseline `JobShellModal` + `AssemblyEngine`.
-  - [ ] **T43.b — Wordbook System (Illustrated Flashcards & CEFR Vocabulary).** Implement
-        the Wordbook HUD icon (`📖`) and modal view: Kid Mode renders illustrated flashcards
-        with picture, phonics and high-fidelity pronunciation audio using the project's Kokoro/Azure
-        audio catalog via `createProcessedAudio`; Adult Mode renders searchable CEFR
-        vocabulary lists (`A1/A2/B1`) with contextual definitions, example sentences, and audio replay.
-  - [ ] **T43.c — Contextual Dynamic Word Cards Tray for Dialogue.** Replace static
-        word cards in `KidDialogueInput` with dynamic vocabulary loaded from active NPC
-        dialogue nodes, questions, and venue catalogs (e.g. food items at café, tickets at station),
-        with tap-to-pronounce audio preview using the project's speech audio engine.
-  - [ ] **T43.d — AI & Authored Dialogue Job Minigame Trigger Bridge.** Connect dialogue
-        parser so that when NPC dialogue confirms an order (`order_confirmed: true`, `items`),
-        it automatically launches `JobShellModal`, and post-minigame shift reports seamlessly
-        return to the conversation and commit server progression.
-  - [ ] **T43.e1 — Job Gameplay Archetype: Sorting & Classification Engine.** Implement
-        `SortingEngine.tsx` for drag/swipe item classification into bins (e.g. mail room postal
-        sorting, airport luggage security scanning).
-  - [ ] **T43.e2 — Job Gameplay Archetype: Matching & Inspection Engine.** Implement
-        `MatchingEngine.tsx` for document/stamp inspection and verification (e.g. airport passport
-        control, tax office document approval).
-  - [ ] **T43.e3 — Job Gameplay Archetype: Precision Gauge & Timing Engine.** Implement
-        `TimingEngine.tsx` for slider/meter precision sweet spots (e.g. barista espresso extraction,
-        milk steaming, clinic lab measurement).
-  - [ ] **T43.e4 — Multi-Industry Job Registry & Sample Shift Scenarios.** Expand
-        `job-registry.ts` with diverse sample jobs across archetypes (Barista, Mail Sorter, Passport Inspector)
-        with customer dialogue tickets and reward configs.
-  - [ ] **T43.f — Overworld Proximity Interaction Bubbles & Themed Mode Signage.** Add
-        floating interactive speech bubbles above NPCs in Phaser when the player approaches;
-        render mode-specific signage overlays (Kid: iconic visual landmark badges; Adult: realistic
-        English street signage like "Hiring Now", "Sushi Bar").
-  - [ ] **T43.g — Full Integration & Verification.** Perform comprehensive end-to-end
-        verification across both modes, PWA offline behavior, mobile touch navigation,
-        and full test suites (`pnpm typecheck`, `pnpm test`, `pnpm content:validate`).
+  - [ ] **T43.b1 — Wordbook Data Catalog & Kokoro Offline Audio Helper.** `[Model: Gemini Flash]`
+        Create `apps/game/src/features/learning/wordbook-data.ts` (Kid phonics/emoji items + Adult `A1/A2/B1` CEFR entries with definitions and example sentences) and a small playback helper wrapping `createProcessedAudio` (`apps/game/src/speech/processed-audio.ts`) backed by pre-generated Kokoro-82M MP3s (`kokoro-js` in `package.json`) — zero `window.speechSynthesis`.
+  - [ ] **T43.b2 — Wordbook HUD Trigger & Modal View.** `[Model: Gemini Flash]`
+        Add the `📖` Wordbook HUD button in `StationScreen.tsx` (following the `<1024px` Mobile HUD rule) and `apps/game/src/features/learning/WordbookModal.tsx`: Kid Mode renders illustrated flashcards with phonics + audio replay; Adult Mode renders searchable `A1/A2/B1` CEFR vocabulary lists with audio replay, using semantic `--color-*` tokens only.
+  - [ ] **T43.c — Contextual Dynamic Word Cards Tray for Dialogue.** `[Model: Gemini Flash]`
+        Create pure mapper `apps/game/src/features/dialogue/word-cards.ts` resolving `WordCard[]` from active `npcId`, `nodeId`, and venue/quest vocabulary; wire into `KidDialogueInput.tsx` (`cards` + `onSpeakWord` using the `T43.b1` `createProcessedAudio` helper) replacing `DEFAULT_KID_WORD_CARDS` fallback when contextual cards exist.
+  - [ ] **T43.d1 — Server Job Completion Endpoint & Trigger Metadata.** `[Model: Gemini Hydrogen]`
+        Add optional `jobTrigger` (`{ jobId, ticket }`) to `turnMetadataSchema` in `packages/shared/src/conversations.ts` and emit it when seller/NPC order dialogue confirms; add transactional, idempotent `POST /jobs/complete` accepting `JobShiftReport` (`job-engine.ts`) in NestJS (`economy` / `jobs` module) using `wallet_ledger` (`idempotency_key = job:<idempotencyKey>`) and server-side reward lookup by `jobId` (never trusting client reward numbers).
+  - [ ] **T43.d2 — Client Dialogue ↔ JobShellModal Bridge.** `[Model: Gemini Hydrogen]`
+        Update `apps/game/src/features/shops/ShopConversation.tsx` (replacing the manual `sampleJobTicket` trigger) and `api/client.ts`: auto-open `JobShellModal` when `turn.jobTrigger` arrives, submit `JobShiftReport` to `POST /jobs/complete`, refresh player XP/coins (`refreshPlayer(true)`), and post the post-shift completion reply back into the conversation.
+  - [ ] **T43.e1 — Job Gameplay Archetype: Sorting & Classification Engine.** `[Model: Gemini Flash]`
+        Implement `apps/game/src/features/jobs/engines/SortingEngine.tsx` matching `JobTicket.sortingBins` and `AssemblyEngine.tsx` report contract (`JobShiftReport`, `calculateJobStars`). Use touch-friendly tap-to-assign (plus optional pointer/drag) so mobile `320px/375px` works without new drag libraries; wire `sorting` case in `JobShellModal.tsx`.
+  - [ ] **T43.e2 — Job Gameplay Archetype: Matching & Inspection Engine.** `[Model: Gemini Flash]`
+        Implement `apps/game/src/features/jobs/engines/MatchingEngine.tsx` matching `JobTicket.matchingCriteria` for document/stamp inspection (airport passport control, tax office approval) returning `JobShiftReport`; wire `matching` case in `JobShellModal.tsx`.
+  - [ ] **T43.e3 — Job Gameplay Archetype: Precision Gauge & Timing Engine.** `[Model: Gemini Flash]`
+        Extend `JobTicket` in `packages/shared/src/job-engine.ts` with optional `timingConfig` (`targetMin`, `targetMax`, `speedMs`) and implement `apps/game/src/features/jobs/engines/TimingEngine.tsx` for slider/meter precision sweet spots returning `JobShiftReport`; wire `timing` case in `JobShellModal.tsx`.
+  - [ ] **T43.e4 — Multi-Industry Job Registry & Sample Shift Scenarios.** `[Model: Gemini Flash]`
+        Expand `apps/game/src/features/jobs/registry/job-registry.ts` and `sample-configs/` with sample jobs across all 4 archetypes (Barista, Mail Sorter, Passport Inspector) including customer `JobTicket` configs and unit tests for `calculateJobStars` / config validity.
+  - [ ] **T43.f — Overworld Proximity Interaction Bubbles & Themed Mode Signage.** `[Model: Gemini Hydrogen]`
+        Extract bubble/signage helper `apps/game/src/features/npcs/npc-bubbles.ts` (avoid bloating `create-station-game.ts`), add `setUserMode(mode: UserMode)` on `StationGame` (`types/gameplay/world.ts`), and render floating proximity bubbles above nearby NPCs + mode-themed venue signage overlays (Kid icons vs Adult English signs) using `UI_COLORS`.
+  - [ ] **T43.g — Full Integration & Verification.** `[Model: Gemini Hydrogen]`
+        Add focused unit/component tests across Kid & Adult modes and new job engines; run `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm content:validate`, `pnpm build`, and `pnpm check:pwa`.
 
 - [ ] **ONB-01 — One-page country setup, shared country clocks and quick rest.**
       Replace the multi-screen country/avatar/name flow with one short first-run
@@ -173,28 +176,15 @@ database: https://wedjinchhlybabstcchp.supabase.co
       becomes a five-second rest that restores energy without moving world time.
       Implement only one numbered slice per request, keep each slice green, and
       do not start the next slice automatically.
-  - [ ] **ONB-01.7 — Legacy clock cleanup and release verification.** After
-        every runtime consumer uses world clocks, add forward migration
-        `033_remove_per_player_clock.sql` to drop only `player_life.clock_time`,
-        `clock_anchor` and `clock_rate`; remove rebase/time-skip functions,
-        stale fixtures and leftover references, while preserving appearance and
-        `player_actions`. Stop the old server before this contract migration; if
-        zero-downtime deployment is needed, defer `033` to the next release.
-        Update `docs/GAME.md` and `docs/TECH.md` with the final durable
-        behavior. Done when repository search finds old clock names only in
-        historical/contract migrations, and content validation, lint, typecheck,
-        unit tests, build, integration tests and PWA checks pass.
+  - [ ] **ONB-01.7 — Legacy clock cleanup and release verification.** `[Model: Gemini Flash]` *(Migration `033_remove_per_player_clock.sql` and `apps/server/src/tests/legacy-clock-cleanup.integration.test.ts` already exist; verify remaining references, update docs, and run checks.)*
+        Verify repository search finds `clock_time`/`clock_anchor`/rebase/time-skip names only in historical migrations/tests (note: `clock_rate` on `worlds` is the active 6× world clock), update `docs/GAME.md` and `docs/TECH.md` with the final durable behavior, and run `content:validate`, `lint`, `typecheck`, `test`, `build`, `test:integration`, and `check:pwa`.
 
 - [ ] **NPC speech audio prototype (Azure TTS + client DSP).** Complete the
       following slices in order. Keep the test scope to a few shared lines,
       NPC-specific lines, and AI fallback replies for one NPC. Do not mark the
       parent complete until every slice passes.
-  - [ ] **S1 — NPC gender content and approval.** Require `gender` (`male` or
-        `female`) on every NPC in validated content and `npcs.gender` through a
-        forward migration. List the proposed value for every existing NPC for
-        owner approval. The player's ID-card gender is unrelated. Done when
-        content validation passes, removing one gender makes it fail, and the
-        owner approves the proposals.
+  - [ ] **S1 — NPC gender content and approval.** `[Model: Gemini Flash]` *(Migrations `023_npc_gender.sql`, `024_npc_gender_values.sql` and `gender` fields in `content/seed/npcs.json` & `street-npcs.json` already exist.)*
+        Verify schema validation requires `gender` (`male` or `female`) on every NPC (confirm removing one `gender` makes `pnpm content:validate` fail), and list the existing NPC `gender` table for owner approval.
   - [ ] **S8 — End-to-end mobile verification.** With the existing test account,
         verify audio quality, response time and CPU behavior on supported mobile
         browsers, plus fixed/AI reuse, emotion/style, signed-URL expiry and
@@ -204,12 +194,12 @@ database: https://wedjinchhlybabstcchp.supabase.co
           signed-URL retry behavior and stale AI cleanup (2026-10-20).
     - [x] Authenticated Chromium check: replay works without console errors and
           dialogue has no horizontal overflow at 320/375 px (2026-10-20).
-    - [ ] Physical Android Chrome: audio quality, response time and CPU
+    - [ ] `[Manual]` Physical Android Chrome: audio quality, response time and CPU
           behavior.
-    - [ ] Physical iOS Safari: audio quality, response time and CPU behavior.
-    - [ ] Live signed-URL expiry and fixed/AI cache reuse against local storage.
+    - [ ] `[Manual]` Physical iOS Safari: audio quality, response time and CPU behavior.
+    - [ ] `[Manual]` Live signed-URL expiry and fixed/AI cache reuse against local storage.
 
-- [ ] **Shop polish follow-up (browser checks only).** Code, 173 unit tests,
+- [ ] **Shop polish follow-up (browser checks only).** `[Manual]` Code, 173 unit tests,
       typecheck, lint, build, content and PWA checks already pass. Remaining:
       refresh the old cached PWA, then check both shop maps, conversations, NPC
       movement and 320/375/1024px layouts with the existing test account. Done
@@ -280,8 +270,8 @@ database: https://wedjinchhlybabstcchp.supabase.co
         re-issue or renewal flows. The service list is content, so more services
         can be added later without code. A player who says they do not have an
         ID card is routed to registration. Check: each question gets the right
-        scripted answer; AI never answers service questions. - [x] **c.
-        Application conversation.** The staff member asks four questions, one at
+        scripted answer; AI never answers service questions.
+  - [x] **c. Application conversation.** The staff member asks four questions, one at
         a time: **name**, **date of birth**, **address**, and **where you come
         from**. Gender comes from the immutable character choice and is never
         asked again. Then the photo (step d). Then the staff member reads
@@ -304,9 +294,9 @@ database: https://wedjinchhlybabstcchp.supabase.co
         server recasts remain always enabled. Check: answers kept in order;
         resume after reload; natural no-address explanations give `null`,
         literal "skip" gets a retry, character gender is copied server-side, and
-        "12 Maple Street" is stored. - [x] **d. Photo (upload or camera)**: kept
-        in the browser until the player confirms.** After the four questions the
-        staff member asks for a photo. The chat panel offers **Upload photo**,
+        "12 Maple Street" is stored.
+  - [x] **d. Photo (upload or camera): kept in the browser until the player confirms.**
+        After the four questions the staff member asks for a photo. The chat panel offers **Upload photo**,
         **Take photo** and **Use my character picture** (skips the photo). Use a
         file input (`accept="image/*"`) for uploads. **Take photo** opens a live
         `getUserMedia` camera preview on supported browsers with explicit
@@ -369,7 +359,8 @@ database: https://wedjinchhlybabstcchp.supabase.co
         no stored photo; a retry with the same key creates one card and one
         photo; another player cannot read the photo; the signed URL expires; a
         reload asks for the photo again; a camera-permission denial falls back
-        to the file picker with a clear message. - [x] **e. ID number.** Shown
+        to the file picker with a clear message.
+  - [x] **e. ID number.** Shown
         as **`YYYYMMDD-XXXX`**: the date of birth, a hyphen, and 4 random
         digits. Stored as 12 digits without the hyphen (text, leading zeros
         count); the hyphen is added only for display by one shared function. The
@@ -381,7 +372,8 @@ database: https://wedjinchhlybabstcchp.supabase.co
         returns the same card and creates nothing. Check: format, parity, hyphen
         display, uniqueness under forced collisions, two simultaneous
         applications with the same birth date and gender get different
-        numbers. - [x] **f. Storage, API and updates.** Table `player_id_card`
+        numbers.
+  - [x] **f. Storage, API and updates.** Table `player_id_card`
         (one row per user: `number` unique, `fullName`, `birthDate`, `address`
         nullable, `gender`, `origin`, `photoPath` nullable, `issuedAt`,
         `updatedAt`). The card remains valid permanently. `GET   /me/id-card`
@@ -391,8 +383,8 @@ database: https://wedjinchhlybabstcchp.supabase.co
         `setIdCardAddress(userId, address | null)` for the future "rent a flat"
         quest. Check: ownership; plain-text storage; `<script>` stays text; the
         card remains valid as the game clock advances; direct client attempts to
-        update it outside the Tax Office flow are rejected. - [x] **g. ID card
-        icon and info panel.** A small ID card icon sits on the compact profile
+        update it outside the Tax Office flow are rejected.
+  - [x] **g. ID card icon and info panel.** A small ID card icon sits on the compact profile
         card, shown only once the player has a card. Tapping it opens a panel
         with the photo (or the character picture), the number as
         `YYYYMMDD-XXXX`, name, date of birth, gender, origin, and the address. A
@@ -405,31 +397,31 @@ database: https://wedjinchhlybabstcchp.supabase.co
         for the photo, keyboard and screen-reader use. Check: hidden before the
         card, shown after; the panel persists after reload, remains valid when
         the clock is moved forward, and exposes the update hint to pointer and
-        keyboard users; no overlap at 320, 375 and 1024 px. - [ ] **h. Quest
-        wiring.** The quest completes when the card is issued; the reward (if
-        any) is given once; progress survives reload and sign-in; the NPC of the
-        current step gets the yellow `!` tag and the minimap marks it.
-        Out-of-order attempts get a friendly scripted hint and change nothing.
-        Check: replay, two simultaneous requests, reload. - [ ] **i. Privacy and
-        final checks\*\* Name, date of birth, address, origin, the ID number and
-        the photo are never sent to the AI prompt and never logged in
-        production; account deletion removes the card and the photo. The flow,
-        the photo step and the card panel say: "Use your character's details,
-        not your real personal data." The privacy note (P3) must also mention
-        the photo before the playtest. Browser check with the existing account
-        at 320, 375 and 1024 px: map, both staff, the full flow with an upload
-        and with the camera, confirmation, the card icon and panel, Goals, no
-        overlap, no horizontal scroll. Done when a to i are ticked, content
-        validation fails for a missing step or an unknown NPC, and the AI
-        evaluation shows no ID card data in any prompt.
+        keyboard users; no overlap at 320, 375 and 1024 px.
+  - [ ] **h1. Quest wiring (Server & Content).** `[Model: Gemini Hydrogen]`
+        Add `q_id_card` (5 ordered steps, default reward none) to `content/seed/quests.json`
+        and seed migration; wire idempotent quest completion when `IdCardService.issue`
+        succeeds (accepting either `npc_tax_clerk_marcus` or `npc_tax_clerk_nadia`),
+        returning friendly scripted hints on out-of-order attempts without side effects.
+        Check: replay, two simultaneous requests, reload, and `pnpm content:validate` fails for missing step/unknown NPC.
+  - [ ] **h2. Quest wiring (Client HUD & NPC Marker).** `[Model: Gemini Flash]`
+        Display `q_id_card` steps in `QuestBoard.tsx`, mark active Tax Office NPC (`npc_tax_clerk_marcus` / `npc_tax_clerk_nadia`)
+        with the yellow `!` tag in Phaser, and mark Tax Office on the minimap while active.
+  - [ ] **i. Privacy and final checks.** `[Model: Gemini Hydrogen]` + `[Manual]` *(Browser check depends on `P3`)*
+        Verify in tests & code: name, date of birth, address, origin, the ID number and
+        the photo are never sent to the AI prompt (`npc-prompt.service.ts` / `ai-evaluation.ts`) and never logged in
+        production; account deletion removes `player_id_card` and the Storage photo.
+        Check UI copy says: `"Use your character's details, not your real personal data."`
+        `[Manual]` Browser check with the existing account at 320, 375 and 1024 px after `P3`:
+        map, both staff, full flow with upload and camera, confirmation, card icon/panel, Goals, no overlap/horizontal scroll.
 
 ## BLOCKED — start only after the Open decisions below are answered
 
-- [ ] **P1 — Hosted Supabase.** Migrations, seed and production Auth settings.
+- [ ] **P1 — Hosted Supabase.** `[Manual]` Migrations, seed and production Auth settings.
       Done when: a new account can sign in on the hosted project.
-- [ ] **P2 — Hosting, CORS and rate limits.** HTTPS for the app and the server.
+- [ ] **P2 — Hosting, CORS and rate limits.** `[Manual]` + `[Model: Gemini Flash]` (config/env) HTTPS for the app and the server.
       Done when: the app works on a public address.
-- [ ] **P3 — Privacy note.** Short note: speech audio may go to the browser
+- [ ] **P3 — Privacy note.** `[Model: Gemini Flash]` Short note: speech audio may go to the browser
       vendor; the optional ID card photo is private and removed with the
       account. Done when: the note is shown in the app.
 
@@ -445,7 +437,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
       genuinely new role is required. Do not introduce hard-coded component
       colors, generated bitmap buttons/panels, a parallel design system, new UI
       libraries or a whole-app rewrite.
-  - [ ] **UI-01.1 — Foundations and shared primitives.** Map the reference to
+  - [ ] **UI-01.1 — Foundations and shared primitives.** `[Model: Gemini Hydrogen]` Map the reference to
         documented semantic roles for primary, secondary and disabled buttons;
         compact information panels; dialogue panels; tooltip bubbles;
         information and quest markers; inventory slots; and ID-card icons.
@@ -454,23 +446,21 @@ database: https://wedjinchhlybabstcchp.supabase.co
         disabled, loading and error states. Check: component tests prove state
         behavior and keyboard operation; contrast and focus indicators remain
         accessible; no feature flow changes.
-  - [ ] **UI-01.2 — Feature adoption.** Migrate one explicitly requested feature
+  - [ ] **UI-01.2 — Feature adoption.** `[Model: Gemini Flash]` Migrate one explicitly requested feature
         at a time to the approved primitives, starting with components that are
         already shared rather than duplicating styles inside feature folders.
         Preserve copy, authorization, server-owned state and responsive layout.
         Check each slice at 320, 375 and 1024 px with no overlap, clipping or
         horizontal scroll, and verify its existing focused tests still pass.
-  - [ ] **UI-01.3 — Cleanup and final consistency audit.** Only after all
+  - [ ] **UI-01.3 — Cleanup and final consistency audit.** `[Model: Gemini Flash]` Only after all
         requested feature slices are adopted, remove styles proven unused and
         search for accidental hard-coded colors or duplicate primitives. Do not
         delete legacy styles still used by an unmigrated feature. Done when the
         approved component categories have one maintained implementation,
         accessibility checks pass, relevant screenshots are owner-approved, and
         game tests, typecheck, lint and production build pass.
-- [ ] **DOC-01 — Split maintained game and technical references by domain.**
-      Defer until `docs/GAME.md` or `docs/TECH.md` becomes difficult to navigate
-      (default trigger: either file exceeds about 300 lines, or one section owns
-      multiple independently changing domains). Keep `GAME.md` and `TECH.md` as
+- [ ] **DOC-01 — Split maintained game and technical references by domain.** `[Model: Gemini Hydrogen]` *(Trigger met: `docs/TECH.md` is 798 lines.)*
+      Keep `GAME.md` and `TECH.md` as
       short entry points and move detail into cohesive `docs/game/` and
       `docs/tech/` files. Product behavior belongs under `game/`;
       implementation, interfaces and operations belong under `tech/`. Start with
@@ -485,44 +475,54 @@ database: https://wedjinchhlybabstcchp.supabase.co
       maintained content was lost.
 - [ ] **T37 — Library and CV (start only after T36).** One task, done in order a
       to g. Tick each step when it passes its own check. Art, portraits and
-      voice clips use the existing asset pipeline (T14). - [ ] **a. Library
-      map.** New map "Library" with an entrance on Town Street. It appears in
-      the map pack and the minimap. Check: the player can walk in and leave. - [
-      ] **b. Librarian.** A named NPC with scripted small talk, three emotion
-      portraits, and opening hours from the existing shared check (default:
-      organization hours, 08:00–16:00). A closed library says its hours. Check:
-      the player can chat with her; closed hours show the dialogue. - [ ] **c.
-      CV conversation.** When the player asks how to make a CV (or a resume),
-      she offers help and asks five questions, one at a time: your name, the job
-      you want, what you can do well, your work experience, the languages you
-      speak (owner approves the wording). The pending state lives on the server,
-      so leaving and returning resumes at the saved question. "I don't know"
-      gets a short example answer, never a skip. At the end: "Shall I save it?".
-      If a CV exists she offers to update it. Safe server recasts remain always
-      enabled. Check: the five answers are kept in order, and the flow resumes
-      after a reload. - [ ] **d. CV storage and API.** Table `player_cv` (one
-      row per user: `name`, `desiredJob`, `skills`, `experience`, `languages`,
-      `updatedAt`). `GET/PUT /me/cv`. Plain text, trimmed, at most 300
-      characters per field, no control characters, every field required. A
-      player reads and edits only their own CV. Check: a replayed confirm
-      creates one CV; empty or over-long fields are rejected; `<script>` is
-      stored as plain text; another player cannot read it. - [ ] **e. Server
-      check for later quests.** Expose a server function
-      `hasCompleteCv(userId)`, true only when a complete CV exists. No quest
-      changes in this task; the future job quest will use it. Check: complete CV
-      → true; incomplete → false. - [ ] **f. CV in the profile.** In the profile
-      section, a CV icon appears only once a CV exists. It opens a panel with
-      the five labelled fields and an Edit button; the edit form has counters,
-      Save, Cancel, and a warning for unsaved changes, plus the note "Use your
-      character's details, not your real phone number or address." Plain-text
-      rendering only. Editing costs no energy. Check: hidden before the CV,
-      shown after; edits persist after reload; keyboard and screen reader
-      work. - [ ] **g. Privacy and final checks.** CV text is never sent to the
-      AI prompt and never logged in production; account deletion removes it.
-      Browser check with the existing account at 320, 375 and 1024 px: map,
-      librarian, the full flow, icon and edit panel, no overlap, no horizontal
-      scroll. Done when a to g are ticked and the AI evaluation shows no CV text
-      in any prompt.
+      voice clips use the existing asset pipeline (T14).
+  - [ ] **a. Library map.** `[Model: Gemini Flash]` (content/map-pack config) + `[Model: Gemini Hydrogen]` (scene wiring)
+        New map "Library" with an entrance on Town Street. It appears in
+        the map pack and the minimap. Check: the player can walk in and leave.
+  - [ ] **b. Librarian.** `[Model: Gemini Flash]`
+        A named NPC with scripted small talk, three emotion
+        portraits, and opening hours from the existing shared check (default:
+        organization hours, 08:00–16:00). A closed library says its hours. Check:
+        the player can chat with her; closed hours show the dialogue.
+  - [ ] **c. CV conversation.** `[Model: Gemini Hydrogen]`
+        When the player asks how to make a CV (or a resume),
+        she offers help and asks five questions, one at a time: your name, the job
+        you want, what you can do well, your work experience, the languages you
+        speak (owner approves the wording). The pending state lives on the server,
+        so leaving and returning resumes at the saved question. "I don't know"
+        gets a short example answer, never a skip. At the end: "Shall I save it?".
+        If a CV exists she offers to update it. Safe server recasts remain always
+        enabled. Check: the five answers are kept in order, and the flow resumes
+        after a reload.
+  - [ ] **d. CV storage and API.** `[Model: Gemini Hydrogen]`
+        Table `player_cv` (one
+        row per user: `name`, `desiredJob`, `skills`, `experience`, `languages`,
+        `updatedAt`). `GET/PUT /me/cv`. Plain text, trimmed, at most 300
+        characters per field, no control characters, every field required. A
+        player reads and edits only their own CV. Check: a replayed confirm
+        creates one CV; empty or over-long fields are rejected; `<script>` is
+        stored as plain text; another player cannot read it.
+  - [ ] **e. Server check for later quests.** `[Model: Gemini Flash]`
+        Expose a server function
+        `hasCompleteCv(userId)`, true only when a complete CV exists. No quest
+        changes in this task; the future job quest will use it. Check: complete CV
+        → true; incomplete → false.
+  - [ ] **f. CV in the profile.** `[Model: Gemini Flash]`
+        In the profile
+        section, a CV icon appears only once a CV exists. It opens a panel with
+        the five labelled fields and an Edit button; the edit form has counters,
+        Save, Cancel, and a warning for unsaved changes, plus the note "Use your
+        character's details, not your real phone number or address." Plain-text
+        rendering only. Editing costs no energy. Check: hidden before the CV,
+        shown after; edits persist after reload; keyboard and screen reader
+        work.
+  - [ ] **g. Privacy and final checks.** `[Model: Gemini Hydrogen]` + `[Manual]`
+        CV text is never sent to the
+        AI prompt and never logged in production; account deletion removes it.
+        Browser check with the existing account at 320, 375 and 1024 px: map,
+        librarian, the full flow, icon and edit panel, no overlap, no horizontal
+        scroll. Done when a to g are ticked and the AI evaluation shows no CV text
+        in any prompt.
 - [ ] **OPS-01 — Production asset reconciliation and deploy prewarm.** Build a
       manifest-driven deployment gate after P1 Hosted Supabase. The command must
       compare required assets with production metadata and private/public
@@ -534,7 +534,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
       the art approval contract: static art must pass visual approval,
       permission-to-use approval, reviewed local integration and a production
       dry run before a separately approved production mutation.
-  - [ ] **OPS-01.1 — Canonical manifest and read-only reconciliation.** Define a
+  - [ ] **OPS-01.1 — Canonical manifest and read-only reconciliation.** `[Model: Gemini Hydrogen]` Define a
         typed manifest for required map backgrounds, portraits, spritesheets,
         atlases, fixed NPC audio and the five tutorial narration pages. Add
         `pnpm assets:reconcile -- --target production --check` to validate local
@@ -545,7 +545,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         and fail closed. Tests cover duplicate keys, changed checksum without a
         version bump, malformed atlas/frame contracts, unavailable production
         configuration and zero mutation in check mode.
-  - [ ] **OPS-01.2 — Reviewed static-asset upload.** Add explicit `--apply` for
+  - [ ] **OPS-01.2 — Reviewed static-asset upload.** `[Model: Gemini Hydrogen]` Add explicit `--apply` for
         missing versioned maps, portraits, spritesheets and atlases sourced only
         from the reviewed local archive. Reuse the existing content asset API,
         production URL/key safeguards and immutable version rules. Identical
@@ -554,7 +554,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         overwrite mismatched bytes, rewrite unrelated pack references or remove
         bundled station/PWA assets. Verify with mocked Storage/API tests and a
         non-production fixture reconciliation.
-  - [ ] **OPS-01.3 — Azure fixed-audio prewarm.** Extend `--apply` to synthesize
+  - [ ] **OPS-01.3 — Azure fixed-audio prewarm.** `[Model: Gemini Hydrogen]` Extend `--apply` to synthesize
         only missing trusted fixed-speech entries, including all five tutorial
         pages, through the existing server-side Azure provider and private
         `speech-audio` cache. Cache identity must include exact text, voice,
@@ -564,7 +564,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         failures without secrets. Tests prove missing-only generation,
         idempotent reruns, cache-version invalidation, signed-URL independence
         and safe partial failure.
-  - [ ] **OPS-01.4 — Deployment gate and production smoke check.** Add the
+  - [ ] **OPS-01.4 — Deployment gate and production smoke check.** `[Model: Gemini Hydrogen]` Add the
         sequence `content:validate` → build → reconcile `--apply` → reconcile
         `--check` → authenticated production smoke checks. The deploy fails if a
         required asset remains missing/invalid or any tutorial audio cannot be
@@ -573,7 +573,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         never load production secrets from local env files. Document rollback as
         deploying the previous manifest/code version; do not delete newer
         immutable objects automatically.
-  - [ ] **OPS-01.5 — Production proof and maintained docs.** Against the
+  - [ ] **OPS-01.5 — Production proof and maintained docs.** `[Manual]` + `[Model: Gemini Flash]` (docs) Against the
         approved production project, run check mode before apply, apply missing
         assets, rerun check mode and the smoke suite, then confirm a second
         apply creates and uploads nothing. Record only non-secret counts and
