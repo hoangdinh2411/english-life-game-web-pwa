@@ -27,6 +27,8 @@ export const loadOptions = async (token: string): Promise<OnboardingOptions> =>
   parseOnboardingOptions(await request<unknown>('onboarding/options', undefined, token));
 export const loadPlayer = (token: string): Promise<PlayerResponse> => request('me', undefined, token);
 export const createPassport = (token: string, body: PassportDraft): Promise<PlayerState> => request<PlayerState>('players/passport', body, token);
+export const setDestinationCountry = (token: string, countryId: string): Promise<PlayerState> =>
+  request<PlayerState>('players/destination-country', { countryId }, token);
 export const createCharacter = (token: string, body: CreateCharacterRequest) => request<PlayerState>('characters', body, token);
 export const savePlayerLocation = (token: string, location: PlayerLocation): Promise<PlayerLocation> =>
   request('players/location', location, token);

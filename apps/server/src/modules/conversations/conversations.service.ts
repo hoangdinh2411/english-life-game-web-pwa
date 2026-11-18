@@ -1,6 +1,6 @@
 import { LifeService } from '../life/life.service';
 import { ConflictException, Injectable } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS, TRANSIENT_SERVICE_NPC_IDS, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID } from '@life-abroad/shared';
+import { AIRPORT_NPC_IDS, ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS, TRANSIENT_SERVICE_NPC_IDS, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID } from '@life-abroad/shared';
 import { DialogueService } from '../dialogue/dialogue.service';
 import { QuestsService } from '../quests/quests.service';
 import { ConversationsRepository, sellerState } from './conversations.repository';
@@ -49,7 +49,9 @@ export class ConversationsService {
           ? 'townsperson_start'
           : (TAX_OFFICE_NPC_IDS as readonly string[]).includes(npcId)
             ? 'tax_office_start'
-            : 'shop_start';
+            : (AIRPORT_NPC_IDS as readonly string[]).includes(npcId)
+              ? 'airport_agent_start'
+              : 'shop_start';
         const id = await this.conversations.create(client, userId, npcId, openingVariation);
         const context = { ...baseContext, variationIndex: openingVariation };
         const resumedApplication = (TAX_OFFICE_NPC_IDS as readonly string[]).includes(npcId)

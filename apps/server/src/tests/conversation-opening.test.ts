@@ -33,3 +33,31 @@ test('conversation opening skips speech work only when the client disabled speec
   assert.equal(speechCalls, 1);
   assert.equal(spoken.messages[0]?.speech?.url, 'https://storage.test/opening.mp3');
 });
+
+
+test('airport agent opens with its own node and is a transient service conversation', async () => {
+  const nodes: string[] = [];
+  let discarded = 0;
+  const arrival = { questId: 'q_station_arrival', status: 'in_progress', currentStepId: null,
+    ticket: { issued: false, used: false }, canEnterTownStreet: false,
+    locationId: 'loc_airport_departure', rewardsGranted: false };
+  const repository = {
+    transaction: async (work: (client: object) => Promise<unknown>) => work({}),
+    discardTransientForNpc: async () => { discarded += 1; },
+    variationIndex: async () => 0,
+    context: async () => ({ npcId: 'npc_airport_agent', npcName: 'Claire', roleId: 'airport_check_in_agent', personality: 'cheerful' }),
+    create: async () => '00000000-0000-4000-8000-000000000002',
+  };
+  const service = new ConversationsService(repository as never,
+    { node: async (_context: object, id: string) => { nodes.push(id); return { text: 'Welcome to the check-in desk.' }; } } as never,
+    { getArrival: async () => arrival } as never, {} as never, {} as never, {} as never, {} as never,
+    { conversation: async (_userId: string, conversation: object) => conversation } as never,
+    { assertCanStart: async () => undefined } as never,
+    { opening: async () => null, summary: async () => undefined } as never);
+
+  const opened = await service.create('user-1', 'npc_airport_agent', false);
+  assert.deepEqual(nodes, ['airport_agent_start']);
+  assert.equal(discarded, 1);
+  assert.equal(opened.npcId, 'npc_airport_agent');
+  assert.equal(opened.messages[0]?.text, 'Welcome to the check-in desk.');
+});
