@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import {
+  claimBaggageRequestSchema,
   createCharacterSchema,
   playerLocationSchema,
   playerPreferencesInitializeSchema,
   playerPreferencesUpdateSchema,
+  type ClaimBaggageRequest,
+  type ClaimBaggageResponse,
   type CreateCharacterRequest,
   type PlayerLocation,
   type PlayerPreferences,
@@ -53,5 +56,11 @@ export class PlayersController {
   updatePreferences(@CurrentUser() userId: string,
     @Body(new SchemaValidationPipe(playerPreferencesUpdateSchema)) preferences: PlayerPreferencesUpdate): Promise<PlayerPreferences> {
     return this.players.updatePreferences(userId, preferences);
+  }
+
+  @Post('players/claim-baggage')
+  claimStarterBaggage(@CurrentUser() userId: string,
+    @Body(new SchemaValidationPipe(claimBaggageRequestSchema)) request: ClaimBaggageRequest): Promise<ClaimBaggageResponse> {
+    return this.players.claimStarterBaggage(userId, request.idempotencyKey);
   }
 }

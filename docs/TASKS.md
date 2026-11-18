@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36a–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.d; S2–S7; T43.a.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.e; S2–S7; T43.a.
 
 ## How to work
 
@@ -99,7 +99,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         `docs/art-direction/STYLE.md` 3-gate contract (visual approval, permission
         to use, dry-run upload) for airport terminal backgrounds, luggage props,
         and agent spritesheet/portraits.
-  - [ ] **T42.e — Backend Character Spawn & Idempotent Starter Funds.** Update
+  - [x] **T42.e — Backend Character Spawn & Idempotent Starter Funds.** Update
         `players.repository.ts` to spawn new characters at `loc_airport_departure`
         with 0 initial coins; add idempotent `claimStarterBaggage` endpoint in
         `economy.service.ts` to grant the $500 starting balance upon claiming luggage.

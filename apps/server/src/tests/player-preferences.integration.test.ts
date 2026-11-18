@@ -38,7 +38,7 @@ test('T38.1 preferences enforce atomic initialization, bounds, ownership and cas
     assert.equal(migration.status, 0, migration.stderr);
 
     database = new DatabaseService(new ConfigService({ DATABASE_URL: databaseUrl.toString() }));
-    const players = new PlayersRepository(database, {} as never);
+    const players = new PlayersRepository(database);
     const userId = randomUUID();
     const otherUserId = randomUUID();
     for (const id of [userId, otherUserId]) {
