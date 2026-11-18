@@ -56,13 +56,17 @@ export interface CreateCharacterRequest {
   gender: PlayerGender;
 }
 
+export interface SetDestinationCountryRequest {
+  countryId: string;
+}
+
 export interface Character {
   id: string;
   userId: string;
   name: string;
-  cityId: string;
-  countryId: string;
-  countryName: string;
+  cityId: string | null;
+  countryId: string | null;
+  countryName: string | null;
   gender: PlayerGender;
   avatarId: string;
   lastLocation: PlayerLocation;
@@ -162,3 +166,15 @@ export function parseClaimBaggageRequest(value: unknown): ClaimBaggageRequest {
 
 export const passportDraftSchema = schemaFromParser(parsePassportDraft);
 export const claimBaggageRequestSchema = schemaFromParser(parseClaimBaggageRequest);
+
+export function parseSetDestinationCountryRequest(value: unknown): SetDestinationCountryRequest {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('Invalid set destination country request');
+  const request = value as Record<string, unknown>;
+  if (Object.keys(request).some((key) => key !== 'countryId')) throw new Error('Unexpected set destination country request field');
+  if (typeof request.countryId !== 'string' || !/^country_[a-z0-9_]+$/.test(request.countryId)) {
+    throw new Error('Invalid country id');
+  }
+  return { countryId: request.countryId };
+}
+
+export const setDestinationCountrySchema = schemaFromParser(parseSetDestinationCountryRequest);

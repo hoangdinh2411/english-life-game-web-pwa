@@ -6,7 +6,14 @@ import {
   parseCreateCharacterRequest,
   parseOnboardingOptions,
   parsePassportDraft,
+  parseSetDestinationCountryRequest,
+  setDestinationCountrySchema,
 } from '../dist/onboarding.js';
+import {
+  AIRPORT_AGENT_NPC_ID,
+  AIRPORT_NPC_IDS,
+  conversationNpcSchema,
+} from '../dist/conversations.js';
 
 // A permissive parser could let clients choose server-owned setup state or save malformed names.
 test('creation normalizes valid Unicode names, requires gender and rejects every server-owned field', () => {
@@ -64,4 +71,21 @@ test('claim baggage request requires a valid UUID idempotency key and rejects ex
   assert.deepEqual(parseClaimBaggageRequest({ idempotencyKey: key }), { idempotencyKey: key });
   assert.throws(() => parseClaimBaggageRequest({ idempotencyKey: 'not-a-uuid' }), /idempotency/i);
   assert.throws(() => parseClaimBaggageRequest({ idempotencyKey: key, coins: 500 }), /unexpected/i);
+});
+
+test('set destination country request validates countryId format and rejects extra or invalid fields', () => {
+  assert.deepEqual(parseSetDestinationCountryRequest({ countryId: 'country_sweden' }), { countryId: 'country_sweden' });
+  assert.deepEqual(parseSetDestinationCountryRequest({ countryId: 'country_vietnam' }), { countryId: 'country_vietnam' });
+  assert.deepEqual(setDestinationCountrySchema.parse({ countryId: 'country_japan' }), { countryId: 'country_japan' });
+
+  for (const invalid of [null, undefined, 123, {}, [], { countryId: '' }, { countryId: 'sweden' }, { countryId: 'country_SWE' }, { countryId: 'country_sweden', cityId: 'city_maplewood' }]) {
+    assert.throws(() => parseSetDestinationCountryRequest(invalid));
+    assert.throws(() => setDestinationCountrySchema.parse(invalid));
+  }
+});
+
+test('conversation NPC schema accepts airport agent', () => {
+  assert.equal(AIRPORT_AGENT_NPC_ID, 'npc_airport_agent');
+  assert.ok(AIRPORT_NPC_IDS.includes('npc_airport_agent'));
+  assert.equal(conversationNpcSchema.parse('npc_airport_agent'), 'npc_airport_agent');
 });
