@@ -6,7 +6,7 @@ import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../features/assets/phaser-pack';
 import { AIRPORT_STAFF } from '../features/airport/airport-staff';
-import { AIRPORT_DEPARTURE_GATE, AIRPORT_DEPARTURE_PORTALS, AIRPORT_SPAWN_POINT, airportSpawnPoint, canWalkAirport, moveInAirport, recoverAirportPosition, authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetArrivalForLocation, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
+import { AIRPORT_DEPARTURE_PORTALS, airportSpawnPoint, canWalkAirport, moveInAirport, recoverAirportPosition, authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetArrivalForLocation, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
 import { canEnterLocation, closedVenueExit, moveInShop, shopCanWalk, shouldCloseActiveVenue, shouldDeferClosedVenueExit } from '../features/shops/shop-navigation';
