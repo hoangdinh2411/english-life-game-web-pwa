@@ -9,7 +9,7 @@ import { AppModule } from '../app.module';
 import { PlayersRepository } from '../modules/players/players.repository';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { QuestsService } from '../modules/quests/quests.service';
-import { ARRIVAL_NPC_ID, arrivalStateSchema } from '@life-abroad/shared';
+import { ARRIVAL_NPC_ID, arrivalStateSchema, type PlayerState } from '@life-abroad/shared';
 import { EconomyService } from '../modules/economy/economy.service';
 import { PlayersService } from '../modules/players/players.service';
 import { OnboardingService } from '../modules/onboarding/onboarding.service';
@@ -200,5 +200,121 @@ test('T15 new character starts with $0 at airport and idempotent baggage claim g
     await database.query('DELETE FROM auth.users WHERE id=$1', [userId]);
     await database.end();
     await module.close();
+  }
+});
+
+test('T42.e2b airport check-in passport creation and atomic destination country lock', async () => {
+  const databaseUrl = process.env.DATABASE_URL ?? '';
+  const authUrl = process.env.SUPABASE_URL ?? '';
+  assert.equal(new URL(databaseUrl).hostname, '127.0.0.1');
+  assert.equal(new URL(databaseUrl).port, '54322');
+  assert.equal(new URL(authUrl).hostname, '127.0.0.1');
+  const database = new Pool({ connectionString: databaseUrl });
+  const auth = createClient(authUrl, process.env.SUPABASE_PUBLISHABLE_KEY ?? '', {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  const email = `t42-e2b-${randomUUID()}@example.com`;
+  const password = randomUUID();
+  const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
+  const app = module.createNestApplication();
+  app.setGlobalPrefix('api/v1');
+  let userId: string | undefined;
+  try {
+    await app.listen(0, '127.0.0.1');
+    const signed = await auth.auth.signUp({ email, password, options: { data: { display_name: 'T42 Traveler' } } });
+    assert.equal(signed.error, null);
+    userId = signed.data.user?.id;
+    assert.ok(userId);
+    assert.ok(signed.data.session);
+    const headers = { Authorization: `Bearer ${signed.data.session.access_token}`, 'Content-Type': 'application/json' };
+    const base = await app.getUrl() + '/api/v1';
+    const call = (path: string, body?: unknown) => fetch(base + path, {
+      headers, method: body === undefined ? 'GET' : 'POST',
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+
+    assert.equal((await fetch(base + '/players/passport', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Alex', gender: 'male' }),
+    })).status, 401);
+    assert.equal((await fetch(base + '/players/destination-country', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ countryId: 'country_uk' }),
+    })).status, 401);
+
+    const optionsRes = await call('/onboarding/options');
+    const options = await optionsRes.json() as { countries: Array<{ id: string; name: string }> };
+    assert.ok(options.countries.length >= 2);
+    const firstCountry = options.countries[0]!;
+    const secondCountry = options.countries[1]!;
+
+    assert.equal((await call('/players/destination-country', { countryId: firstCountry.id })).status, 400);
+    for (const invalidPassport of [null, {}, { name: ' ', gender: 'male' }, { name: 'Alex', gender: 'other' }, { name: 'Alex', gender: 'male', countryId: firstCountry.id }]) {
+      assert.equal((await call('/players/passport', invalidPassport)).status, 400);
+    }
+
+    const passportRes = await call('/players/passport', { name: '  Alex Rivera  ', gender: 'female', avatarId: 'avatar_traveler_02' });
+    assert.equal(passportRes.status, 201);
+    const passportPayload = await passportRes.json() as PlayerState;
+    assert.deepEqual(passportPayload, {
+      user: { id: userId, email, displayName: 'T42 Traveler' },
+      character: {
+        id: userId,
+        userId,
+        name: 'Alex Rivera',
+        gender: 'female',
+        cityId: null,
+        countryId: null,
+        countryName: null,
+        avatarId: 'avatar_traveler_02',
+        lastLocation: { mapId: 'loc_airport_departure', placeId: 'loc_airport_departure', x: 768, y: 370 },
+      },
+      stats: { xp: 0, coins: 0 },
+      inventory: [],
+      questProgress: [],
+    });
+
+    const dbChar = await database.query<{ country_id: string | null; world_id: string | null; current_city_id: string | null }>(
+      'SELECT country_id, world_id, current_city_id FROM public.characters WHERE user_id = $1',
+      [userId],
+    );
+    assert.deepEqual(dbChar.rows[0], { country_id: null, world_id: null, current_city_id: null });
+
+    const meRes = await call('/me');
+    assert.equal(meRes.status, 200);
+    assert.deepEqual(await meRes.json(), {
+      user: passportPayload.user,
+      character: passportPayload.character,
+      stats: { xp: 0, coins: 0 },
+    });
+
+    assert.equal((await call('/players/passport', { name: 'Alex Rivera', gender: 'female', avatarId: 'avatar_traveler_02' })).status, 201);
+    assert.equal((await call('/players/passport', { name: 'Other Name', gender: 'female', avatarId: 'avatar_traveler_02' })).status, 409);
+
+    for (const invalidCountry of [null, {}, { countryId: 'invalid' }, { countryId: 'country_unknown' }]) {
+      assert.equal((await call('/players/destination-country', invalidCountry)).status, 400);
+    }
+
+    const lockResponses = await Promise.all([
+      call('/players/destination-country', { countryId: firstCountry.id }),
+      call('/players/destination-country', { countryId: firstCountry.id }),
+    ]);
+    assert.deepEqual(lockResponses.map(r => r.status).sort(), [201, 201]);
+    const locked = await lockResponses[0]!.json() as PlayerState;
+    assert.equal(locked.character.countryId, firstCountry.id);
+    assert.equal(locked.character.countryName, firstCountry.name);
+    assert.ok(locked.character.cityId);
+
+    const dbLocked = await database.query<{ country_id: string | null; world_id: string | null; current_city_id: string | null }>(
+      'SELECT country_id, world_id, current_city_id FROM public.characters WHERE user_id = $1',
+      [userId],
+    );
+    assert.equal(dbLocked.rows[0]?.country_id, firstCountry.id);
+    assert.ok(dbLocked.rows[0]?.world_id);
+    assert.equal(dbLocked.rows[0]?.current_city_id, locked.character.cityId);
+
+    assert.equal((await call('/players/destination-country', { countryId: secondCountry.id })).status, 409);
+  } finally {
+    if (userId) await database.query('DELETE FROM auth.users WHERE id = $1', [userId]);
+    await app.close();
+    await database.end();
   }
 });
