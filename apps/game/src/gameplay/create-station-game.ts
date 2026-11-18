@@ -5,7 +5,8 @@ import type { MapAsset, MapPack } from '@life-abroad/shared';
 import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../features/assets/phaser-pack';
-import { authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetArrivalForLocation, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
+import { AIRPORT_STAFF } from '../features/airport/airport-staff';
+import { AIRPORT_DEPARTURE_GATE, AIRPORT_DEPARTURE_PORTALS, AIRPORT_SPAWN_POINT, airportSpawnPoint, canWalkAirport, moveInAirport, recoverAirportPosition, authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetArrivalForLocation, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
 import { canEnterLocation, closedVenueExit, moveInShop, shopCanWalk, shouldCloseActiveVenue, shouldDeferClosedVenueExit } from '../features/shops/shop-navigation';
@@ -39,7 +40,12 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let packAnimations: string[] = [];
   let unavailableAmbientNpcIds: ReadonlySet<string> = new Set();
   let packRequest: AbortController | null = null;
-  const mapIds = { station: 'loc_station', street: 'loc_town_street', cafe: 'loc_cafe', corner_cafe: 'loc_corner_cafe', clothes: 'loc_clothes', tax_office: 'loc_tax_office' };
+  const mapIds = { station: 'loc_station', street: 'loc_town_street', cafe: 'loc_cafe', corner_cafe: 'loc_corner_cafe', clothes: 'loc_clothes', tax_office: 'loc_tax_office', airport_departure: 'loc_airport_departure', airport_arrival: 'loc_airport_arrival' };
+  const isAirport = () => activeLocation === 'airport_departure' || activeLocation === 'airport_arrival';
+  const canWalkInterior = (point: Point, others: readonly Point[] = []) =>
+    isAirport() ? canWalkAirport(activeLocation as 'airport_departure' | 'airport_arrival', point, others) : shopCanWalk(activeLocation, point, others);
+  const moveInterior = (start: Point, delta: Point, others: readonly Point[] = []) =>
+    isAirport() ? moveInAirport(activeLocation as 'airport_departure' | 'airport_arrival', start, delta, others) : moveInShop(activeLocation, start, delta, others);
   let authorizing = false;
   const P = Phaser;
   let paused = false;
@@ -55,7 +61,11 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     ? { x: callbacks.initialLocation.x, y: callbacks.initialLocation.y }
     : activeLocation === 'street' ? streetSpawnPoint('station') : { x: 768, y: 370 };
   // Older positions may now sit inside a building or directly inside a portal's entry ring.
-  let position: Point = activeLocation === 'street' ? recoverStreetPosition(savedPosition) : savedPosition;
+  let position: Point = activeLocation === 'street'
+    ? recoverStreetPosition(savedPosition)
+    : isAirport()
+      ? recoverAirportPosition(savedPosition, activeLocation as 'airport_departure' | 'airport_arrival')
+      : savedPosition;
   let lastLocationSaveAt = 0;
   const saveLocation = () => {
     if (callbacks.practice) return;
@@ -294,7 +304,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       for (const actor of resources?.actors ?? []) {
         const streetDefinition = activeLocation === 'street' && actor.npcId ? findStreetNpc(actor.npcId) : undefined;
         const definition = streetDefinition ?? SHOP_NPCS.find(npc => npc.id === actor.npcId)
-          ?? TAX_OFFICE_STAFF.find(npc => npc.id === actor.npcId) ?? SHOP_NPCS.find(npc => npc.frame === actor.frame);
+          ?? TAX_OFFICE_STAFF.find(npc => npc.id === actor.npcId) ?? AIRPORT_STAFF.find(npc => npc.id === actor.npcId) ?? SHOP_NPCS.find(npc => npc.frame === actor.frame);
         if (!definition) continue;
         const authoredRoute = streetDefinition && STREET_NPC_ROUTES.find(route => route.id === streetDefinition.routeId);
         // Route data is authoritative so stale map-pack actor coordinates cannot place NPCs on buildings.
@@ -337,7 +347,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           idleFrame: textureReady ? actor.frame : '__BASE', ...(idleFrames ? { idleFrames } : {}), ...(textureReady ? { walkPrefix: npcWalk } : {}),
           ...(lazyStreetArt ? { artTextureKey: actor.texture, artFrame: actor.frame } : {}),
           ...(authoredRoute && streetDefinition && !streetDefinition.stationary ? { patrol: { points: authoredRoute.points.map(scaleStreetPoint), startWaypoint: streetDefinition.startWaypoint } } : {}),
-          clip: (anchor, offset) => moveInShop(activeLocation, anchor, offset) });
+          clip: (anchor, offset) => moveInterior(anchor, offset) });
         sprite.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
           if (paused) return;
           if (nearestNpc(position, [npc])) { callbacks.onTalk(npc.id); return; }
@@ -352,7 +362,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
             route = candidates.map(target => findPath(position, target, canWalkStreet, moveOnStreet)).find(path => path.length > 0) ?? [];
           } else {
             destinationMapTarget = { x: npc.x, y: npc.y + 55 };
-            route = findPath(position, destinationMapTarget, point => shopCanWalk(activeLocation, point, npcs), (point, delta) => moveInShop(activeLocation, point, delta, npcs));
+            route = findPath(position, destinationMapTarget, point => canWalkInterior(point, npcs), (point, delta) => moveInterior(point, delta, npcs));
           }
           destinationMapTarget = route.shift() ?? null;
           if (!destinationMapTarget) { selectedNpc = null; return; }
@@ -406,11 +416,11 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         if (activeLocation !== 'station') {
           selectedNpc = null;
           const street = activeLocation === 'street';
-          const walkable = street ? canWalkStreet(target) : shopCanWalk(activeLocation, target, npcs);
+          const walkable = street ? canWalkStreet(target) : canWalkInterior(target, npcs);
           if (walkable) {
             route = street
               ? findPath(position, target, canWalkStreet, moveOnStreet)
-              : findPath(position, target, point => shopCanWalk(activeLocation, point, npcs), (point, delta) => moveInShop(activeLocation, point, delta, npcs));
+              : findPath(position, target, point => canWalkInterior(point, npcs), (point, delta) => moveInterior(point, delta, npcs));
             destinationMapTarget = route.shift() ?? null;
             if (destinationMapTarget) this.marker.setPosition(target.x, target.y).setVisible(true);
           } else {
@@ -477,6 +487,8 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     private portalsForLocation(): StationPortal[] {
       if (activeLocation === 'station') return STATION_PORTALS;
       if (activeLocation === 'street') return STREET_PORTALS;
+      if (activeLocation === 'airport_departure') return AIRPORT_DEPARTURE_PORTALS;
+      if (activeLocation === 'airport_arrival') return [];
       const destination: MapLocation = this.previousLocation === 'street' ? 'street' : 'station';
       return [{ id: destination, label: destination === 'street' ? 'Town Street' : 'Train Station', x: 768, y: 930 }];
     }
@@ -513,6 +525,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const portal = STATION_PORTALS.find((item) => item.id === this.previousLocation);
         position = portal ? { x: portal.x + (portal.id === 'cafe' ? 70 : portal.id === 'clothes' ? -70 : 0), y: portal.id === 'street' ? 850 : 750 } : { x: 768, y: 370 };
       } else if (location === 'street') position = streetSpawnPoint(streetArrival);
+      else if (isAirport()) position = airportSpawnPoint(location as 'airport_departure' | 'airport_arrival');
       else position = { x: 768, y: 860 };
       callbacks.onLocationChange(countryLocationLabel(callbacks.countryName, location));
       this.worldReady = false;
@@ -650,7 +663,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       const previous = position;
       position = activeLocation === 'street'
         ? moveOnStreet(position, movement)
-        : moveInShop(activeLocation, position, movement, npcs);
+        : moveInterior(position, movement, npcs);
       const moved = Math.hypot(position.x - previous.x, position.y - previous.y) > 0.01;
       if (moved && Date.now() - lastLocationSaveAt >= 500) saveLocation();
       this.player.setPosition(position.x, position.y).setDepth(position.y);

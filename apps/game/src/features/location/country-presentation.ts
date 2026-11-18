@@ -6,6 +6,8 @@ const PLACE_NAMES: Record<MapLocation, string> = {
   corner_cafe: 'Corner Cup Café',
   clothes: 'Clothes Shop',
   tax_office: 'Tax Office',
+  airport_departure: 'Airport Departure',
+  airport_arrival: 'Airport Arrival',
   street: 'Town Street',
 };
 
