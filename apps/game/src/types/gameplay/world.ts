@@ -29,6 +29,8 @@ export type MapLocation =
   | "corner_cafe"
   | "clothes"
   | "tax_office"
+  | "airport_departure"
+  | "airport_arrival"
   | "street";
 export type ClosedVenueLocation = Extract<
   MapLocation,

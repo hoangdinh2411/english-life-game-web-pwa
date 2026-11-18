@@ -283,3 +283,120 @@ export function findPath(
   }
   return [];
 }
+
+// Airport interiors share the authored 1536x1024 canvas; feet coordinates.
+export const AIRPORT_BOUNDS: Bounds = { left: 0, right: 1536, top: 0, bottom: 1024 };
+export const AIRPORT_SPAWN_POINT: Point = { x: 768, y: 600 };
+export const AIRPORT_AGENT_POINT: Point = { x: 768, y: 420 };
+export const AIRPORT_DEPARTURE_GATE: StationPortal = { id: "airport_arrival", label: "Departure Gate", x: 1095, y: 190 };
+export const AIRPORT_DEPARTURE_PORTALS: StationPortal[] = [
+  AIRPORT_DEPARTURE_GATE,
+  { id: "airport_arrival", label: "Departure Gate", x: 768, y: 920 },
+];
+
+export const AIRPORT_DEPARTURE_OBSTACLES: readonly Bounds[] = [
+  // Check-in desk, luggage scale, and back counter area (covers back wall tables & desk)
+  { left: 0, right: 1030, top: 0, bottom: 455 },
+  // Column with blue flowers to the right of conveyor
+  { left: 1060, right: 1160, top: 290, bottom: 410 },
+  // Back wall to the right of the gate corridor
+  { left: 1160, right: 1536, top: 0, bottom: 455 },
+  // Left seating area (3 blue chairs, rug, planters)
+  { left: 160, right: 310, top: 460, bottom: 740 },
+  // Left wall planters / trash bin
+  { left: 110, right: 230, top: 620, bottom: 750 },
+  // Right large potted tree in circular rings
+  { left: 1160, right: 1340, top: 430, bottom: 640 },
+  // Right side small terminal desk next to wall
+  { left: 1320, right: 1400, top: 500, bottom: 660 },
+  // Bottom wall left of entrance
+  { left: 0, right: 630, top: 780, bottom: 1024 },
+  // Bottom wall right of entrance
+  { left: 910, right: 1536, top: 780, bottom: 1024 },
+];
+
+export const AIRPORT_ARRIVAL_OBSTACLES: readonly Bounds[] = [
+  // Top wall and staff tables across the top
+  { left: 0, right: 1536, top: 0, bottom: 330 },
+  // Central baggage claim carousel
+  { left: 350, right: 1180, top: 345, bottom: 685 },
+  // Left chairs & planters
+  { left: 140, right: 270, top: 280, bottom: 740 },
+  // Right chairs & planters
+  { left: 1270, right: 1400, top: 280, bottom: 740 },
+  // Bottom wall left of exit
+  { left: 0, right: 670, top: 750, bottom: 1024 },
+  // Bottom wall right of exit
+  { left: 860, right: 1536, top: 750, bottom: 1024 },
+];
+
+export function airportSpawnPoint(location: "airport_departure" | "airport_arrival" = "airport_departure"): Point {
+  return location === "airport_arrival" ? { x: 768, y: 720 } : { x: 768, y: 600 };
+}
+
+export function canWalkAirport(
+  locationOrPoint: "airport_departure" | "airport_arrival" | Point = "airport_departure",
+  pointOrNpcs?: Point | readonly Point[],
+  maybeNpcs: readonly Point[] = [],
+): boolean {
+  const isLocation = typeof locationOrPoint === "string";
+  const location: "airport_departure" | "airport_arrival" = isLocation ? locationOrPoint : "airport_departure";
+  const point: Point = isLocation ? (pointOrNpcs as Point) : locationOrPoint;
+  const npcs: readonly Point[] = isLocation ? (maybeNpcs ?? []) : (Array.isArray(pointOrNpcs) ? pointOrNpcs : []);
+
+  if (location === "airport_arrival") {
+    if (point.x < 190 || point.x > 1360 || point.y < 280 || point.y > 950) return false;
+    if (point.y > 750 && (point.x < 670 || point.x > 860)) return false;
+    if (AIRPORT_ARRIVAL_OBSTACLES.some((o) => point.x >= o.left && point.x <= o.right && point.y >= o.top && point.y <= o.bottom)) {
+      return false;
+    }
+  } else {
+    if (point.x < 190 || point.x > 1360 || point.y < 160 || point.y > 950) return false;
+    if (point.y > 780 && (point.x < 630 || point.x > 910)) return false;
+    if (AIRPORT_DEPARTURE_OBSTACLES.some((o) => point.x >= o.left && point.x <= o.right && point.y >= o.top && point.y <= o.bottom)) {
+      return false;
+    }
+  }
+
+  return !npcs.some((npc) => {
+    const dx = Math.abs(point.x - npc.x);
+    const dy = Math.abs(point.y - npc.y);
+    return (dx < 32 && dy < 48) || Math.hypot(point.x - npc.x, point.y - npc.y) < 42;
+  });
+}
+
+export function recoverAirportPosition(
+  point: Point,
+  location: "airport_departure" | "airport_arrival" = "airport_departure",
+): Point {
+  if (canWalkAirport(location, point)) return point;
+  return airportSpawnPoint(location);
+}
+
+export function moveInAirport(
+  locationOrStart: "airport_departure" | "airport_arrival" | Point = "airport_departure",
+  startOrDelta?: Point,
+  deltaOrNpcs?: Point | readonly Point[],
+  maybeNpcs: readonly Point[] = [],
+): Point {
+  const isLocation = typeof locationOrStart === "string";
+  const location: "airport_departure" | "airport_arrival" = isLocation ? locationOrStart : "airport_departure";
+  const start: Point = isLocation ? startOrDelta! : locationOrStart;
+  const delta: Point = isLocation ? (deltaOrNpcs as Point) : startOrDelta!;
+  const npcs: readonly Point[] = isLocation ? maybeNpcs : (Array.isArray(deltaOrNpcs) ? deltaOrNpcs : []);
+
+  let point = { ...start };
+  const steps = Math.max(1, Math.ceil(Math.hypot(delta.x, delta.y) / 4));
+  for (let step = 0; step < steps; step++) {
+    const next = { x: point.x + delta.x / steps, y: point.y + delta.y / steps };
+    if (canWalkAirport(location, next, npcs)) point = next;
+    else {
+      const horizontal = { x: next.x, y: point.y };
+      const vertical = { x: point.x, y: next.y };
+      if (canWalkAirport(location, horizontal, npcs)) point = horizontal;
+      if (canWalkAirport(location, vertical, npcs)) point = vertical;
+    }
+  }
+  return point;
+}
+

@@ -3,6 +3,7 @@ import { validateVenueNpcConfig, type VenueNpcCatalog, type VenueNpcConfig } fro
 import { STATION_ROSTER } from '../station/station-roster';
 import { SHOP_NPCS } from './shop-npcs';
 import { TAX_OFFICE_STAFF } from '../tax-office/tax-office-staff';
+import { AIRPORT_STAFF } from '../airport/airport-staff';
 
 export const VENUE_SPAWN_ZONES = {
   station_passengers_left: { left: 560, right: 640, top: 350, bottom: 420 },
@@ -22,8 +23,8 @@ export const VENUE_EXCLUSION_ZONES = {
 } as const satisfies Readonly<Record<string, Bounds>>;
 
 const catalog = {
-  locationIds: ['station', 'cafe', 'corner_cafe', 'clothes', 'tax_office'],
-  npcIds: [...STATION_ROSTER.map(npc => npc.id), ...SHOP_NPCS.map(npc => npc.id), ...TAX_OFFICE_STAFF.map(npc => npc.id)],
+  locationIds: ['station', 'cafe', 'corner_cafe', 'clothes', 'tax_office', 'airport_departure', 'airport_arrival'],
+  npcIds: [...STATION_ROSTER.map(npc => npc.id), ...SHOP_NPCS.map(npc => npc.id), ...TAX_OFFICE_STAFF.map(npc => npc.id), ...AIRPORT_STAFF.map(npc => npc.id)],
   spawnZones: VENUE_SPAWN_ZONES,
   exclusionZones: VENUE_EXCLUSION_ZONES,
 } as const satisfies VenueNpcCatalog;
@@ -35,6 +36,8 @@ const configs = [
   { locationId: 'clothes', serviceNpcIds: ['npc_clothes_seller', 'npc_clothes_assistant'], optionalStaffNpcIds: [], ambientNpcPool: ['npc_clothes_customer'], ambientCount: { min: 0, max: 1 }, spawnZoneIds: ['clothes_customers'], exclusionZoneIds: ['clothes_entrance'], timeBuckets: ['morning', 'daytime', 'evening'] },
   // TODO(undo-24h-tax-office): restore `timeBuckets: ['morning', 'daytime']` when reverting 24/24 hours.
   { locationId: 'tax_office', serviceNpcIds: ['npc_tax_clerk_marcus', 'npc_tax_clerk_nadia'], optionalStaffNpcIds: [], ambientNpcPool: [], ambientCount: { min: 0, max: 0 }, spawnZoneIds: [], exclusionZoneIds: [], timeBuckets: ['morning', 'daytime', 'evening'] },
+  { locationId: 'airport_departure', serviceNpcIds: ['npc_airport_agent'], optionalStaffNpcIds: [], ambientNpcPool: [], ambientCount: { min: 0, max: 0 }, spawnZoneIds: [], exclusionZoneIds: [], timeBuckets: ['morning', 'daytime', 'evening'] },
+  { locationId: 'airport_arrival', serviceNpcIds: [], optionalStaffNpcIds: [], ambientNpcPool: [], ambientCount: { min: 0, max: 0 }, spawnZoneIds: [], exclusionZoneIds: [], timeBuckets: ['morning', 'daytime', 'evening'] },
 ] as const satisfies readonly VenueNpcConfig[];
 
 const registry = new Map(configs.map(config => [config.locationId, validateVenueNpcConfig(config, catalog)]));
@@ -51,6 +54,8 @@ const locationByMapId = {
   loc_corner_cafe: 'corner_cafe',
   loc_clothes: 'clothes',
   loc_tax_office: 'tax_office',
+  loc_airport_departure: 'airport_departure',
+  loc_airport_arrival: 'airport_arrival',
 } as const satisfies Readonly<Record<string, Exclude<MapLocation, 'street'>>>;
 
 export function venueNpcConfigForMapId(mapId: string): VenueNpcConfig | undefined {

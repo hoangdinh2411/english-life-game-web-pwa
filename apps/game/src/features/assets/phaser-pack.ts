@@ -9,6 +9,7 @@ import { VENUE_EXCLUSION_ZONES, VENUE_SPAWN_ZONES } from '../shops/venue-npc-con
 import { ambientNpcSpawnPoints } from '../npcs/controlled-presence';
 import { NPC_DISPLAY_SCALE } from '../npcs/actor-display';
 import { TAX_OFFICE_STAFF } from '../tax-office/tax-office-staff';
+import { AIRPORT_STAFF } from '../airport/airport-staff';
 import { SAVED_PLAYER_FRAME } from '../appearance/player-frame';
 
 type Diagnostic = (message: string) => void;
@@ -121,7 +122,7 @@ export function preparePack(
   }
   for (const definition of definitions) scene.anims.create(definition);
   const actorAsset = pack.assets.find(asset => asset.key === 'actors' && asset.type === 'json' && asset.npcId === null);
-  const venue = pack.mapId === 'loc_cafe' || pack.mapId === 'loc_corner_cafe' || pack.mapId === 'loc_clothes' || pack.mapId === 'loc_tax_office';
+  const venue = pack.mapId === 'loc_cafe' || pack.mapId === 'loc_corner_cafe' || pack.mapId === 'loc_clothes' || pack.mapId === 'loc_tax_office' || pack.mapId === 'loc_airport_departure';
   if (venue && !actorAsset) throw new Error('Venue NPC assets are missing. Please retry after the map upload finishes.');
   const authoredActors = actorAsset ? packActorsSchema.parse(scene.cache.json.get(packKey(pack, actorAsset))).actors : [];
   // Train Station owns its roster and randomized presence outside the uploaded actor manifest.
@@ -146,7 +147,7 @@ export function preparePack(
   const actors = authoredActors.flatMap(actor => {
     const streetNpc = pack.mapId === 'loc_town_street' && actor.npcId ? findStreetNpc(actor.npcId) : undefined;
     const definition = streetNpc ?? (actor.npcId
-      ? SHOP_NPCS.find(npc => npc.id === actor.npcId) ?? TAX_OFFICE_STAFF.find(npc => npc.id === actor.npcId)
+      ? SHOP_NPCS.find(npc => npc.id === actor.npcId) ?? TAX_OFFICE_STAFF.find(npc => npc.id === actor.npcId) ?? AIRPORT_STAFF.find(npc => npc.id === actor.npcId)
       : SHOP_NPCS.find(npc => npc.frame === actor.frame));
     if (!definition || definition.frame !== actor.frame) throw new Error('Shop NPC identity or atlas frame is invalid.');
     const ambient = venueConfig?.ambientNpcPool.includes(definition.id) ?? false;
