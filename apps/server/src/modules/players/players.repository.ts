@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import type {
   CreateCharacterRequest,
+  PassportDraft,
   PlayerLocation,
   PlayerPreferences,
   PlayerPreferencesInitialize,
@@ -8,6 +9,7 @@ import type {
   PlayerPreferencesUpdate,
   PlayerResponse,
   PlayerState,
+  SetDestinationCountryRequest,
 } from '@life-abroad/shared';
 import type { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
@@ -84,6 +86,71 @@ export class PlayersRepository {
     });
   }
 
+  async createPassport(userId: string, request: PassportDraft): Promise<PlayerState> {
+    const avatarId = request.avatarId ?? 'avatar_traveler_01';
+    return this.database.transaction(async client => {
+      const profile = await client.query('SELECT id FROM public.profiles WHERE id = $1 FOR UPDATE', [userId]);
+      if (profile.rowCount !== 1) throw new ServiceUnavailableException('Player profile is unavailable');
+      const before = await this.getPlayer(userId, client);
+      if (before.character) {
+        if (before.character.name !== request.name || before.character.gender !== request.gender || before.character.avatarId !== avatarId) {
+          throw new ConflictException('A different character already exists');
+        }
+        return { ...before, character: before.character, inventory: [], questProgress: [] };
+      }
+      await client.query(
+        `INSERT INTO public.characters
+          (user_id, name, gender, outfit, country_id, world_id, current_city_id, current_map_id, current_place_id, current_position_x, current_position_y)
+         VALUES ($1, $2, $3, $4, NULL, NULL, NULL, $5, $5, 768, 370)
+         ON CONFLICT (user_id) DO NOTHING`,
+        [userId, request.name, request.gender, JSON.stringify({ avatarId }), AIRPORT_SPAWN_LOCATION_ID],
+      );
+      const player = await this.getPlayer(userId, client);
+      if (!player.character) throw new ServiceUnavailableException('Character state is unavailable');
+      return { ...player, character: player.character, inventory: [], questProgress: [] };
+    });
+  }
+
+  async setDestinationCountry(userId: string, request: SetDestinationCountryRequest): Promise<PlayerState> {
+    return this.database.transaction(async client => {
+      const profile = await client.query('SELECT id FROM public.profiles WHERE id = $1 FOR UPDATE', [userId]);
+      if (profile.rowCount !== 1) throw new ServiceUnavailableException('Player profile is unavailable');
+      const countryResult = await client.query<StarterCountryRow>(
+        `SELECT id, starter_city_id FROM public.countries WHERE id = $1`,
+        [request.countryId],
+      );
+      const country = countryResult.rows[0];
+      if (!country) throw new BadRequestException('Unknown country');
+      const before = await this.getPlayer(userId, client);
+      if (!before.character) {
+        throw new BadRequestException('Character passport must be created first');
+      }
+      if (before.character.countryId !== null) {
+        if (before.character.countryId === request.countryId) {
+          return { ...before, character: before.character, inventory: [], questProgress: [] };
+        }
+        throw new ConflictException('Destination country is already locked');
+      }
+      const world = await client.query<{ id: string }>(
+        `INSERT INTO public.worlds (country_id) VALUES ($1)
+         ON CONFLICT (country_id) DO UPDATE SET country_id = excluded.country_id RETURNING id`,
+        [country.id],
+      );
+      const worldId = world.rows[0]?.id;
+      if (!worldId) throw new ServiceUnavailableException('Country world is unavailable');
+      const updated = await client.query(
+        `UPDATE public.characters
+         SET country_id = $2, world_id = $3, current_city_id = $4
+         WHERE user_id = $1 AND country_id IS NULL`,
+        [userId, country.id, worldId, country.starter_city_id],
+      );
+      if (updated.rowCount !== 1) throw new ConflictException('Destination country is already locked');
+      const player = await this.getPlayer(userId, client);
+      if (!player.character) throw new ServiceUnavailableException('Character state is unavailable');
+      return { ...player, character: player.character, inventory: [], questProgress: [] };
+    });
+  }
+
   async saveLocation(userId: string, location: PlayerLocation): Promise<PlayerLocation> {
     const result = await this.database.query(
       `UPDATE public.characters SET current_map_id=$2, current_place_id=$3, current_position_x=$4, current_position_y=$5
@@ -152,11 +219,12 @@ export class PlayersRepository {
     if (!row || row.xp === null || row.coins === null) throw new ServiceUnavailableException('Player state is unavailable');
     const outfit = row.outfit;
     const avatarId = typeof outfit === 'object' && outfit !== null && 'avatarId' in outfit && typeof outfit.avatarId === 'string' ? outfit.avatarId : null;
-    const needsOnboarding = row.name !== null && (!row.current_city_id || !row.country_id || !row.country_name);
+    const isAirportDeparture = row.current_map_id === AIRPORT_SPAWN_LOCATION_ID;
+    const needsOnboarding = row.name !== null && !isAirportDeparture && (!row.current_city_id || !row.country_id || !row.country_name);
     if (row.name !== null && !needsOnboarding && (!row.current_map_id || !row.current_place_id || row.current_position_x === null || row.current_position_y === null || !avatarId)) throw new ServiceUnavailableException('Character state is unavailable');
     return {
       user: { id: row.id, email: row.email, displayName: row.display_name },
-      character: row.name === null || needsOnboarding ? null : { id: row.id, userId: row.id, name: row.name, gender: row.gender!, cityId: row.current_city_id!, countryId: row.country_id!, countryName: row.country_name!, avatarId: avatarId!,
+      character: row.name === null || needsOnboarding ? null : { id: row.id, userId: row.id, name: row.name, gender: row.gender!, cityId: row.current_city_id, countryId: row.country_id, countryName: row.country_name, avatarId: avatarId!,
         lastLocation: { mapId: row.current_map_id as PlayerLocation['mapId'], placeId: row.current_place_id as PlayerLocation['placeId'],
           x: row.current_position_x!, y: row.current_position_y! } },
       stats: { xp: row.xp, coins: row.coins },

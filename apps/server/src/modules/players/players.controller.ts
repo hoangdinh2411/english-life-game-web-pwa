@@ -2,12 +2,15 @@ import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import {
   claimBaggageRequestSchema,
   createCharacterSchema,
+  passportDraftSchema,
   playerLocationSchema,
   playerPreferencesInitializeSchema,
   playerPreferencesUpdateSchema,
+  setDestinationCountrySchema,
   type ClaimBaggageRequest,
   type ClaimBaggageResponse,
   type CreateCharacterRequest,
+  type PassportDraft,
   type PlayerLocation,
   type PlayerPreferences,
   type PlayerPreferencesInitialize,
@@ -15,6 +18,7 @@ import {
   type PlayerPreferencesUpdate,
   type PlayerResponse,
   type PlayerState,
+  type SetDestinationCountryRequest,
 } from '@life-abroad/shared';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -33,6 +37,18 @@ export class PlayersController {
   createCharacter(@CurrentUser() userId: string,
     @Body(new SchemaValidationPipe(createCharacterSchema)) request: CreateCharacterRequest): Promise<PlayerState> {
     return this.players.createCharacter(userId, request);
+  }
+
+  @Post('players/passport')
+  createPassport(@CurrentUser() userId: string,
+    @Body(new SchemaValidationPipe(passportDraftSchema)) request: PassportDraft): Promise<PlayerState> {
+    return this.players.createPassport(userId, request);
+  }
+
+  @Post('players/destination-country')
+  setDestinationCountry(@CurrentUser() userId: string,
+    @Body(new SchemaValidationPipe(setDestinationCountrySchema)) request: SetDestinationCountryRequest): Promise<PlayerState> {
+    return this.players.setDestinationCountry(userId, request);
   }
 
   @Post('players/location')
