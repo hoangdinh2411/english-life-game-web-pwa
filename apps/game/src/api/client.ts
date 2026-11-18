@@ -1,4 +1,4 @@
-import type { CreateCharacterRequest, IdCardIssueResponse, IdCardResponse, IssueIdCardBody, MovementTutorialPageId, NpcPresenceResponse, OnboardingOptions, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState, TutorialSpeechResponse } from '@life-abroad/shared';
+import type { CreateCharacterRequest, IdCardIssueResponse, IdCardResponse, IssueIdCardBody, MovementTutorialPageId, NpcPresenceResponse, OnboardingOptions, PassportDraft, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState, TutorialSpeechResponse } from '@life-abroad/shared';
 import { parseOnboardingOptions, arrivalStateSchema, conversationHistoryPageSchema, conversationSchema, conversationTurnSchema, idCardIssueResponseSchema, idCardResponseSchema, npcPresenceResponseSchema, playerPreferencesReadSchema, playerPreferencesSchema, tutorialSpeechResponseSchema, ARRIVAL_NPC_ID, TRANSIENT_SERVICE_NPC_IDS, type Conversation, type ConversationHistoryPage, type SendMessageRequest } from '@life-abroad/shared';
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
@@ -26,6 +26,7 @@ export async function request<T>(path: string, body?: unknown, token?: string): 
 export const loadOptions = async (token: string): Promise<OnboardingOptions> =>
   parseOnboardingOptions(await request<unknown>('onboarding/options', undefined, token));
 export const loadPlayer = (token: string): Promise<PlayerResponse> => request('me', undefined, token);
+export const createPassport = (token: string, body: PassportDraft): Promise<PlayerState> => request<PlayerState>('players/passport', body, token);
 export const createCharacter = (token: string, body: CreateCharacterRequest) => request<PlayerState>('characters', body, token);
 export const savePlayerLocation = (token: string, location: PlayerLocation): Promise<PlayerLocation> =>
   request('players/location', location, token);
