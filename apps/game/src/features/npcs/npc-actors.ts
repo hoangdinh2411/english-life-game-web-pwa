@@ -69,6 +69,7 @@ export function updateNpcActors(actors: NpcActor[], player: Point, delta: number
   let nearest: NpcActor | undefined;
   let indicatorActor: NpcActor | undefined;
   let nearestDistance = NPC_STOP_DISTANCE;
+  let indicatorDistance = Number.POSITIVE_INFINITY;
   if (conversationNpcId === null) {
     for (const actor of actors) {
       if (actor.sprite.visible === false) {
@@ -80,8 +81,12 @@ export function updateNpcActors(actors: NpcActor[], player: Point, delta: number
         nearest = actor;
         nearestDistance = distance;
       }
+      const talkThreshold = actor.npc.id === 'npc_airport_agent' ? 200 : NPC_STOP_DISTANCE;
+      if (distance <= talkThreshold && distance < indicatorDistance) {
+        indicatorActor = actor;
+        indicatorDistance = distance;
+      }
     }
-    indicatorActor = nearest;
   } else {
     indicatorActor = actors.find(actor => actor.npc.id === conversationNpcId);
   }

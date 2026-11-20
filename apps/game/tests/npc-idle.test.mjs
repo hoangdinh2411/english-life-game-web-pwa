@@ -155,3 +155,49 @@ test('resizing nameplates uses cheap transforms instead of rebuilding text textu
   assert.equal(name.scale, 13 / 0.5 / 24);
   assert.equal(dot.scale, 16 / 0.5 / 28);
 });
+
+test('Airport agent Claire shows typing dots across the check-in counter when player stands in front', () => {
+  const sprite = {
+    visible: true,
+    displayHeight: 115,
+    anims: { stop() {} },
+    setPosition() { return this; },
+    setDepth() { return this; },
+    setFrame() { return this; },
+    play() { return this; },
+    setVisible(value) { this.visible = value; return this; },
+  };
+  const label = {
+    text: 'Claire',
+    visible: true,
+    setPosition() { return this; },
+    setText(value) { this.text = value; return this; },
+    setColor() { return this; },
+    setAlpha() { return this; },
+    setVisible(value) { this.visible = value; return this; },
+  };
+  const dots = Array.from({ length: 3 }, () => ({
+    text: '●',
+    visible: false,
+    setPosition() { return this; },
+    setVisible(value) { this.visible = value; return this; },
+  }));
+  const claire = {
+    npc: { id: 'npc_airport_agent', name: 'Claire', texture: 'npc-npc_airport_agent', x: 684, y: 310 },
+    anchor: { x: 684, y: 310 },
+    sprite,
+    label,
+    indicatorDots: dots,
+    nameLabel: 'Claire',
+    elapsed: 0,
+    idleFrame: 'walk',
+  };
+
+  updateNpcActors([claire], { x: 684, y: 456 }, 16, false);
+  assert.equal(label.visible, false);
+  assert.deepEqual(dots.map(dot => dot.visible), [true, true, true]);
+
+  updateNpcActors([claire], { x: 684, y: 700 }, 16, false);
+  assert.equal(label.visible, true);
+  assert.deepEqual(dots.map(dot => dot.visible), [false, false, false]);
+});

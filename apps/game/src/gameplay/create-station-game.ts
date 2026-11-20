@@ -316,8 +316,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         const textureReady = this.textures.exists(actor.texture);
         const displayTexture = lazyStreetArt && !textureReady ? '__DEFAULT' : actor.texture;
         const displayFrame = lazyStreetArt && !textureReady ? '__BASE' : actor.frame;
+        const isAirportAgent = activeLocation === 'airport_departure' && definition.id === 'npc_airport_agent';
         const sprite = this.add.sprite(actorPosition.x, actorPosition.y, displayTexture, displayFrame)
           .setOrigin(0.5, 1).setScale(actor.scale).setDepth(actorPosition.y).setVisible(!lazyStreetArt && isPresent(definition.id));
+        if (isAirportAgent) sprite.setAlpha(0.001);
         const npc = { id: definition.id, name: definition.name, texture: actor.texture, x: actorPosition.x, y: actorPosition.y };
         npcs.push(npc);
         const taxOfficeStaff = TAX_OFFICE_STAFF.some(staff => staff.id === definition.id);
@@ -348,7 +350,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           ...(lazyStreetArt ? { artTextureKey: actor.texture, artFrame: actor.frame } : {}),
           ...(authoredRoute && streetDefinition && !streetDefinition.stationary ? { patrol: { points: authoredRoute.points.map(scaleStreetPoint), startWaypoint: streetDefinition.startWaypoint } } : {}),
           clip: (anchor, offset) => moveInterior(anchor, offset) });
-        sprite.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+        const onSelectNpc = () => {
           if (paused) return;
           if (nearestNpc(position, [npc])) { callbacks.onTalk(npc.id); return; }
           selectedNpc = npc.id;
@@ -361,13 +363,21 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
             ].filter(canWalkStreet);
             route = candidates.map(target => findPath(position, target, canWalkStreet, moveOnStreet)).find(path => path.length > 0) ?? [];
           } else {
-            destinationMapTarget = { x: npc.x, y: npc.y + 55 };
+            destinationMapTarget = activeLocation === 'airport_departure' && npc.id === 'npc_airport_agent'
+              ? { x: npc.x, y: 456 }
+              : { x: npc.x, y: npc.y + 55 };
             route = findPath(position, destinationMapTarget, point => canWalkInterior(point, npcs), (point, delta) => moveInterior(point, delta, npcs));
           }
           destinationMapTarget = route.shift() ?? null;
-          if (!destinationMapTarget) { selectedNpc = null; return; }
+          if (!destinationMapTarget) {
+            selectedNpc = null;
+            if (nearestNpc(position, [npc])) callbacks.onTalk(npc.id);
+            return;
+          }
           this.marker.setPosition(destinationMapTarget.x, destinationMapTarget.y).setVisible(true);
-        });
+        };
+        sprite.setInteractive({ useHandCursor: true }).on('pointerdown', onSelectNpc);
+        label.setInteractive({ useHandCursor: true }).on('pointerdown', onSelectNpc);
       }
       if (activeLocation === 'station') for (const npc of npcs) {
         const shadow = this.add.ellipse(npc.x, npc.y - 3, 48, 16, 0x443728, 0.22);
@@ -397,6 +407,25 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       for (const portal of this.portalsForLocation()) {
         this.addPortalRing(portal, activeLocation !== 'street' && portal.id !== 'corner_cafe');
       }
+      if (activeLocation === 'airport_departure') {
+        const deskZone = this.add.zone(684, 360, 240, 120).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        deskZone.on('pointerdown', () => {
+          const agent = npcs.find(n => n.id === 'npc_airport_agent');
+          if (agent) {
+            if (nearestNpc(position, [agent])) { callbacks.onTalk(agent.id); return; }
+            selectedNpc = agent.id;
+            destinationMapTarget = { x: agent.x, y: 456 };
+            route = findPath(position, destinationMapTarget, point => canWalkInterior(point, npcs), (point, delta) => moveInterior(point, delta, npcs));
+            destinationMapTarget = route.shift() ?? null;
+            if (!destinationMapTarget) {
+              selectedNpc = null;
+              if (nearestNpc(position, [agent])) callbacks.onTalk(agent.id);
+              return;
+            }
+            this.marker.setPosition(destinationMapTarget.x, destinationMapTarget.y).setVisible(true);
+          }
+        });
+      }
       if (activeLocation === 'corner_cafe') this.add.text(768, 147, 'CORNER CUP', {
         fontFamily: 'sans-serif', fontSize: '32px', fontStyle: 'bold', color: UI_COLORS.creamTextBright,
         backgroundColor: UI_COLORS.greenStrong, padding: { x: 18, y: 8 },
@@ -407,8 +436,19 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         // Do not capture browser input: the text composer must retain normal typing.
         this.walkingKeys = this.input.keyboard.addKeys('W,A,S,D', false) as Record<string, Phaser.Input.Keyboard.Key>;
         this.input.keyboard.clearCaptures();
-        this.input.keyboard.on('keydown-E', talk);
-        this.events.once('shutdown', () => this.input.keyboard?.off('keydown-E', talk));
+        const talkOnKey = () => {
+          const activeTag = document.activeElement?.tagName;
+          if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+          talk();
+        };
+        this.input.keyboard.on('keydown-E', talkOnKey);
+        this.input.keyboard.on('keydown-SPACE', talkOnKey);
+        this.input.keyboard.on('keydown-ENTER', talkOnKey);
+        this.events.once('shutdown', () => {
+          this.input.keyboard?.off('keydown-E', talkOnKey);
+          this.input.keyboard?.off('keydown-SPACE', talkOnKey);
+          this.input.keyboard?.off('keydown-ENTER', talkOnKey);
+        });
       }
       this.input.on('pointerdown', (pointer: Phaser.Input.Pointer, objects: Phaser.GameObjects.GameObject[]) => {
         if (paused || objects.length) return;
@@ -684,7 +724,14 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       }
       destinationMapTarget = destinationMapTarget && Math.hypot(destinationMapTarget.x - position.x, destinationMapTarget.y - position.y) > 3 ? destinationMapTarget : null;
       if (!destinationMapTarget && route.length) destinationMapTarget = route.shift() ?? null;
-      if (!destinationMapTarget) this.marker.setVisible(false);
+      if (!destinationMapTarget) {
+        this.marker.setVisible(false);
+        if (selectedNpc) {
+          const id = selectedNpc;
+          selectedNpc = null;
+          if (nearestNpc(position, npcs)?.id === id) callbacks.onTalk(id);
+        }
+      }
     }
     update(_time: number, delta: number) {
       if (!this.worldReady) return;

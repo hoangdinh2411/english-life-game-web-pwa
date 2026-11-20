@@ -101,6 +101,7 @@ export default function GameCanvas({
   );
   const [attempt, setAttempt] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [nearbyNpcId, setNearbyNpcId] = useState<string | null>(null);
   const serverExit = Boolean(onEnterStreet);
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +113,7 @@ export default function GameCanvas({
     setReady(false);
     setError("");
     setAssetWarning("");
+    setNearbyNpcId(null);
     callbacks.current.onReadyChange(false);
     const start = async () => {
       const { createStationGame } = await import("./create-station-game");
@@ -145,7 +147,9 @@ export default function GameCanvas({
                 callbacks.current.onVenueClosed?.(location, talkingNpcId),
             }
           : {}),
-        onNearby: () => {},
+        onNearby: (id) => {
+          if (!cancelled) setNearbyNpcId(id);
+        },
         onTalk: (id) => {
           if (!cancelled) callbacks.current.onTalk(id);
         },
@@ -153,6 +157,7 @@ export default function GameCanvas({
           if (!cancelled) {
             setProgress(0);
             setReady(false);
+            setNearbyNpcId(null);
             callbacks.current.onReadyChange(false);
           }
         },
@@ -262,6 +267,17 @@ export default function GameCanvas({
               <p role="status">Loading map… {Math.round(progress * 100)}%</p>
             )}
           </div>
+        </div>
+      ) : null}
+      {ready && !paused && nearbyNpcId ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center px-3">
+          <button
+            type="button"
+            className="pointer-events-auto rounded-full border-2 border-[var(--color-green-deep)] bg-[var(--color-cream-text-pure)] px-4 py-1.5 text-sm font-semibold text-[var(--color-ink)] shadow-md transition-transform hover:scale-105 active:scale-95"
+            onClick={() => game.current?.talk()}
+          >
+            Press E / Space / Enter to talk
+          </button>
         </div>
       ) : null}
       {ready && assetWarning ? (

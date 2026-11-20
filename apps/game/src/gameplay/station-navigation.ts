@@ -192,10 +192,14 @@ export function movementDelta(
 export function nearestNpc(
   point: Point,
   npcs: StationNpc[] = STATION_NPCS,
+  maxDistance = 110,
 ): StationNpc | null {
   return (
     npcs
-      .filter((npc) => Math.hypot(npc.x - point.x, npc.y - point.y) <= 110)
+      .filter((npc) => {
+        const threshold = npc.id === "npc_airport_agent" ? 200 : maxDistance;
+        return Math.hypot(npc.x - point.x, npc.y - point.y) <= threshold;
+      })
       .sort(
         (a, b) =>
           Math.hypot(a.x - point.x, a.y - point.y) -
@@ -287,32 +291,25 @@ export function findPath(
 // Airport interiors share the authored 1536x1024 canvas; feet coordinates.
 export const AIRPORT_BOUNDS: Bounds = { left: 0, right: 1536, top: 0, bottom: 1024 };
 export const AIRPORT_SPAWN_POINT: Point = { x: 768, y: 600 };
-export const AIRPORT_AGENT_POINT: Point = { x: 768, y: 420 };
-export const AIRPORT_DEPARTURE_GATE: StationPortal = { id: "airport_arrival", label: "Departure Gate", x: 1095, y: 190 };
+export const AIRPORT_AGENT_POINT: Point = { x: 684, y: 310 };
+export const AIRPORT_DEPARTURE_GATE: StationPortal = { id: "airport_arrival", label: "Departure Gate", x: 1322, y: 230 };
 export const AIRPORT_DEPARTURE_PORTALS: StationPortal[] = [
   AIRPORT_DEPARTURE_GATE,
-  { id: "airport_arrival", label: "Departure Gate", x: 768, y: 920 },
 ];
 
 export const AIRPORT_DEPARTURE_OBSTACLES: readonly Bounds[] = [
-  // Check-in desk, luggage scale, and back counter area (covers back wall tables & desk)
-  { left: 0, right: 1030, top: 0, bottom: 455 },
-  // Column with blue flowers to the right of conveyor
-  { left: 1060, right: 1160, top: 290, bottom: 410 },
-  // Back wall to the right of the gate corridor
-  { left: 1160, right: 1536, top: 0, bottom: 455 },
-  // Left seating area (3 blue chairs, rug, planters)
-  { left: 160, right: 310, top: 460, bottom: 740 },
-  // Left wall planters / trash bin
-  { left: 110, right: 230, top: 620, bottom: 750 },
-  // Right large potted tree in circular rings
-  { left: 1160, right: 1340, top: 430, bottom: 640 },
-  // Right side small terminal desk next to wall
-  { left: 1320, right: 1400, top: 500, bottom: 660 },
+  // 3 check-in desks, luggage scales, conveyor belts, and staff counter
+  { left: 0, right: 1220, top: 0, bottom: 450 },
+  // Gate archway right wall
+  { left: 1435, right: 1536, top: 0, bottom: 450 },
+  // Back wall above gate archway portal
+  { left: 1220, right: 1435, top: 0, bottom: 200 },
+  // Left seating lounge chairs and planters along left wall
+  { left: 0, right: 230, top: 250, bottom: 850 },
   // Bottom wall left of entrance
-  { left: 0, right: 630, top: 780, bottom: 1024 },
+  { left: 0, right: 650, top: 920, bottom: 1024 },
   // Bottom wall right of entrance
-  { left: 910, right: 1536, top: 780, bottom: 1024 },
+  { left: 900, right: 1536, top: 920, bottom: 1024 },
 ];
 
 export const AIRPORT_ARRIVAL_OBSTACLES: readonly Bounds[] = [
@@ -331,7 +328,7 @@ export const AIRPORT_ARRIVAL_OBSTACLES: readonly Bounds[] = [
 ];
 
 export function airportSpawnPoint(location: "airport_departure" | "airport_arrival" = "airport_departure"): Point {
-  return location === "airport_arrival" ? { x: 768, y: 720 } : { x: 768, y: 600 };
+  return location === "airport_arrival" ? { x: 768, y: 720 } : { x: 768, y: 700 };
 }
 
 export function canWalkAirport(
@@ -351,8 +348,8 @@ export function canWalkAirport(
       return false;
     }
   } else {
-    if (point.x < 190 || point.x > 1360 || point.y < 160 || point.y > 950) return false;
-    if (point.y > 780 && (point.x < 630 || point.x > 910)) return false;
+    if (point.x < 180 || point.x > 1460 || point.y < 210 || point.y > 950) return false;
+    if (point.y > 920 && (point.x < 650 || point.x > 900)) return false;
     if (AIRPORT_DEPARTURE_OBSTACLES.some((o) => point.x >= o.left && point.x <= o.right && point.y >= o.top && point.y <= o.bottom)) {
       return false;
     }

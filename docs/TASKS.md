@@ -4,7 +4,7 @@ Current client: **Vite + React DOM + TypeScript + Phaser 4 + PWA (D16)**.
 Native/Expo/WebView tasks are retired.
 
 Done: NPC-01–NPC-09; ONB-01.1–ONB-01.6, ONB-01.8; T36a–T36g; T38.1–T38.6;
-T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.e, T42.e2a–T42.e2b, T42.f, T42.g1, T42.g2a–T42.g2b; S2–S7; T43.a.
+T39.1–T39.5; T40.a–T40.e; T41.a–T41.d; T42.a–T42.e, T42.e2a–T42.e2b, T42.f, T42.g1, T42.g2a–T42.g2b, T42.h; S2–S7; T43.a.
 
 ## How to work
 
@@ -126,7 +126,7 @@ database: https://wedjinchhlybabstcchp.supabase.co
         Add `AIRPORT_NPC_IDS` to `TRANSIENT_SERVICE_NPC_IDS`, open `npc_airport_agent` with `airport_agent_start`, and let `ConversationsRepository.context()` work while `country_id IS NULL`.
   - [x] **T42.g2b — Airport Check-in Dialogue & Destination Country Extraction (Client).** `[Model: Gemini Hydrogen]`
         Add an airport conversation (wrap `SavedConversation` + `createConversationController` like `TownspersonConversation`; `ConversationPanel` is offline/station-only) wired from `StationScreen.tsx`. Client-side: fuzzy-match the player's text against `loadOptions().countries` (name contains, not exact); on a match call `POST /players/destination-country` BEFORE sending the message (`{countryName}` in `airport_agent_checked_in` needs the country set), then unlock the departure gate portal.
-  - [ ] **T42.h — Flight Cutscene Transition.** `[Model: Gemini Flash]`
+  - [x] **T42.h — Flight Cutscene Transition.** `[Model: Gemini Flash]`
         Implement `apps/game/src/features/onboarding/FlightCutscene.tsx` strictly matching `FlightCutsceneProps` in `types/ui/gameplay.ts` (3–4s airplane flight CSS animation using semantic `--color-*` tokens, reduced-motion friendly), triggered from `StationScreen.tsx` after boarding the departure gate and transitioning to `loc_airport_arrival`.
   - [ ] **T42.i — Baggage Carousel Interaction & Starter Funds Claim.** `[Model: Gemini Hydrogen]`
         Add `claimStarterBaggage(token, idempotencyKey)` in `apps/game/src/api/client.ts`, add an interactive baggage claim zone/prop on `loc_airport_arrival` in `create-station-game.ts` + `BaggageClaimOverlay.tsx` (`BaggageClaimOverlayProps`), invoke `POST /players/claim-baggage` with a UUID `idempotencyKey` to grant $500 and refresh `PlayerState`, then unlock the exit portal directly to `loc_station` (entering the existing Train Station arrival flow).
