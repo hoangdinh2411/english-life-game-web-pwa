@@ -26,6 +26,7 @@ import {
 } from "../features/npcs/street-npcs";
 import { AIRPORT_AGENT_NPC_ID } from "@life-abroad/shared";
 import { AirportConversation } from "../features/npcs/AirportConversation";
+import { FlightCutscene } from "../features/onboarding/FlightCutscene";
 import { TownspersonConversation } from "../features/npcs/TownspersonConversation";
 import { usePreferences } from "../features/hud/usePreferences";
 import { useNpcPresence } from "../features/npcs/use-npc-presence";
@@ -94,6 +95,18 @@ export default function StationScreen({
   const [activeMapId, setActiveMapId] = useState<string>(
     arrival?.initialLocation.placeId ?? "loc_station",
   );
+  const [flightCutscene, setFlightCutscene] = useState(false);
+  const handleMapChange = useCallback((nextMapId: string) => {
+    setActiveMapId((prevMapId) => {
+      if (
+        prevMapId === "loc_airport_departure" &&
+        nextMapId === "loc_airport_arrival"
+      ) {
+        setFlightCutscene(true);
+      }
+      return nextMapId;
+    });
+  }, []);
   const [goals, setGoals] = useState(false);
   const { sound, userMode, set: setPreference } = usePreferences();
   const closeMenu = useCallback(() => {
@@ -142,14 +155,16 @@ export default function StationScreen({
     Boolean(arrival?.pending || arrival?.error);
   const inputOnlyOverlayOpen =
     menu || settingsOpen || reviewOpen || tutorialSource !== null;
-  const overlayOpen = npcId !== null || worldPaused || inputOnlyOverlayOpen;
+  const overlayOpen =
+    npcId !== null || worldPaused || inputOnlyOverlayOpen || flightCutscene;
   const canvasPause = gameMenuCanvasState({
     inputOverlayOpen: inputOnlyOverlayOpen,
     worldBlockerOpen:
       !stationReady ||
       worldPaused ||
       Boolean(life?.sleepTransition) ||
-      Boolean(arrival && !arrival.online),
+      Boolean(arrival && !arrival.online) ||
+      flightCutscene,
   });
   const showGoals = shouldShowQuestBoard({
     tutorialOpen: overlayOpen,
@@ -190,7 +205,7 @@ export default function StationScreen({
         onExitBlocked={() => setExitReminder(true)}
         onReadyChange={setStationReady}
         onLocationChange={setLocation}
-        onMapChange={setActiveMapId}
+        onMapChange={handleMapChange}
         presentNpcIds={presence.presentNpcIds}
         {...(!practice && life
           ? {
@@ -215,7 +230,7 @@ export default function StationScreen({
       />
       <div
         className="station-hud pointer-events-none absolute inset-x-0 top-[max(8px,env(safe-area-inset-top))] flex items-start justify-between gap-2 px-[max(8px,env(safe-area-inset-left))] pr-[max(8px,env(safe-area-inset-right))]"
-        inert={Boolean(life?.sleepTransition)}
+        inert={Boolean(life?.sleepTransition) || flightCutscene}
       >
         <div className="flex flex-col items-start gap-1">
           <PlayerInfoCard
@@ -516,6 +531,12 @@ export default function StationScreen({
         >
           <span>Taking a quick rest…</span>
         </div>
+      ) : null}
+      {flightCutscene ? (
+        <FlightCutscene
+          destinationCountryName={countryName?.trim() || displayedCountryName}
+          onComplete={() => setFlightCutscene(false)}
+        />
       ) : null}
       {life?.error && !menu ? (
         <div

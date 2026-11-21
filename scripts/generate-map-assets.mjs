@@ -174,7 +174,7 @@ async function mapAssets(mapId, { source = sourceAsset, npcCatalog } = {}) {
       { npcId: 'npc_cafe_waiter', x: 1000, y: 460 },
       { npcId: 'npc_cafe_customer', x: 430, y: 600 },
     ] : mapId === 'loc_airport_departure' ? [
-      { npcId: 'npc_airport_agent', x: 768, y: 420 },
+      { npcId: 'npc_airport_agent', x: 684, y: 310 },
     ] : mapId === 'loc_airport_arrival' ? [
     ] : [
       { npcId: 'npc_clothes_seller', x: 1005, y: 405 },

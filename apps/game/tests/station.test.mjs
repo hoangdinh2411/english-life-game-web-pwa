@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { canWalk, findPath, movePlayer, movementDelta, nearestNpc, STATION_NPCS } from '../src/gameplay/station-navigation.ts';
+import { AIRPORT_AGENT_POINT, canWalk, canWalkAirport, findPath, movePlayer, movementDelta, nearestNpc, STATION_NPCS } from '../src/gameplay/station-navigation.ts';
 
 test('station keeps movement on the concourse and out of the kiosk and shops', () => {
   assert.equal(canWalk({ x: 768, y: 370 }), true);
@@ -33,4 +33,11 @@ test('W A S D unit directions move at walking speed instead of stopping as near 
   }
   assert.equal(Math.hypot(...Object.values(movementDelta({ x: 1, y: 1 }, 8, true))), 8);
   assert.deepEqual(movementDelta({ x: 1, y: 0 }, 8, false), { x: 0, y: 0 });
+});
+
+test('airport departure keeps player off the check-in desk and within Claire speaking distance', () => {
+  assert.equal(canWalkAirport('airport_departure', { x: 684, y: 440 }), false);
+  assert.equal(canWalkAirport('airport_departure', { x: 684, y: 456 }), true);
+  const claire = { id: 'npc_airport_agent', name: 'Claire', texture: 'npc-npc_airport_agent', ...AIRPORT_AGENT_POINT };
+  assert.equal(nearestNpc({ x: 684, y: 456 }, [claire])?.id, 'npc_airport_agent');
 });
