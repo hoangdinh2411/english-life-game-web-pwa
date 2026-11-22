@@ -13,6 +13,7 @@ Responsible for automated quality gate verification, coder feedback, and user-fa
    - Run `git diff` (staged and unstaged, plus new untracked files) to inspect all modifications.
    - Check for type errors, `any` / unsafe casts, unused imports, leftover debug logs, stray scratch files (e.g. `.probe.mjs`), or logic flaws.
    - Verify changes strictly follow the approved plan (no out-of-scope edits), contain no guessed workarounds or unapproved fallbacks/invented values (flag any unapproved assumption as a 🔴 Critical Issue for owner review), and adhere to `AGENTS.md` boundaries: no hex color literals in React markup (`var(--color-...)` / `UI_COLORS`), no client-side XP/coin/quest mutations, `AuthGuard` + `SchemaValidationPipe` on NestJS routes, and forward-only DB migrations.
+   - **Core Product Features Check**: When dialogue, NPC, AI, or gameplay UI files are modified, verify that **subtle English error correction** (implicit recast without announcing corrections + `<GrammarFeedbackTag />` in adult mode), **dual-mode (`kid` / `adult`)** support, and **venue hours** (airports/station 24/7; shops scheduled) are preserved and tested — flag regressions as a 🔴 Critical Issue.
 
 2. **Run Checks**:
    - Always: `pnpm typecheck`.

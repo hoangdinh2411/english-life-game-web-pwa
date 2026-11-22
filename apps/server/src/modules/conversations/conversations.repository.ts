@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS, TRANSIENT_SERVICE_NPC_IDS, ConversationHistoryPage, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, npcProfileSchema, SHOP_NPC_IDS, type PendingOrder, type SellerState } from '@life-abroad/shared';
+import { AIRPORT_NPC_IDS, ARRIVAL_NPC_ID, ARRIVAL_QUEST_ID, CAFE_SELLER_NPC_IDS, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS, TRANSIENT_SERVICE_NPC_IDS, ConversationHistoryPage, ConversationMessage, ConversationTurn, SendMessageRequest, TurnMetadata, turnMetadataSchema, pendingOrderSchema, npcProfileSchema, SHOP_NPC_IDS, type PendingOrder, type SellerState } from '@life-abroad/shared';
 import { PoolClient } from 'pg';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { DialogueContext } from '../dialogue/dialogue.service';
@@ -7,6 +7,16 @@ import { conversationNpcSchema } from '@life-abroad/shared';
 
 interface MessageRow { id: string; sender: 'player' | 'npc'; text: string; created_at: Date; metadata: unknown }
 export interface ConversationRow { id: string; npc_id: string; current_node_id: string | null; opening_variation_index: number; pending_order: unknown; ended_at: Date | null }
+
+export function openingNodeIdForNpc(npcId: string): string {
+  if (npcId === ARRIVAL_NPC_ID) return 'receptionist_start';
+  if ((CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId)) return 'seller_start';
+  if (npcId === 'npc_clothes_seller') return 'clothes_seller_start';
+  if ((TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId)) return 'townsperson_start';
+  if ((TAX_OFFICE_NPC_IDS as readonly string[]).includes(npcId)) return 'tax_office_start';
+  if ((AIRPORT_NPC_IDS as readonly string[]).includes(npcId)) return 'airport_agent_start';
+  return 'shop_start';
+}
 
 export function sellerState(row: ConversationRow): SellerState {
   return { shop: row.npc_id === 'npc_clothes_seller' ? 'clothes' : 'cafe', pendingOrder: row.pending_order ? pendingOrderSchema.parse(row.pending_order) : null,
@@ -69,10 +79,7 @@ export class ConversationsRepository {
     const result = await client.query<{ id: string }>(`INSERT INTO public.conversations
       (user_id,npc_id,quest_id,current_node_id,opening_variation_index) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
     [userId, npcId, npcId === ARRIVAL_NPC_ID ? ARRIVAL_QUEST_ID : null,
-      npcId === ARRIVAL_NPC_ID ? 'receptionist_start' : (CAFE_SELLER_NPC_IDS as readonly string[]).includes(npcId) ? 'seller_start'
-        : npcId === 'npc_clothes_seller' ? 'clothes_seller_start'
-          : (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId) ? 'townsperson_start'
-            : (TAX_OFFICE_NPC_IDS as readonly string[]).includes(npcId) ? 'tax_office_start' : 'shop_start', openingVariation]);
+      openingNodeIdForNpc(npcId), openingVariation]);
     return result.rows[0]!.id;
   }
 

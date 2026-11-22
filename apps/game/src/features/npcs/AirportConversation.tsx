@@ -27,9 +27,10 @@ const AIRPORT_AGENT_DISPLAY = {
   job: 'Check-in Agent',
 } as const;
 
-export function AirportConversation({ gender, sound, onClose, onRefresh, onDestinationSelected }: {
+export function AirportConversation({ gender, sound, destinationLocked = false, onClose, onRefresh, onDestinationSelected }: {
   gender?: PlayerGender | undefined;
   sound: boolean;
+  destinationLocked?: boolean | undefined;
   onClose: () => void;
   onRefresh: () => Promise<void>;
   onDestinationSelected: () => void;
@@ -37,7 +38,7 @@ export function AirportConversation({ gender, sound, onClose, onRefresh, onDesti
   const { runAuthenticated: run } = useSession();
   const { online } = usePwa();
   const countriesRef = useRef<readonly CountryOption[]>([]);
-  const destinationLockedRef = useRef(false);
+  const destinationLockedRef = useRef(destinationLocked);
 
   const [controller] = useState(() => createConversationController({
     load: () => run(loadArrival),
@@ -85,7 +86,7 @@ export function AirportConversation({ gender, sound, onClose, onRefresh, onDesti
       countriesRef.current = options.countries;
       return options.countries;
     },
-    isDestinationLocked: () => destinationLockedRef.current,
+    isDestinationLocked: () => destinationLocked || destinationLockedRef.current,
     lockCountry: async (countryId) => {
       await run(token => setDestinationCountry(token, countryId));
       destinationLockedRef.current = true;
@@ -93,7 +94,7 @@ export function AirportConversation({ gender, sound, onClose, onRefresh, onDesti
     onRefresh,
     onDestinationSelected,
     send: controller.send,
-  })(text), [controller, onDestinationSelected, onRefresh, run]);
+  })(text), [controller, destinationLocked, onDestinationSelected, onRefresh, run]);
 
   const confirmationOnly = state.farewellStage === 'confirm';
   if (!state.conversation && !state.error) {

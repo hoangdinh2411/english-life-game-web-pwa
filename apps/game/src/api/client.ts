@@ -1,4 +1,4 @@
-import type { CreateCharacterRequest, IdCardIssueResponse, IdCardResponse, IssueIdCardBody, MovementTutorialPageId, NpcPresenceResponse, OnboardingOptions, PassportDraft, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState, TutorialSpeechResponse } from '@life-abroad/shared';
+import type { ClaimBaggageResponse, CreateCharacterRequest, IdCardIssueResponse, IdCardResponse, IssueIdCardBody, MovementTutorialPageId, NpcPresenceResponse, OnboardingOptions, PassportDraft, PlayerLocation, PlayerPreferences, PlayerPreferencesInitialize, PlayerPreferencesRead, PlayerPreferencesUpdate, PlayerResponse, PlayerState, TutorialSpeechResponse } from '@life-abroad/shared';
 import { parseOnboardingOptions, arrivalStateSchema, conversationHistoryPageSchema, conversationSchema, conversationTurnSchema, idCardIssueResponseSchema, idCardResponseSchema, npcPresenceResponseSchema, playerPreferencesReadSchema, playerPreferencesSchema, tutorialSpeechResponseSchema, ARRIVAL_NPC_ID, TRANSIENT_SERVICE_NPC_IDS, type Conversation, type ConversationHistoryPage, type SendMessageRequest } from '@life-abroad/shared';
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1';
@@ -29,6 +29,8 @@ export const loadPlayer = (token: string): Promise<PlayerResponse> => request('m
 export const createPassport = (token: string, body: PassportDraft): Promise<PlayerState> => request<PlayerState>('players/passport', body, token);
 export const setDestinationCountry = (token: string, countryId: string): Promise<PlayerState> =>
   request<PlayerState>('players/destination-country', { countryId }, token);
+export const claimStarterBaggage = (token: string, idempotencyKey: string): Promise<ClaimBaggageResponse> =>
+  request<ClaimBaggageResponse>('players/claim-baggage', { idempotencyKey }, token);
 export const createCharacter = (token: string, body: CreateCharacterRequest) => request<PlayerState>('characters', body, token);
 export const savePlayerLocation = (token: string, location: PlayerLocation): Promise<PlayerLocation> =>
   request('players/location', location, token);

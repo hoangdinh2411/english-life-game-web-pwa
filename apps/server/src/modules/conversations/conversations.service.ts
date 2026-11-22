@@ -3,7 +3,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { AIRPORT_NPC_IDS, ARRIVAL_NPC_ID, CAFE_SELLER_NPC_IDS, SELLER_NPC_ID, TAX_OFFICE_NPC_IDS, TOWN_STREET_NPC_IDS, TRANSIENT_SERVICE_NPC_IDS, Conversation, ConversationTurn, SendMessageRequest, STATION_LOCATION_ID } from '@life-abroad/shared';
 import { DialogueService } from '../dialogue/dialogue.service';
 import { QuestsService } from '../quests/quests.service';
-import { ConversationsRepository, sellerState } from './conversations.repository';
+import { ConversationsRepository, openingNodeIdForNpc, sellerState } from './conversations.repository';
 import { SellerService } from './seller.service';
 import { conversationNpcSchema } from '@life-abroad/shared';
 import { CoffeeQuestService } from '../quests/coffee-quest.service';
@@ -45,13 +45,7 @@ export class ConversationsService {
       if (npcId !== ARRIVAL_NPC_ID) {
         const openingVariation = await this.conversations.variationIndex(client, userId, npcId, true);
         const baseContext = await this.conversations.context(client, userId, npcId);
-        const openingNode = (TOWN_STREET_NPC_IDS as readonly string[]).includes(npcId)
-          ? 'townsperson_start'
-          : (TAX_OFFICE_NPC_IDS as readonly string[]).includes(npcId)
-            ? 'tax_office_start'
-            : (AIRPORT_NPC_IDS as readonly string[]).includes(npcId)
-              ? 'airport_agent_start'
-              : 'shop_start';
+        const openingNode = openingNodeIdForNpc(npcId);
         const id = await this.conversations.create(client, userId, npcId, openingVariation);
         const context = { ...baseContext, variationIndex: openingVariation };
         const resumedApplication = (TAX_OFFICE_NPC_IDS as readonly string[]).includes(npcId)

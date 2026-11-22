@@ -26,6 +26,7 @@ import {
 } from "../features/npcs/street-npcs";
 import { AIRPORT_AGENT_NPC_ID } from "@life-abroad/shared";
 import { AirportConversation } from "../features/npcs/AirportConversation";
+import { BaggageClaimOverlay } from "../features/onboarding/BaggageClaimOverlay";
 import { FlightCutscene } from "../features/onboarding/FlightCutscene";
 import { TownspersonConversation } from "../features/npcs/TownspersonConversation";
 import { usePreferences } from "../features/hud/usePreferences";
@@ -46,7 +47,7 @@ import {
   tutorialReturnSurface,
   type TutorialSource,
 } from "../features/tutorial/tutorial-state";
-import { loadTutorialSpeech } from "../api/client";
+import { claimStarterBaggage, loadIdCard, loadTutorialSpeech } from "../api/client";
 import {
   isTaxOfficeStaff,
   TAX_OFFICE_STAFF,
@@ -54,7 +55,6 @@ import {
 } from "../features/tax-office/tax-office-staff";
 import { GameIcon } from "../shared/GameIcon";
 import { OverlayButton } from "./OverlayButton";
-import { loadIdCard } from "../api/client";
 import { VirtualJoystick } from "./VirtualJoystick";
 
 type ClosedVenueNotice = Readonly<{
@@ -118,6 +118,11 @@ export default function StationScreen({
     });
   }, []);
   const [exitUnlocked, setExitUnlocked] = useState(false);
+  const [baggageClaimOpen, setBaggageClaimOpen] = useState(false);
+  const [claimingBaggage, setClaimingBaggage] = useState(false);
+  const [baggageClaimed, setBaggageClaimed] = useState(coins > 0);
+  const [baggageCoinsGranted, setBaggageCoinsGranted] = useState<number | undefined>(undefined);
+  const [baggageError, setBaggageError] = useState<string | undefined>(undefined);
   const [practiceDirectionsAsked, setPracticeDirectionsAsked] = useState(false);
   const [exitReminder, setExitReminder] = useState(false);
   const pwa = usePwa();
@@ -147,11 +152,32 @@ export default function StationScreen({
     worldClock.revision,
   );
   const displayedCountryName = countryName?.trim() || "Not selected";
+  const handleClaimBaggage = useCallback(async () => {
+    if (claimingBaggage || baggageClaimed) return;
+    setClaimingBaggage(true);
+    setBaggageError(undefined);
+    try {
+      const result = await runAuthenticated((token) =>
+        claimStarterBaggage(token, crypto.randomUUID()),
+      );
+      setBaggageClaimed(true);
+      setBaggageCoinsGranted(result.coinsGranted > 0 ? result.coinsGranted : result.coins);
+      setExitUnlocked(true);
+      await life?.refresh();
+    } catch (error) {
+      setBaggageError(
+        error instanceof Error ? error.message : "Could not claim your baggage. Please try again.",
+      );
+    } finally {
+      setClaimingBaggage(false);
+    }
+  }, [baggageClaimed, claimingBaggage, life, runAuthenticated]);
   const worldPaused =
     profileOpen ||
     closedVenue !== null ||
     goals ||
     exitReminder ||
+    baggageClaimOpen ||
     Boolean(arrival?.pending || arrival?.error);
   const inputOnlyOverlayOpen =
     menu || settingsOpen || reviewOpen || tutorialSource !== null;
@@ -201,7 +227,11 @@ export default function StationScreen({
               onPlaceChange: arrival.onPlaceChange,
             }
           : {})}
-        exitUnlocked={exitUnlocked || Boolean(arrival?.exitUnlocked)}
+        exitUnlocked={
+          activeMapId === "loc_airport_arrival"
+            ? baggageClaimed || (life?.state?.coins ?? coins) > 0
+            : exitUnlocked || Boolean(arrival?.exitUnlocked)
+        }
         onExitBlocked={() => setExitReminder(true)}
         onReadyChange={setStationReady}
         onLocationChange={setLocation}
@@ -220,6 +250,11 @@ export default function StationScreen({
         worldPaused={canvasPause.worldPaused}
         paused={canvasPause.playerInputPaused || npcId !== null}
         onTalk={(id) => {
+          if (id === "baggage_claim") {
+            setBaggageError(undefined);
+            setBaggageClaimOpen(true);
+            return;
+          }
           if (id === "npc_station_information") arrival?.onOpenReceptionist();
           if (isStationSpeaker(id)) setNpcId(id);
           if (!practice && isShopNpc(id)) setNpcId(id);
@@ -237,7 +272,7 @@ export default function StationScreen({
             gender={gender}
             playerName={playerName}
             cityName={displayedCountryName}
-            coins={coins}
+            coins={life?.state?.coins ?? coins}
             idCard={idCard}
             userMode={userMode}
             onOpenProfile={() => setProfileOpen(true)}
@@ -401,6 +436,7 @@ export default function StationScreen({
           gender={gender}
           key={npcId}
           sound={sound}
+          destinationLocked={Boolean(countryName?.trim() && countryName.trim() !== "Not selected")}
           onClose={() => setNpcId(null)}
           onDestinationSelected={() => setExitUnlocked(true)}
           onRefresh={async () => {
@@ -477,11 +513,13 @@ export default function StationScreen({
         <DialogueFrame>
           <h2>Before you leave</h2>
           <p>
-            {arrival?.blockedExitMessage ??
-              "Talk to the receptionist at the information kiosk and ask where to get an ID card first. Look for the yellow ! marker."}
+            {activeMapId === "loc_airport_arrival"
+              ? "Collect your baggage and $500 starter funds from the baggage carousel first."
+              : arrival?.blockedExitMessage ??
+                "Talk to the receptionist at the information kiosk and ask where to get an ID card first. Look for the yellow ! marker."}
           </p>
           <GameButton
-            label="Return to station"
+            label={activeMapId === "loc_airport_arrival" ? "Return to terminal" : "Return to station"}
             onClick={() => setExitReminder(false)}
           />
         </DialogueFrame>
@@ -536,6 +574,16 @@ export default function StationScreen({
         <FlightCutscene
           destinationCountryName={countryName?.trim() || displayedCountryName}
           onComplete={() => setFlightCutscene(false)}
+        />
+      ) : null}
+      {baggageClaimOpen ? (
+        <BaggageClaimOverlay
+          claiming={claimingBaggage}
+          claimed={baggageClaimed || (life?.state?.coins ?? coins) > 0}
+          coinsGranted={baggageCoinsGranted}
+          error={baggageError}
+          onClaim={() => void handleClaimBaggage()}
+          onClose={() => setBaggageClaimOpen(false)}
         />
       ) : null}
       {life?.error && !menu ? (

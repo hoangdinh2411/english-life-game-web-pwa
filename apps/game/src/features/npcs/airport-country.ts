@@ -20,6 +20,10 @@ export function matchCountry(input: string, countries: readonly CountryOption[])
   return undefined;
 }
 
+const isAlreadyLockedError = (error: unknown): boolean =>
+  (typeof error === 'object' && error !== null && 'status' in error && error.status === 409) ||
+  (error instanceof Error && /already locked/i.test(error.message));
+
 /**
  * Intercepts country mentions before forwarding the player's message to the conversation endpoint
  * so the server can resolve `{countryName}` from the updated player profile.
@@ -47,9 +51,14 @@ export function createAirportSendHandler({
       if (countries.length === 0) countries = await loadCountries().catch(() => []);
       const matched = matchCountry(text, countries);
       if (matched) {
-        await lockCountry(matched.id);
-        await onRefresh();
-        onDestinationSelected();
+        try {
+          await lockCountry(matched.id);
+          await onRefresh().catch(() => undefined);
+          onDestinationSelected();
+        } catch (error) {
+          if (!isAlreadyLockedError(error)) throw error;
+          onDestinationSelected();
+        }
       }
     }
     return send(text);

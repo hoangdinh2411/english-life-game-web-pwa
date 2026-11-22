@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { ConversationsRepository, openingNodeIdForNpc } from '../modules/conversations/conversations.repository';
 import { ConversationsService } from '../modules/conversations/conversations.service';
 
 test('conversation opening skips speech work only when the client disabled speech', async () => {
@@ -60,4 +61,20 @@ test('airport agent opens with its own node and is a transient service conversat
   assert.equal(discarded, 1);
   assert.equal(opened.npcId, 'npc_airport_agent');
   assert.equal(opened.messages[0]?.text, 'Welcome to the check-in desk.');
+});
+
+test('ConversationsRepository.create stores airport_agent_start as initial current_node_id for airport agent', async () => {
+  assert.equal(openingNodeIdForNpc('npc_airport_agent'), 'airport_agent_start');
+  const calls: Array<{ sql: string; params: unknown[] }> = [];
+  const client = {
+    query: async (sql: string, params: unknown[]) => {
+      calls.push({ sql, params });
+      return { rows: [{ id: '00000000-0000-4000-8000-000000000003' }] };
+    },
+  };
+  const repository = new ConversationsRepository({} as never);
+  const id = await repository.create(client as never, 'user-1', 'npc_airport_agent', 2);
+  assert.equal(id, '00000000-0000-4000-8000-000000000003');
+  assert.equal(calls.length, 1);
+  assert.deepEqual(calls[0]?.params, ['user-1', 'npc_airport_agent', null, 'airport_agent_start', 2]);
 });

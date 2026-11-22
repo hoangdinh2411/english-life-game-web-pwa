@@ -15,6 +15,7 @@ Before planning or touching any code, verify the active branch with `git branch 
 Before planning, run a fast **Repo & Contract Audit** (search first, read only relevant line ranges; never read `docs/DONE.md`):
 - Check whether migrations, schemas, endpoints, or tests already exist so you never plan duplicate work.
 - Verify `packages/shared` schemas, DB columns, API endpoints, and registry/coordinate configs (`venue-npc-config.ts`, `player-location.ts`, etc.) match the request.
+- **Core Product Features Check:** When planning dialogue, NPC, UI, or progression work, explicitly preserve and integrate core learning/gameplay features: **subtle English error correction** (implicit recast in NPC replies without announcing corrections + `<GrammarFeedbackTag />` in adult mode), **dual-mode (`kid` / `adult`)** compatibility, **venue hours** (24/7 airport/station vs scheduled shops), and **offline `/practice` isolation**.
 - **No-Guessing & Owner Review Gate:** If anything is unclear, missing, or conflicts with existing code/contracts (and cannot be verified directly from approved repo code), **do NOT guess, assume, or silently invent a workaround**. Stop and list every concrete issue (file path, symbol/line, conflict, and options) for the user to review and approve before finalizing any plan or touching files.
 - Slice multi-layer work into independent **single-layer steps** (Shared/Server contract, Client UI, Phaser scene wiring, Integration tests) with <= 4 files per step so Tier 1/2 models can execute each step in a small context.
 
