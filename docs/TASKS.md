@@ -419,6 +419,64 @@ database: https://wedjinchhlybabstcchp.supabase.co
         `[Manual]` Browser check with the existing account at 320, 375 and 1024 px after `P3`:
         map, both staff, full flow with upload and camera, confirmation, card icon/panel, Goals, no overlap/horizontal scroll.
 
+- [ ] **MAP-01 — Unified data-driven map collision, movement & A\* pathfinding.**
+      Replace the 4 fragmented hardcoded navigation/collision implementations
+      (`town-street-collision.json`, `station-navigation.ts`, `shop-navigation.ts`,
+      airport obstacles) with one pure-TS SDF collision engine, gradient wall-sliding
+      mover, and A\* pathfinder in `packages/shared`, driven by per-map
+      `content/maps/<mapId>/map-data.json` delivered via `MapPack` (offline `/practice`
+      `loc_station` imports the same repo file directly). No server code changes needed;
+      keep `applyResponsiveLayout` viewport zoom (`1536×1024`) unchanged while
+      `cameras.main.setBounds` reads scaled `width/height` from `map-data`.
+  - [ ] **MAP-01.1 — Shared map schema & 8px geometry SDF engine.**
+        Add `mapDataSchema` (`polygon`/`circle`/`rect`, `displayScale`, per-map
+        `playerRadius`, `portals` with optional `radius`/`showLabel`/`gate`, `spawns`)
+        and pure-TS narrow-band 8px geometry SDF baker (per-shape expanded AABB loops,
+        `max` walkable union, `regionId` connected-component labels, bilinear sampling,
+        `moveWithSlide` with gradient sliding + axis fallback when `|grad| ≈ 0`, and
+        runtime dynamic NPC circular blockers) in `packages/shared`. Relax
+        `packActorsSchema` bounds in `packages/shared/src/assets.ts` from `1536×1024`
+        to `8192×8192`. Done when: `pnpm typecheck && pnpm test` pass, including union
+        intersection/concave-corner tests and a `4096×4096` (200 obstacles) bake benchmark
+        (target `< 25 ms`).
+  - [ ] **MAP-01.2 — Shared A\* pathfinder & path smoothing.**
+        Implement binary min-heap A\* on the 8px SDF grid in `packages/shared`: 8-dir
+        movement without corner cutting, $O(1)$ `regionId` unreachable rejection,
+        proportional `maxNodes` cap, runtime dynamic NPC avoidance, line-of-sight
+        smoothing verified by `moveWithSlide`, and lazy NPC approach candidate search.
+        Done when: `pnpm typecheck && pnpm test` pass, including corner-cut/NPC detour
+        tests and a `4096×4096` long-range path benchmark (target `< 8 ms`).
+  - [ ] **MAP-01.3 — Migrate `loc_town_street` (pilot + parity).**
+        Author `content/maps/loc_town_street/map-data.json` (temporarily imported
+        directly until `MAP-01.5`), switch street navigation to the shared engine, and
+        delete `town-street-collision.json/.ts` and legacy `map-collision.ts`. Done
+        when: 10,000-point parity test vs legacy `canWalkTownStreet` achieves `≥ 99.5%`
+        agreement (diffs strictly within `≤ playerRadius` of edges) and `pnpm typecheck
+        && pnpm test` pass.
+  - [ ] **MAP-01.4 — Migrate remaining 7 maps & remove hardcoded navigators.**
+        Author `content/maps/<id>/map-data.json` for `loc_station`, `loc_cafe`,
+        `loc_corner_cafe`, `loc_clothes`, `loc_tax_office`, `loc_airport_departure`,
+        and `loc_airport_arrival`. Add 10k-point parity tests (`≥ 99.5%`) per map;
+        remove hardcoded obstacle arrays, legacy `movePlayer`/`moveInShop`/`moveInAirport`,
+        and legacy BFS `findPath` while keeping venue open/close hours logic intact.
+        Done when: `pnpm typecheck && pnpm lint && pnpm test` pass.
+  - [ ] **MAP-01.5 — MapPack delivery, generic `StationScene` & `content:validate`.**
+        Update `scripts/sync-map-assets.mjs` to include `content/maps/<mapId>/map-data.json`
+        as the `map-data` JSON asset on `pnpm assets:upload`, parse `map-data` in
+        `phaser-pack.ts`, and generalize `create-station-game.ts` to read bounds, scale,
+        portals, spawns, and collision/pathfinding from `mapData` (keeping offline
+        `/practice` `loc_station` importing `content/maps/loc_station/map-data.json`).
+        Extend `pnpm content:validate` to validate all `map-data.json` files with
+        `mapDataSchema` and verify portal/spawn reachability via SDF `regionId`
+        flood-fill. Done when: `pnpm typecheck && pnpm lint && pnpm test && pnpm
+        content:validate && pnpm build` pass.
+  - [ ] **MAP-01.6 — Universal DEV `?collision` overlay & map authoring guide.**
+        Extend `collision-debug.ts` to render on all 8 maps in DEV when `?collision` is
+        present (walkable/obstacle shapes, effective `playerRadius` contour, live NPC
+        colliders, unscaled art-space `(x, y)` cursor readout, and JSON export) and add
+        a concise "How to add a map" doc. Done when: `?collision` works on all 8 maps
+        (disabled in production builds) and `[Manual]` walk-through passes on all 8 maps.
+
 ## BLOCKED — start only after the Open decisions below are answered
 
 - [ ] **P1 — Hosted Supabase.** `[Manual]` Migrations, seed and production Auth settings.
