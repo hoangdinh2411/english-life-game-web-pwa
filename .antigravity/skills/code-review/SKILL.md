@@ -17,6 +17,7 @@ description:
    - NestJS `AuthGuard` + `SchemaValidationPipe` and forward-only DB migrations.
    - Semantic color tokens (`var(--color-...)` / `UI_COLORS` — no hex literals in React markup), no `any` or leftover debug logs.
    - No guessed workarounds, unapproved fallbacks, invented values, or out-of-scope edits (flag any unapproved assumption as a 🔴 Critical Issue for owner review).
+   - Core product features preserved and tested when touching dialogue/NPC/AI/UI: **subtle English error correction** (implicit recast without announcing corrections + `<GrammarFeedbackTag />` in adult mode), **dual-mode (`kid` / `adult`)** compatibility, and **venue hours** (airports/station 24/7; shops scheduled).
    - If the diff is large, review it file by file without re-reading unchanged files.
 
 3. **Run the typecheck.** Run `pnpm typecheck` in the terminal. If pnpm is not

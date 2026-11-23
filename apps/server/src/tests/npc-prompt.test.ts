@@ -51,3 +51,24 @@ test('T10c prompt uses DB persona, levels and hours; only six turns; current inp
     assert.match(result.prompt.system, /serving a customer.*request first.*store service/i);
   } finally { await module.close(); }
 });
+
+test('airport NPC prompt always marks the airport open 24/7', async t => {
+  const module = await Test.createTestingModule({ providers: [NpcPromptService,
+    { provide: LifeService, useValue: { venueOpen: async () => false } },
+    { provide: NpcMoodService, useValue: { resolve: async () => ({ id: 'helpful', label: 'Helpful', guidance: 'Be helpful.' }) } },
+    { provide: NpcRelationshipService, useValue: { context: async () => ({ familiarity: 0, affinity: 0,
+      stage: 'stranger', reactionMood: null, reactionExpiresAt: null }) } },
+  ] }).compile();
+  const client = Object.assign(new Client(), { release: () => undefined });
+  const userId = '12345678-1234-1234-1234-123456789abc';
+  t.mock.method(client, 'query', async (sql: string) => ({ rows: sql.includes('FROM public.npcs') ? [{
+    name: 'Claire', role: 'Check-in Agent', personality: 'cheerful', speaking_level: 'A1', place: 'Airport Departure',
+    profile: { profileVersion: 1, conversationTopics: ['flight check-in'] },
+    place_type: 'airport_departure', city: null, country: null, player_level: 'A1',
+    private_display_name: 'Learner', private_character_name: 'Avatar',
+  }] : [] }));
+  try {
+    const result = await module.get(NpcPromptService).build(client, userId, 'npc_airport_agent', 'session', 'Hello');
+    assert.ok(result.prompt.system.includes('"open":true'));
+  } finally { await module.close(); }
+});

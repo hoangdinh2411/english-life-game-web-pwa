@@ -296,6 +296,16 @@ export const AIRPORT_DEPARTURE_GATE: StationPortal = { id: "airport_arrival", la
 export const AIRPORT_DEPARTURE_PORTALS: StationPortal[] = [
   AIRPORT_DEPARTURE_GATE,
 ];
+export const AIRPORT_ARRIVAL_PORTAL: StationPortal = {
+  id: "station",
+  label: "Train Station",
+  x: 768,
+  y: 930,
+};
+export const AIRPORT_ARRIVAL_PORTALS: StationPortal[] = [
+  AIRPORT_ARRIVAL_PORTAL,
+];
+export const AIRPORT_BAGGAGE_CLAIM_POINT: Point = { x: 768, y: 620 };
 
 export const AIRPORT_DEPARTURE_OBSTACLES: readonly Bounds[] = [
   // 3 check-in desks, luggage scales, conveyor belts, and staff counter

@@ -28,6 +28,7 @@ Execute the task card defined in `.antigravity/current-task.md` safely and rigor
    - Modify only the target files required by the action steps (plus directly related tests).
    - Keep changes minimal, coherent, and maintainable.
    - Respect non-negotiable boundaries from `AGENTS.md` (auth, server-owned progression, semantic `var(--color-...)` / `UI_COLORS` styling tokens, client/server boundaries).
+   - **Preserve & integrate core product features:** When touching dialogue, NPCs, AI, or gameplay UI, ensure **subtle English error correction** (implicit recast without announcing corrections + `<GrammarFeedbackTag />` in adult mode), **dual-mode (`kid` / `adult`)** support, and **venue hours** (airports/station 24/7; shops scheduled) remain integrated and covered by tests.
 5. **Verification & Review (`reviewer` stage — mandatory):**
    - Run `pnpm typecheck` and any task-relevant validations listed on the card (`pnpm test`, `pnpm lint`, integration tests).
    - **Auto Content Check:** If any file under `content/` or `packages/shared/src/dialogue/content/` (or content schemas) was modified, automatically run `pnpm content:validate` (`content-check`).

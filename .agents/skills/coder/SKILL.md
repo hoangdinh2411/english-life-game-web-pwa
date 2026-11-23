@@ -26,6 +26,7 @@ Responsible for executing code implementation strictly following the approved pl
    - **Structure**: Client code is feature-first (`src/features/<feature>`); server is domain modules (`src/modules/<domain>`). Shared contracts live in `packages/shared`.
    - **Palette**: Use shared semantic tokens (`var(--color-...)`, `src/styles/colors.ts`); no hex color literals in React markup.
    - **Hygiene**: No secrets or private tokens in Git/logs/bundles. Forward-only DB migrations.
+   - **Core Learning & Gameplay Features**: Preserve and integrate **subtle English error correction** (implicit recast without announcing corrections + `<GrammarFeedbackTag />` in adult mode), **dual-mode (`kid` / `adult`)** support, and accurate **venue hours** (airports/station open 24/7; shops scheduled) whenever touching dialogue, NPCs, or gameplay UI — and add/update tests covering them.
 4. **No Git writes**: never commit, tag, merge, push or open PRs. Suggest a commit message in the final report.
 5. **Handoff to reviewer (mandatory)**:
    - Immediately after completing code changes, automatically transition to Stage 3 (`reviewer`) without waiting for user intervention. Never skip this step or report completion before the reviewer passes.

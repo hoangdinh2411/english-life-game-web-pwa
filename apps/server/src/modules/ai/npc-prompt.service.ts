@@ -1,6 +1,6 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { PoolClient } from 'pg';
-import { npcProfileSchema, SHOP_NPC_IDS, type NpcProfile } from '@life-abroad/shared';
+import { AIRPORT_NPC_IDS, npcProfileSchema, SHOP_NPC_IDS, type NpcProfile } from '@life-abroad/shared';
 import { LifeService } from '../life/life.service';
 import { AiPrompt } from './ai-provider';
 import { npcSystemPrompt } from './prompts';
@@ -50,9 +50,9 @@ export class NpcPromptService {
       l.name AS place,l.type AS place_type,ci.name AS city,co.name AS country,p.english_level AS player_level,
       p.display_name AS private_display_name,c.name AS private_character_name
       FROM public.npcs n JOIN public.roles r ON r.id=n.role_id JOIN public.locations l ON l.id=n.location_id
-      JOIN public.cities ci ON ci.id=l.city_id
+      LEFT JOIN public.cities ci ON ci.id=l.city_id
       JOIN public.profiles p ON p.id=$1 JOIN public.characters c ON c.user_id=p.id
-      JOIN public.countries co ON co.id=c.country_id WHERE n.id=$2`, [userId, npcId]);
+      LEFT JOIN public.countries co ON co.id=c.country_id WHERE n.id=$2`, [userId, npcId]);
     const row = result.rows[0];
     if (!row) throw new ServiceUnavailableException('NPC prompt context is unavailable.');
     const names = [row.private_display_name, row.private_character_name, userId];
@@ -60,9 +60,11 @@ export class NpcPromptService {
       FROM public.messages m JOIN public.conversations c ON c.id=m.conversation_id
       WHERE m.conversation_id=$1 AND c.user_id=$2 AND c.npc_id=$3 AND m.client_message_id IS NOT NULL
       ORDER BY m.sequence DESC LIMIT 12`, [conversationId, userId, npcId]);
+    const isAirport = (AIRPORT_NPC_IDS as readonly string[]).includes(npcId) ||
+      row.place_type === 'airport_departure' || row.place_type === 'airport_arrival';
     const kind = (SHOP_NPC_IDS as readonly string[]).includes(npcId) ? (npcId.startsWith('npc_clothes_') ? 'store' : 'cafe')
       : row.place_type === 'workplace' ? 'workplace' : 'organization';
-    const open = await this.life.venueOpen(client, userId, kind);
+    const open = isAirport ? true : await this.life.venueOpen(client, userId, kind);
     const mood = await this.moods.resolve(client, userId, npcId);
     const relationship = await this.relationships.context(client, userId, npcId);
     const responseLevel = resolveResponseLevel(row.player_level, text);

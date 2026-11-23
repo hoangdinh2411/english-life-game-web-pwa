@@ -103,3 +103,32 @@ test('createAirportSendHandler loads countries lazily when cache is initially em
     'send:United Kingdom',
   ]);
 });
+
+test('createAirportSendHandler still sends message when server reports destination country is already locked (409)', async () => {
+  const events = [];
+
+  const sendHandler = createAirportSendHandler({
+    getCountries: () => COUNTRIES,
+    loadCountries: async () => COUNTRIES,
+    isDestinationLocked: () => false,
+    lockCountry: async () => {
+      const error = new Error('Destination country is already locked');
+      Object.assign(error, { status: 409 });
+      throw error;
+    },
+    onRefresh: async () => {
+      events.push('onRefresh');
+    },
+    onDestinationSelected: () => {
+      events.push('onDestinationSelected');
+    },
+    send: async (text) => {
+      events.push(`send:${text}`);
+      return true;
+    },
+  });
+
+  const sent = await sendHandler('Japan');
+  assert.equal(sent, true);
+  assert.deepEqual(events, ['onDestinationSelected', 'send:Japan']);
+});
