@@ -19,7 +19,7 @@ function SessionRoutes() {
   const character = session.player?.character;
   const route = resolveRoute(path, {
     token: session.token,
-    hasCharacter: Boolean(character?.countryId && character.countryName?.trim()),
+    hasCharacter: Boolean(character?.name),
     online: pwa.online,
   });
   const practice = route === '/practice';

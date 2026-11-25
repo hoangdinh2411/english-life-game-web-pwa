@@ -27,6 +27,12 @@ const AIRPORT_AGENT_DISPLAY = {
   job: 'Check-in Agent',
 } as const;
 
+const AIRPORT_HINT_FRAMES = [
+  'I will fly to Sweden.',
+  'I want to check in my luggage.',
+  'What should I do?',
+];
+
 export function AirportConversation({ gender, sound, destinationLocked = false, onClose, onRefresh, onDestinationSelected }: {
   gender?: PlayerGender | undefined;
   sound: boolean;
@@ -126,6 +132,8 @@ export function AirportConversation({ gender, sound, destinationLocked = false, 
         portraitGrid: NPC_PORTRAIT_GRID,
       }}
       hint="Tell Claire which country you are flying to."
+      hintFrames={AIRPORT_HINT_FRAMES}
+      defaultHintOpen={!destinationLocked}
     />
   </DialogueFrame>;
 }

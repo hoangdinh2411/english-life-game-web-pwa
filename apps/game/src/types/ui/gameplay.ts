@@ -112,6 +112,10 @@ export interface BaggageClaimOverlayProps {
   claiming: boolean;
   claimed: boolean;
   coinsGranted?: number | undefined;
+  playerName?: string | undefined;
+  targetSuitcaseId?: string | undefined;
+  selectedSuitcaseId?: string | null | undefined;
+  onSelectSuitcase?: ((id: string) => void) | undefined;
   error?: string | undefined;
   onClaim: () => void;
   onClose?: (() => void) | undefined;

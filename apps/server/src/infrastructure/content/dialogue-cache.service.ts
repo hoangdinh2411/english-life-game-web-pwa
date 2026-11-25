@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { dialogueNodeSchema, dialogueSchema, DialogueContent } from '@life-abroad/shared';
+import { dialogueNodeSchema, dialogueSchema, DialogueContent, type CountryEntity } from '@life-abroad/shared';
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { QueryResultRow } from 'pg';
@@ -26,6 +26,7 @@ export interface CachedDialogueNode {
 @Injectable()
 export class DialogueCacheService {
   private loaded: Promise<CachedDialogueNode[]> | undefined;
+  private loadedCountries: Promise<CountryEntity[]> | undefined;
 
   constructor(private readonly database: DatabaseService) {}
 
@@ -36,6 +37,21 @@ export class DialogueCacheService {
       throw error;
     });
     return structuredClone(await this.loaded);
+  }
+
+  async getCountries(): Promise<CountryEntity[]> {
+    this.loadedCountries ??= this.loadCountries().catch((error: unknown) => {
+      this.loadedCountries = undefined;
+      throw error;
+    });
+    return structuredClone(await this.loadedCountries);
+  }
+
+  protected async loadCountries(): Promise<CountryEntity[]> {
+    const result = await this.database.query<{ id: string; name: string }>(
+      'SELECT id, name FROM public.countries ORDER BY name, id',
+    );
+    return result.rows.map(row => ({ id: row.id, name: row.name }));
   }
 
   private async load(): Promise<CachedDialogueNode[]> {

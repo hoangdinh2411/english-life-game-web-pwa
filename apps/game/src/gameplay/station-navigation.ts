@@ -300,12 +300,39 @@ export const AIRPORT_ARRIVAL_PORTAL: StationPortal = {
   id: "station",
   label: "Train Station",
   x: 768,
-  y: 930,
+  y: 790,
 };
 export const AIRPORT_ARRIVAL_PORTALS: StationPortal[] = [
   AIRPORT_ARRIVAL_PORTAL,
 ];
-export const AIRPORT_BAGGAGE_CLAIM_POINT: Point = { x: 768, y: 620 };
+export interface CarouselSuitcase {
+  readonly id: "green" | "red" | "beige" | "brown" | "blue";
+  readonly label: string;
+  readonly swatch: string;
+  readonly x: number;
+  readonly y: number;
+  readonly standX: number;
+  readonly standY: number;
+}
+
+export const AIRPORT_CAROUSEL_SUITCASES: readonly CarouselSuitcase[] = [
+  { id: "green", label: "Green trunk", swatch: "🟩", x: 605, y: 395, standX: 605, standY: 325 },
+  { id: "red", label: "Red suitcase", swatch: "🟥", x: 930, y: 395, standX: 930, standY: 325 },
+  { id: "beige", label: "Beige suitcase", swatch: "🟨", x: 1115, y: 515, standX: 1225, standY: 515 },
+  { id: "brown", label: "Brown suitcase", swatch: "🟫", x: 665, y: 595, standX: 665, standY: 705 },
+  { id: "blue", label: "Blue suitcase", swatch: "🟦", x: 960, y: 595, standX: 960, standY: 705 },
+];
+
+export function resolveCarouselSuitcase(id?: string): CarouselSuitcase {
+  return AIRPORT_CAROUSEL_SUITCASES.find((bag) => bag.id === id) ?? AIRPORT_CAROUSEL_SUITCASES[4]!;
+}
+
+export function pickRandomCarouselSuitcase(random = Math.random): CarouselSuitcase {
+  const index = Math.floor(random() * AIRPORT_CAROUSEL_SUITCASES.length);
+  return AIRPORT_CAROUSEL_SUITCASES[Math.min(AIRPORT_CAROUSEL_SUITCASES.length - 1, Math.max(0, index))]!;
+}
+
+export const AIRPORT_BAGGAGE_CLAIM_POINT: Point = { x: 960, y: 595 };
 
 export const AIRPORT_DEPARTURE_OBSTACLES: readonly Bounds[] = [
   // 3 check-in desks, luggage scales, conveyor belts, and staff counter
@@ -323,8 +350,8 @@ export const AIRPORT_DEPARTURE_OBSTACLES: readonly Bounds[] = [
 ];
 
 export const AIRPORT_ARRIVAL_OBSTACLES: readonly Bounds[] = [
-  // Top wall and staff tables across the top
-  { left: 0, right: 1536, top: 0, bottom: 330 },
+  // Top wall and staff tables across the top (leaves walkable aisle y=301..344 behind carousel)
+  { left: 0, right: 1536, top: 0, bottom: 300 },
   // Central baggage claim carousel
   { left: 350, right: 1180, top: 345, bottom: 685 },
   // Left chairs & planters
@@ -352,7 +379,7 @@ export function canWalkAirport(
   const npcs: readonly Point[] = isLocation ? (maybeNpcs ?? []) : (Array.isArray(pointOrNpcs) ? pointOrNpcs : []);
 
   if (location === "airport_arrival") {
-    if (point.x < 190 || point.x > 1360 || point.y < 280 || point.y > 950) return false;
+    if (point.x < 190 || point.x > 1360 || point.y < 280 || point.y > 775) return false;
     if (point.y > 750 && (point.x < 670 || point.x > 860)) return false;
     if (AIRPORT_ARRIVAL_OBSTACLES.some((o) => point.x >= o.left && point.x <= o.right && point.y >= o.top && point.y <= o.bottom)) {
       return false;

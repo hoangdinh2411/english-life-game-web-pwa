@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import {
-  compileIntentLexicon, defineContextProfile, detectContextIntent, intentResultSchema,
+  compileIntentLexicon, defineContextProfile, detectContextIntent, intentResultSchema, matchCountry,
 } from '../dist/index.js';
 
 const lexiconSource = JSON.parse(readFileSync(new URL('../src/dialogue/content/intent-lexicon.json', import.meta.url), 'utf8'));
@@ -122,3 +122,28 @@ test('lexicon validation reports syntax, empty, duplicate, unknown intent and to
   fails(withPhrases({ intent: 'deny', mode: 'negated', patterns: ['no way'] }), /negation/);
   fails({ ...lexiconSource, compatible: [['confirm', 'apologize']] }, /compatible/);
 });
+
+test('matchCountry detects non-negated country entities and skips negated clauses', () => {
+  const countries = [
+    { id: 'country_germany', name: 'Germany' },
+    { id: 'country_sweden', name: 'Sweden' },
+    { id: 'country_us', name: 'United States' },
+  ];
+
+  assert.equal(matchCountry('Germany', countries)?.id, 'country_germany');
+  assert.equal(matchCountry('to Germany', countries)?.id, 'country_germany');
+  assert.equal(matchCountry('i will fly to germany', countries)?.id, 'country_germany');
+  assert.equal(matchCountry('United States', countries)?.id, 'country_us');
+  assert.equal(matchCountry('flying to the United States', countries)?.id, 'country_us');
+
+  // Negated clauses are skipped
+  assert.equal(matchCountry('Not Germany', countries), undefined);
+  assert.equal(matchCountry("I don't want Germany", countries), undefined);
+  assert.equal(matchCountry('Hello', countries), undefined);
+  assert.equal(matchCountry('', countries), undefined);
+
+  // Mixed negated and non-negated clauses resolve to the non-negated one
+  assert.equal(matchCountry('Not Germany, I will fly to Sweden', countries)?.id, 'country_sweden');
+  assert.equal(matchCountry("I won't go to Germany but Sweden", countries)?.id, 'country_sweden');
+});
+

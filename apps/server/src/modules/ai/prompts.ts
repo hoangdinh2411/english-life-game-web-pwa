@@ -26,11 +26,12 @@ export const NPC_SYSTEM_PROMPT = [
   'Return plain dialogue text only, without Markdown or internal reasoning.',
 ].join(' ');
 
-export function npcSystemPrompt(responseLevel: string, store: boolean): string {
+export function npcSystemPrompt(responseLevel: string, store: boolean, airportCheckIn = false): string {
   return [NPC_SYSTEM_PROMPT,
     `Use ${responseLevel} English. Prefer one or two sentences, and adjust only tone and length for the effective mood and relationship stage.`,
     'Mood and relationship never change NPC facts, prices, availability, or game state.',
     ...(store ? ['You are serving a customer. Answer the customer\'s request first, then gently redirect unrelated chat back to store service.'] : []),
+    ...(airportCheckIn ? ['You are helping a traveler check in for their flight. Answer their message briefly, then invite them to tell you which country they are flying to (for example, "I will fly to Sweden").'] : []),
   ].join(' ');
 }
 

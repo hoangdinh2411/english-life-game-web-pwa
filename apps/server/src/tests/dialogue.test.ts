@@ -174,6 +174,12 @@ async function fixture() {
   }
   class FixtureCache extends DialogueCacheService {
     protected override async commonNodes(): Promise<CachedDialogueNode[]> { return nodes.filter(entry => entry.scope !== 'npc'); }
+    protected override async loadCountries(): Promise<import('@life-abroad/shared').CountryEntity[]> {
+      return [
+        { id: 'country_germany', name: 'Germany' },
+        { id: 'country_sweden', name: 'Sweden' },
+      ];
+    }
   }
   const cache = new FixtureCache(new ContentDatabase(new ConfigService()));
   return { content, nodes, cache, engine: new DialogueService(cache), queries: () => queries };
@@ -316,3 +322,81 @@ test('T4 failed cache loads can retry', async () => {
   assert.ok(nodes.every(entry => entry.scope !== 'npc'));
   assert.equal(attempts, 2);
 });
+
+test('T42.i2a airport destination country entity matching and newcomer vs locked country rendering', async () => {
+  const { engine } = await fixture();
+  const countries = [
+    { id: 'country_germany', name: 'Germany' },
+    { id: 'country_sweden', name: 'Sweden' },
+  ];
+
+  // 1. Newcomer context (countryId is null, countryName undefined)
+  const newcomerContext = {
+    npcId: 'npc_airport_agent',
+    roleId: 'airport_check_in_agent',
+    personality: 'cheerful',
+    countryId: null,
+    countries,
+  };
+
+  // Valid non-negated inputs match Germany, route to checked_in, and populate countryName in newcomer context
+  for (const input of ['Germany', 'to Germany', 'i will fly to germany']) {
+    const reply = await engine.reply(newcomerContext, input);
+    assert.equal(reply.node.id, 'airport_agent_checked_in', input);
+    assert.equal(reply.intent, 'state_destination_country', input);
+    assert.equal(reply.misunderstood, false, input);
+    assert.equal(reply.node.completesStep, 'airport_check_in', input);
+    assert.match(reply.text, /Germany/, input);
+    assert.doesNotMatch(reply.text, /\{countryName\}/, input);
+  }
+
+  // Negated clause "Not Germany" must NOT match country, falls back to repeat
+  const negatedReply = await engine.reply(newcomerContext, 'Not Germany');
+  assert.equal(negatedReply.node.id, 'airport_agent_repeat');
+  assert.equal(negatedReply.intent, null);
+  assert.equal(negatedReply.misunderstood, true);
+
+  // "Hello" does NOT match destination, matches greet intent instead and routes to welcome
+  const helloReply = await engine.reply(newcomerContext, 'Hello');
+  assert.equal(helloReply.node.id, 'airport_agent_welcome');
+  assert.equal(helloReply.intent, 'greet');
+  assert.equal(helloReply.misunderstood, false);
+
+  // Single-word "checkin" matches check_in_luggage and guides player to pick a country
+  const checkinReply = await engine.reply(newcomerContext, 'i want to checkin');
+  assert.equal(checkinReply.node.id, 'airport_agent_destination');
+  assert.equal(checkinReply.intent, 'check_in_luggage');
+  assert.equal(checkinReply.misunderstood, false);
+
+  // Asking what to do routes to airport_agent_help instead of generic repeat
+  const helpReply = await engine.reply(newcomerContext, 'what should we do now?');
+  assert.equal(helpReply.node.id, 'airport_agent_help');
+  assert.equal(helpReply.intent, 'ask_airport_help');
+  assert.equal(helpReply.misunderstood, false);
+  assert.match(helpReply.text, /I will fly to Sweden/);
+
+  // 2. Already-locked country context (countryId and countryName already set)
+  const lockedContext = {
+    npcId: 'npc_airport_agent',
+    roleId: 'airport_check_in_agent',
+    personality: 'cheerful',
+    countryId: 'country_sweden',
+    countryName: 'Sweden',
+    countries,
+  };
+
+  // Stating destination when already locked retains the locked countryName in boarding pass
+  const lockedReply = await engine.reply(lockedContext, 'i will fly to sweden');
+  assert.equal(lockedReply.node.id, 'airport_agent_checked_in');
+  assert.equal(lockedReply.intent, 'state_destination_country');
+  assert.equal(lockedReply.misunderstood, false);
+  assert.match(lockedReply.text, /Sweden/);
+  assert.doesNotMatch(lockedReply.text, /\{countryName\}/);
+
+  // Mentioning another country when already locked does not match check-in (prevents output inconsistency)
+  const lockedDiffReply = await engine.reply(lockedContext, 'Germany');
+  assert.equal(lockedDiffReply.node.id, 'airport_agent_repeat');
+  assert.equal(lockedDiffReply.intent, null);
+  assert.equal(lockedDiffReply.misunderstood, true);
+});
+
