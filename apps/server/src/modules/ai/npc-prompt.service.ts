@@ -72,8 +72,9 @@ export class NpcPromptService {
     const persona = { name: row.name, role: row.role, personality: row.personality,
       facts: allowedFacts(npcProfileSchema.parse(row.profile)), place: row.place, city: row.city, country: row.country, open,
       effectiveMood: relationship.reactionMood ?? mood.id, relationshipStage: relationship.stage, responseLevel };
+    const isAirportCheckIn = isAirport && !row.country;
     return { text: scrub(text, names), prompt: {
-      system: `${npcSystemPrompt(responseLevel, kind === 'store' || kind === 'cafe')}\nNPC context: ${JSON.stringify(persona)}`,
+      system: `${npcSystemPrompt(responseLevel, kind === 'store' || kind === 'cafe', isAirportCheckIn)}\nNPC context: ${JSON.stringify(persona)}`,
       history: history.rows.slice(0, 12).reverse().map(message => ({
         speaker: message.sender, text: scrub(message.text, names),
       })),

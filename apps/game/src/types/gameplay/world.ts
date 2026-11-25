@@ -39,6 +39,7 @@ export type ClosedVenueLocation = Extract<
 export interface StationCallbacks {
   gender?: PlayerGender | undefined;
   countryName?: string | undefined;
+  targetSuitcaseId?: string | undefined;
   appearance?: Appearance | undefined;
   practice?: boolean;
   onProgress: (value: number) => void;
@@ -76,6 +77,7 @@ export interface StationGame {
 export interface GameCanvasProps {
   gender?: PlayerGender | undefined;
   countryName?: string | undefined;
+  targetSuitcaseId?: string | undefined;
   minimapVisible?: boolean;
   appearance?: Appearance | undefined;
   initialLocation?: PlayerLocation;

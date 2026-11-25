@@ -6,7 +6,7 @@ import { paintPlayerTexture } from '../features/appearance/player-texture';
 import { fetchMapPack, packKey, unloadPack } from '../features/assets/map-pack';
 import { isDeferredStreetNpcAsset, loadPack, preparePack } from '../features/assets/phaser-pack';
 import { AIRPORT_STAFF } from '../features/airport/airport-staff';
-import { AIRPORT_ARRIVAL_PORTALS, AIRPORT_BAGGAGE_CLAIM_POINT, AIRPORT_DEPARTURE_PORTALS, airportSpawnPoint, canWalkAirport, moveInAirport, recoverAirportPosition, authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetArrivalForLocation, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
+import { AIRPORT_ARRIVAL_PORTALS, AIRPORT_DEPARTURE_PORTALS, airportSpawnPoint, canWalkAirport, moveInAirport, recoverAirportPosition, resolveCarouselSuitcase, authorizeStreetExit, canWalk, canWalkStreet, findPath, moveOnStreet, movePlayer, movementDelta, nearestNpc, portalAt, recoverStreetPosition, scaleStreetPoint, stationStoreReturnPoint, streetArrivalForLocation, streetSpawnPoint, STREET_MAP_SCALE, STREET_MAP_SIZE, STATION_NPCS, STATION_PORTALS, STREET_PORTALS } from './station-navigation';
 import { SHOP_NPCS } from '../features/shops/shop-npcs';
 import { findStreetNpc, STREET_NPC_ROUTES } from '../features/npcs/street-npcs';
 import { canEnterLocation, closedVenueExit, moveInShop, shopCanWalk, shouldCloseActiveVenue, shouldDeferClosedVenueExit } from '../features/shops/shop-navigation';
@@ -55,7 +55,9 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   let controlledNpcIds: ReadonlySet<string> = new Set();
   let controlledPresenceSignature = '';
   const presenceDiagnostics = new Set<string>();
+  const targetSuitcase = resolveCarouselSuitcase(callbacks.targetSuitcaseId);
   let exitUnlocked = false;
+  let refreshBaggageHighlight: (() => void) | undefined;
   let blockedPortal: string | null = null;
   const savedPosition: Point = callbacks.initialLocation
     ? { x: callbacks.initialLocation.x, y: callbacks.initialLocation.y }
@@ -101,7 +103,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
     if (paused) return;
     const npc = nearestNpc(position, npcs);
     if (npc) { callbacks.onTalk(npc.id); return; }
-    if (activeLocation === 'airport_arrival' && Math.hypot(position.x - AIRPORT_BAGGAGE_CLAIM_POINT.x, position.y - AIRPORT_BAGGAGE_CLAIM_POINT.y) <= 160) {
+    if (activeLocation === 'airport_arrival' && Math.hypot(position.x - targetSuitcase.x, position.y - targetSuitcase.y) <= 160) {
       callbacks.onTalk('baggage_claim');
     }
   };
@@ -433,24 +435,38 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
           }
         });
       }
+      refreshBaggageHighlight = undefined;
       if (activeLocation === 'airport_arrival') {
-        this.add.text(AIRPORT_BAGGAGE_CLAIM_POINT.x, AIRPORT_BAGGAGE_CLAIM_POINT.y - 40, 'Baggage Claim', {
-          fontFamily: 'sans-serif', fontSize: '22px', fontStyle: 'bold', color: UI_COLORS.ink,
-          backgroundColor: UI_COLORS.creamTextSoft, padding: { x: 8, y: 5 },
+        const suitcaseHalo = this.add.circle(targetSuitcase.x, targetSuitcase.y, 58, 0xf4c44e, 0.28)
+          .setStrokeStyle(4, 0xffe082, 0.95)
+          .setDepth(1450);
+        this.tweens.add({ targets: suitcaseHalo, scale: 1.15, alpha: 0.72, duration: 750, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        const suitcaseTag = this.add.text(targetSuitcase.x, targetSuitcase.y - 68, 'Your Suitcase !', {
+          fontFamily: 'sans-serif', fontSize: '20px', fontStyle: 'bold', color: UI_COLORS.ink,
+          backgroundColor: UI_COLORS.gold, padding: { x: 10, y: 5 },
         }).setOrigin(0.5, 1).setDepth(1500);
-        const baggageZone = this.add.zone(AIRPORT_BAGGAGE_CLAIM_POINT.x, AIRPORT_BAGGAGE_CLAIM_POINT.y, 400, 180).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        this.tweens.add({ targets: suitcaseTag, y: targetSuitcase.y - 78, duration: 650, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        const baggageZone = this.add.zone(targetSuitcase.x, targetSuitcase.y, 130, 130).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        refreshBaggageHighlight = () => {
+          const unclaimed = !exitUnlocked;
+          suitcaseHalo.setVisible(unclaimed);
+          suitcaseTag.setVisible(unclaimed);
+          if (unclaimed) baggageZone.setInteractive({ useHandCursor: true });
+          else baggageZone.disableInteractive();
+        };
+        refreshBaggageHighlight();
         baggageZone.on('pointerdown', () => {
-          if (Math.hypot(position.x - AIRPORT_BAGGAGE_CLAIM_POINT.x, position.y - AIRPORT_BAGGAGE_CLAIM_POINT.y) <= 160) {
+          if (Math.hypot(position.x - targetSuitcase.x, position.y - targetSuitcase.y) <= 160) {
             callbacks.onTalk('baggage_claim');
             return;
           }
           selectedNpc = 'baggage_claim';
-          destinationMapTarget = { x: AIRPORT_BAGGAGE_CLAIM_POINT.x, y: 710 };
+          destinationMapTarget = { x: targetSuitcase.standX, y: targetSuitcase.standY };
           route = findPath(position, destinationMapTarget, point => canWalkInterior(point, npcs), (point, delta) => moveInterior(point, delta, npcs));
           destinationMapTarget = route.shift() ?? null;
           if (!destinationMapTarget) {
             selectedNpc = null;
-            if (Math.hypot(position.x - AIRPORT_BAGGAGE_CLAIM_POINT.x, position.y - AIRPORT_BAGGAGE_CLAIM_POINT.y) <= 160) {
+            if (Math.hypot(position.x - targetSuitcase.x, position.y - targetSuitcase.y) <= 160) {
               callbacks.onTalk('baggage_claim');
             }
             return;
@@ -743,7 +759,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
       else this.player.anims.stop();
       const closest = nearestNpc(position, npcs)?.id ?? null;
       if (closest !== nearby) { nearby = closest; callbacks.onNearby(closest); }
-      if (selectedNpc === 'baggage_claim' && activeLocation === 'airport_arrival' && Math.hypot(position.x - AIRPORT_BAGGAGE_CLAIM_POINT.x, position.y - AIRPORT_BAGGAGE_CLAIM_POINT.y) <= 160) {
+      if (selectedNpc === 'baggage_claim' && activeLocation === 'airport_arrival' && Math.hypot(position.x - targetSuitcase.x, position.y - targetSuitcase.y) <= 160) {
         selectedNpc = null; destinationMapTarget = null;
         this.player.anims.stop(); this.marker.setVisible(false); callbacks.onTalk('baggage_claim'); return;
       }
@@ -752,7 +768,10 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         this.player.anims.stop(); this.marker.setVisible(false); callbacks.onTalk(id); return;
       }
       const portal = portalAt(position, this.portalsForLocation());
-      if (activeLocation === 'airport_arrival' && portal?.id === 'station' && !exitUnlocked) {
+      if (
+        (activeLocation === 'airport_departure' && portal?.id === 'airport_arrival' && !exitUnlocked) ||
+        (activeLocation === 'airport_arrival' && portal?.id === 'station' && !exitUnlocked)
+      ) {
         if (blockedPortal !== portal.id) callbacks.onExitBlocked();
         blockedPortal = portal.id;
         destinationMapTarget = null; route = []; selectedNpc = null;
@@ -772,7 +791,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
         if (selectedNpc) {
           const id = selectedNpc;
           selectedNpc = null;
-          if (id === 'baggage_claim' && activeLocation === 'airport_arrival' && Math.hypot(position.x - AIRPORT_BAGGAGE_CLAIM_POINT.x, position.y - AIRPORT_BAGGAGE_CLAIM_POINT.y) <= 160) {
+          if (id === 'baggage_claim' && activeLocation === 'airport_arrival' && Math.hypot(position.x - targetSuitcase.x, position.y - targetSuitcase.y) <= 160) {
             callbacks.onTalk('baggage_claim');
           } else if (nearestNpc(position, npcs)?.id === id) callbacks.onTalk(id);
         }
@@ -845,7 +864,7 @@ export function createStationGame(parent: HTMLElement, callbacks: StationCallbac
   }
   const game = new P.Game({ type: P.AUTO, parent, width: parent.clientWidth, height: parent.clientHeight, backgroundColor: UI_COLORS.worldBackground, scene: StationScene,
     scale: { mode: P.Scale.RESIZE, autoCenter: P.Scale.CENTER_BOTH }, render: { pixelArt: false }, loader: { timeout: 15000 } });
-  return { destroy: () => { destroyed = true; packRequest?.abort(); game.destroy(true); }, pause: (value, pauseWorld = value, talkingNpc = null) => { paused = value; worldPaused = pauseWorld; conversationNpcId = talkingNpc; refreshPresence?.(); }, unlockExit: (value) => { exitUnlocked = value; }, talk,
+  return { destroy: () => { destroyed = true; packRequest?.abort(); game.destroy(true); }, pause: (value, pauseWorld = value, talkingNpc = null) => { paused = value; worldPaused = pauseWorld; conversationNpcId = talkingNpc; refreshPresence?.(); }, unlockExit: (value) => { exitUnlocked = value; refreshBaggageHighlight?.(); }, talk,
     enforceVenueHours: () => enforceVenueHours?.(),
     leaveClosedVenue: () => leaveClosedVenue?.(),
     setPresentNpcIds: (ids) => { presentNpcIds = new Set(ids); refreshPresence?.(); },

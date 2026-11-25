@@ -39,3 +39,23 @@ test('ONB-01.3 converts one instant through country zones and DST boundaries', (
   assert.equal(zonedGameTime(new Date('2026-10-25T00:30:00Z'), 'Europe/Stockholm').minutes, 150);
   assert.equal(zonedGameTime(new Date('2026-10-25T01:30:00Z'), 'Europe/Stockholm').minutes, 150);
 });
+
+test('ONB-01.3 provides fallback world clock for newcomer at airport departure without locked country', async () => {
+  const row = {
+    clock_start_utc: null,
+    clock_rate: null,
+    time_zone: null,
+    current_map_id: 'loc_airport_departure',
+    country_id: null,
+  };
+  const database = { query: async () => ({ rows: [row] }) };
+  const clock = new WorldClockService(database as never, serverClock);
+  const reading = await clock.read('newcomer');
+  assert.deepEqual(reading.public, {
+    gameTimeUtc: fixedNow.toISOString(),
+    timeZone: 'UTC',
+    clockRate: 6,
+  });
+  assert.equal(reading.timeZone, 'UTC');
+});
+

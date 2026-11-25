@@ -28,6 +28,7 @@ import { AIRPORT_AGENT_NPC_ID } from "@life-abroad/shared";
 import { AirportConversation } from "../features/npcs/AirportConversation";
 import { BaggageClaimOverlay } from "../features/onboarding/BaggageClaimOverlay";
 import { FlightCutscene } from "../features/onboarding/FlightCutscene";
+import { pickRandomCarouselSuitcase } from "./station-navigation";
 import { TownspersonConversation } from "../features/npcs/TownspersonConversation";
 import { usePreferences } from "../features/hud/usePreferences";
 import { useNpcPresence } from "../features/npcs/use-npc-presence";
@@ -96,6 +97,9 @@ export default function StationScreen({
     arrival?.initialLocation.placeId ?? "loc_station",
   );
   const [flightCutscene, setFlightCutscene] = useState(false);
+  const handleFlightCutsceneComplete = useCallback(() => {
+    setFlightCutscene(false);
+  }, []);
   const handleMapChange = useCallback((nextMapId: string) => {
     setActiveMapId((prevMapId) => {
       if (
@@ -119,6 +123,8 @@ export default function StationScreen({
   }, []);
   const [exitUnlocked, setExitUnlocked] = useState(false);
   const [baggageClaimOpen, setBaggageClaimOpen] = useState(false);
+  const [targetSuitcase] = useState(() => pickRandomCarouselSuitcase());
+  const [selectedSuitcaseId, setSelectedSuitcaseId] = useState<string | null>(null);
   const [claimingBaggage, setClaimingBaggage] = useState(false);
   const [baggageClaimed, setBaggageClaimed] = useState(coins > 0);
   const [baggageCoinsGranted, setBaggageCoinsGranted] = useState<number | undefined>(undefined);
@@ -152,6 +158,8 @@ export default function StationScreen({
     worldClock.revision,
   );
   const displayedCountryName = countryName?.trim() || "Not selected";
+  const destinationLocked = Boolean(countryName?.trim() && countryName.trim() !== "Not selected");
+  const airportDepartureUnlocked = exitUnlocked || destinationLocked;
   const handleClaimBaggage = useCallback(async () => {
     if (claimingBaggage || baggageClaimed) return;
     setClaimingBaggage(true);
@@ -218,6 +226,7 @@ export default function StationScreen({
       <GameCanvas
         gender={gender}
         countryName={countryName}
+        targetSuitcaseId={targetSuitcase.id}
         minimapVisible={!overlayOpen && !life?.sleepTransition}
         {...(life?.state ? { appearance: life.state.appearance } : {})}
         {...(arrival
@@ -228,9 +237,11 @@ export default function StationScreen({
             }
           : {})}
         exitUnlocked={
-          activeMapId === "loc_airport_arrival"
-            ? baggageClaimed || (life?.state?.coins ?? coins) > 0
-            : exitUnlocked || Boolean(arrival?.exitUnlocked)
+          activeMapId === "loc_airport_departure"
+            ? airportDepartureUnlocked
+            : activeMapId === "loc_airport_arrival"
+              ? baggageClaimed || (life?.state?.coins ?? coins) > 0
+              : exitUnlocked || Boolean(arrival?.exitUnlocked)
         }
         onExitBlocked={() => setExitReminder(true)}
         onReadyChange={setStationReady}
@@ -252,6 +263,7 @@ export default function StationScreen({
         onTalk={(id) => {
           if (id === "baggage_claim") {
             setBaggageError(undefined);
+            setSelectedSuitcaseId(null);
             setBaggageClaimOpen(true);
             return;
           }
@@ -513,13 +525,19 @@ export default function StationScreen({
         <DialogueFrame>
           <h2>Before you leave</h2>
           <p>
-            {activeMapId === "loc_airport_arrival"
-              ? "Collect your baggage and $500 starter funds from the baggage carousel first."
-              : arrival?.blockedExitMessage ??
-                "Talk to the receptionist at the information kiosk and ask where to get an ID card first. Look for the yellow ! marker."}
+            {activeMapId === "loc_airport_departure"
+              ? "Talk to Claire at the check-in desk and tell her which country you are flying to first."
+              : activeMapId === "loc_airport_arrival"
+                ? "Collect your baggage and $500 starter funds from the baggage carousel first."
+                : arrival?.blockedExitMessage ??
+                  "Talk to the receptionist at the information kiosk and ask where to get an ID card first. Look for the yellow ! marker."}
           </p>
           <GameButton
-            label={activeMapId === "loc_airport_arrival" ? "Return to terminal" : "Return to station"}
+            label={
+              activeMapId === "loc_airport_departure" || activeMapId === "loc_airport_arrival"
+                ? "Return to terminal"
+                : "Return to station"
+            }
             onClick={() => setExitReminder(false)}
           />
         </DialogueFrame>
@@ -573,14 +591,58 @@ export default function StationScreen({
       {flightCutscene ? (
         <FlightCutscene
           destinationCountryName={countryName?.trim() || displayedCountryName}
-          onComplete={() => setFlightCutscene(false)}
+          onComplete={handleFlightCutsceneComplete}
         />
+      ) : null}
+      {activeMapId === "loc_airport_departure" &&
+      airportDepartureUnlocked &&
+      !npcId &&
+      !menu &&
+      !flightCutscene &&
+      !life?.error ? (
+        <div
+          className="absolute bottom-4 left-1/2 z-[15] flex max-w-[min(calc(100%_-_1rem),34rem)] -translate-x-1/2 items-center gap-2 rounded-xl border-2 border-[var(--color-green-strong)] bg-[var(--color-success-surface-alt)] px-4 py-2.5 text-sm font-semibold text-[var(--color-green-strong)] shadow-[0_8px_24px_var(--color-shadow)]"
+          role="status"
+          aria-live="polite"
+        >
+          <span>
+            Boarding pass ready! Walk to the <strong>Departure Gate</strong> to board your flight ↗
+          </span>
+        </div>
+      ) : null}
+      {activeMapId === "loc_airport_arrival" &&
+      !baggageClaimOpen &&
+      !npcId &&
+      !menu &&
+      !flightCutscene &&
+      !life?.error ? (
+        <div
+          className="absolute bottom-4 left-1/2 z-[15] flex max-w-[min(calc(100%_-_1rem),34rem)] -translate-x-1/2 items-center gap-2 rounded-xl border-2 border-[var(--color-green-strong)] bg-[var(--color-success-surface-alt)] px-4 py-2.5 text-sm font-semibold text-[var(--color-green-strong)] shadow-[0_8px_24px_var(--color-shadow)]"
+          role="status"
+          aria-live="polite"
+        >
+          <span>
+            {baggageClaimed || (life?.state?.coins ?? coins) > 0 ? (
+              <>
+                Baggage claimed! Walk to the <strong>Train Station</strong> exit ↓
+              </>
+            ) : (
+              <>
+                Find your <strong>{targetSuitcase.label.toLowerCase()}</strong> on the carousel and click it to collect your luggage.
+              </>
+            )}
+          </span>
+        </div>
       ) : null}
       {baggageClaimOpen ? (
         <BaggageClaimOverlay
           claiming={claimingBaggage}
           claimed={baggageClaimed || (life?.state?.coins ?? coins) > 0}
           coinsGranted={baggageCoinsGranted}
+          playerName={playerName}
+          targetSuitcaseId={targetSuitcase.id}
+          selectedSuitcaseId={selectedSuitcaseId}
+          onSelectSuitcase={setSelectedSuitcaseId}
           error={baggageError}
           onClaim={() => void handleClaimBaggage()}
           onClose={() => setBaggageClaimOpen(false)}

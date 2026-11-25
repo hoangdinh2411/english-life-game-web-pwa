@@ -15,6 +15,7 @@ const DEFAULT_INITIAL_LOCATION = {
 export default function GameCanvas({
   gender,
   countryName,
+  targetSuitcaseId,
   paused,
   worldPaused = paused,
   conversationNpcId = null,
@@ -147,6 +148,7 @@ export default function GameCanvas({
                 callbacks.current.onVenueClosed?.(location, talkingNpcId),
             }
           : {}),
+        ...(targetSuitcaseId ? { targetSuitcaseId } : {}),
         onNearby: (id) => {
           if (!cancelled) setNearbyNpcId(id);
         },

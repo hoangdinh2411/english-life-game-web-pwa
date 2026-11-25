@@ -6,14 +6,16 @@
     {
       "id": "airport_agent_start",
       "text": {
-        "default": "Hello! Welcome to the check-in desk. Where are you flying today?",
-        "cheerful": "Hello! Welcome to the departure terminal! Where are you flying today?"
+        "default": "Hello! Welcome to the check-in desk. Where are you flying today? You can say: 'I will fly to Sweden.'",
+        "cheerful": "Hello! Welcome to the departure terminal! Where are you flying today? You can say: 'I will fly to Sweden.'"
       },
       "intents": [
         {
           "name": "check_in_luggage",
           "keywords": [
             "check in",
+            "checkin",
+            "check-in",
             "check in my luggage",
             "check in my bag",
             "check in my suitcase",
@@ -26,20 +28,23 @@
         {
           "name": "state_destination_country",
           "keywords": [
-            "flying to",
-            "fly to",
-            "going to",
-            "traveling to",
-            "travelling to",
-            "travel to",
-            "heading to",
-            "head to",
-            "moving to",
-            "flight to",
-            "ticket to",
-            "destination is"
+            "fly to"
           ],
           "next": "airport_agent_checked_in"
+        },
+        {
+          "name": "ask_airport_help",
+          "keywords": [
+            "what should we do",
+            "what should i do",
+            "what to do",
+            "what now",
+            "help",
+            "where can i fly",
+            "which country",
+            "which countries"
+          ],
+          "next": "airport_agent_help"
         },
         {
           "name": "greet",
@@ -58,14 +63,16 @@
     {
       "id": "airport_agent_welcome",
       "text": {
-        "default": "Welcome! Please tell me your destination country and place your suitcase on the scale to check in.",
-        "cheerful": "Welcome! Where are you flying today? Let's get your suitcase checked in!"
+        "default": "Welcome! Please tell me your destination country and place your suitcase on the scale to check in. For example, say: 'I will fly to Sweden.'",
+        "cheerful": "Welcome! Where are you flying today? Let's get your suitcase checked in—just say something like 'I will fly to Sweden!'"
       },
       "intents": [
         {
           "name": "check_in_luggage",
           "keywords": [
             "check in",
+            "checkin",
+            "check-in",
             "check in my luggage",
             "check in my bag",
             "check in my suitcase",
@@ -78,20 +85,23 @@
         {
           "name": "state_destination_country",
           "keywords": [
-            "flying to",
-            "fly to",
-            "going to",
-            "traveling to",
-            "travelling to",
-            "travel to",
-            "heading to",
-            "head to",
-            "moving to",
-            "flight to",
-            "ticket to",
-            "destination is"
+            "fly to"
           ],
           "next": "airport_agent_checked_in"
+        },
+        {
+          "name": "ask_airport_help",
+          "keywords": [
+            "what should we do",
+            "what should i do",
+            "what to do",
+            "what now",
+            "help",
+            "where can i fly",
+            "which country",
+            "which countries"
+          ],
+          "next": "airport_agent_help"
         }
       ],
       "fallback": "airport_agent_repeat",
@@ -100,30 +110,64 @@
     {
       "id": "airport_agent_destination",
       "text": {
-        "default": "I can check in your suitcase right away. Which country are you flying to today?"
+        "default": "I can check in your suitcase right away. Which country are you flying to today? For example, say: 'I will fly to Sweden.'"
       },
       "intents": [
         {
           "name": "state_destination_country",
           "keywords": [
-            "flying to",
-            "fly to",
-            "going to",
-            "traveling to",
-            "travelling to",
-            "travel to",
-            "heading to",
-            "head to",
-            "moving to",
-            "flight to",
-            "ticket to",
-            "destination is"
+            "fly to"
           ],
           "next": "airport_agent_checked_in"
+        },
+        {
+          "name": "ask_airport_help",
+          "keywords": [
+            "what should we do",
+            "what should i do",
+            "what to do",
+            "what now",
+            "help",
+            "where can i fly",
+            "which country",
+            "which countries"
+          ],
+          "next": "airport_agent_help"
         }
       ],
       "fallback": "airport_agent_repeat",
       "completesStep": "airport_check_in"
+    },
+    {
+      "id": "airport_agent_help",
+      "text": {
+        "default": "You can check in your suitcase and choose your destination country. Try saying: 'I will fly to Sweden' or 'I want to check in my luggage.'"
+      },
+      "intents": [
+        {
+          "name": "check_in_luggage",
+          "keywords": [
+            "check in",
+            "checkin",
+            "check-in",
+            "check in my luggage",
+            "check in my bag",
+            "check in my suitcase",
+            "luggage",
+            "suitcase",
+            "baggage"
+          ],
+          "next": "airport_agent_destination"
+        },
+        {
+          "name": "state_destination_country",
+          "keywords": [
+            "fly to"
+          ],
+          "next": "airport_agent_checked_in"
+        }
+      ],
+      "fallback": "airport_agent_repeat"
     },
     {
       "id": "airport_agent_checked_in",

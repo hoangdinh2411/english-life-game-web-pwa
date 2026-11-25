@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FlightCutsceneProps } from "../../types/ui/gameplay";
 
 export interface FlightCutsceneTimerOptions {
@@ -36,6 +36,8 @@ export function FlightCutscene({
   onComplete,
 }: FlightCutsceneProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return;
@@ -50,21 +52,21 @@ export function FlightCutscene({
     return startFlightCutsceneTimer({
       durationMs,
       reducedMotion,
-      onComplete,
+      onComplete: () => onCompleteRef.current(),
     });
-  }, [durationMs, reducedMotion, onComplete]);
+  }, [durationMs, reducedMotion]);
 
   // Keyboard shortcut to skip
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.key === " " || e.key === "Enter") {
         e.preventDefault();
-        onComplete();
+        onCompleteRef.current();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onComplete]);
+  }, []);
 
   const countryLabel =
     destinationCountryName && destinationCountryName !== "Not selected"

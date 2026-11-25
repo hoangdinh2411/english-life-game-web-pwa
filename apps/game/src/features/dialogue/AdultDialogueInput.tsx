@@ -12,6 +12,7 @@ export interface AdultDialogueInputProps {
   pending: boolean;
   voiceSupported: boolean;
   hintFrames?: string[];
+  defaultHintOpen?: boolean;
 }
 
 const DEFAULT_HINT_FRAMES = [
@@ -31,8 +32,9 @@ export function AdultDialogueInput({
   pending,
   voiceSupported,
   hintFrames = DEFAULT_HINT_FRAMES,
+  defaultHintOpen = false,
 }: AdultDialogueInputProps) {
-  const [hintOpen, setHintOpen] = useState(false);
+  const [hintOpen, setHintOpen] = useState(defaultHintOpen);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {

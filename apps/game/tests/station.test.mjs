@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AIRPORT_AGENT_POINT, canWalk, canWalkAirport, findPath, movePlayer, movementDelta, nearestNpc, STATION_NPCS } from '../src/gameplay/station-navigation.ts';
+import { AIRPORT_AGENT_POINT, AIRPORT_ARRIVAL_PORTALS, AIRPORT_CAROUSEL_SUITCASES, canWalk, canWalkAirport, findPath, movePlayer, movementDelta, nearestNpc, portalAt, STATION_NPCS } from '../src/gameplay/station-navigation.ts';
 
 test('station keeps movement on the concourse and out of the kiosk and shops', () => {
   assert.equal(canWalk({ x: 768, y: 370 }), true);
@@ -40,4 +40,19 @@ test('airport departure keeps player off the check-in desk and within Claire spe
   assert.equal(canWalkAirport('airport_departure', { x: 684, y: 456 }), true);
   const claire = { id: 'npc_airport_agent', name: 'Claire', texture: 'npc-npc_airport_agent', ...AIRPORT_AGENT_POINT };
   assert.equal(nearestNpc({ x: 684, y: 456 }, [claire])?.id, 'npc_airport_agent');
+});
+
+test('airport arrival keeps player off the EXIT arch while still reaching the Train Station portal', () => {
+  assert.equal(canWalkAirport('airport_arrival', { x: 768, y: 760 }), true);
+  assert.equal(canWalkAirport('airport_arrival', { x: 768, y: 800 }), false);
+  assert.equal(portalAt({ x: 768, y: 720 }, AIRPORT_ARRIVAL_PORTALS), null);
+  assert.equal(portalAt({ x: 768, y: 760 }, AIRPORT_ARRIVAL_PORTALS)?.id, 'station');
+});
+
+test('every random airport carousel suitcase has a walkable stand point within interaction range', () => {
+  assert.equal(AIRPORT_CAROUSEL_SUITCASES.length, 5);
+  for (const bag of AIRPORT_CAROUSEL_SUITCASES) {
+    assert.equal(canWalkAirport('airport_arrival', { x: bag.standX, y: bag.standY }), true, bag.id);
+    assert.ok(Math.hypot(bag.standX - bag.x, bag.standY - bag.y) <= 160, bag.id);
+  }
 });

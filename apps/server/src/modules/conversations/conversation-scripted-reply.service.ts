@@ -129,6 +129,7 @@ export class ConversationScriptedReplyService {
         arrival,
         intent: reply.intent,
         misunderstood: reply.misunderstood,
+        ...(reply.node.end ? { closeConversation: true as const } : {}),
         ...(conversation.npc_id === 'npc_cafe_waiter'
           ? { coffeeQuest: await this.coffee.get(userId, client) }
           : {}),

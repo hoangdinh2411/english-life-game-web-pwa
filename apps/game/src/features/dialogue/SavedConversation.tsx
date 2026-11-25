@@ -24,6 +24,8 @@ export function SavedConversation({
   completed = false,
   details,
   hint,
+  hintFrames,
+  defaultHintOpen = false,
   onClose,
   actions,
   composerHidden = false,
@@ -48,6 +50,8 @@ export function SavedConversation({
   completed?: boolean;
   details?: ReactNode;
   hint?: string;
+  hintFrames?: string[];
+  defaultHintOpen?: boolean;
   onClose?: () => void;
   actions?: ReactNode;
   composerHidden?: boolean;
@@ -81,6 +85,7 @@ export function SavedConversation({
     online,
     completed,
     send,
+    defaultHintOpen,
     ...(loadOlder ? { loadOlder } : {}),
     ...(onNpcMessagePresented ? { onNpcMessagePresented } : {}),
   });
@@ -299,6 +304,8 @@ export function SavedConversation({
             listening={speech.listening}
             onRecord={toggleRecording}
             onCancelRecording={cancelRecording}
+            defaultHintOpen={defaultHintOpen}
+            {...(hintFrames ? { hintFrames } : {})}
           />
         )
       ) : null}

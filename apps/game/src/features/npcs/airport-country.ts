@@ -1,24 +1,7 @@
+import { matchCountry } from '@life-abroad/shared';
+
 export type CountryOption = Readonly<{ id: string; name: string }>;
-
-const normalizeText = (value: string): string =>
-  value.trim().toLowerCase().replace(/[^\p{L}\p{N}\s]+/gu, ' ').replace(/\s+/g, ' ').trim();
-
-const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/** Matches a country name mentioned in the player's text, preferring longer multi-word names first. */
-export function matchCountry(input: string, countries: readonly CountryOption[]): CountryOption | undefined {
-  const normalizedInput = normalizeText(input);
-  if (!normalizedInput) return undefined;
-  const sorted = [...countries].sort((a, b) => b.name.length - a.name.length);
-  for (const country of sorted) {
-    const normalizedName = normalizeText(country.name);
-    if (!normalizedName) continue;
-    if (normalizedInput === normalizedName) return country;
-    const boundary = new RegExp(`(?:^|\\s)${escapeRegExp(normalizedName)}(?:\\s|$)`);
-    if (boundary.test(normalizedInput)) return country;
-  }
-  return undefined;
-}
+export { matchCountry };
 
 const isAlreadyLockedError = (error: unknown): boolean =>
   (typeof error === 'object' && error !== null && 'status' in error && error.status === 409) ||

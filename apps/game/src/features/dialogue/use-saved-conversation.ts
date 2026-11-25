@@ -18,6 +18,7 @@ interface SavedConversationBehaviorOptions {
   send: (text: string) => Promise<boolean>;
   loadOlder?: () => Promise<boolean>;
   onNpcMessagePresented?: (messageId: string) => void;
+  defaultHintOpen?: boolean;
 }
 
 export function useSavedConversation({
@@ -28,9 +29,10 @@ export function useSavedConversation({
   send,
   loadOlder,
   onNpcMessagePresented,
+  defaultHintOpen = false,
 }: SavedConversationBehaviorOptions) {
   const [text, setText] = useState(state.retryMessage?.text ?? "");
-  const [hintOpen, setHintOpen] = useState(false);
+  const [hintOpen, setHintOpen] = useState(defaultHintOpen);
   const [finalizing, setFinalizing] = useState(false);
   const [dismissEndPrompt, setDismissEndPrompt] = useState(false);
   const sending = useRef(false);

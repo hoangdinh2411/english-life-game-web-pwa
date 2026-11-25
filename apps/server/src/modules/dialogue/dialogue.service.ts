@@ -1,5 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { normalizeDialogue, type NpcProfile } from '@life-abroad/shared';
+import { matchCountry, normalizeDialogue, type CountryEntity, type NpcProfile } from '@life-abroad/shared';
 import { CachedDialogueNode, DialogueCacheService } from '../../infrastructure/content/dialogue-cache.service';
 
 export interface DialogueContext {
@@ -15,6 +15,8 @@ export interface DialogueContext {
   countryName?: string;
   townLocationName?: string;
   store?: boolean;
+  countryId?: string | null;
+  countries?: readonly CountryEntity[];
 }
 
 export interface DialogueReply {
@@ -81,10 +83,27 @@ export class DialogueService {
     }
     // Do not turn an explicit refusal into a positive request.
     const refused = /\b(?:(?:don't|do not|not|never)\s+(?:want|need|like|request|ask|asking)|(?:no|not)\s+(?:a\s+|the\s+)?(?:bus\s+)?tickets?)\b/.test(text);
+    if (context.npcId === 'npc_airport_agent' && !refused) {
+      const countries = context.countries ?? (await this.cache.getCountries().catch(() => []));
+      const matched = matchCountry(input, countries);
+      if (matched) {
+        const target = find('airport_agent_checked_in');
+        if (target) {
+          const isNewcomer = !context.countryName || context.countryId === null;
+          if (!isNewcomer && context.countryName && matched.name.toLowerCase() !== context.countryName.toLowerCase()) {
+            // When already locked, a different destination country must not trigger check-in
+          } else {
+            const countryName = isNewcomer ? matched.name : (context.countryName ?? matched.name);
+            return this.render(target, { ...context, countryName }, 'state_destination_country', find('global_missing_fact'));
+          }
+        }
+      }
+    }
     if (text && !refused) for (const group of groups) {
       const ordered = [...group].sort((a, b) =>
         Number(b === current) - Number(a === current) || a.node.id.localeCompare(b.node.id));
       for (const entry of ordered) for (const intent of entry.node.intents ?? []) {
+        if (context.npcId === 'npc_airport_agent' && intent.name === 'state_destination_country') continue;
         const directionRequest = context.npcId === 'npc_receptionist' && intent.name === 'ask_town_directions' && asksForDirections(text);
         if (!directionRequest && !intent.keywords.some(keyword => matches(text, keyword))) continue;
         const target = find(intent.next);

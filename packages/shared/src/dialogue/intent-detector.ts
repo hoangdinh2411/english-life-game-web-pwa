@@ -333,3 +333,32 @@ export function detectContextIntent(
     ? { status: 'unclear', reason: 'no_match' }
     : { status: 'matched', primary, modifiers };
 }
+
+export interface CountryEntity {
+  readonly id: string;
+  readonly name: string;
+}
+
+/** Matches a non-negated country entity mentioned in the player's text, skipping negated clauses. */
+export function matchCountry<T extends { id: string; name: string }>(
+  input: string,
+  countries: readonly T[],
+  lexicon: CompiledIntentLexicon = DEFAULT_INTENT_LEXICON,
+): T | undefined {
+  const clauses = clausesOf(input, lexicon);
+  if (clauses.length === 0) return undefined;
+  const sorted = [...countries].sort((a, b) => b.name.length - a.name.length);
+  for (const clause of clauses) {
+    const { negated, rest } = resolveNegation(clause, lexicon);
+    if (negated || rest.length === 0) continue;
+    const clauseStr = ` ${rest.join(' ')} `;
+    for (const country of sorted) {
+      const countryTokens = stripFillers(words(country.name).flatMap((w) => expandWord(w, lexicon)), lexicon);
+      if (countryTokens.length === 0) continue;
+      const targetStr = ` ${countryTokens.join(' ')} `;
+      if (clauseStr.includes(targetStr)) return country;
+    }
+  }
+  return undefined;
+}
+
